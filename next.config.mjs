@@ -1,6 +1,6 @@
 let userConfig = undefined
 try {
-  userConfig = await import('./v0-user-next.config')
+  userConfig = await import('./next.config.user.mjs')
 } catch (e) {
   // ignore error
 }
@@ -20,6 +20,14 @@ const nextConfig = {
     webpackBuildWorker: true,
     parallelServerBuildTraces: true,
     parallelServerCompiles: true,
+  },
+  async rewrites() {
+    return [
+      {
+        source: '/api/2.1/unity-catalog/iceberg/:path*',
+        destination: 'http://localhost:8080/api/2.1/unity-catalog/iceberg/:path*',
+      },
+    ]
   },
 }
 
