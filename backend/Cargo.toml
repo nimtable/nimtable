@@ -8,3 +8,4 @@ rocket = { version = "0.5", features = ["json"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.9"
 reqwest = "0.12"
+clap = { version = "4", features = ["derive"] }
