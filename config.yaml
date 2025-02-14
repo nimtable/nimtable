@@ -1,0 +1,3 @@
+catalogs:
+- name: unity-catalog-demo
+  url: http://localhost:8080/api/2.1/unity-catalog/iceberg/v1/catalogs/
