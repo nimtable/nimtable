@@ -36,7 +36,7 @@ async fn main() {
     // Mount a proxy handler for each catalog
     for catalog in config.catalogs {
         let source_base = format!("/api/catalog/{}", catalog.name);
-        let handler = ProxyHandler::new(source_base.clone(), catalog.url);
+        let handler = ProxyHandler::new(source_base.clone(), catalog.url, catalog.prefix);
         rocket = rocket.mount(&source_base, handler);
     }
 

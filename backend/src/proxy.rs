@@ -12,13 +12,17 @@ use rocket::{
 pub struct ProxyHandler {
     source_base: String,
     target_base: String,
+
+    /// The prefix in the [Iceberg REST Catalog API](https://raw.githubusercontent.com/apache/iceberg/refs/heads/main/open-api/rest-catalog-open-api.yaml)
+    prefix: Option<String>,
 }
 
 impl ProxyHandler {
-    pub fn new(source_base: String, target_base: String) -> Self {
+    pub fn new(source_base: String, target_base: String, prefix: Option<String>) -> Self {
         Self {
             source_base,
             target_base,
+            prefix,
         }
     }
 }
@@ -31,13 +35,19 @@ impl Handler for ProxyHandler {
         let relative_path = path.strip_prefix(&self.source_base).unwrap_or(path);
 
         // Construct target URL
-        let target_url = format!("{}{}", self.target_base, relative_path);
+        let target_url = if relative_path == "/v1/config" || self.prefix.is_none() {
+            format!("{}{}", self.target_base, relative_path)
+        } else {
+            let path = relative_path.strip_prefix("/v1/").unwrap_or(relative_path);
+            let prefix = self.prefix.clone().unwrap_or("".to_string());
+            format!("{}/v1/{}/{}", self.target_base, prefix, path)
+        };
 
         // Create reqwest client and forward the request
         let client = reqwest::Client::new();
         let response = match req.method() {
             Method::Get => client.get(&target_url),
-            Method::Post => client.post(&target_url),
+            Method::Post => client.post(&target_url), // FIXME: data
             Method::Put => client.put(&target_url),
             Method::Delete => client.delete(&target_url),
             Method::Head => client.head(&target_url),
