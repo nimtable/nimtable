@@ -1,3 +1,4 @@
+use log::info;
 use reqwest;
 use rocket::http::Method;
 use rocket::{
@@ -44,6 +45,13 @@ impl Handler for ProxyHandler {
             let prefix = self.prefix.clone().unwrap_or("".to_string());
             format!("{}/v1/{}/{}", self.target_base, prefix, path)
         };
+
+        info!(
+            "proxying {} {} to {}",
+            req.method(),
+            req.uri().path(),
+            target_url
+        );
 
         // Create reqwest client and forward the request
         let client = reqwest::Client::new();

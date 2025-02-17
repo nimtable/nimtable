@@ -10,3 +10,4 @@ serde_yaml = "0.9"
 reqwest = "0.12"
 clap = { version = "4", features = ["derive"] }
 anyhow = "1.0.95"
+log = "0.4"
