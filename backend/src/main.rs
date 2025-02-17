@@ -29,7 +29,11 @@ async fn main() {
     let args = Args::parse();
     let config = Config::read_from_file(args.config).expect("Failed to read config file");
 
-    let mut rocket = rocket::build()
+    let figment = rocket::Config::figment()
+        .merge(("port", config.server.port))
+        .merge(("address", config.server.host.as_str()));
+
+    let mut rocket = rocket::custom(figment)
         .manage(config.clone())
         .mount("/", routes![list_catalogs]);
 
