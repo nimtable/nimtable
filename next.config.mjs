@@ -24,8 +24,8 @@ const nextConfig = {
   async rewrites() {
     return [
       {
-        source: '/api/2.1/unity-catalog/iceberg/:path*',
-        destination: 'http://localhost:8080/api/2.1/unity-catalog/iceberg/:path*',
+        source: '/api/:path*',
+        destination: 'http://localhost:8182/api/:path*',
       },
     ]
   },
