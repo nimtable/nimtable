@@ -28,3 +28,6 @@ next-env.d.ts
 
 # rust
 /backend/target/
+
+# python
+/venv/

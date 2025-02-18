@@ -22,27 +22,39 @@ describe("CatalogAPIApi", () => {
   });
 
   test("cancelPlanning", () => {
-    return expect(instance.cancelPlanning({})).resolves.toBe(null)
+    const prefix: any = undefined
+    const namespace: any = undefined
+    const table: any = undefined
+    const planId: any = undefined
+    return expect(instance.cancelPlanning(prefix, namespace, table, planId, {})).resolves.toBe(null)
   })
   test("commitTransaction", () => {
     const body: api.CommitTransactionRequest = undefined
-    return expect(instance.commitTransaction(body, {})).resolves.toBe(null)
+    const prefix: any = undefined
+    return expect(instance.commitTransaction(body, prefix, {})).resolves.toBe(null)
   })
   test("createNamespace", () => {
     const body: api.CreateNamespaceRequest = undefined
-    return expect(instance.createNamespace(body, {})).resolves.toBe(null)
+    const prefix: any = undefined
+    return expect(instance.createNamespace(body, prefix, {})).resolves.toBe(null)
   })
   test("createTable", () => {
     const body: api.CreateTableRequest = undefined
+    const prefix: any = undefined
+    const namespace: any = undefined
     const xIcebergAccessDelegation: any = undefined
-    return expect(instance.createTable(body, xIcebergAccessDelegation, {})).resolves.toBe(null)
+    return expect(instance.createTable(body, prefix, namespace, xIcebergAccessDelegation, {})).resolves.toBe(null)
   })
   test("createView", () => {
     const body: api.CreateViewRequest = undefined
-    return expect(instance.createView(body, {})).resolves.toBe(null)
+    const prefix: any = undefined
+    const namespace: any = undefined
+    return expect(instance.createView(body, prefix, namespace, {})).resolves.toBe(null)
   })
   test("dropNamespace", () => {
-    return expect(instance.dropNamespace({})).resolves.toBe(null)
+    const prefix: any = undefined
+    const namespace: any = undefined
+    return expect(instance.dropNamespace(prefix, namespace, {})).resolves.toBe(null)
   })
   test("dropTable", () => {
     const prefix: any = undefined
@@ -52,92 +64,144 @@ describe("CatalogAPIApi", () => {
     return expect(instance.dropTable(prefix, namespace, table, purgeRequested, {})).resolves.toBe(null)
   })
   test("dropView", () => {
-    return expect(instance.dropView({})).resolves.toBe(null)
+    const prefix: any = undefined
+    const namespace: any = undefined
+    const view: any = undefined
+    return expect(instance.dropView(prefix, namespace, view, {})).resolves.toBe(null)
   })
   test("fetchPlanningResult", () => {
-    return expect(instance.fetchPlanningResult({})).resolves.toBe(null)
+    const prefix: any = undefined
+    const namespace: any = undefined
+    const table: any = undefined
+    const planId: any = undefined
+    return expect(instance.fetchPlanningResult(prefix, namespace, table, planId, {})).resolves.toBe(null)
   })
   test("fetchScanTasks", () => {
+    const prefix: any = undefined
+    const namespace: any = undefined
+    const table: any = undefined
     const body: api.FetchScanTasksRequest = undefined
-    return expect(instance.fetchScanTasks(body, {})).resolves.toBe(null)
+    return expect(instance.fetchScanTasks(prefix, namespace, table, body, {})).resolves.toBe(null)
   })
   test("listNamespaces", () => {
+    const prefix: any = undefined
     const pageToken: PageToken = undefined
     const pageSize: any = undefined
     const parent: any = undefined
-    return expect(instance.listNamespaces(pageToken, pageSize, parent, {})).resolves.toBe(null)
+    return expect(instance.listNamespaces(prefix, pageToken, pageSize, parent, {})).resolves.toBe(null)
   })
   test("listTables", () => {
+    const prefix: any = undefined
+    const namespace: any = undefined
     const pageToken: PageToken = undefined
     const pageSize: any = undefined
-    return expect(instance.listTables(pageToken, pageSize, {})).resolves.toBe(null)
+    return expect(instance.listTables(prefix, namespace, pageToken, pageSize, {})).resolves.toBe(null)
   })
   test("listViews", () => {
+    const prefix: any = undefined
+    const namespace: any = undefined
     const pageToken: PageToken = undefined
     const pageSize: any = undefined
-    return expect(instance.listViews(pageToken, pageSize, {})).resolves.toBe(null)
+    return expect(instance.listViews(prefix, namespace, pageToken, pageSize, {})).resolves.toBe(null)
   })
   test("loadCredentials", () => {
-    return expect(instance.loadCredentials({})).resolves.toBe(null)
+    const prefix: any = undefined
+    const namespace: any = undefined
+    const table: any = undefined
+    return expect(instance.loadCredentials(prefix, namespace, table, {})).resolves.toBe(null)
   })
   test("loadNamespaceMetadata", () => {
-    return expect(instance.loadNamespaceMetadata({})).resolves.toBe(null)
+    const prefix: any = undefined
+    const namespace: any = undefined
+    return expect(instance.loadNamespaceMetadata(prefix, namespace, {})).resolves.toBe(null)
   })
   test("loadTable", () => {
+    const prefix: any = undefined
+    const namespace: any = undefined
+    const table: any = undefined
     const xIcebergAccessDelegation: any = undefined
     const ifNoneMatch: any = undefined
     const snapshots: any = undefined
-    return expect(instance.loadTable(xIcebergAccessDelegation, ifNoneMatch, snapshots, {})).resolves.toBe(null)
+    return expect(instance.loadTable(prefix, namespace, table, xIcebergAccessDelegation, ifNoneMatch, snapshots, {})).resolves.toBe(null)
   })
   test("loadView", () => {
-    return expect(instance.loadView({})).resolves.toBe(null)
+    const prefix: any = undefined
+    const namespace: any = undefined
+    const view: any = undefined
+    return expect(instance.loadView(prefix, namespace, view, {})).resolves.toBe(null)
   })
   test("namespaceExists", () => {
-    return expect(instance.namespaceExists({})).resolves.toBe(null)
+    const prefix: any = undefined
+    const namespace: any = undefined
+    return expect(instance.namespaceExists(prefix, namespace, {})).resolves.toBe(null)
   })
   test("planTableScan", () => {
+    const prefix: any = undefined
+    const namespace: any = undefined
+    const table: any = undefined
     const body: api.PlanTableScanRequest = undefined
-    return expect(instance.planTableScan(body, {})).resolves.toBe(null)
+    return expect(instance.planTableScan(prefix, namespace, table, body, {})).resolves.toBe(null)
   })
   test("registerTable", () => {
     const body: api.RegisterTableRequest = undefined
-    return expect(instance.registerTable(body, {})).resolves.toBe(null)
+    const prefix: any = undefined
+    const namespace: any = undefined
+    return expect(instance.registerTable(body, prefix, namespace, {})).resolves.toBe(null)
   })
   test("renameTable", () => {
     const body: api.RenameTableRequest = {
   "$ref" : "#/components/examples/RenameTableSameNamespace"
 }
-    return expect(instance.renameTable(body, {})).resolves.toBe(null)
+    const prefix: any = undefined
+    return expect(instance.renameTable(body, prefix, {})).resolves.toBe(null)
   })
   test("renameView", () => {
     const body: api.RenameTableRequest = {
   "$ref" : "#/components/examples/RenameViewSameNamespace"
 }
-    return expect(instance.renameView(body, {})).resolves.toBe(null)
+    const prefix: any = undefined
+    return expect(instance.renameView(body, prefix, {})).resolves.toBe(null)
   })
   test("replaceView", () => {
     const body: api.CommitViewRequest = undefined
-    return expect(instance.replaceView(body, {})).resolves.toBe(null)
+    const prefix: any = undefined
+    const namespace: any = undefined
+    const view: any = undefined
+    return expect(instance.replaceView(body, prefix, namespace, view, {})).resolves.toBe(null)
   })
   test("reportMetrics", () => {
     const body: api.ReportMetricsRequest = undefined
-    return expect(instance.reportMetrics(body, {})).resolves.toBe(null)
+    const prefix: any = undefined
+    const namespace: any = undefined
+    const table: any = undefined
+    return expect(instance.reportMetrics(body, prefix, namespace, table, {})).resolves.toBe(null)
   })
   test("tableExists", () => {
-    return expect(instance.tableExists({})).resolves.toBe(null)
+    const prefix: any = undefined
+    const namespace: any = undefined
+    const table: any = undefined
+    return expect(instance.tableExists(prefix, namespace, table, {})).resolves.toBe(null)
   })
   test("updateProperties", () => {
     const body: api.UpdateNamespacePropertiesRequest = {
   "$ref" : "#/components/examples/UpdateAndRemoveNamespacePropertiesRequest"
 }
-    return expect(instance.updateProperties(body, {})).resolves.toBe(null)
+    const prefix: any = undefined
+    const namespace: any = undefined
+    return expect(instance.updateProperties(body, prefix, namespace, {})).resolves.toBe(null)
   })
   test("updateTable", () => {
     const body: api.CommitTableRequest = undefined
-    return expect(instance.updateTable(body, {})).resolves.toBe(null)
+    const prefix: any = undefined
+    const namespace: any = undefined
+    const table: any = undefined
+    return expect(instance.updateTable(body, prefix, namespace, table, {})).resolves.toBe(null)
   })
   test("viewExists", () => {
-    return expect(instance.viewExists({})).resolves.toBe(null)
+    const prefix: any = undefined
+    const namespace: any = undefined
+    const view: any = undefined
+    return expect(instance.viewExists(prefix, namespace, view, {})).resolves.toBe(null)
   })
 })
 

@@ -1771,6 +1771,12 @@ export interface RegisterTableRequest {
      * @memberof RegisterTableRequest
      */
     metadataLocation: any;
+    /**
+     * Whether to overwrite table metadata if the table already exists
+     * @type {any}
+     * @memberof RegisterTableRequest
+     */
+    overwrite?: any;
 }
 /**
  * 
@@ -3091,11 +3097,35 @@ export const CatalogAPIApiFetchParamCreator = function (configuration?: Configur
         /**
          * Cancels scan planning for a plan-id.  This notifies the service that it can release resources held for the scan. Clients should cancel scans that are no longer needed, either while the plan-id returns a \"submitted\" status or while there are remaining plan tasks that have not been fetched.  Cancellation is not necessary when - Scan tasks for each plan task have been fetched using fetchScanTasks - A plan-id has produced a \"failed\" or \"cancelled\" status from   planTableScan or fetchPlanningResult 
          * @summary Cancels scan planning for a plan-id
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+         * @param {any} table A table name
+         * @param {any} planId ID used to track a planning request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cancelPlanning(options: any = {}): FetchArgs {
-            const localVarPath = `/v1/{prefix}/namespaces/{namespace}/tables/{table}/plan/{plan-id}`;
+        cancelPlanning(prefix: any, namespace: any, table: any, planId: any, options: any = {}): FetchArgs {
+            // verify required parameter 'prefix' is not null or undefined
+            if (prefix === null || prefix === undefined) {
+                throw new RequiredError('prefix','Required parameter prefix was null or undefined when calling cancelPlanning.');
+            }
+            // verify required parameter 'namespace' is not null or undefined
+            if (namespace === null || namespace === undefined) {
+                throw new RequiredError('namespace','Required parameter namespace was null or undefined when calling cancelPlanning.');
+            }
+            // verify required parameter 'table' is not null or undefined
+            if (table === null || table === undefined) {
+                throw new RequiredError('table','Required parameter table was null or undefined when calling cancelPlanning.');
+            }
+            // verify required parameter 'planId' is not null or undefined
+            if (planId === null || planId === undefined) {
+                throw new RequiredError('planId','Required parameter planId was null or undefined when calling cancelPlanning.');
+            }
+            const localVarPath = `/v1/{prefix}/namespaces/{namespace}/tables/{table}/plan/{plan-id}`
+                .replace(`{${"prefix"}}`, encodeURIComponent(String(prefix)))
+                .replace(`{${"namespace"}}`, encodeURIComponent(String(namespace)))
+                .replace(`{${"table"}}`, encodeURIComponent(String(table)))
+                .replace(`{${"plan-id"}}`, encodeURIComponent(String(planId)));
             const localVarUrlObj = url.parse(localVarPath, true);
             const localVarRequestOptions = Object.assign({ method: 'DELETE' }, options);
             const localVarHeaderParameter = {} as any;
@@ -3126,15 +3156,21 @@ export const CatalogAPIApiFetchParamCreator = function (configuration?: Configur
          * 
          * @summary Commit updates to multiple tables in an atomic operation
          * @param {CommitTransactionRequest} body Commit updates to multiple tables in an atomic operation  A commit for a single table consists of a table identifier with requirements and updates. Requirements are assertions that will be validated before attempting to make and commit changes. For example, &#x60;assert-ref-snapshot-id&#x60; will check that a named ref&#x27;s snapshot ID has a certain value. Server implementations are required to fail with a 400 status code if any unknown updates or requirements are received. Updates are changes to make to table metadata. For example, after asserting that the current main ref is at the expected snapshot, a commit may add a new child snapshot and set the ref to the new snapshot id.
+         * @param {any} prefix An optional prefix in the path
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        commitTransaction(body: CommitTransactionRequest, options: any = {}): FetchArgs {
+        commitTransaction(body: CommitTransactionRequest, prefix: any, options: any = {}): FetchArgs {
             // verify required parameter 'body' is not null or undefined
             if (body === null || body === undefined) {
                 throw new RequiredError('body','Required parameter body was null or undefined when calling commitTransaction.');
             }
-            const localVarPath = `/v1/{prefix}/transactions/commit`;
+            // verify required parameter 'prefix' is not null or undefined
+            if (prefix === null || prefix === undefined) {
+                throw new RequiredError('prefix','Required parameter prefix was null or undefined when calling commitTransaction.');
+            }
+            const localVarPath = `/v1/{prefix}/transactions/commit`
+                .replace(`{${"prefix"}}`, encodeURIComponent(String(prefix)));
             const localVarUrlObj = url.parse(localVarPath, true);
             const localVarRequestOptions = Object.assign({ method: 'POST' }, options);
             const localVarHeaderParameter = {} as any;
@@ -3169,15 +3205,21 @@ export const CatalogAPIApiFetchParamCreator = function (configuration?: Configur
          * Create a namespace, with an optional set of properties. The server might also add properties, such as `last_modified_time` etc.
          * @summary Create a namespace
          * @param {CreateNamespaceRequest} body 
+         * @param {any} prefix An optional prefix in the path
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        createNamespace(body: CreateNamespaceRequest, options: any = {}): FetchArgs {
+        createNamespace(body: CreateNamespaceRequest, prefix: any, options: any = {}): FetchArgs {
             // verify required parameter 'body' is not null or undefined
             if (body === null || body === undefined) {
                 throw new RequiredError('body','Required parameter body was null or undefined when calling createNamespace.');
             }
-            const localVarPath = `/v1/{prefix}/namespaces`;
+            // verify required parameter 'prefix' is not null or undefined
+            if (prefix === null || prefix === undefined) {
+                throw new RequiredError('prefix','Required parameter prefix was null or undefined when calling createNamespace.');
+            }
+            const localVarPath = `/v1/{prefix}/namespaces`
+                .replace(`{${"prefix"}}`, encodeURIComponent(String(prefix)));
             const localVarUrlObj = url.parse(localVarPath, true);
             const localVarRequestOptions = Object.assign({ method: 'POST' }, options);
             const localVarHeaderParameter = {} as any;
@@ -3212,16 +3254,28 @@ export const CatalogAPIApiFetchParamCreator = function (configuration?: Configur
          * Create a table or start a create transaction, like atomic CTAS.  If `stage-create` is false, the table is created immediately.  If `stage-create` is true, the table is not created, but table metadata is initialized and returned. The service should prepare as needed for a commit to the table commit endpoint to complete the create transaction. The client uses the returned metadata to begin a transaction. To commit the transaction, the client sends all create and subsequent changes to the table commit route. Changes from the table create operation include changes like AddSchemaUpdate and SetCurrentSchemaUpdate that set the initial table state.
          * @summary Create a table in the given namespace
          * @param {CreateTableRequest} body 
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
          * @param {any} [xIcebergAccessDelegation] Optional signal to the server that the client supports delegated access via a comma-separated list of access mechanisms.  The server may choose to supply access via any or none of the requested mechanisms.  Specific properties and handling for &#x60;vended-credentials&#x60; is documented in the &#x60;LoadTableResult&#x60; schema section of this spec document.  The protocol and specification for &#x60;remote-signing&#x60; is documented in  the &#x60;s3-signer-open-api.yaml&#x60; OpenApi spec in the &#x60;aws&#x60; module. 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        createTable(body: CreateTableRequest, xIcebergAccessDelegation?: any, options: any = {}): FetchArgs {
+        createTable(body: CreateTableRequest, prefix: any, namespace: any, xIcebergAccessDelegation?: any, options: any = {}): FetchArgs {
             // verify required parameter 'body' is not null or undefined
             if (body === null || body === undefined) {
                 throw new RequiredError('body','Required parameter body was null or undefined when calling createTable.');
             }
-            const localVarPath = `/v1/{prefix}/namespaces/{namespace}/tables`;
+            // verify required parameter 'prefix' is not null or undefined
+            if (prefix === null || prefix === undefined) {
+                throw new RequiredError('prefix','Required parameter prefix was null or undefined when calling createTable.');
+            }
+            // verify required parameter 'namespace' is not null or undefined
+            if (namespace === null || namespace === undefined) {
+                throw new RequiredError('namespace','Required parameter namespace was null or undefined when calling createTable.');
+            }
+            const localVarPath = `/v1/{prefix}/namespaces/{namespace}/tables`
+                .replace(`{${"prefix"}}`, encodeURIComponent(String(prefix)))
+                .replace(`{${"namespace"}}`, encodeURIComponent(String(namespace)));
             const localVarUrlObj = url.parse(localVarPath, true);
             const localVarRequestOptions = Object.assign({ method: 'POST' }, options);
             const localVarHeaderParameter = {} as any;
@@ -3260,15 +3314,27 @@ export const CatalogAPIApiFetchParamCreator = function (configuration?: Configur
          * Create a view in the given namespace.
          * @summary Create a view in the given namespace
          * @param {CreateViewRequest} body 
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        createView(body: CreateViewRequest, options: any = {}): FetchArgs {
+        createView(body: CreateViewRequest, prefix: any, namespace: any, options: any = {}): FetchArgs {
             // verify required parameter 'body' is not null or undefined
             if (body === null || body === undefined) {
                 throw new RequiredError('body','Required parameter body was null or undefined when calling createView.');
             }
-            const localVarPath = `/v1/{prefix}/namespaces/{namespace}/views`;
+            // verify required parameter 'prefix' is not null or undefined
+            if (prefix === null || prefix === undefined) {
+                throw new RequiredError('prefix','Required parameter prefix was null or undefined when calling createView.');
+            }
+            // verify required parameter 'namespace' is not null or undefined
+            if (namespace === null || namespace === undefined) {
+                throw new RequiredError('namespace','Required parameter namespace was null or undefined when calling createView.');
+            }
+            const localVarPath = `/v1/{prefix}/namespaces/{namespace}/views`
+                .replace(`{${"prefix"}}`, encodeURIComponent(String(prefix)))
+                .replace(`{${"namespace"}}`, encodeURIComponent(String(namespace)));
             const localVarUrlObj = url.parse(localVarPath, true);
             const localVarRequestOptions = Object.assign({ method: 'POST' }, options);
             const localVarHeaderParameter = {} as any;
@@ -3302,11 +3368,23 @@ export const CatalogAPIApiFetchParamCreator = function (configuration?: Configur
         /**
          * 
          * @summary Drop a namespace from the catalog. Namespace must be empty.
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        dropNamespace(options: any = {}): FetchArgs {
-            const localVarPath = `/v1/{prefix}/namespaces/{namespace}`;
+        dropNamespace(prefix: any, namespace: any, options: any = {}): FetchArgs {
+            // verify required parameter 'prefix' is not null or undefined
+            if (prefix === null || prefix === undefined) {
+                throw new RequiredError('prefix','Required parameter prefix was null or undefined when calling dropNamespace.');
+            }
+            // verify required parameter 'namespace' is not null or undefined
+            if (namespace === null || namespace === undefined) {
+                throw new RequiredError('namespace','Required parameter namespace was null or undefined when calling dropNamespace.');
+            }
+            const localVarPath = `/v1/{prefix}/namespaces/{namespace}`
+                .replace(`{${"prefix"}}`, encodeURIComponent(String(prefix)))
+                .replace(`{${"namespace"}}`, encodeURIComponent(String(namespace)));
             const localVarUrlObj = url.parse(localVarPath, true);
             const localVarRequestOptions = Object.assign({ method: 'DELETE' }, options);
             const localVarHeaderParameter = {} as any;
@@ -3393,11 +3471,29 @@ export const CatalogAPIApiFetchParamCreator = function (configuration?: Configur
         /**
          * Remove a view from the catalog
          * @summary Drop a view from the catalog
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+         * @param {any} view A view name
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        dropView(options: any = {}): FetchArgs {
-            const localVarPath = `/v1/{prefix}/namespaces/{namespace}/views/{view}`;
+        dropView(prefix: any, namespace: any, view: any, options: any = {}): FetchArgs {
+            // verify required parameter 'prefix' is not null or undefined
+            if (prefix === null || prefix === undefined) {
+                throw new RequiredError('prefix','Required parameter prefix was null or undefined when calling dropView.');
+            }
+            // verify required parameter 'namespace' is not null or undefined
+            if (namespace === null || namespace === undefined) {
+                throw new RequiredError('namespace','Required parameter namespace was null or undefined when calling dropView.');
+            }
+            // verify required parameter 'view' is not null or undefined
+            if (view === null || view === undefined) {
+                throw new RequiredError('view','Required parameter view was null or undefined when calling dropView.');
+            }
+            const localVarPath = `/v1/{prefix}/namespaces/{namespace}/views/{view}`
+                .replace(`{${"prefix"}}`, encodeURIComponent(String(prefix)))
+                .replace(`{${"namespace"}}`, encodeURIComponent(String(namespace)))
+                .replace(`{${"view"}}`, encodeURIComponent(String(view)));
             const localVarUrlObj = url.parse(localVarPath, true);
             const localVarRequestOptions = Object.assign({ method: 'DELETE' }, options);
             const localVarHeaderParameter = {} as any;
@@ -3427,11 +3523,35 @@ export const CatalogAPIApiFetchParamCreator = function (configuration?: Configur
         /**
          * Fetches the result of scan planning for a plan-id.  Responses must include a valid status - When \"completed\" the planning operation has produced plan-tasks and   file-scan-tasks that must be returned in the response  - When \"submitted\" the planning operation has not completed; the client   should wait to call this endpoint again to fetch a completed response  - When \"failed\" the response must be a valid error response - When \"cancelled\" the plan-id is invalid and should be discarded  The response for a \"completed\" planning operation includes two types of tasks (file scan tasks and plan tasks) and both may be included in the response. Tasks must not be included for any other response status. 
          * @summary Fetches the result of scan planning for a plan-id
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+         * @param {any} table A table name
+         * @param {any} planId ID used to track a planning request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        fetchPlanningResult(options: any = {}): FetchArgs {
-            const localVarPath = `/v1/{prefix}/namespaces/{namespace}/tables/{table}/plan/{plan-id}`;
+        fetchPlanningResult(prefix: any, namespace: any, table: any, planId: any, options: any = {}): FetchArgs {
+            // verify required parameter 'prefix' is not null or undefined
+            if (prefix === null || prefix === undefined) {
+                throw new RequiredError('prefix','Required parameter prefix was null or undefined when calling fetchPlanningResult.');
+            }
+            // verify required parameter 'namespace' is not null or undefined
+            if (namespace === null || namespace === undefined) {
+                throw new RequiredError('namespace','Required parameter namespace was null or undefined when calling fetchPlanningResult.');
+            }
+            // verify required parameter 'table' is not null or undefined
+            if (table === null || table === undefined) {
+                throw new RequiredError('table','Required parameter table was null or undefined when calling fetchPlanningResult.');
+            }
+            // verify required parameter 'planId' is not null or undefined
+            if (planId === null || planId === undefined) {
+                throw new RequiredError('planId','Required parameter planId was null or undefined when calling fetchPlanningResult.');
+            }
+            const localVarPath = `/v1/{prefix}/namespaces/{namespace}/tables/{table}/plan/{plan-id}`
+                .replace(`{${"prefix"}}`, encodeURIComponent(String(prefix)))
+                .replace(`{${"namespace"}}`, encodeURIComponent(String(namespace)))
+                .replace(`{${"table"}}`, encodeURIComponent(String(table)))
+                .replace(`{${"plan-id"}}`, encodeURIComponent(String(planId)));
             const localVarUrlObj = url.parse(localVarPath, true);
             const localVarRequestOptions = Object.assign({ method: 'GET' }, options);
             const localVarHeaderParameter = {} as any;
@@ -3461,12 +3581,30 @@ export const CatalogAPIApiFetchParamCreator = function (configuration?: Configur
         /**
          * Fetches result tasks for a plan task.
          * @summary Fetches result tasks for a plan task
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+         * @param {any} table A table name
          * @param {FetchScanTasksRequest} [body] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        fetchScanTasks(body?: FetchScanTasksRequest, options: any = {}): FetchArgs {
-            const localVarPath = `/v1/{prefix}/namespaces/{namespace}/tables/{table}/tasks`;
+        fetchScanTasks(prefix: any, namespace: any, table: any, body?: FetchScanTasksRequest, options: any = {}): FetchArgs {
+            // verify required parameter 'prefix' is not null or undefined
+            if (prefix === null || prefix === undefined) {
+                throw new RequiredError('prefix','Required parameter prefix was null or undefined when calling fetchScanTasks.');
+            }
+            // verify required parameter 'namespace' is not null or undefined
+            if (namespace === null || namespace === undefined) {
+                throw new RequiredError('namespace','Required parameter namespace was null or undefined when calling fetchScanTasks.');
+            }
+            // verify required parameter 'table' is not null or undefined
+            if (table === null || table === undefined) {
+                throw new RequiredError('table','Required parameter table was null or undefined when calling fetchScanTasks.');
+            }
+            const localVarPath = `/v1/{prefix}/namespaces/{namespace}/tables/{table}/tasks`
+                .replace(`{${"prefix"}}`, encodeURIComponent(String(prefix)))
+                .replace(`{${"namespace"}}`, encodeURIComponent(String(namespace)))
+                .replace(`{${"table"}}`, encodeURIComponent(String(table)));
             const localVarUrlObj = url.parse(localVarPath, true);
             const localVarRequestOptions = Object.assign({ method: 'POST' }, options);
             const localVarHeaderParameter = {} as any;
@@ -3500,14 +3638,20 @@ export const CatalogAPIApiFetchParamCreator = function (configuration?: Configur
         /**
          * List all namespaces at a certain level, optionally starting from a given parent namespace. If table accounting.tax.paid.info exists, using 'SELECT NAMESPACE IN accounting' would translate into `GET /namespaces?parent=accounting` and must return a namespace, [\"accounting\", \"tax\"] only. Using 'SELECT NAMESPACE IN accounting.tax' would translate into `GET /namespaces?parent=accounting%1Ftax` and must return a namespace, [\"accounting\", \"tax\", \"paid\"]. If `parent` is not provided, all top-level namespaces should be listed.
          * @summary List namespaces, optionally providing a parent namespace to list underneath
+         * @param {any} prefix An optional prefix in the path
          * @param {PageToken} [pageToken] 
          * @param {any} [pageSize] For servers that support pagination, this signals an upper bound of the number of results that a client will receive. For servers that do not support pagination, clients may receive results larger than the indicated &#x60;pageSize&#x60;.
          * @param {any} [parent] An optional namespace, underneath which to list namespaces. If not provided or empty, all top-level namespaces should be listed. If parent is a multipart namespace, the parts must be separated by the unit separator (&#x60;0x1F&#x60;) byte.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        listNamespaces(pageToken?: PageToken, pageSize?: any, parent?: any, options: any = {}): FetchArgs {
-            const localVarPath = `/v1/{prefix}/namespaces`;
+        listNamespaces(prefix: any, pageToken?: PageToken, pageSize?: any, parent?: any, options: any = {}): FetchArgs {
+            // verify required parameter 'prefix' is not null or undefined
+            if (prefix === null || prefix === undefined) {
+                throw new RequiredError('prefix','Required parameter prefix was null or undefined when calling listNamespaces.');
+            }
+            const localVarPath = `/v1/{prefix}/namespaces`
+                .replace(`{${"prefix"}}`, encodeURIComponent(String(prefix)));
             const localVarUrlObj = url.parse(localVarPath, true);
             const localVarRequestOptions = Object.assign({ method: 'GET' }, options);
             const localVarHeaderParameter = {} as any;
@@ -3549,13 +3693,25 @@ export const CatalogAPIApiFetchParamCreator = function (configuration?: Configur
         /**
          * Return all table identifiers under this namespace
          * @summary List all table identifiers underneath a given namespace
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
          * @param {PageToken} [pageToken] 
          * @param {any} [pageSize] For servers that support pagination, this signals an upper bound of the number of results that a client will receive. For servers that do not support pagination, clients may receive results larger than the indicated &#x60;pageSize&#x60;.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        listTables(pageToken?: PageToken, pageSize?: any, options: any = {}): FetchArgs {
-            const localVarPath = `/v1/{prefix}/namespaces/{namespace}/tables`;
+        listTables(prefix: any, namespace: any, pageToken?: PageToken, pageSize?: any, options: any = {}): FetchArgs {
+            // verify required parameter 'prefix' is not null or undefined
+            if (prefix === null || prefix === undefined) {
+                throw new RequiredError('prefix','Required parameter prefix was null or undefined when calling listTables.');
+            }
+            // verify required parameter 'namespace' is not null or undefined
+            if (namespace === null || namespace === undefined) {
+                throw new RequiredError('namespace','Required parameter namespace was null or undefined when calling listTables.');
+            }
+            const localVarPath = `/v1/{prefix}/namespaces/{namespace}/tables`
+                .replace(`{${"prefix"}}`, encodeURIComponent(String(prefix)))
+                .replace(`{${"namespace"}}`, encodeURIComponent(String(namespace)));
             const localVarUrlObj = url.parse(localVarPath, true);
             const localVarRequestOptions = Object.assign({ method: 'GET' }, options);
             const localVarHeaderParameter = {} as any;
@@ -3593,13 +3749,25 @@ export const CatalogAPIApiFetchParamCreator = function (configuration?: Configur
         /**
          * Return all view identifiers under this namespace
          * @summary List all view identifiers underneath a given namespace
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
          * @param {PageToken} [pageToken] 
          * @param {any} [pageSize] For servers that support pagination, this signals an upper bound of the number of results that a client will receive. For servers that do not support pagination, clients may receive results larger than the indicated &#x60;pageSize&#x60;.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        listViews(pageToken?: PageToken, pageSize?: any, options: any = {}): FetchArgs {
-            const localVarPath = `/v1/{prefix}/namespaces/{namespace}/views`;
+        listViews(prefix: any, namespace: any, pageToken?: PageToken, pageSize?: any, options: any = {}): FetchArgs {
+            // verify required parameter 'prefix' is not null or undefined
+            if (prefix === null || prefix === undefined) {
+                throw new RequiredError('prefix','Required parameter prefix was null or undefined when calling listViews.');
+            }
+            // verify required parameter 'namespace' is not null or undefined
+            if (namespace === null || namespace === undefined) {
+                throw new RequiredError('namespace','Required parameter namespace was null or undefined when calling listViews.');
+            }
+            const localVarPath = `/v1/{prefix}/namespaces/{namespace}/views`
+                .replace(`{${"prefix"}}`, encodeURIComponent(String(prefix)))
+                .replace(`{${"namespace"}}`, encodeURIComponent(String(namespace)));
             const localVarUrlObj = url.parse(localVarPath, true);
             const localVarRequestOptions = Object.assign({ method: 'GET' }, options);
             const localVarHeaderParameter = {} as any;
@@ -3637,11 +3805,29 @@ export const CatalogAPIApiFetchParamCreator = function (configuration?: Configur
         /**
          * Load vended credentials for a table from the catalog.
          * @summary Load vended credentials for a table from the catalog
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+         * @param {any} table A table name
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        loadCredentials(options: any = {}): FetchArgs {
-            const localVarPath = `/v1/{prefix}/namespaces/{namespace}/tables/{table}/credentials`;
+        loadCredentials(prefix: any, namespace: any, table: any, options: any = {}): FetchArgs {
+            // verify required parameter 'prefix' is not null or undefined
+            if (prefix === null || prefix === undefined) {
+                throw new RequiredError('prefix','Required parameter prefix was null or undefined when calling loadCredentials.');
+            }
+            // verify required parameter 'namespace' is not null or undefined
+            if (namespace === null || namespace === undefined) {
+                throw new RequiredError('namespace','Required parameter namespace was null or undefined when calling loadCredentials.');
+            }
+            // verify required parameter 'table' is not null or undefined
+            if (table === null || table === undefined) {
+                throw new RequiredError('table','Required parameter table was null or undefined when calling loadCredentials.');
+            }
+            const localVarPath = `/v1/{prefix}/namespaces/{namespace}/tables/{table}/credentials`
+                .replace(`{${"prefix"}}`, encodeURIComponent(String(prefix)))
+                .replace(`{${"namespace"}}`, encodeURIComponent(String(namespace)))
+                .replace(`{${"table"}}`, encodeURIComponent(String(table)));
             const localVarUrlObj = url.parse(localVarPath, true);
             const localVarRequestOptions = Object.assign({ method: 'GET' }, options);
             const localVarHeaderParameter = {} as any;
@@ -3671,11 +3857,23 @@ export const CatalogAPIApiFetchParamCreator = function (configuration?: Configur
         /**
          * Return all stored metadata properties for a given namespace
          * @summary Load the metadata properties for a namespace
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        loadNamespaceMetadata(options: any = {}): FetchArgs {
-            const localVarPath = `/v1/{prefix}/namespaces/{namespace}`;
+        loadNamespaceMetadata(prefix: any, namespace: any, options: any = {}): FetchArgs {
+            // verify required parameter 'prefix' is not null or undefined
+            if (prefix === null || prefix === undefined) {
+                throw new RequiredError('prefix','Required parameter prefix was null or undefined when calling loadNamespaceMetadata.');
+            }
+            // verify required parameter 'namespace' is not null or undefined
+            if (namespace === null || namespace === undefined) {
+                throw new RequiredError('namespace','Required parameter namespace was null or undefined when calling loadNamespaceMetadata.');
+            }
+            const localVarPath = `/v1/{prefix}/namespaces/{namespace}`
+                .replace(`{${"prefix"}}`, encodeURIComponent(String(prefix)))
+                .replace(`{${"namespace"}}`, encodeURIComponent(String(namespace)));
             const localVarUrlObj = url.parse(localVarPath, true);
             const localVarRequestOptions = Object.assign({ method: 'GET' }, options);
             const localVarHeaderParameter = {} as any;
@@ -3705,14 +3903,32 @@ export const CatalogAPIApiFetchParamCreator = function (configuration?: Configur
         /**
          * Load a table from the catalog.  The response contains both configuration and table metadata. The configuration, if non-empty is used as additional configuration for the table that overrides catalog configuration. For example, this configuration may change the FileIO implementation to be used for the table.  The response also contains the table's full metadata, matching the table metadata JSON file.  The catalog configuration may contain credentials that should be used for subsequent requests for the table. The configuration key \"token\" is used to pass an access token to be used as a bearer token for table requests. Otherwise, a token may be passed using a RFC 8693 token type as a configuration key. For example, \"urn:ietf:params:oauth:token-type:jwt=<JWT-token>\".
          * @summary Load a table from the catalog
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+         * @param {any} table A table name
          * @param {any} [xIcebergAccessDelegation] Optional signal to the server that the client supports delegated access via a comma-separated list of access mechanisms.  The server may choose to supply access via any or none of the requested mechanisms.  Specific properties and handling for &#x60;vended-credentials&#x60; is documented in the &#x60;LoadTableResult&#x60; schema section of this spec document.  The protocol and specification for &#x60;remote-signing&#x60; is documented in  the &#x60;s3-signer-open-api.yaml&#x60; OpenApi spec in the &#x60;aws&#x60; module. 
          * @param {any} [ifNoneMatch] An optional header that allows the server to return 304 (Not Modified) if the metadata is current. The content is the value of the ETag received in a CreateTableResponse or LoadTableResponse.
          * @param {any} [snapshots] The snapshots to return in the body of the metadata. Setting the value to &#x60;all&#x60; would return the full set of snapshots currently valid for the table. Setting the value to &#x60;refs&#x60; would load all snapshots referenced by branches or tags. Default if no param is provided is &#x60;all&#x60;.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        loadTable(xIcebergAccessDelegation?: any, ifNoneMatch?: any, snapshots?: any, options: any = {}): FetchArgs {
-            const localVarPath = `/v1/{prefix}/namespaces/{namespace}/tables/{table}`;
+        loadTable(prefix: any, namespace: any, table: any, xIcebergAccessDelegation?: any, ifNoneMatch?: any, snapshots?: any, options: any = {}): FetchArgs {
+            // verify required parameter 'prefix' is not null or undefined
+            if (prefix === null || prefix === undefined) {
+                throw new RequiredError('prefix','Required parameter prefix was null or undefined when calling loadTable.');
+            }
+            // verify required parameter 'namespace' is not null or undefined
+            if (namespace === null || namespace === undefined) {
+                throw new RequiredError('namespace','Required parameter namespace was null or undefined when calling loadTable.');
+            }
+            // verify required parameter 'table' is not null or undefined
+            if (table === null || table === undefined) {
+                throw new RequiredError('table','Required parameter table was null or undefined when calling loadTable.');
+            }
+            const localVarPath = `/v1/{prefix}/namespaces/{namespace}/tables/{table}`
+                .replace(`{${"prefix"}}`, encodeURIComponent(String(prefix)))
+                .replace(`{${"namespace"}}`, encodeURIComponent(String(namespace)))
+                .replace(`{${"table"}}`, encodeURIComponent(String(table)));
             const localVarUrlObj = url.parse(localVarPath, true);
             const localVarRequestOptions = Object.assign({ method: 'GET' }, options);
             const localVarHeaderParameter = {} as any;
@@ -3754,11 +3970,29 @@ export const CatalogAPIApiFetchParamCreator = function (configuration?: Configur
         /**
          * Load a view from the catalog.  The response contains both configuration and view metadata. The configuration, if non-empty is used as additional configuration for the view that overrides catalog configuration.  The response also contains the view's full metadata, matching the view metadata JSON file.  The catalog configuration may contain credentials that should be used for subsequent requests for the view. The configuration key \"token\" is used to pass an access token to be used as a bearer token for view requests. Otherwise, a token may be passed using a RFC 8693 token type as a configuration key. For example, \"urn:ietf:params:oauth:token-type:jwt=<JWT-token>\".
          * @summary Load a view from the catalog
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+         * @param {any} view A view name
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        loadView(options: any = {}): FetchArgs {
-            const localVarPath = `/v1/{prefix}/namespaces/{namespace}/views/{view}`;
+        loadView(prefix: any, namespace: any, view: any, options: any = {}): FetchArgs {
+            // verify required parameter 'prefix' is not null or undefined
+            if (prefix === null || prefix === undefined) {
+                throw new RequiredError('prefix','Required parameter prefix was null or undefined when calling loadView.');
+            }
+            // verify required parameter 'namespace' is not null or undefined
+            if (namespace === null || namespace === undefined) {
+                throw new RequiredError('namespace','Required parameter namespace was null or undefined when calling loadView.');
+            }
+            // verify required parameter 'view' is not null or undefined
+            if (view === null || view === undefined) {
+                throw new RequiredError('view','Required parameter view was null or undefined when calling loadView.');
+            }
+            const localVarPath = `/v1/{prefix}/namespaces/{namespace}/views/{view}`
+                .replace(`{${"prefix"}}`, encodeURIComponent(String(prefix)))
+                .replace(`{${"namespace"}}`, encodeURIComponent(String(namespace)))
+                .replace(`{${"view"}}`, encodeURIComponent(String(view)));
             const localVarUrlObj = url.parse(localVarPath, true);
             const localVarRequestOptions = Object.assign({ method: 'GET' }, options);
             const localVarHeaderParameter = {} as any;
@@ -3788,11 +4022,23 @@ export const CatalogAPIApiFetchParamCreator = function (configuration?: Configur
         /**
          * Check if a namespace exists. The response does not contain a body.
          * @summary Check if a namespace exists
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        namespaceExists(options: any = {}): FetchArgs {
-            const localVarPath = `/v1/{prefix}/namespaces/{namespace}`;
+        namespaceExists(prefix: any, namespace: any, options: any = {}): FetchArgs {
+            // verify required parameter 'prefix' is not null or undefined
+            if (prefix === null || prefix === undefined) {
+                throw new RequiredError('prefix','Required parameter prefix was null or undefined when calling namespaceExists.');
+            }
+            // verify required parameter 'namespace' is not null or undefined
+            if (namespace === null || namespace === undefined) {
+                throw new RequiredError('namespace','Required parameter namespace was null or undefined when calling namespaceExists.');
+            }
+            const localVarPath = `/v1/{prefix}/namespaces/{namespace}`
+                .replace(`{${"prefix"}}`, encodeURIComponent(String(prefix)))
+                .replace(`{${"namespace"}}`, encodeURIComponent(String(namespace)));
             const localVarUrlObj = url.parse(localVarPath, true);
             const localVarRequestOptions = Object.assign({ method: 'HEAD' }, options);
             const localVarHeaderParameter = {} as any;
@@ -3822,12 +4068,30 @@ export const CatalogAPIApiFetchParamCreator = function (configuration?: Configur
         /**
          * Submits a scan for server-side planning.  Point-in-time scans are planned by passing snapshot-id to identify the table snapshot to scan. Incremental scans are planned by passing both start-snapshot-id and end-snapshot-id. Requests that include both point in time config properties and incremental config properties are invalid. If the request does not include either incremental or point-in-time config properties, scan planning should produce a point-in-time scan of the latest snapshot in the table's main branch.  Responses must include a valid status listed below. A \"cancelled\" status is considered invalid for this endpoint.   - When \"completed\" the planning operation has produced plan tasks and   file scan tasks that must be returned in the response (not fetched   later by calling fetchPlanningResult)  - When \"submitted\" the response must include a plan-id used to poll   fetchPlanningResult to fetch the planning result when it is ready  - When \"failed\" the response must be a valid error response The response for a \"completed\" planning operation includes two types of tasks (file scan tasks and plan tasks) and both may be included in the response. Tasks must not be included for any other response status.  Responses that include a plan-id indicate that the service is holding state or performing work for the client.  - Clients should use the plan-id to fetch results from   fetchPlanningResult when the response status is \"submitted\"  - Clients should inform the service if planning results are no longer   needed by calling cancelPlanning. Cancellation is not necessary after   fetchScanTasks has been used to fetch scan tasks for each plan task. 
          * @summary Submit a scan for planning
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+         * @param {any} table A table name
          * @param {PlanTableScanRequest} [body] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        planTableScan(body?: PlanTableScanRequest, options: any = {}): FetchArgs {
-            const localVarPath = `/v1/{prefix}/namespaces/{namespace}/tables/{table}/plan`;
+        planTableScan(prefix: any, namespace: any, table: any, body?: PlanTableScanRequest, options: any = {}): FetchArgs {
+            // verify required parameter 'prefix' is not null or undefined
+            if (prefix === null || prefix === undefined) {
+                throw new RequiredError('prefix','Required parameter prefix was null or undefined when calling planTableScan.');
+            }
+            // verify required parameter 'namespace' is not null or undefined
+            if (namespace === null || namespace === undefined) {
+                throw new RequiredError('namespace','Required parameter namespace was null or undefined when calling planTableScan.');
+            }
+            // verify required parameter 'table' is not null or undefined
+            if (table === null || table === undefined) {
+                throw new RequiredError('table','Required parameter table was null or undefined when calling planTableScan.');
+            }
+            const localVarPath = `/v1/{prefix}/namespaces/{namespace}/tables/{table}/plan`
+                .replace(`{${"prefix"}}`, encodeURIComponent(String(prefix)))
+                .replace(`{${"namespace"}}`, encodeURIComponent(String(namespace)))
+                .replace(`{${"table"}}`, encodeURIComponent(String(table)));
             const localVarUrlObj = url.parse(localVarPath, true);
             const localVarRequestOptions = Object.assign({ method: 'POST' }, options);
             const localVarHeaderParameter = {} as any;
@@ -3862,15 +4126,27 @@ export const CatalogAPIApiFetchParamCreator = function (configuration?: Configur
          * Register a table using given metadata file location.
          * @summary Register a table in the given namespace using given metadata file location
          * @param {RegisterTableRequest} body 
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        registerTable(body: RegisterTableRequest, options: any = {}): FetchArgs {
+        registerTable(body: RegisterTableRequest, prefix: any, namespace: any, options: any = {}): FetchArgs {
             // verify required parameter 'body' is not null or undefined
             if (body === null || body === undefined) {
                 throw new RequiredError('body','Required parameter body was null or undefined when calling registerTable.');
             }
-            const localVarPath = `/v1/{prefix}/namespaces/{namespace}/register`;
+            // verify required parameter 'prefix' is not null or undefined
+            if (prefix === null || prefix === undefined) {
+                throw new RequiredError('prefix','Required parameter prefix was null or undefined when calling registerTable.');
+            }
+            // verify required parameter 'namespace' is not null or undefined
+            if (namespace === null || namespace === undefined) {
+                throw new RequiredError('namespace','Required parameter namespace was null or undefined when calling registerTable.');
+            }
+            const localVarPath = `/v1/{prefix}/namespaces/{namespace}/register`
+                .replace(`{${"prefix"}}`, encodeURIComponent(String(prefix)))
+                .replace(`{${"namespace"}}`, encodeURIComponent(String(namespace)));
             const localVarUrlObj = url.parse(localVarPath, true);
             const localVarRequestOptions = Object.assign({ method: 'POST' }, options);
             const localVarHeaderParameter = {} as any;
@@ -3905,15 +4181,21 @@ export const CatalogAPIApiFetchParamCreator = function (configuration?: Configur
          * Rename a table from one identifier to another. It's valid to move a table across namespaces, but the server implementation is not required to support it.
          * @summary Rename a table from its current name to a new name
          * @param {RenameTableRequest} body Current table identifier to rename and new table identifier to rename to
+         * @param {any} prefix An optional prefix in the path
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        renameTable(body: RenameTableRequest, options: any = {}): FetchArgs {
+        renameTable(body: RenameTableRequest, prefix: any, options: any = {}): FetchArgs {
             // verify required parameter 'body' is not null or undefined
             if (body === null || body === undefined) {
                 throw new RequiredError('body','Required parameter body was null or undefined when calling renameTable.');
             }
-            const localVarPath = `/v1/{prefix}/tables/rename`;
+            // verify required parameter 'prefix' is not null or undefined
+            if (prefix === null || prefix === undefined) {
+                throw new RequiredError('prefix','Required parameter prefix was null or undefined when calling renameTable.');
+            }
+            const localVarPath = `/v1/{prefix}/tables/rename`
+                .replace(`{${"prefix"}}`, encodeURIComponent(String(prefix)));
             const localVarUrlObj = url.parse(localVarPath, true);
             const localVarRequestOptions = Object.assign({ method: 'POST' }, options);
             const localVarHeaderParameter = {} as any;
@@ -3948,15 +4230,21 @@ export const CatalogAPIApiFetchParamCreator = function (configuration?: Configur
          * Rename a view from one identifier to another. It's valid to move a view across namespaces, but the server implementation is not required to support it.
          * @summary Rename a view from its current name to a new name
          * @param {RenameTableRequest} body Current view identifier to rename and new view identifier to rename to
+         * @param {any} prefix An optional prefix in the path
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        renameView(body: RenameTableRequest, options: any = {}): FetchArgs {
+        renameView(body: RenameTableRequest, prefix: any, options: any = {}): FetchArgs {
             // verify required parameter 'body' is not null or undefined
             if (body === null || body === undefined) {
                 throw new RequiredError('body','Required parameter body was null or undefined when calling renameView.');
             }
-            const localVarPath = `/v1/{prefix}/views/rename`;
+            // verify required parameter 'prefix' is not null or undefined
+            if (prefix === null || prefix === undefined) {
+                throw new RequiredError('prefix','Required parameter prefix was null or undefined when calling renameView.');
+            }
+            const localVarPath = `/v1/{prefix}/views/rename`
+                .replace(`{${"prefix"}}`, encodeURIComponent(String(prefix)));
             const localVarUrlObj = url.parse(localVarPath, true);
             const localVarRequestOptions = Object.assign({ method: 'POST' }, options);
             const localVarHeaderParameter = {} as any;
@@ -3991,15 +4279,33 @@ export const CatalogAPIApiFetchParamCreator = function (configuration?: Configur
          * Commit updates to a view.
          * @summary Replace a view
          * @param {CommitViewRequest} body 
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+         * @param {any} view A view name
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        replaceView(body: CommitViewRequest, options: any = {}): FetchArgs {
+        replaceView(body: CommitViewRequest, prefix: any, namespace: any, view: any, options: any = {}): FetchArgs {
             // verify required parameter 'body' is not null or undefined
             if (body === null || body === undefined) {
                 throw new RequiredError('body','Required parameter body was null or undefined when calling replaceView.');
             }
-            const localVarPath = `/v1/{prefix}/namespaces/{namespace}/views/{view}`;
+            // verify required parameter 'prefix' is not null or undefined
+            if (prefix === null || prefix === undefined) {
+                throw new RequiredError('prefix','Required parameter prefix was null or undefined when calling replaceView.');
+            }
+            // verify required parameter 'namespace' is not null or undefined
+            if (namespace === null || namespace === undefined) {
+                throw new RequiredError('namespace','Required parameter namespace was null or undefined when calling replaceView.');
+            }
+            // verify required parameter 'view' is not null or undefined
+            if (view === null || view === undefined) {
+                throw new RequiredError('view','Required parameter view was null or undefined when calling replaceView.');
+            }
+            const localVarPath = `/v1/{prefix}/namespaces/{namespace}/views/{view}`
+                .replace(`{${"prefix"}}`, encodeURIComponent(String(prefix)))
+                .replace(`{${"namespace"}}`, encodeURIComponent(String(namespace)))
+                .replace(`{${"view"}}`, encodeURIComponent(String(view)));
             const localVarUrlObj = url.parse(localVarPath, true);
             const localVarRequestOptions = Object.assign({ method: 'POST' }, options);
             const localVarHeaderParameter = {} as any;
@@ -4034,15 +4340,33 @@ export const CatalogAPIApiFetchParamCreator = function (configuration?: Configur
          * 
          * @summary Send a metrics report to this endpoint to be processed by the backend
          * @param {ReportMetricsRequest} body The request containing the metrics report to be sent
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+         * @param {any} table A table name
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        reportMetrics(body: ReportMetricsRequest, options: any = {}): FetchArgs {
+        reportMetrics(body: ReportMetricsRequest, prefix: any, namespace: any, table: any, options: any = {}): FetchArgs {
             // verify required parameter 'body' is not null or undefined
             if (body === null || body === undefined) {
                 throw new RequiredError('body','Required parameter body was null or undefined when calling reportMetrics.');
             }
-            const localVarPath = `/v1/{prefix}/namespaces/{namespace}/tables/{table}/metrics`;
+            // verify required parameter 'prefix' is not null or undefined
+            if (prefix === null || prefix === undefined) {
+                throw new RequiredError('prefix','Required parameter prefix was null or undefined when calling reportMetrics.');
+            }
+            // verify required parameter 'namespace' is not null or undefined
+            if (namespace === null || namespace === undefined) {
+                throw new RequiredError('namespace','Required parameter namespace was null or undefined when calling reportMetrics.');
+            }
+            // verify required parameter 'table' is not null or undefined
+            if (table === null || table === undefined) {
+                throw new RequiredError('table','Required parameter table was null or undefined when calling reportMetrics.');
+            }
+            const localVarPath = `/v1/{prefix}/namespaces/{namespace}/tables/{table}/metrics`
+                .replace(`{${"prefix"}}`, encodeURIComponent(String(prefix)))
+                .replace(`{${"namespace"}}`, encodeURIComponent(String(namespace)))
+                .replace(`{${"table"}}`, encodeURIComponent(String(table)));
             const localVarUrlObj = url.parse(localVarPath, true);
             const localVarRequestOptions = Object.assign({ method: 'POST' }, options);
             const localVarHeaderParameter = {} as any;
@@ -4076,11 +4400,29 @@ export const CatalogAPIApiFetchParamCreator = function (configuration?: Configur
         /**
          * Check if a table exists within a given namespace. The response does not contain a body.
          * @summary Check if a table exists
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+         * @param {any} table A table name
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        tableExists(options: any = {}): FetchArgs {
-            const localVarPath = `/v1/{prefix}/namespaces/{namespace}/tables/{table}`;
+        tableExists(prefix: any, namespace: any, table: any, options: any = {}): FetchArgs {
+            // verify required parameter 'prefix' is not null or undefined
+            if (prefix === null || prefix === undefined) {
+                throw new RequiredError('prefix','Required parameter prefix was null or undefined when calling tableExists.');
+            }
+            // verify required parameter 'namespace' is not null or undefined
+            if (namespace === null || namespace === undefined) {
+                throw new RequiredError('namespace','Required parameter namespace was null or undefined when calling tableExists.');
+            }
+            // verify required parameter 'table' is not null or undefined
+            if (table === null || table === undefined) {
+                throw new RequiredError('table','Required parameter table was null or undefined when calling tableExists.');
+            }
+            const localVarPath = `/v1/{prefix}/namespaces/{namespace}/tables/{table}`
+                .replace(`{${"prefix"}}`, encodeURIComponent(String(prefix)))
+                .replace(`{${"namespace"}}`, encodeURIComponent(String(namespace)))
+                .replace(`{${"table"}}`, encodeURIComponent(String(table)));
             const localVarUrlObj = url.parse(localVarPath, true);
             const localVarRequestOptions = Object.assign({ method: 'HEAD' }, options);
             const localVarHeaderParameter = {} as any;
@@ -4111,15 +4453,27 @@ export const CatalogAPIApiFetchParamCreator = function (configuration?: Configur
          * Set and/or remove properties on a namespace. The request body specifies a list of properties to remove and a map of key value pairs to update. Properties that are not in the request are not modified or removed by this call. Server implementations are not required to support namespace properties.
          * @summary Set or remove properties on a namespace
          * @param {UpdateNamespacePropertiesRequest} body 
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        updateProperties(body: UpdateNamespacePropertiesRequest, options: any = {}): FetchArgs {
+        updateProperties(body: UpdateNamespacePropertiesRequest, prefix: any, namespace: any, options: any = {}): FetchArgs {
             // verify required parameter 'body' is not null or undefined
             if (body === null || body === undefined) {
                 throw new RequiredError('body','Required parameter body was null or undefined when calling updateProperties.');
             }
-            const localVarPath = `/v1/{prefix}/namespaces/{namespace}/properties`;
+            // verify required parameter 'prefix' is not null or undefined
+            if (prefix === null || prefix === undefined) {
+                throw new RequiredError('prefix','Required parameter prefix was null or undefined when calling updateProperties.');
+            }
+            // verify required parameter 'namespace' is not null or undefined
+            if (namespace === null || namespace === undefined) {
+                throw new RequiredError('namespace','Required parameter namespace was null or undefined when calling updateProperties.');
+            }
+            const localVarPath = `/v1/{prefix}/namespaces/{namespace}/properties`
+                .replace(`{${"prefix"}}`, encodeURIComponent(String(prefix)))
+                .replace(`{${"namespace"}}`, encodeURIComponent(String(namespace)));
             const localVarUrlObj = url.parse(localVarPath, true);
             const localVarRequestOptions = Object.assign({ method: 'POST' }, options);
             const localVarHeaderParameter = {} as any;
@@ -4154,15 +4508,33 @@ export const CatalogAPIApiFetchParamCreator = function (configuration?: Configur
          * Commit updates to a table.  Commits have two parts, requirements and updates. Requirements are assertions that will be validated before attempting to make and commit changes. For example, `assert-ref-snapshot-id` will check that a named ref's snapshot ID has a certain value. Server implementations are required to fail with a 400 status code if any unknown updates or requirements are received.  Updates are changes to make to table metadata. For example, after asserting that the current main ref is at the expected snapshot, a commit may add a new child snapshot and set the ref to the new snapshot id.  Create table transactions that are started by createTable with `stage-create` set to true are committed using this route. Transactions should include all changes to the table, including table initialization, like AddSchemaUpdate and SetCurrentSchemaUpdate. The `assert-create` requirement is used to ensure that the table was not created concurrently.
          * @summary Commit updates to a table
          * @param {CommitTableRequest} body 
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+         * @param {any} table A table name
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        updateTable(body: CommitTableRequest, options: any = {}): FetchArgs {
+        updateTable(body: CommitTableRequest, prefix: any, namespace: any, table: any, options: any = {}): FetchArgs {
             // verify required parameter 'body' is not null or undefined
             if (body === null || body === undefined) {
                 throw new RequiredError('body','Required parameter body was null or undefined when calling updateTable.');
             }
-            const localVarPath = `/v1/{prefix}/namespaces/{namespace}/tables/{table}`;
+            // verify required parameter 'prefix' is not null or undefined
+            if (prefix === null || prefix === undefined) {
+                throw new RequiredError('prefix','Required parameter prefix was null or undefined when calling updateTable.');
+            }
+            // verify required parameter 'namespace' is not null or undefined
+            if (namespace === null || namespace === undefined) {
+                throw new RequiredError('namespace','Required parameter namespace was null or undefined when calling updateTable.');
+            }
+            // verify required parameter 'table' is not null or undefined
+            if (table === null || table === undefined) {
+                throw new RequiredError('table','Required parameter table was null or undefined when calling updateTable.');
+            }
+            const localVarPath = `/v1/{prefix}/namespaces/{namespace}/tables/{table}`
+                .replace(`{${"prefix"}}`, encodeURIComponent(String(prefix)))
+                .replace(`{${"namespace"}}`, encodeURIComponent(String(namespace)))
+                .replace(`{${"table"}}`, encodeURIComponent(String(table)));
             const localVarUrlObj = url.parse(localVarPath, true);
             const localVarRequestOptions = Object.assign({ method: 'POST' }, options);
             const localVarHeaderParameter = {} as any;
@@ -4196,11 +4568,29 @@ export const CatalogAPIApiFetchParamCreator = function (configuration?: Configur
         /**
          * Check if a view exists within a given namespace. This request does not return a response body.
          * @summary Check if a view exists
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+         * @param {any} view A view name
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        viewExists(options: any = {}): FetchArgs {
-            const localVarPath = `/v1/{prefix}/namespaces/{namespace}/views/{view}`;
+        viewExists(prefix: any, namespace: any, view: any, options: any = {}): FetchArgs {
+            // verify required parameter 'prefix' is not null or undefined
+            if (prefix === null || prefix === undefined) {
+                throw new RequiredError('prefix','Required parameter prefix was null or undefined when calling viewExists.');
+            }
+            // verify required parameter 'namespace' is not null or undefined
+            if (namespace === null || namespace === undefined) {
+                throw new RequiredError('namespace','Required parameter namespace was null or undefined when calling viewExists.');
+            }
+            // verify required parameter 'view' is not null or undefined
+            if (view === null || view === undefined) {
+                throw new RequiredError('view','Required parameter view was null or undefined when calling viewExists.');
+            }
+            const localVarPath = `/v1/{prefix}/namespaces/{namespace}/views/{view}`
+                .replace(`{${"prefix"}}`, encodeURIComponent(String(prefix)))
+                .replace(`{${"namespace"}}`, encodeURIComponent(String(namespace)))
+                .replace(`{${"view"}}`, encodeURIComponent(String(view)));
             const localVarUrlObj = url.parse(localVarPath, true);
             const localVarRequestOptions = Object.assign({ method: 'HEAD' }, options);
             const localVarHeaderParameter = {} as any;
@@ -4239,11 +4629,15 @@ export const CatalogAPIApiFp = function(configuration?: Configuration) {
         /**
          * Cancels scan planning for a plan-id.  This notifies the service that it can release resources held for the scan. Clients should cancel scans that are no longer needed, either while the plan-id returns a \"submitted\" status or while there are remaining plan tasks that have not been fetched.  Cancellation is not necessary when - Scan tasks for each plan task have been fetched using fetchScanTasks - A plan-id has produced a \"failed\" or \"cancelled\" status from   planTableScan or fetchPlanningResult 
          * @summary Cancels scan planning for a plan-id
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+         * @param {any} table A table name
+         * @param {any} planId ID used to track a planning request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cancelPlanning(options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
-            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).cancelPlanning(options);
+        cancelPlanning(prefix: any, namespace: any, table: any, planId: any, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
+            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).cancelPlanning(prefix, namespace, table, planId, options);
             return (fetch: FetchAPI = isomorphicFetch, basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
@@ -4258,11 +4652,12 @@ export const CatalogAPIApiFp = function(configuration?: Configuration) {
          * 
          * @summary Commit updates to multiple tables in an atomic operation
          * @param {CommitTransactionRequest} body Commit updates to multiple tables in an atomic operation  A commit for a single table consists of a table identifier with requirements and updates. Requirements are assertions that will be validated before attempting to make and commit changes. For example, &#x60;assert-ref-snapshot-id&#x60; will check that a named ref&#x27;s snapshot ID has a certain value. Server implementations are required to fail with a 400 status code if any unknown updates or requirements are received. Updates are changes to make to table metadata. For example, after asserting that the current main ref is at the expected snapshot, a commit may add a new child snapshot and set the ref to the new snapshot id.
+         * @param {any} prefix An optional prefix in the path
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        commitTransaction(body: CommitTransactionRequest, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
-            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).commitTransaction(body, options);
+        commitTransaction(body: CommitTransactionRequest, prefix: any, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
+            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).commitTransaction(body, prefix, options);
             return (fetch: FetchAPI = isomorphicFetch, basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
@@ -4277,11 +4672,12 @@ export const CatalogAPIApiFp = function(configuration?: Configuration) {
          * Create a namespace, with an optional set of properties. The server might also add properties, such as `last_modified_time` etc.
          * @summary Create a namespace
          * @param {CreateNamespaceRequest} body 
+         * @param {any} prefix An optional prefix in the path
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        createNamespace(body: CreateNamespaceRequest, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
-            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).createNamespace(body, options);
+        createNamespace(body: CreateNamespaceRequest, prefix: any, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
+            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).createNamespace(body, prefix, options);
             return (fetch: FetchAPI = isomorphicFetch, basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
@@ -4296,12 +4692,14 @@ export const CatalogAPIApiFp = function(configuration?: Configuration) {
          * Create a table or start a create transaction, like atomic CTAS.  If `stage-create` is false, the table is created immediately.  If `stage-create` is true, the table is not created, but table metadata is initialized and returned. The service should prepare as needed for a commit to the table commit endpoint to complete the create transaction. The client uses the returned metadata to begin a transaction. To commit the transaction, the client sends all create and subsequent changes to the table commit route. Changes from the table create operation include changes like AddSchemaUpdate and SetCurrentSchemaUpdate that set the initial table state.
          * @summary Create a table in the given namespace
          * @param {CreateTableRequest} body 
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
          * @param {any} [xIcebergAccessDelegation] Optional signal to the server that the client supports delegated access via a comma-separated list of access mechanisms.  The server may choose to supply access via any or none of the requested mechanisms.  Specific properties and handling for &#x60;vended-credentials&#x60; is documented in the &#x60;LoadTableResult&#x60; schema section of this spec document.  The protocol and specification for &#x60;remote-signing&#x60; is documented in  the &#x60;s3-signer-open-api.yaml&#x60; OpenApi spec in the &#x60;aws&#x60; module. 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        createTable(body: CreateTableRequest, xIcebergAccessDelegation?: any, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
-            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).createTable(body, xIcebergAccessDelegation, options);
+        createTable(body: CreateTableRequest, prefix: any, namespace: any, xIcebergAccessDelegation?: any, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
+            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).createTable(body, prefix, namespace, xIcebergAccessDelegation, options);
             return (fetch: FetchAPI = isomorphicFetch, basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
@@ -4316,11 +4714,13 @@ export const CatalogAPIApiFp = function(configuration?: Configuration) {
          * Create a view in the given namespace.
          * @summary Create a view in the given namespace
          * @param {CreateViewRequest} body 
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        createView(body: CreateViewRequest, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
-            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).createView(body, options);
+        createView(body: CreateViewRequest, prefix: any, namespace: any, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
+            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).createView(body, prefix, namespace, options);
             return (fetch: FetchAPI = isomorphicFetch, basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
@@ -4334,11 +4734,13 @@ export const CatalogAPIApiFp = function(configuration?: Configuration) {
         /**
          * 
          * @summary Drop a namespace from the catalog. Namespace must be empty.
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        dropNamespace(options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
-            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).dropNamespace(options);
+        dropNamespace(prefix: any, namespace: any, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
+            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).dropNamespace(prefix, namespace, options);
             return (fetch: FetchAPI = isomorphicFetch, basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
@@ -4374,11 +4776,14 @@ export const CatalogAPIApiFp = function(configuration?: Configuration) {
         /**
          * Remove a view from the catalog
          * @summary Drop a view from the catalog
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+         * @param {any} view A view name
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        dropView(options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
-            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).dropView(options);
+        dropView(prefix: any, namespace: any, view: any, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
+            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).dropView(prefix, namespace, view, options);
             return (fetch: FetchAPI = isomorphicFetch, basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
@@ -4392,11 +4797,15 @@ export const CatalogAPIApiFp = function(configuration?: Configuration) {
         /**
          * Fetches the result of scan planning for a plan-id.  Responses must include a valid status - When \"completed\" the planning operation has produced plan-tasks and   file-scan-tasks that must be returned in the response  - When \"submitted\" the planning operation has not completed; the client   should wait to call this endpoint again to fetch a completed response  - When \"failed\" the response must be a valid error response - When \"cancelled\" the plan-id is invalid and should be discarded  The response for a \"completed\" planning operation includes two types of tasks (file scan tasks and plan tasks) and both may be included in the response. Tasks must not be included for any other response status. 
          * @summary Fetches the result of scan planning for a plan-id
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+         * @param {any} table A table name
+         * @param {any} planId ID used to track a planning request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        fetchPlanningResult(options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
-            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).fetchPlanningResult(options);
+        fetchPlanningResult(prefix: any, namespace: any, table: any, planId: any, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
+            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).fetchPlanningResult(prefix, namespace, table, planId, options);
             return (fetch: FetchAPI = isomorphicFetch, basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
@@ -4410,12 +4819,15 @@ export const CatalogAPIApiFp = function(configuration?: Configuration) {
         /**
          * Fetches result tasks for a plan task.
          * @summary Fetches result tasks for a plan task
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+         * @param {any} table A table name
          * @param {FetchScanTasksRequest} [body] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        fetchScanTasks(body?: FetchScanTasksRequest, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
-            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).fetchScanTasks(body, options);
+        fetchScanTasks(prefix: any, namespace: any, table: any, body?: FetchScanTasksRequest, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
+            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).fetchScanTasks(prefix, namespace, table, body, options);
             return (fetch: FetchAPI = isomorphicFetch, basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
@@ -4429,14 +4841,15 @@ export const CatalogAPIApiFp = function(configuration?: Configuration) {
         /**
          * List all namespaces at a certain level, optionally starting from a given parent namespace. If table accounting.tax.paid.info exists, using 'SELECT NAMESPACE IN accounting' would translate into `GET /namespaces?parent=accounting` and must return a namespace, [\"accounting\", \"tax\"] only. Using 'SELECT NAMESPACE IN accounting.tax' would translate into `GET /namespaces?parent=accounting%1Ftax` and must return a namespace, [\"accounting\", \"tax\", \"paid\"]. If `parent` is not provided, all top-level namespaces should be listed.
          * @summary List namespaces, optionally providing a parent namespace to list underneath
+         * @param {any} prefix An optional prefix in the path
          * @param {PageToken} [pageToken] 
          * @param {any} [pageSize] For servers that support pagination, this signals an upper bound of the number of results that a client will receive. For servers that do not support pagination, clients may receive results larger than the indicated &#x60;pageSize&#x60;.
          * @param {any} [parent] An optional namespace, underneath which to list namespaces. If not provided or empty, all top-level namespaces should be listed. If parent is a multipart namespace, the parts must be separated by the unit separator (&#x60;0x1F&#x60;) byte.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        listNamespaces(pageToken?: PageToken, pageSize?: any, parent?: any, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
-            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).listNamespaces(pageToken, pageSize, parent, options);
+        listNamespaces(prefix: any, pageToken?: PageToken, pageSize?: any, parent?: any, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
+            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).listNamespaces(prefix, pageToken, pageSize, parent, options);
             return (fetch: FetchAPI = isomorphicFetch, basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
@@ -4450,13 +4863,15 @@ export const CatalogAPIApiFp = function(configuration?: Configuration) {
         /**
          * Return all table identifiers under this namespace
          * @summary List all table identifiers underneath a given namespace
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
          * @param {PageToken} [pageToken] 
          * @param {any} [pageSize] For servers that support pagination, this signals an upper bound of the number of results that a client will receive. For servers that do not support pagination, clients may receive results larger than the indicated &#x60;pageSize&#x60;.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        listTables(pageToken?: PageToken, pageSize?: any, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
-            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).listTables(pageToken, pageSize, options);
+        listTables(prefix: any, namespace: any, pageToken?: PageToken, pageSize?: any, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
+            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).listTables(prefix, namespace, pageToken, pageSize, options);
             return (fetch: FetchAPI = isomorphicFetch, basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
@@ -4470,13 +4885,15 @@ export const CatalogAPIApiFp = function(configuration?: Configuration) {
         /**
          * Return all view identifiers under this namespace
          * @summary List all view identifiers underneath a given namespace
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
          * @param {PageToken} [pageToken] 
          * @param {any} [pageSize] For servers that support pagination, this signals an upper bound of the number of results that a client will receive. For servers that do not support pagination, clients may receive results larger than the indicated &#x60;pageSize&#x60;.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        listViews(pageToken?: PageToken, pageSize?: any, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
-            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).listViews(pageToken, pageSize, options);
+        listViews(prefix: any, namespace: any, pageToken?: PageToken, pageSize?: any, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
+            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).listViews(prefix, namespace, pageToken, pageSize, options);
             return (fetch: FetchAPI = isomorphicFetch, basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
@@ -4490,11 +4907,14 @@ export const CatalogAPIApiFp = function(configuration?: Configuration) {
         /**
          * Load vended credentials for a table from the catalog.
          * @summary Load vended credentials for a table from the catalog
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+         * @param {any} table A table name
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        loadCredentials(options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
-            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).loadCredentials(options);
+        loadCredentials(prefix: any, namespace: any, table: any, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
+            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).loadCredentials(prefix, namespace, table, options);
             return (fetch: FetchAPI = isomorphicFetch, basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
@@ -4508,11 +4928,13 @@ export const CatalogAPIApiFp = function(configuration?: Configuration) {
         /**
          * Return all stored metadata properties for a given namespace
          * @summary Load the metadata properties for a namespace
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        loadNamespaceMetadata(options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
-            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).loadNamespaceMetadata(options);
+        loadNamespaceMetadata(prefix: any, namespace: any, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
+            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).loadNamespaceMetadata(prefix, namespace, options);
             return (fetch: FetchAPI = isomorphicFetch, basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
@@ -4526,14 +4948,17 @@ export const CatalogAPIApiFp = function(configuration?: Configuration) {
         /**
          * Load a table from the catalog.  The response contains both configuration and table metadata. The configuration, if non-empty is used as additional configuration for the table that overrides catalog configuration. For example, this configuration may change the FileIO implementation to be used for the table.  The response also contains the table's full metadata, matching the table metadata JSON file.  The catalog configuration may contain credentials that should be used for subsequent requests for the table. The configuration key \"token\" is used to pass an access token to be used as a bearer token for table requests. Otherwise, a token may be passed using a RFC 8693 token type as a configuration key. For example, \"urn:ietf:params:oauth:token-type:jwt=<JWT-token>\".
          * @summary Load a table from the catalog
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+         * @param {any} table A table name
          * @param {any} [xIcebergAccessDelegation] Optional signal to the server that the client supports delegated access via a comma-separated list of access mechanisms.  The server may choose to supply access via any or none of the requested mechanisms.  Specific properties and handling for &#x60;vended-credentials&#x60; is documented in the &#x60;LoadTableResult&#x60; schema section of this spec document.  The protocol and specification for &#x60;remote-signing&#x60; is documented in  the &#x60;s3-signer-open-api.yaml&#x60; OpenApi spec in the &#x60;aws&#x60; module. 
          * @param {any} [ifNoneMatch] An optional header that allows the server to return 304 (Not Modified) if the metadata is current. The content is the value of the ETag received in a CreateTableResponse or LoadTableResponse.
          * @param {any} [snapshots] The snapshots to return in the body of the metadata. Setting the value to &#x60;all&#x60; would return the full set of snapshots currently valid for the table. Setting the value to &#x60;refs&#x60; would load all snapshots referenced by branches or tags. Default if no param is provided is &#x60;all&#x60;.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        loadTable(xIcebergAccessDelegation?: any, ifNoneMatch?: any, snapshots?: any, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
-            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).loadTable(xIcebergAccessDelegation, ifNoneMatch, snapshots, options);
+        loadTable(prefix: any, namespace: any, table: any, xIcebergAccessDelegation?: any, ifNoneMatch?: any, snapshots?: any, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
+            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).loadTable(prefix, namespace, table, xIcebergAccessDelegation, ifNoneMatch, snapshots, options);
             return (fetch: FetchAPI = isomorphicFetch, basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
@@ -4547,11 +4972,14 @@ export const CatalogAPIApiFp = function(configuration?: Configuration) {
         /**
          * Load a view from the catalog.  The response contains both configuration and view metadata. The configuration, if non-empty is used as additional configuration for the view that overrides catalog configuration.  The response also contains the view's full metadata, matching the view metadata JSON file.  The catalog configuration may contain credentials that should be used for subsequent requests for the view. The configuration key \"token\" is used to pass an access token to be used as a bearer token for view requests. Otherwise, a token may be passed using a RFC 8693 token type as a configuration key. For example, \"urn:ietf:params:oauth:token-type:jwt=<JWT-token>\".
          * @summary Load a view from the catalog
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+         * @param {any} view A view name
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        loadView(options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
-            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).loadView(options);
+        loadView(prefix: any, namespace: any, view: any, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
+            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).loadView(prefix, namespace, view, options);
             return (fetch: FetchAPI = isomorphicFetch, basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
@@ -4565,11 +4993,13 @@ export const CatalogAPIApiFp = function(configuration?: Configuration) {
         /**
          * Check if a namespace exists. The response does not contain a body.
          * @summary Check if a namespace exists
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        namespaceExists(options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
-            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).namespaceExists(options);
+        namespaceExists(prefix: any, namespace: any, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
+            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).namespaceExists(prefix, namespace, options);
             return (fetch: FetchAPI = isomorphicFetch, basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
@@ -4583,12 +5013,15 @@ export const CatalogAPIApiFp = function(configuration?: Configuration) {
         /**
          * Submits a scan for server-side planning.  Point-in-time scans are planned by passing snapshot-id to identify the table snapshot to scan. Incremental scans are planned by passing both start-snapshot-id and end-snapshot-id. Requests that include both point in time config properties and incremental config properties are invalid. If the request does not include either incremental or point-in-time config properties, scan planning should produce a point-in-time scan of the latest snapshot in the table's main branch.  Responses must include a valid status listed below. A \"cancelled\" status is considered invalid for this endpoint.   - When \"completed\" the planning operation has produced plan tasks and   file scan tasks that must be returned in the response (not fetched   later by calling fetchPlanningResult)  - When \"submitted\" the response must include a plan-id used to poll   fetchPlanningResult to fetch the planning result when it is ready  - When \"failed\" the response must be a valid error response The response for a \"completed\" planning operation includes two types of tasks (file scan tasks and plan tasks) and both may be included in the response. Tasks must not be included for any other response status.  Responses that include a plan-id indicate that the service is holding state or performing work for the client.  - Clients should use the plan-id to fetch results from   fetchPlanningResult when the response status is \"submitted\"  - Clients should inform the service if planning results are no longer   needed by calling cancelPlanning. Cancellation is not necessary after   fetchScanTasks has been used to fetch scan tasks for each plan task. 
          * @summary Submit a scan for planning
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+         * @param {any} table A table name
          * @param {PlanTableScanRequest} [body] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        planTableScan(body?: PlanTableScanRequest, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
-            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).planTableScan(body, options);
+        planTableScan(prefix: any, namespace: any, table: any, body?: PlanTableScanRequest, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
+            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).planTableScan(prefix, namespace, table, body, options);
             return (fetch: FetchAPI = isomorphicFetch, basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
@@ -4603,11 +5036,13 @@ export const CatalogAPIApiFp = function(configuration?: Configuration) {
          * Register a table using given metadata file location.
          * @summary Register a table in the given namespace using given metadata file location
          * @param {RegisterTableRequest} body 
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        registerTable(body: RegisterTableRequest, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
-            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).registerTable(body, options);
+        registerTable(body: RegisterTableRequest, prefix: any, namespace: any, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
+            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).registerTable(body, prefix, namespace, options);
             return (fetch: FetchAPI = isomorphicFetch, basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
@@ -4622,11 +5057,12 @@ export const CatalogAPIApiFp = function(configuration?: Configuration) {
          * Rename a table from one identifier to another. It's valid to move a table across namespaces, but the server implementation is not required to support it.
          * @summary Rename a table from its current name to a new name
          * @param {RenameTableRequest} body Current table identifier to rename and new table identifier to rename to
+         * @param {any} prefix An optional prefix in the path
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        renameTable(body: RenameTableRequest, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
-            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).renameTable(body, options);
+        renameTable(body: RenameTableRequest, prefix: any, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
+            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).renameTable(body, prefix, options);
             return (fetch: FetchAPI = isomorphicFetch, basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
@@ -4641,11 +5077,12 @@ export const CatalogAPIApiFp = function(configuration?: Configuration) {
          * Rename a view from one identifier to another. It's valid to move a view across namespaces, but the server implementation is not required to support it.
          * @summary Rename a view from its current name to a new name
          * @param {RenameTableRequest} body Current view identifier to rename and new view identifier to rename to
+         * @param {any} prefix An optional prefix in the path
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        renameView(body: RenameTableRequest, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
-            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).renameView(body, options);
+        renameView(body: RenameTableRequest, prefix: any, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
+            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).renameView(body, prefix, options);
             return (fetch: FetchAPI = isomorphicFetch, basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
@@ -4660,11 +5097,14 @@ export const CatalogAPIApiFp = function(configuration?: Configuration) {
          * Commit updates to a view.
          * @summary Replace a view
          * @param {CommitViewRequest} body 
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+         * @param {any} view A view name
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        replaceView(body: CommitViewRequest, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
-            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).replaceView(body, options);
+        replaceView(body: CommitViewRequest, prefix: any, namespace: any, view: any, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
+            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).replaceView(body, prefix, namespace, view, options);
             return (fetch: FetchAPI = isomorphicFetch, basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
@@ -4679,11 +5119,14 @@ export const CatalogAPIApiFp = function(configuration?: Configuration) {
          * 
          * @summary Send a metrics report to this endpoint to be processed by the backend
          * @param {ReportMetricsRequest} body The request containing the metrics report to be sent
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+         * @param {any} table A table name
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        reportMetrics(body: ReportMetricsRequest, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
-            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).reportMetrics(body, options);
+        reportMetrics(body: ReportMetricsRequest, prefix: any, namespace: any, table: any, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
+            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).reportMetrics(body, prefix, namespace, table, options);
             return (fetch: FetchAPI = isomorphicFetch, basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
@@ -4697,11 +5140,14 @@ export const CatalogAPIApiFp = function(configuration?: Configuration) {
         /**
          * Check if a table exists within a given namespace. The response does not contain a body.
          * @summary Check if a table exists
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+         * @param {any} table A table name
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        tableExists(options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
-            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).tableExists(options);
+        tableExists(prefix: any, namespace: any, table: any, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
+            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).tableExists(prefix, namespace, table, options);
             return (fetch: FetchAPI = isomorphicFetch, basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
@@ -4716,11 +5162,13 @@ export const CatalogAPIApiFp = function(configuration?: Configuration) {
          * Set and/or remove properties on a namespace. The request body specifies a list of properties to remove and a map of key value pairs to update. Properties that are not in the request are not modified or removed by this call. Server implementations are not required to support namespace properties.
          * @summary Set or remove properties on a namespace
          * @param {UpdateNamespacePropertiesRequest} body 
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        updateProperties(body: UpdateNamespacePropertiesRequest, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
-            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).updateProperties(body, options);
+        updateProperties(body: UpdateNamespacePropertiesRequest, prefix: any, namespace: any, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
+            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).updateProperties(body, prefix, namespace, options);
             return (fetch: FetchAPI = isomorphicFetch, basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
@@ -4735,11 +5183,14 @@ export const CatalogAPIApiFp = function(configuration?: Configuration) {
          * Commit updates to a table.  Commits have two parts, requirements and updates. Requirements are assertions that will be validated before attempting to make and commit changes. For example, `assert-ref-snapshot-id` will check that a named ref's snapshot ID has a certain value. Server implementations are required to fail with a 400 status code if any unknown updates or requirements are received.  Updates are changes to make to table metadata. For example, after asserting that the current main ref is at the expected snapshot, a commit may add a new child snapshot and set the ref to the new snapshot id.  Create table transactions that are started by createTable with `stage-create` set to true are committed using this route. Transactions should include all changes to the table, including table initialization, like AddSchemaUpdate and SetCurrentSchemaUpdate. The `assert-create` requirement is used to ensure that the table was not created concurrently.
          * @summary Commit updates to a table
          * @param {CommitTableRequest} body 
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+         * @param {any} table A table name
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        updateTable(body: CommitTableRequest, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
-            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).updateTable(body, options);
+        updateTable(body: CommitTableRequest, prefix: any, namespace: any, table: any, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
+            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).updateTable(body, prefix, namespace, table, options);
             return (fetch: FetchAPI = isomorphicFetch, basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
@@ -4753,11 +5204,14 @@ export const CatalogAPIApiFp = function(configuration?: Configuration) {
         /**
          * Check if a view exists within a given namespace. This request does not return a response body.
          * @summary Check if a view exists
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+         * @param {any} view A view name
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        viewExists(options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
-            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).viewExists(options);
+        viewExists(prefix: any, namespace: any, view: any, options?: any): (fetch?: FetchAPI, basePath?: string) => Promise<Response> {
+            const localVarFetchArgs = CatalogAPIApiFetchParamCreator(configuration).viewExists(prefix, namespace, view, options);
             return (fetch: FetchAPI = isomorphicFetch, basePath: string = BASE_PATH) => {
                 return fetch(basePath + localVarFetchArgs.url, localVarFetchArgs.options).then((response) => {
                     if (response.status >= 200 && response.status < 300) {
@@ -4780,61 +5234,73 @@ export const CatalogAPIApiFactory = function (configuration?: Configuration, fet
         /**
          * Cancels scan planning for a plan-id.  This notifies the service that it can release resources held for the scan. Clients should cancel scans that are no longer needed, either while the plan-id returns a \"submitted\" status or while there are remaining plan tasks that have not been fetched.  Cancellation is not necessary when - Scan tasks for each plan task have been fetched using fetchScanTasks - A plan-id has produced a \"failed\" or \"cancelled\" status from   planTableScan or fetchPlanningResult 
          * @summary Cancels scan planning for a plan-id
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+         * @param {any} table A table name
+         * @param {any} planId ID used to track a planning request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cancelPlanning(options?: any) {
-            return CatalogAPIApiFp(configuration).cancelPlanning(options)(fetch, basePath);
+        cancelPlanning(prefix: any, namespace: any, table: any, planId: any, options?: any) {
+            return CatalogAPIApiFp(configuration).cancelPlanning(prefix, namespace, table, planId, options)(fetch, basePath);
         },
         /**
          * 
          * @summary Commit updates to multiple tables in an atomic operation
          * @param {CommitTransactionRequest} body Commit updates to multiple tables in an atomic operation  A commit for a single table consists of a table identifier with requirements and updates. Requirements are assertions that will be validated before attempting to make and commit changes. For example, &#x60;assert-ref-snapshot-id&#x60; will check that a named ref&#x27;s snapshot ID has a certain value. Server implementations are required to fail with a 400 status code if any unknown updates or requirements are received. Updates are changes to make to table metadata. For example, after asserting that the current main ref is at the expected snapshot, a commit may add a new child snapshot and set the ref to the new snapshot id.
+         * @param {any} prefix An optional prefix in the path
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        commitTransaction(body: CommitTransactionRequest, options?: any) {
-            return CatalogAPIApiFp(configuration).commitTransaction(body, options)(fetch, basePath);
+        commitTransaction(body: CommitTransactionRequest, prefix: any, options?: any) {
+            return CatalogAPIApiFp(configuration).commitTransaction(body, prefix, options)(fetch, basePath);
         },
         /**
          * Create a namespace, with an optional set of properties. The server might also add properties, such as `last_modified_time` etc.
          * @summary Create a namespace
          * @param {CreateNamespaceRequest} body 
+         * @param {any} prefix An optional prefix in the path
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        createNamespace(body: CreateNamespaceRequest, options?: any) {
-            return CatalogAPIApiFp(configuration).createNamespace(body, options)(fetch, basePath);
+        createNamespace(body: CreateNamespaceRequest, prefix: any, options?: any) {
+            return CatalogAPIApiFp(configuration).createNamespace(body, prefix, options)(fetch, basePath);
         },
         /**
          * Create a table or start a create transaction, like atomic CTAS.  If `stage-create` is false, the table is created immediately.  If `stage-create` is true, the table is not created, but table metadata is initialized and returned. The service should prepare as needed for a commit to the table commit endpoint to complete the create transaction. The client uses the returned metadata to begin a transaction. To commit the transaction, the client sends all create and subsequent changes to the table commit route. Changes from the table create operation include changes like AddSchemaUpdate and SetCurrentSchemaUpdate that set the initial table state.
          * @summary Create a table in the given namespace
          * @param {CreateTableRequest} body 
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
          * @param {any} [xIcebergAccessDelegation] Optional signal to the server that the client supports delegated access via a comma-separated list of access mechanisms.  The server may choose to supply access via any or none of the requested mechanisms.  Specific properties and handling for &#x60;vended-credentials&#x60; is documented in the &#x60;LoadTableResult&#x60; schema section of this spec document.  The protocol and specification for &#x60;remote-signing&#x60; is documented in  the &#x60;s3-signer-open-api.yaml&#x60; OpenApi spec in the &#x60;aws&#x60; module. 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        createTable(body: CreateTableRequest, xIcebergAccessDelegation?: any, options?: any) {
-            return CatalogAPIApiFp(configuration).createTable(body, xIcebergAccessDelegation, options)(fetch, basePath);
+        createTable(body: CreateTableRequest, prefix: any, namespace: any, xIcebergAccessDelegation?: any, options?: any) {
+            return CatalogAPIApiFp(configuration).createTable(body, prefix, namespace, xIcebergAccessDelegation, options)(fetch, basePath);
         },
         /**
          * Create a view in the given namespace.
          * @summary Create a view in the given namespace
          * @param {CreateViewRequest} body 
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        createView(body: CreateViewRequest, options?: any) {
-            return CatalogAPIApiFp(configuration).createView(body, options)(fetch, basePath);
+        createView(body: CreateViewRequest, prefix: any, namespace: any, options?: any) {
+            return CatalogAPIApiFp(configuration).createView(body, prefix, namespace, options)(fetch, basePath);
         },
         /**
          * 
          * @summary Drop a namespace from the catalog. Namespace must be empty.
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        dropNamespace(options?: any) {
-            return CatalogAPIApiFp(configuration).dropNamespace(options)(fetch, basePath);
+        dropNamespace(prefix: any, namespace: any, options?: any) {
+            return CatalogAPIApiFp(configuration).dropNamespace(prefix, namespace, options)(fetch, basePath);
         },
         /**
          * Remove a table from the catalog
@@ -4852,210 +5318,262 @@ export const CatalogAPIApiFactory = function (configuration?: Configuration, fet
         /**
          * Remove a view from the catalog
          * @summary Drop a view from the catalog
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+         * @param {any} view A view name
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        dropView(options?: any) {
-            return CatalogAPIApiFp(configuration).dropView(options)(fetch, basePath);
+        dropView(prefix: any, namespace: any, view: any, options?: any) {
+            return CatalogAPIApiFp(configuration).dropView(prefix, namespace, view, options)(fetch, basePath);
         },
         /**
          * Fetches the result of scan planning for a plan-id.  Responses must include a valid status - When \"completed\" the planning operation has produced plan-tasks and   file-scan-tasks that must be returned in the response  - When \"submitted\" the planning operation has not completed; the client   should wait to call this endpoint again to fetch a completed response  - When \"failed\" the response must be a valid error response - When \"cancelled\" the plan-id is invalid and should be discarded  The response for a \"completed\" planning operation includes two types of tasks (file scan tasks and plan tasks) and both may be included in the response. Tasks must not be included for any other response status. 
          * @summary Fetches the result of scan planning for a plan-id
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+         * @param {any} table A table name
+         * @param {any} planId ID used to track a planning request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        fetchPlanningResult(options?: any) {
-            return CatalogAPIApiFp(configuration).fetchPlanningResult(options)(fetch, basePath);
+        fetchPlanningResult(prefix: any, namespace: any, table: any, planId: any, options?: any) {
+            return CatalogAPIApiFp(configuration).fetchPlanningResult(prefix, namespace, table, planId, options)(fetch, basePath);
         },
         /**
          * Fetches result tasks for a plan task.
          * @summary Fetches result tasks for a plan task
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+         * @param {any} table A table name
          * @param {FetchScanTasksRequest} [body] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        fetchScanTasks(body?: FetchScanTasksRequest, options?: any) {
-            return CatalogAPIApiFp(configuration).fetchScanTasks(body, options)(fetch, basePath);
+        fetchScanTasks(prefix: any, namespace: any, table: any, body?: FetchScanTasksRequest, options?: any) {
+            return CatalogAPIApiFp(configuration).fetchScanTasks(prefix, namespace, table, body, options)(fetch, basePath);
         },
         /**
          * List all namespaces at a certain level, optionally starting from a given parent namespace. If table accounting.tax.paid.info exists, using 'SELECT NAMESPACE IN accounting' would translate into `GET /namespaces?parent=accounting` and must return a namespace, [\"accounting\", \"tax\"] only. Using 'SELECT NAMESPACE IN accounting.tax' would translate into `GET /namespaces?parent=accounting%1Ftax` and must return a namespace, [\"accounting\", \"tax\", \"paid\"]. If `parent` is not provided, all top-level namespaces should be listed.
          * @summary List namespaces, optionally providing a parent namespace to list underneath
+         * @param {any} prefix An optional prefix in the path
          * @param {PageToken} [pageToken] 
          * @param {any} [pageSize] For servers that support pagination, this signals an upper bound of the number of results that a client will receive. For servers that do not support pagination, clients may receive results larger than the indicated &#x60;pageSize&#x60;.
          * @param {any} [parent] An optional namespace, underneath which to list namespaces. If not provided or empty, all top-level namespaces should be listed. If parent is a multipart namespace, the parts must be separated by the unit separator (&#x60;0x1F&#x60;) byte.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        listNamespaces(pageToken?: PageToken, pageSize?: any, parent?: any, options?: any) {
-            return CatalogAPIApiFp(configuration).listNamespaces(pageToken, pageSize, parent, options)(fetch, basePath);
+        listNamespaces(prefix: any, pageToken?: PageToken, pageSize?: any, parent?: any, options?: any) {
+            return CatalogAPIApiFp(configuration).listNamespaces(prefix, pageToken, pageSize, parent, options)(fetch, basePath);
         },
         /**
          * Return all table identifiers under this namespace
          * @summary List all table identifiers underneath a given namespace
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
          * @param {PageToken} [pageToken] 
          * @param {any} [pageSize] For servers that support pagination, this signals an upper bound of the number of results that a client will receive. For servers that do not support pagination, clients may receive results larger than the indicated &#x60;pageSize&#x60;.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        listTables(pageToken?: PageToken, pageSize?: any, options?: any) {
-            return CatalogAPIApiFp(configuration).listTables(pageToken, pageSize, options)(fetch, basePath);
+        listTables(prefix: any, namespace: any, pageToken?: PageToken, pageSize?: any, options?: any) {
+            return CatalogAPIApiFp(configuration).listTables(prefix, namespace, pageToken, pageSize, options)(fetch, basePath);
         },
         /**
          * Return all view identifiers under this namespace
          * @summary List all view identifiers underneath a given namespace
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
          * @param {PageToken} [pageToken] 
          * @param {any} [pageSize] For servers that support pagination, this signals an upper bound of the number of results that a client will receive. For servers that do not support pagination, clients may receive results larger than the indicated &#x60;pageSize&#x60;.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        listViews(pageToken?: PageToken, pageSize?: any, options?: any) {
-            return CatalogAPIApiFp(configuration).listViews(pageToken, pageSize, options)(fetch, basePath);
+        listViews(prefix: any, namespace: any, pageToken?: PageToken, pageSize?: any, options?: any) {
+            return CatalogAPIApiFp(configuration).listViews(prefix, namespace, pageToken, pageSize, options)(fetch, basePath);
         },
         /**
          * Load vended credentials for a table from the catalog.
          * @summary Load vended credentials for a table from the catalog
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+         * @param {any} table A table name
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        loadCredentials(options?: any) {
-            return CatalogAPIApiFp(configuration).loadCredentials(options)(fetch, basePath);
+        loadCredentials(prefix: any, namespace: any, table: any, options?: any) {
+            return CatalogAPIApiFp(configuration).loadCredentials(prefix, namespace, table, options)(fetch, basePath);
         },
         /**
          * Return all stored metadata properties for a given namespace
          * @summary Load the metadata properties for a namespace
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        loadNamespaceMetadata(options?: any) {
-            return CatalogAPIApiFp(configuration).loadNamespaceMetadata(options)(fetch, basePath);
+        loadNamespaceMetadata(prefix: any, namespace: any, options?: any) {
+            return CatalogAPIApiFp(configuration).loadNamespaceMetadata(prefix, namespace, options)(fetch, basePath);
         },
         /**
          * Load a table from the catalog.  The response contains both configuration and table metadata. The configuration, if non-empty is used as additional configuration for the table that overrides catalog configuration. For example, this configuration may change the FileIO implementation to be used for the table.  The response also contains the table's full metadata, matching the table metadata JSON file.  The catalog configuration may contain credentials that should be used for subsequent requests for the table. The configuration key \"token\" is used to pass an access token to be used as a bearer token for table requests. Otherwise, a token may be passed using a RFC 8693 token type as a configuration key. For example, \"urn:ietf:params:oauth:token-type:jwt=<JWT-token>\".
          * @summary Load a table from the catalog
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+         * @param {any} table A table name
          * @param {any} [xIcebergAccessDelegation] Optional signal to the server that the client supports delegated access via a comma-separated list of access mechanisms.  The server may choose to supply access via any or none of the requested mechanisms.  Specific properties and handling for &#x60;vended-credentials&#x60; is documented in the &#x60;LoadTableResult&#x60; schema section of this spec document.  The protocol and specification for &#x60;remote-signing&#x60; is documented in  the &#x60;s3-signer-open-api.yaml&#x60; OpenApi spec in the &#x60;aws&#x60; module. 
          * @param {any} [ifNoneMatch] An optional header that allows the server to return 304 (Not Modified) if the metadata is current. The content is the value of the ETag received in a CreateTableResponse or LoadTableResponse.
          * @param {any} [snapshots] The snapshots to return in the body of the metadata. Setting the value to &#x60;all&#x60; would return the full set of snapshots currently valid for the table. Setting the value to &#x60;refs&#x60; would load all snapshots referenced by branches or tags. Default if no param is provided is &#x60;all&#x60;.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        loadTable(xIcebergAccessDelegation?: any, ifNoneMatch?: any, snapshots?: any, options?: any) {
-            return CatalogAPIApiFp(configuration).loadTable(xIcebergAccessDelegation, ifNoneMatch, snapshots, options)(fetch, basePath);
+        loadTable(prefix: any, namespace: any, table: any, xIcebergAccessDelegation?: any, ifNoneMatch?: any, snapshots?: any, options?: any) {
+            return CatalogAPIApiFp(configuration).loadTable(prefix, namespace, table, xIcebergAccessDelegation, ifNoneMatch, snapshots, options)(fetch, basePath);
         },
         /**
          * Load a view from the catalog.  The response contains both configuration and view metadata. The configuration, if non-empty is used as additional configuration for the view that overrides catalog configuration.  The response also contains the view's full metadata, matching the view metadata JSON file.  The catalog configuration may contain credentials that should be used for subsequent requests for the view. The configuration key \"token\" is used to pass an access token to be used as a bearer token for view requests. Otherwise, a token may be passed using a RFC 8693 token type as a configuration key. For example, \"urn:ietf:params:oauth:token-type:jwt=<JWT-token>\".
          * @summary Load a view from the catalog
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+         * @param {any} view A view name
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        loadView(options?: any) {
-            return CatalogAPIApiFp(configuration).loadView(options)(fetch, basePath);
+        loadView(prefix: any, namespace: any, view: any, options?: any) {
+            return CatalogAPIApiFp(configuration).loadView(prefix, namespace, view, options)(fetch, basePath);
         },
         /**
          * Check if a namespace exists. The response does not contain a body.
          * @summary Check if a namespace exists
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        namespaceExists(options?: any) {
-            return CatalogAPIApiFp(configuration).namespaceExists(options)(fetch, basePath);
+        namespaceExists(prefix: any, namespace: any, options?: any) {
+            return CatalogAPIApiFp(configuration).namespaceExists(prefix, namespace, options)(fetch, basePath);
         },
         /**
          * Submits a scan for server-side planning.  Point-in-time scans are planned by passing snapshot-id to identify the table snapshot to scan. Incremental scans are planned by passing both start-snapshot-id and end-snapshot-id. Requests that include both point in time config properties and incremental config properties are invalid. If the request does not include either incremental or point-in-time config properties, scan planning should produce a point-in-time scan of the latest snapshot in the table's main branch.  Responses must include a valid status listed below. A \"cancelled\" status is considered invalid for this endpoint.   - When \"completed\" the planning operation has produced plan tasks and   file scan tasks that must be returned in the response (not fetched   later by calling fetchPlanningResult)  - When \"submitted\" the response must include a plan-id used to poll   fetchPlanningResult to fetch the planning result when it is ready  - When \"failed\" the response must be a valid error response The response for a \"completed\" planning operation includes two types of tasks (file scan tasks and plan tasks) and both may be included in the response. Tasks must not be included for any other response status.  Responses that include a plan-id indicate that the service is holding state or performing work for the client.  - Clients should use the plan-id to fetch results from   fetchPlanningResult when the response status is \"submitted\"  - Clients should inform the service if planning results are no longer   needed by calling cancelPlanning. Cancellation is not necessary after   fetchScanTasks has been used to fetch scan tasks for each plan task. 
          * @summary Submit a scan for planning
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+         * @param {any} table A table name
          * @param {PlanTableScanRequest} [body] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        planTableScan(body?: PlanTableScanRequest, options?: any) {
-            return CatalogAPIApiFp(configuration).planTableScan(body, options)(fetch, basePath);
+        planTableScan(prefix: any, namespace: any, table: any, body?: PlanTableScanRequest, options?: any) {
+            return CatalogAPIApiFp(configuration).planTableScan(prefix, namespace, table, body, options)(fetch, basePath);
         },
         /**
          * Register a table using given metadata file location.
          * @summary Register a table in the given namespace using given metadata file location
          * @param {RegisterTableRequest} body 
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        registerTable(body: RegisterTableRequest, options?: any) {
-            return CatalogAPIApiFp(configuration).registerTable(body, options)(fetch, basePath);
+        registerTable(body: RegisterTableRequest, prefix: any, namespace: any, options?: any) {
+            return CatalogAPIApiFp(configuration).registerTable(body, prefix, namespace, options)(fetch, basePath);
         },
         /**
          * Rename a table from one identifier to another. It's valid to move a table across namespaces, but the server implementation is not required to support it.
          * @summary Rename a table from its current name to a new name
          * @param {RenameTableRequest} body Current table identifier to rename and new table identifier to rename to
+         * @param {any} prefix An optional prefix in the path
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        renameTable(body: RenameTableRequest, options?: any) {
-            return CatalogAPIApiFp(configuration).renameTable(body, options)(fetch, basePath);
+        renameTable(body: RenameTableRequest, prefix: any, options?: any) {
+            return CatalogAPIApiFp(configuration).renameTable(body, prefix, options)(fetch, basePath);
         },
         /**
          * Rename a view from one identifier to another. It's valid to move a view across namespaces, but the server implementation is not required to support it.
          * @summary Rename a view from its current name to a new name
          * @param {RenameTableRequest} body Current view identifier to rename and new view identifier to rename to
+         * @param {any} prefix An optional prefix in the path
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        renameView(body: RenameTableRequest, options?: any) {
-            return CatalogAPIApiFp(configuration).renameView(body, options)(fetch, basePath);
+        renameView(body: RenameTableRequest, prefix: any, options?: any) {
+            return CatalogAPIApiFp(configuration).renameView(body, prefix, options)(fetch, basePath);
         },
         /**
          * Commit updates to a view.
          * @summary Replace a view
          * @param {CommitViewRequest} body 
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+         * @param {any} view A view name
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        replaceView(body: CommitViewRequest, options?: any) {
-            return CatalogAPIApiFp(configuration).replaceView(body, options)(fetch, basePath);
+        replaceView(body: CommitViewRequest, prefix: any, namespace: any, view: any, options?: any) {
+            return CatalogAPIApiFp(configuration).replaceView(body, prefix, namespace, view, options)(fetch, basePath);
         },
         /**
          * 
          * @summary Send a metrics report to this endpoint to be processed by the backend
          * @param {ReportMetricsRequest} body The request containing the metrics report to be sent
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+         * @param {any} table A table name
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        reportMetrics(body: ReportMetricsRequest, options?: any) {
-            return CatalogAPIApiFp(configuration).reportMetrics(body, options)(fetch, basePath);
+        reportMetrics(body: ReportMetricsRequest, prefix: any, namespace: any, table: any, options?: any) {
+            return CatalogAPIApiFp(configuration).reportMetrics(body, prefix, namespace, table, options)(fetch, basePath);
         },
         /**
          * Check if a table exists within a given namespace. The response does not contain a body.
          * @summary Check if a table exists
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+         * @param {any} table A table name
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        tableExists(options?: any) {
-            return CatalogAPIApiFp(configuration).tableExists(options)(fetch, basePath);
+        tableExists(prefix: any, namespace: any, table: any, options?: any) {
+            return CatalogAPIApiFp(configuration).tableExists(prefix, namespace, table, options)(fetch, basePath);
         },
         /**
          * Set and/or remove properties on a namespace. The request body specifies a list of properties to remove and a map of key value pairs to update. Properties that are not in the request are not modified or removed by this call. Server implementations are not required to support namespace properties.
          * @summary Set or remove properties on a namespace
          * @param {UpdateNamespacePropertiesRequest} body 
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        updateProperties(body: UpdateNamespacePropertiesRequest, options?: any) {
-            return CatalogAPIApiFp(configuration).updateProperties(body, options)(fetch, basePath);
+        updateProperties(body: UpdateNamespacePropertiesRequest, prefix: any, namespace: any, options?: any) {
+            return CatalogAPIApiFp(configuration).updateProperties(body, prefix, namespace, options)(fetch, basePath);
         },
         /**
          * Commit updates to a table.  Commits have two parts, requirements and updates. Requirements are assertions that will be validated before attempting to make and commit changes. For example, `assert-ref-snapshot-id` will check that a named ref's snapshot ID has a certain value. Server implementations are required to fail with a 400 status code if any unknown updates or requirements are received.  Updates are changes to make to table metadata. For example, after asserting that the current main ref is at the expected snapshot, a commit may add a new child snapshot and set the ref to the new snapshot id.  Create table transactions that are started by createTable with `stage-create` set to true are committed using this route. Transactions should include all changes to the table, including table initialization, like AddSchemaUpdate and SetCurrentSchemaUpdate. The `assert-create` requirement is used to ensure that the table was not created concurrently.
          * @summary Commit updates to a table
          * @param {CommitTableRequest} body 
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+         * @param {any} table A table name
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        updateTable(body: CommitTableRequest, options?: any) {
-            return CatalogAPIApiFp(configuration).updateTable(body, options)(fetch, basePath);
+        updateTable(body: CommitTableRequest, prefix: any, namespace: any, table: any, options?: any) {
+            return CatalogAPIApiFp(configuration).updateTable(body, prefix, namespace, table, options)(fetch, basePath);
         },
         /**
          * Check if a view exists within a given namespace. This request does not return a response body.
          * @summary Check if a view exists
+         * @param {any} prefix An optional prefix in the path
+         * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+         * @param {any} view A view name
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        viewExists(options?: any) {
-            return CatalogAPIApiFp(configuration).viewExists(options)(fetch, basePath);
+        viewExists(prefix: any, namespace: any, view: any, options?: any) {
+            return CatalogAPIApiFp(configuration).viewExists(prefix, namespace, view, options)(fetch, basePath);
         },
     };
 };
@@ -5070,72 +5588,84 @@ export class CatalogAPIApi extends BaseAPI {
     /**
      * Cancels scan planning for a plan-id.  This notifies the service that it can release resources held for the scan. Clients should cancel scans that are no longer needed, either while the plan-id returns a \"submitted\" status or while there are remaining plan tasks that have not been fetched.  Cancellation is not necessary when - Scan tasks for each plan task have been fetched using fetchScanTasks - A plan-id has produced a \"failed\" or \"cancelled\" status from   planTableScan or fetchPlanningResult 
      * @summary Cancels scan planning for a plan-id
+     * @param {any} prefix An optional prefix in the path
+     * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+     * @param {any} table A table name
+     * @param {any} planId ID used to track a planning request
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CatalogAPIApi
      */
-    public cancelPlanning(options?: any) {
-        return CatalogAPIApiFp(this.configuration).cancelPlanning(options)(this.fetch, this.basePath);
+    public cancelPlanning(prefix: any, namespace: any, table: any, planId: any, options?: any) {
+        return CatalogAPIApiFp(this.configuration).cancelPlanning(prefix, namespace, table, planId, options)(this.fetch, this.basePath);
     }
 
     /**
      * 
      * @summary Commit updates to multiple tables in an atomic operation
      * @param {CommitTransactionRequest} body Commit updates to multiple tables in an atomic operation  A commit for a single table consists of a table identifier with requirements and updates. Requirements are assertions that will be validated before attempting to make and commit changes. For example, &#x60;assert-ref-snapshot-id&#x60; will check that a named ref&#x27;s snapshot ID has a certain value. Server implementations are required to fail with a 400 status code if any unknown updates or requirements are received. Updates are changes to make to table metadata. For example, after asserting that the current main ref is at the expected snapshot, a commit may add a new child snapshot and set the ref to the new snapshot id.
+     * @param {any} prefix An optional prefix in the path
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CatalogAPIApi
      */
-    public commitTransaction(body: CommitTransactionRequest, options?: any) {
-        return CatalogAPIApiFp(this.configuration).commitTransaction(body, options)(this.fetch, this.basePath);
+    public commitTransaction(body: CommitTransactionRequest, prefix: any, options?: any) {
+        return CatalogAPIApiFp(this.configuration).commitTransaction(body, prefix, options)(this.fetch, this.basePath);
     }
 
     /**
      * Create a namespace, with an optional set of properties. The server might also add properties, such as `last_modified_time` etc.
      * @summary Create a namespace
      * @param {CreateNamespaceRequest} body 
+     * @param {any} prefix An optional prefix in the path
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CatalogAPIApi
      */
-    public createNamespace(body: CreateNamespaceRequest, options?: any) {
-        return CatalogAPIApiFp(this.configuration).createNamespace(body, options)(this.fetch, this.basePath);
+    public createNamespace(body: CreateNamespaceRequest, prefix: any, options?: any) {
+        return CatalogAPIApiFp(this.configuration).createNamespace(body, prefix, options)(this.fetch, this.basePath);
     }
 
     /**
      * Create a table or start a create transaction, like atomic CTAS.  If `stage-create` is false, the table is created immediately.  If `stage-create` is true, the table is not created, but table metadata is initialized and returned. The service should prepare as needed for a commit to the table commit endpoint to complete the create transaction. The client uses the returned metadata to begin a transaction. To commit the transaction, the client sends all create and subsequent changes to the table commit route. Changes from the table create operation include changes like AddSchemaUpdate and SetCurrentSchemaUpdate that set the initial table state.
      * @summary Create a table in the given namespace
      * @param {CreateTableRequest} body 
+     * @param {any} prefix An optional prefix in the path
+     * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
      * @param {any} [xIcebergAccessDelegation] Optional signal to the server that the client supports delegated access via a comma-separated list of access mechanisms.  The server may choose to supply access via any or none of the requested mechanisms.  Specific properties and handling for &#x60;vended-credentials&#x60; is documented in the &#x60;LoadTableResult&#x60; schema section of this spec document.  The protocol and specification for &#x60;remote-signing&#x60; is documented in  the &#x60;s3-signer-open-api.yaml&#x60; OpenApi spec in the &#x60;aws&#x60; module. 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CatalogAPIApi
      */
-    public createTable(body: CreateTableRequest, xIcebergAccessDelegation?: any, options?: any) {
-        return CatalogAPIApiFp(this.configuration).createTable(body, xIcebergAccessDelegation, options)(this.fetch, this.basePath);
+    public createTable(body: CreateTableRequest, prefix: any, namespace: any, xIcebergAccessDelegation?: any, options?: any) {
+        return CatalogAPIApiFp(this.configuration).createTable(body, prefix, namespace, xIcebergAccessDelegation, options)(this.fetch, this.basePath);
     }
 
     /**
      * Create a view in the given namespace.
      * @summary Create a view in the given namespace
      * @param {CreateViewRequest} body 
+     * @param {any} prefix An optional prefix in the path
+     * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CatalogAPIApi
      */
-    public createView(body: CreateViewRequest, options?: any) {
-        return CatalogAPIApiFp(this.configuration).createView(body, options)(this.fetch, this.basePath);
+    public createView(body: CreateViewRequest, prefix: any, namespace: any, options?: any) {
+        return CatalogAPIApiFp(this.configuration).createView(body, prefix, namespace, options)(this.fetch, this.basePath);
     }
 
     /**
      * 
      * @summary Drop a namespace from the catalog. Namespace must be empty.
+     * @param {any} prefix An optional prefix in the path
+     * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CatalogAPIApi
      */
-    public dropNamespace(options?: any) {
-        return CatalogAPIApiFp(this.configuration).dropNamespace(options)(this.fetch, this.basePath);
+    public dropNamespace(prefix: any, namespace: any, options?: any) {
+        return CatalogAPIApiFp(this.configuration).dropNamespace(prefix, namespace, options)(this.fetch, this.basePath);
     }
 
     /**
@@ -5156,40 +5686,51 @@ export class CatalogAPIApi extends BaseAPI {
     /**
      * Remove a view from the catalog
      * @summary Drop a view from the catalog
+     * @param {any} prefix An optional prefix in the path
+     * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+     * @param {any} view A view name
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CatalogAPIApi
      */
-    public dropView(options?: any) {
-        return CatalogAPIApiFp(this.configuration).dropView(options)(this.fetch, this.basePath);
+    public dropView(prefix: any, namespace: any, view: any, options?: any) {
+        return CatalogAPIApiFp(this.configuration).dropView(prefix, namespace, view, options)(this.fetch, this.basePath);
     }
 
     /**
      * Fetches the result of scan planning for a plan-id.  Responses must include a valid status - When \"completed\" the planning operation has produced plan-tasks and   file-scan-tasks that must be returned in the response  - When \"submitted\" the planning operation has not completed; the client   should wait to call this endpoint again to fetch a completed response  - When \"failed\" the response must be a valid error response - When \"cancelled\" the plan-id is invalid and should be discarded  The response for a \"completed\" planning operation includes two types of tasks (file scan tasks and plan tasks) and both may be included in the response. Tasks must not be included for any other response status. 
      * @summary Fetches the result of scan planning for a plan-id
+     * @param {any} prefix An optional prefix in the path
+     * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+     * @param {any} table A table name
+     * @param {any} planId ID used to track a planning request
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CatalogAPIApi
      */
-    public fetchPlanningResult(options?: any) {
-        return CatalogAPIApiFp(this.configuration).fetchPlanningResult(options)(this.fetch, this.basePath);
+    public fetchPlanningResult(prefix: any, namespace: any, table: any, planId: any, options?: any) {
+        return CatalogAPIApiFp(this.configuration).fetchPlanningResult(prefix, namespace, table, planId, options)(this.fetch, this.basePath);
     }
 
     /**
      * Fetches result tasks for a plan task.
      * @summary Fetches result tasks for a plan task
+     * @param {any} prefix An optional prefix in the path
+     * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+     * @param {any} table A table name
      * @param {FetchScanTasksRequest} [body] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CatalogAPIApi
      */
-    public fetchScanTasks(body?: FetchScanTasksRequest, options?: any) {
-        return CatalogAPIApiFp(this.configuration).fetchScanTasks(body, options)(this.fetch, this.basePath);
+    public fetchScanTasks(prefix: any, namespace: any, table: any, body?: FetchScanTasksRequest, options?: any) {
+        return CatalogAPIApiFp(this.configuration).fetchScanTasks(prefix, namespace, table, body, options)(this.fetch, this.basePath);
     }
 
     /**
      * List all namespaces at a certain level, optionally starting from a given parent namespace. If table accounting.tax.paid.info exists, using 'SELECT NAMESPACE IN accounting' would translate into `GET /namespaces?parent=accounting` and must return a namespace, [\"accounting\", \"tax\"] only. Using 'SELECT NAMESPACE IN accounting.tax' would translate into `GET /namespaces?parent=accounting%1Ftax` and must return a namespace, [\"accounting\", \"tax\", \"paid\"]. If `parent` is not provided, all top-level namespaces should be listed.
      * @summary List namespaces, optionally providing a parent namespace to list underneath
+     * @param {any} prefix An optional prefix in the path
      * @param {PageToken} [pageToken] 
      * @param {any} [pageSize] For servers that support pagination, this signals an upper bound of the number of results that a client will receive. For servers that do not support pagination, clients may receive results larger than the indicated &#x60;pageSize&#x60;.
      * @param {any} [parent] An optional namespace, underneath which to list namespaces. If not provided or empty, all top-level namespaces should be listed. If parent is a multipart namespace, the parts must be separated by the unit separator (&#x60;0x1F&#x60;) byte.
@@ -5197,61 +5738,73 @@ export class CatalogAPIApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof CatalogAPIApi
      */
-    public listNamespaces(pageToken?: PageToken, pageSize?: any, parent?: any, options?: any) {
-        return CatalogAPIApiFp(this.configuration).listNamespaces(pageToken, pageSize, parent, options)(this.fetch, this.basePath);
+    public listNamespaces(prefix: any, pageToken?: PageToken, pageSize?: any, parent?: any, options?: any) {
+        return CatalogAPIApiFp(this.configuration).listNamespaces(prefix, pageToken, pageSize, parent, options)(this.fetch, this.basePath);
     }
 
     /**
      * Return all table identifiers under this namespace
      * @summary List all table identifiers underneath a given namespace
+     * @param {any} prefix An optional prefix in the path
+     * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
      * @param {PageToken} [pageToken] 
      * @param {any} [pageSize] For servers that support pagination, this signals an upper bound of the number of results that a client will receive. For servers that do not support pagination, clients may receive results larger than the indicated &#x60;pageSize&#x60;.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CatalogAPIApi
      */
-    public listTables(pageToken?: PageToken, pageSize?: any, options?: any) {
-        return CatalogAPIApiFp(this.configuration).listTables(pageToken, pageSize, options)(this.fetch, this.basePath);
+    public listTables(prefix: any, namespace: any, pageToken?: PageToken, pageSize?: any, options?: any) {
+        return CatalogAPIApiFp(this.configuration).listTables(prefix, namespace, pageToken, pageSize, options)(this.fetch, this.basePath);
     }
 
     /**
      * Return all view identifiers under this namespace
      * @summary List all view identifiers underneath a given namespace
+     * @param {any} prefix An optional prefix in the path
+     * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
      * @param {PageToken} [pageToken] 
      * @param {any} [pageSize] For servers that support pagination, this signals an upper bound of the number of results that a client will receive. For servers that do not support pagination, clients may receive results larger than the indicated &#x60;pageSize&#x60;.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CatalogAPIApi
      */
-    public listViews(pageToken?: PageToken, pageSize?: any, options?: any) {
-        return CatalogAPIApiFp(this.configuration).listViews(pageToken, pageSize, options)(this.fetch, this.basePath);
+    public listViews(prefix: any, namespace: any, pageToken?: PageToken, pageSize?: any, options?: any) {
+        return CatalogAPIApiFp(this.configuration).listViews(prefix, namespace, pageToken, pageSize, options)(this.fetch, this.basePath);
     }
 
     /**
      * Load vended credentials for a table from the catalog.
      * @summary Load vended credentials for a table from the catalog
+     * @param {any} prefix An optional prefix in the path
+     * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+     * @param {any} table A table name
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CatalogAPIApi
      */
-    public loadCredentials(options?: any) {
-        return CatalogAPIApiFp(this.configuration).loadCredentials(options)(this.fetch, this.basePath);
+    public loadCredentials(prefix: any, namespace: any, table: any, options?: any) {
+        return CatalogAPIApiFp(this.configuration).loadCredentials(prefix, namespace, table, options)(this.fetch, this.basePath);
     }
 
     /**
      * Return all stored metadata properties for a given namespace
      * @summary Load the metadata properties for a namespace
+     * @param {any} prefix An optional prefix in the path
+     * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CatalogAPIApi
      */
-    public loadNamespaceMetadata(options?: any) {
-        return CatalogAPIApiFp(this.configuration).loadNamespaceMetadata(options)(this.fetch, this.basePath);
+    public loadNamespaceMetadata(prefix: any, namespace: any, options?: any) {
+        return CatalogAPIApiFp(this.configuration).loadNamespaceMetadata(prefix, namespace, options)(this.fetch, this.basePath);
     }
 
     /**
      * Load a table from the catalog.  The response contains both configuration and table metadata. The configuration, if non-empty is used as additional configuration for the table that overrides catalog configuration. For example, this configuration may change the FileIO implementation to be used for the table.  The response also contains the table's full metadata, matching the table metadata JSON file.  The catalog configuration may contain credentials that should be used for subsequent requests for the table. The configuration key \"token\" is used to pass an access token to be used as a bearer token for table requests. Otherwise, a token may be passed using a RFC 8693 token type as a configuration key. For example, \"urn:ietf:params:oauth:token-type:jwt=<JWT-token>\".
      * @summary Load a table from the catalog
+     * @param {any} prefix An optional prefix in the path
+     * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+     * @param {any} table A table name
      * @param {any} [xIcebergAccessDelegation] Optional signal to the server that the client supports delegated access via a comma-separated list of access mechanisms.  The server may choose to supply access via any or none of the requested mechanisms.  Specific properties and handling for &#x60;vended-credentials&#x60; is documented in the &#x60;LoadTableResult&#x60; schema section of this spec document.  The protocol and specification for &#x60;remote-signing&#x60; is documented in  the &#x60;s3-signer-open-api.yaml&#x60; OpenApi spec in the &#x60;aws&#x60; module. 
      * @param {any} [ifNoneMatch] An optional header that allows the server to return 304 (Not Modified) if the metadata is current. The content is the value of the ETag received in a CreateTableResponse or LoadTableResponse.
      * @param {any} [snapshots] The snapshots to return in the body of the metadata. Setting the value to &#x60;all&#x60; would return the full set of snapshots currently valid for the table. Setting the value to &#x60;refs&#x60; would load all snapshots referenced by branches or tags. Default if no param is provided is &#x60;all&#x60;.
@@ -5259,148 +5812,177 @@ export class CatalogAPIApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof CatalogAPIApi
      */
-    public loadTable(xIcebergAccessDelegation?: any, ifNoneMatch?: any, snapshots?: any, options?: any) {
-        return CatalogAPIApiFp(this.configuration).loadTable(xIcebergAccessDelegation, ifNoneMatch, snapshots, options)(this.fetch, this.basePath);
+    public loadTable(prefix: any, namespace: any, table: any, xIcebergAccessDelegation?: any, ifNoneMatch?: any, snapshots?: any, options?: any) {
+        return CatalogAPIApiFp(this.configuration).loadTable(prefix, namespace, table, xIcebergAccessDelegation, ifNoneMatch, snapshots, options)(this.fetch, this.basePath);
     }
 
     /**
      * Load a view from the catalog.  The response contains both configuration and view metadata. The configuration, if non-empty is used as additional configuration for the view that overrides catalog configuration.  The response also contains the view's full metadata, matching the view metadata JSON file.  The catalog configuration may contain credentials that should be used for subsequent requests for the view. The configuration key \"token\" is used to pass an access token to be used as a bearer token for view requests. Otherwise, a token may be passed using a RFC 8693 token type as a configuration key. For example, \"urn:ietf:params:oauth:token-type:jwt=<JWT-token>\".
      * @summary Load a view from the catalog
+     * @param {any} prefix An optional prefix in the path
+     * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+     * @param {any} view A view name
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CatalogAPIApi
      */
-    public loadView(options?: any) {
-        return CatalogAPIApiFp(this.configuration).loadView(options)(this.fetch, this.basePath);
+    public loadView(prefix: any, namespace: any, view: any, options?: any) {
+        return CatalogAPIApiFp(this.configuration).loadView(prefix, namespace, view, options)(this.fetch, this.basePath);
     }
 
     /**
      * Check if a namespace exists. The response does not contain a body.
      * @summary Check if a namespace exists
+     * @param {any} prefix An optional prefix in the path
+     * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CatalogAPIApi
      */
-    public namespaceExists(options?: any) {
-        return CatalogAPIApiFp(this.configuration).namespaceExists(options)(this.fetch, this.basePath);
+    public namespaceExists(prefix: any, namespace: any, options?: any) {
+        return CatalogAPIApiFp(this.configuration).namespaceExists(prefix, namespace, options)(this.fetch, this.basePath);
     }
 
     /**
      * Submits a scan for server-side planning.  Point-in-time scans are planned by passing snapshot-id to identify the table snapshot to scan. Incremental scans are planned by passing both start-snapshot-id and end-snapshot-id. Requests that include both point in time config properties and incremental config properties are invalid. If the request does not include either incremental or point-in-time config properties, scan planning should produce a point-in-time scan of the latest snapshot in the table's main branch.  Responses must include a valid status listed below. A \"cancelled\" status is considered invalid for this endpoint.   - When \"completed\" the planning operation has produced plan tasks and   file scan tasks that must be returned in the response (not fetched   later by calling fetchPlanningResult)  - When \"submitted\" the response must include a plan-id used to poll   fetchPlanningResult to fetch the planning result when it is ready  - When \"failed\" the response must be a valid error response The response for a \"completed\" planning operation includes two types of tasks (file scan tasks and plan tasks) and both may be included in the response. Tasks must not be included for any other response status.  Responses that include a plan-id indicate that the service is holding state or performing work for the client.  - Clients should use the plan-id to fetch results from   fetchPlanningResult when the response status is \"submitted\"  - Clients should inform the service if planning results are no longer   needed by calling cancelPlanning. Cancellation is not necessary after   fetchScanTasks has been used to fetch scan tasks for each plan task. 
      * @summary Submit a scan for planning
+     * @param {any} prefix An optional prefix in the path
+     * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+     * @param {any} table A table name
      * @param {PlanTableScanRequest} [body] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CatalogAPIApi
      */
-    public planTableScan(body?: PlanTableScanRequest, options?: any) {
-        return CatalogAPIApiFp(this.configuration).planTableScan(body, options)(this.fetch, this.basePath);
+    public planTableScan(prefix: any, namespace: any, table: any, body?: PlanTableScanRequest, options?: any) {
+        return CatalogAPIApiFp(this.configuration).planTableScan(prefix, namespace, table, body, options)(this.fetch, this.basePath);
     }
 
     /**
      * Register a table using given metadata file location.
      * @summary Register a table in the given namespace using given metadata file location
      * @param {RegisterTableRequest} body 
+     * @param {any} prefix An optional prefix in the path
+     * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CatalogAPIApi
      */
-    public registerTable(body: RegisterTableRequest, options?: any) {
-        return CatalogAPIApiFp(this.configuration).registerTable(body, options)(this.fetch, this.basePath);
+    public registerTable(body: RegisterTableRequest, prefix: any, namespace: any, options?: any) {
+        return CatalogAPIApiFp(this.configuration).registerTable(body, prefix, namespace, options)(this.fetch, this.basePath);
     }
 
     /**
      * Rename a table from one identifier to another. It's valid to move a table across namespaces, but the server implementation is not required to support it.
      * @summary Rename a table from its current name to a new name
      * @param {RenameTableRequest} body Current table identifier to rename and new table identifier to rename to
+     * @param {any} prefix An optional prefix in the path
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CatalogAPIApi
      */
-    public renameTable(body: RenameTableRequest, options?: any) {
-        return CatalogAPIApiFp(this.configuration).renameTable(body, options)(this.fetch, this.basePath);
+    public renameTable(body: RenameTableRequest, prefix: any, options?: any) {
+        return CatalogAPIApiFp(this.configuration).renameTable(body, prefix, options)(this.fetch, this.basePath);
     }
 
     /**
      * Rename a view from one identifier to another. It's valid to move a view across namespaces, but the server implementation is not required to support it.
      * @summary Rename a view from its current name to a new name
      * @param {RenameTableRequest} body Current view identifier to rename and new view identifier to rename to
+     * @param {any} prefix An optional prefix in the path
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CatalogAPIApi
      */
-    public renameView(body: RenameTableRequest, options?: any) {
-        return CatalogAPIApiFp(this.configuration).renameView(body, options)(this.fetch, this.basePath);
+    public renameView(body: RenameTableRequest, prefix: any, options?: any) {
+        return CatalogAPIApiFp(this.configuration).renameView(body, prefix, options)(this.fetch, this.basePath);
     }
 
     /**
      * Commit updates to a view.
      * @summary Replace a view
      * @param {CommitViewRequest} body 
+     * @param {any} prefix An optional prefix in the path
+     * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+     * @param {any} view A view name
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CatalogAPIApi
      */
-    public replaceView(body: CommitViewRequest, options?: any) {
-        return CatalogAPIApiFp(this.configuration).replaceView(body, options)(this.fetch, this.basePath);
+    public replaceView(body: CommitViewRequest, prefix: any, namespace: any, view: any, options?: any) {
+        return CatalogAPIApiFp(this.configuration).replaceView(body, prefix, namespace, view, options)(this.fetch, this.basePath);
     }
 
     /**
      * 
      * @summary Send a metrics report to this endpoint to be processed by the backend
      * @param {ReportMetricsRequest} body The request containing the metrics report to be sent
+     * @param {any} prefix An optional prefix in the path
+     * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+     * @param {any} table A table name
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CatalogAPIApi
      */
-    public reportMetrics(body: ReportMetricsRequest, options?: any) {
-        return CatalogAPIApiFp(this.configuration).reportMetrics(body, options)(this.fetch, this.basePath);
+    public reportMetrics(body: ReportMetricsRequest, prefix: any, namespace: any, table: any, options?: any) {
+        return CatalogAPIApiFp(this.configuration).reportMetrics(body, prefix, namespace, table, options)(this.fetch, this.basePath);
     }
 
     /**
      * Check if a table exists within a given namespace. The response does not contain a body.
      * @summary Check if a table exists
+     * @param {any} prefix An optional prefix in the path
+     * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+     * @param {any} table A table name
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CatalogAPIApi
      */
-    public tableExists(options?: any) {
-        return CatalogAPIApiFp(this.configuration).tableExists(options)(this.fetch, this.basePath);
+    public tableExists(prefix: any, namespace: any, table: any, options?: any) {
+        return CatalogAPIApiFp(this.configuration).tableExists(prefix, namespace, table, options)(this.fetch, this.basePath);
     }
 
     /**
      * Set and/or remove properties on a namespace. The request body specifies a list of properties to remove and a map of key value pairs to update. Properties that are not in the request are not modified or removed by this call. Server implementations are not required to support namespace properties.
      * @summary Set or remove properties on a namespace
      * @param {UpdateNamespacePropertiesRequest} body 
+     * @param {any} prefix An optional prefix in the path
+     * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CatalogAPIApi
      */
-    public updateProperties(body: UpdateNamespacePropertiesRequest, options?: any) {
-        return CatalogAPIApiFp(this.configuration).updateProperties(body, options)(this.fetch, this.basePath);
+    public updateProperties(body: UpdateNamespacePropertiesRequest, prefix: any, namespace: any, options?: any) {
+        return CatalogAPIApiFp(this.configuration).updateProperties(body, prefix, namespace, options)(this.fetch, this.basePath);
     }
 
     /**
      * Commit updates to a table.  Commits have two parts, requirements and updates. Requirements are assertions that will be validated before attempting to make and commit changes. For example, `assert-ref-snapshot-id` will check that a named ref's snapshot ID has a certain value. Server implementations are required to fail with a 400 status code if any unknown updates or requirements are received.  Updates are changes to make to table metadata. For example, after asserting that the current main ref is at the expected snapshot, a commit may add a new child snapshot and set the ref to the new snapshot id.  Create table transactions that are started by createTable with `stage-create` set to true are committed using this route. Transactions should include all changes to the table, including table initialization, like AddSchemaUpdate and SetCurrentSchemaUpdate. The `assert-create` requirement is used to ensure that the table was not created concurrently.
      * @summary Commit updates to a table
      * @param {CommitTableRequest} body 
+     * @param {any} prefix An optional prefix in the path
+     * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+     * @param {any} table A table name
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CatalogAPIApi
      */
-    public updateTable(body: CommitTableRequest, options?: any) {
-        return CatalogAPIApiFp(this.configuration).updateTable(body, options)(this.fetch, this.basePath);
+    public updateTable(body: CommitTableRequest, prefix: any, namespace: any, table: any, options?: any) {
+        return CatalogAPIApiFp(this.configuration).updateTable(body, prefix, namespace, table, options)(this.fetch, this.basePath);
     }
 
     /**
      * Check if a view exists within a given namespace. This request does not return a response body.
      * @summary Check if a view exists
+     * @param {any} prefix An optional prefix in the path
+     * @param {any} namespace A namespace identifier as a single string. Multipart namespace parts should be separated by the unit separator (&#x60;0x1F&#x60;) byte.
+     * @param {any} view A view name
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CatalogAPIApi
      */
-    public viewExists(options?: any) {
-        return CatalogAPIApiFp(this.configuration).viewExists(options)(this.fetch, this.basePath);
+    public viewExists(prefix: any, namespace: any, view: any, options?: any) {
+        return CatalogAPIApiFp(this.configuration).viewExists(prefix, namespace, view, options)(this.fetch, this.basePath);
     }
 
 }
