@@ -1,17 +1,47 @@
 import { ChevronRight, MoreVertical, PenSquare } from "lucide-react"
 import Link from "next/link"
+import { notFound } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { CatalogAPIApiFp } from "@/lib/openapi/api"
+import { useEffect, useState } from "react"
 
 interface CatalogPageProps {
   params: {
-    name: string
+    catalog: string
   }
 }
 
-export default function CatalogPage({ params }: CatalogPageProps) {
+async function getNamespaces(catalog: string) {
+  try {
+    const api = CatalogAPIApiFp()
+    const fetchNamespaces = api.listNamespaces('')
+    const response = await fetchNamespaces(fetch, `/api/catalog/${catalog}`)
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch namespaces: ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    return data.namespaces as string[][]
+  } catch (error) {
+    console.error("Error fetching namespaces:", error)
+    return []
+  }
+}
+
+export default async function CatalogPage({ params }: CatalogPageProps) {
+  const [namespaces, setNamespaces] = useState<string[][]>([])
+  useEffect(() => {
+    getNamespaces(params.catalog).then(setNamespaces)
+  }, [params.catalog])
+
+  if (!namespaces.length) {
+    notFound()
+  }
+
   return (
     <div className="flex flex-col">
       <div className="border-b">
@@ -20,14 +50,14 @@ export default function CatalogPage({ params }: CatalogPageProps) {
             Catalogs
           </Link>
           <ChevronRight className="h-4 w-4" />
-          <span className="text-foreground">{params.name}</span>
+          <span className="text-foreground">{params.catalog}</span>
         </div>
       </div>
       <div className="flex flex-1">
         <div className="flex-1 border-r">
           <div className="flex items-center justify-between border-b px-6 py-4">
             <div className="flex items-center gap-4">
-              <h1 className="text-xl font-semibold">{params.name}</h1>
+              <h1 className="text-xl font-semibold">{params.catalog}</h1>
             </div>
             <div className="flex items-center gap-2">
               <Button>Create Schema</Button>
@@ -62,14 +92,19 @@ export default function CatalogPage({ params }: CatalogPageProps) {
                   <div>Created At</div>
                 </div>
                 <div className="divide-y">
-                  <div className="grid grid-cols-2 gap-4 px-6 py-3">
-                    <div>
-                      <Link href="/catalog/unity/default" className="text-blue-600 hover:underline">
-                        default
-                      </Link>
+                  {namespaces.map(([namespace]) => (
+                    <div key={namespace} className="grid grid-cols-2 gap-4 px-6 py-3">
+                      <div>
+                        <Link 
+                          href={`/${params.catalog}/${namespace}`} 
+                          className="text-blue-600 hover:underline"
+                        >
+                          {namespace}
+                        </Link>
+                      </div>
+                      <div>-</div>
                     </div>
-                    <div>07/17/2024, 18:40:05</div>
-                  </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -80,7 +115,7 @@ export default function CatalogPage({ params }: CatalogPageProps) {
           <dl className="space-y-4">
             <div>
               <dt className="text-sm font-medium text-muted-foreground">Created at</dt>
-              <dd className="text-sm">07/17/2024, 18:40:05</dd>
+              <dd className="text-sm">-</dd>
             </div>
           </dl>
         </div>
