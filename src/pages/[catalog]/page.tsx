@@ -1,18 +1,12 @@
 import { ChevronRight, MoreVertical, PenSquare } from "lucide-react"
-import Link from "next/link"
-import { notFound } from "next/navigation"
+import { Link } from "react-router-dom"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { CatalogAPIApiFp } from "@/lib/openapi/api"
 import { useEffect, useState } from "react"
-
-interface CatalogPageProps {
-  params: {
-    catalog: string
-  }
-}
+import { useParams } from "react-router-dom"
 
 async function getNamespaces(catalog: string) {
   try {
@@ -32,32 +26,29 @@ async function getNamespaces(catalog: string) {
   }
 }
 
-export default async function CatalogPage({ params }: CatalogPageProps) {
+export default function CatalogPage() {
   const [namespaces, setNamespaces] = useState<string[][]>([])
+  const { catalog } = useParams<{ catalog: string }>()
   useEffect(() => {
-    getNamespaces(params.catalog).then(setNamespaces)
-  }, [params.catalog])
-
-  if (!namespaces.length) {
-    notFound()
-  }
+    getNamespaces(catalog!).then(setNamespaces)
+  }, [catalog])
 
   return (
     <div className="flex flex-col">
       <div className="border-b">
         <div className="flex items-center gap-2 px-6 py-4 text-sm text-muted-foreground">
-          <Link href="/" className="hover:text-foreground">
+          <Link to="/" className="hover:text-foreground">
             Catalogs
           </Link>
           <ChevronRight className="h-4 w-4" />
-          <span className="text-foreground">{params.catalog}</span>
+          <span className="text-foreground">{catalog}</span>
         </div>
       </div>
       <div className="flex flex-1">
         <div className="flex-1 border-r">
           <div className="flex items-center justify-between border-b px-6 py-4">
             <div className="flex items-center gap-4">
-              <h1 className="text-xl font-semibold">{params.catalog}</h1>
+              <h1 className="text-xl font-semibold">{catalog}</h1>
             </div>
             <div className="flex items-center gap-2">
               <Button>Create Schema</Button>
@@ -96,7 +87,7 @@ export default async function CatalogPage({ params }: CatalogPageProps) {
                     <div key={namespace} className="grid grid-cols-2 gap-4 px-6 py-3">
                       <div>
                         <Link 
-                          href={`/${params.catalog}/${namespace}`} 
+                          to={`/${catalog}/${namespace}`} 
                           className="text-blue-600 hover:underline"
                         >
                           {namespace}

@@ -1,6 +1,6 @@
 // Move the existing page.tsx content here and update it
 import { ChevronRight, MoreVertical, Trash2 } from "lucide-react"
-import Link from "next/link"
+import { Link } from "react-router-dom"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -19,11 +19,11 @@ export default function SchemaPage({ params }: SchemaPageProps) {
     <div className="flex flex-col">
       <div className="border-b">
         <div className="flex items-center gap-2 px-6 py-4 text-sm text-muted-foreground">
-          <Link href="/" className="hover:text-foreground">
+          <Link to="/" className="hover:text-foreground">
             Catalogs
           </Link>
           <ChevronRight className="h-4 w-4" />
-          <Link href={`/catalog/${params.catalog}`} className="hover:text-foreground">
+          <Link to={`/catalog/${params.catalog}`} className="hover:text-foreground">
             {params.catalog}
           </Link>
           <ChevronRight className="h-4 w-4" />
