@@ -22,6 +22,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { CatalogAPIApiFp } from "@/lib/openapi/api"
 
 // Add these interfaces at the top of the file with other imports
 interface Catalog {
@@ -30,33 +31,10 @@ interface Catalog {
   prefix: string
 }
 
-// This is sample data - replace with your actual data structure
-const SAMPLE_CATALOG = [
-  {
-    id: "unity",
-    name: "unity",
-    namespaces: [
-      {
-        id: "default",
-        name: "default",
-        tables: [
-          { id: "marksheet", name: "marksheet" },
-          { id: "marksheet_uniform", name: "marksheet_uniform" },
-          { id: "numbers", name: "numbers" },
-          { id: "user_countries", name: "user_countries" },
-        ],
-        volumes: [
-          { id: "json_files", name: "json_files" },
-          { id: "txt_files", name: "txt_files" },
-        ],
-        functions: [
-          { id: "lowercase", name: "lowercase" },
-          { id: "sum", name: "sum" },
-        ],
-      },
-    ],
-  },
-]
+interface Namespace {
+  name: string
+  tables: string[]
+}
 
 function TreeItem({
   label,
@@ -117,12 +95,13 @@ function FunctionItem({ name }: { name: string }) {
 }
 
 export function AppSidebar() {
-  // Add these new states
   const [catalogs, setCatalogs] = React.useState<Catalog[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
   const [selectedCatalog, setSelectedCatalog] = React.useState<Catalog | null>(null)
+  const [namespaces, setNamespaces] = React.useState<Namespace[]>([])
+  const [namespacesLoading, setNamespacesLoading] = React.useState(false)
 
-  // Add this useEffect to fetch catalogs
+  // Fetch catalogs on mount
   React.useEffect(() => {
     async function fetchCatalogs() {
       try {
@@ -139,6 +118,53 @@ export function AppSidebar() {
 
     fetchCatalogs()
   }, [])
+
+  // Fetch namespaces when catalog changes
+  React.useEffect(() => {
+    async function fetchNamespacesAndTables() {
+      if (!selectedCatalog) return;
+      
+      setNamespacesLoading(true)
+      try {
+        const api = CatalogAPIApiFp()
+        const fetchNamespaces = api.listNamespaces('')
+        const response = await fetchNamespaces(fetch, `/api/catalog/${selectedCatalog.name}`)
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch namespaces: ${response.statusText}`)
+        }
+
+        const data = await response.json()
+        // Each namespace is an array where first element is the namespace name
+        const namespacesList = data.namespaces || []
+
+        // Fetch tables for each namespace
+        const namespacesWithTables = await Promise.all(
+          namespacesList.map(async (namespace: string[]) => {
+            // Use the first element of the namespace array as the namespace name
+            const namespaceName = namespace.join('.')
+            const fetchTables = api.listTables('', namespaceName)
+            const tablesResponse = await fetchTables(fetch, `/api/catalog/${selectedCatalog.name}`)
+            const tablesData = await tablesResponse.json()
+            
+            return {
+              name: namespaceName,
+              tables: tablesData.identifiers.map((table: any) => table.name),
+            } as Namespace
+          })
+        )
+
+        setNamespaces(namespacesWithTables)
+      } catch (error) {
+        console.error("Error fetching namespaces and tables:", error)
+        setNamespaces([])
+      } finally {
+        setNamespacesLoading(false)
+      }
+    }
+
+    fetchNamespacesAndTables()
+  }, [selectedCatalog])
 
   return (
     <Sidebar>
@@ -167,43 +193,31 @@ export function AppSidebar() {
       <SidebarContent>
         <div className="px-2 py-2">
           <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">Browse</h2>
-          <SidebarMenu>
-            {SAMPLE_CATALOG[0].namespaces.map((namespace) => (
-              <SidebarMenuItem key={namespace.id}>
-                <TreeItem label={namespace.name} icon={FolderTree}>
-                  <SidebarMenu>
-                    <TreeItem label="Tables" icon={LayoutGrid}>
-                      <SidebarMenu>
-                        {namespace.tables.map((table) => (
-                          <SidebarMenuItem key={table.id}>
-                            <TableItem name={table.name} />
-                          </SidebarMenuItem>
-                        ))}
-                      </SidebarMenu>
-                    </TreeItem>
-                    <TreeItem label="Volumes" icon={LayoutGrid}>
-                      <SidebarMenu>
-                        {namespace.volumes.map((volume) => (
-                          <SidebarMenuItem key={volume.id}>
-                            <VolumeItem name={volume.name} />
-                          </SidebarMenuItem>
-                        ))}
-                      </SidebarMenu>
-                    </TreeItem>
-                    <TreeItem label="Functions" icon={LayoutGrid}>
-                      <SidebarMenu>
-                        {namespace.functions.map((func) => (
-                          <SidebarMenuItem key={func.id}>
-                            <FunctionItem name={func.name} />
-                          </SidebarMenuItem>
-                        ))}
-                      </SidebarMenu>
-                    </TreeItem>
-                  </SidebarMenu>
-                </TreeItem>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
+          {namespacesLoading ? (
+            <div className="flex items-center justify-center py-4">
+              <span className="text-sm text-muted-foreground">Loading...</span>
+            </div>
+          ) : (
+            <SidebarMenu>
+              {namespaces.map((namespace) => (
+                <SidebarMenuItem key={namespace.name}>
+                  <TreeItem label={namespace.name} icon={FolderTree}>
+                    <SidebarMenu>
+                      <TreeItem label="Tables" icon={LayoutGrid}>
+                        <SidebarMenu>
+                          {namespace.tables.map((table) => (
+                            <SidebarMenuItem key={table}>
+                              <TableItem name={table} />
+                            </SidebarMenuItem>
+                          ))}
+                        </SidebarMenu>
+                      </TreeItem>
+                    </SidebarMenu>
+                  </TreeItem>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          )}
         </div>
       </SidebarContent>
     </Sidebar>
