@@ -1,6 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import CatalogPage from './pages/[catalog]/page';
+import CatalogPage from './pages/catalog/page';
 import RootLayout from './pages/layout';
 import OverviewPage from './pages/page';
 
