@@ -23,8 +23,15 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
+// Add these interfaces at the top of the file with other imports
+interface Catalog {
+  name: string
+  url: string
+  prefix: string
+}
+
 // This is sample data - replace with your actual data structure
-const catalogs = [
+const SAMPLE_CATALOG = [
   {
     id: "unity",
     name: "unity",
@@ -110,22 +117,47 @@ function FunctionItem({ name }: { name: string }) {
 }
 
 export function AppSidebar() {
-  const [selectedCatalog, setSelectedCatalog] = React.useState(catalogs[0])
+  // Add these new states
+  const [catalogs, setCatalogs] = React.useState<Catalog[]>([])
+  const [isLoading, setIsLoading] = React.useState(true)
+  const [selectedCatalog, setSelectedCatalog] = React.useState<Catalog | null>(null)
+
+  // Add this useEffect to fetch catalogs
+  React.useEffect(() => {
+    async function fetchCatalogs() {
+      try {
+        const response = await fetch('/api/catalogs')
+        const data = await response.json()
+        setCatalogs(data)
+        setSelectedCatalog(data[0]) // Select first catalog by default
+      } catch (error) {
+        console.error('Failed to fetch catalogs:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchCatalogs()
+  }, [])
 
   return (
     <Sidebar>
       <SidebarHeader className="border-b px-2 py-2">
         <Select
-          defaultValue={selectedCatalog.id}
-          onValueChange={(value) => setSelectedCatalog(catalogs.find((catalog) => catalog.id === value) || catalogs[0])}
+          disabled={isLoading}
+          value={selectedCatalog?.name}
+          onValueChange={(value) => {
+            const catalog = catalogs.find((c) => c.name === value)
+            if (catalog) setSelectedCatalog(catalog)
+          }}
         >
           <SelectTrigger>
             <Database className="mr-2 h-4 w-4" />
-            <SelectValue placeholder="Select catalog" />
+            <SelectValue placeholder={isLoading ? "Loading..." : "Select catalog"} />
           </SelectTrigger>
           <SelectContent>
             {catalogs.map((catalog) => (
-              <SelectItem key={catalog.id} value={catalog.id}>
+              <SelectItem key={catalog.name} value={catalog.name}>
                 {catalog.name}
               </SelectItem>
             ))}
@@ -136,7 +168,7 @@ export function AppSidebar() {
         <div className="px-2 py-2">
           <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">Browse</h2>
           <SidebarMenu>
-            {selectedCatalog.namespaces.map((namespace) => (
+            {SAMPLE_CATALOG[0].namespaces.map((namespace) => (
               <SidebarMenuItem key={namespace.id}>
                 <TreeItem label={namespace.name} icon={FolderTree}>
                   <SidebarMenu>
