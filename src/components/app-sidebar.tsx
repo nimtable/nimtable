@@ -22,7 +22,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { CatalogAPIApiFp } from "@/lib/openapi/api"
+import { Api } from "@/lib/api"
 
 // Add these interfaces at the top of the file with other imports
 interface Catalog {
@@ -126,9 +126,8 @@ export function AppSidebar() {
       
       setNamespacesLoading(true)
       try {
-        const api = CatalogAPIApiFp()
-        const fetchNamespaces = api.listNamespaces('')
-        const response = await fetchNamespaces(fetch, `/api/catalog/${selectedCatalog.name}`)
+        const api = new Api({ baseUrl: `/api/catalog/${selectedCatalog.name}`})
+        const response = await api.v1.listNamespaces('')
         
         if (!response.ok) {
           throw new Error(`Failed to fetch namespaces: ${response.statusText}`)
@@ -143,8 +142,7 @@ export function AppSidebar() {
           namespacesList.map(async (namespace: string[]) => {
             // Use the first element of the namespace array as the namespace name
             const namespaceName = namespace.join('.')
-            const fetchTables = api.listTables('', namespaceName)
-            const tablesResponse = await fetchTables(fetch, `/api/catalog/${selectedCatalog.name}`)
+            const tablesResponse = await api.v1.listTables('', namespaceName)
             const tablesData = await tablesResponse.json()
             
             return {

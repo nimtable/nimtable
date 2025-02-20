@@ -4,15 +4,14 @@ import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { CatalogAPIApiFp } from "@/lib/openapi/api"
 import { useEffect, useState } from "react"
+import { Api } from "@/lib/api"
 import { useParams } from "react-router-dom"
 
 async function getNamespaces(catalog: string) {
   try {
-    const api = CatalogAPIApiFp()
-    const fetchNamespaces = api.listNamespaces('')
-    const response = await fetchNamespaces(fetch, `/api/catalog/${catalog}`)
+    const api = new Api({ baseUrl: `/api/catalog/${catalog}`})
+    const response = await api.v1.listNamespaces('')
     
     if (!response.ok) {
       throw new Error(`Failed to fetch namespaces: ${response.statusText}`)
