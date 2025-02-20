@@ -23,6 +23,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { Api } from "@/lib/api"
+import { useNavigate } from "react-router-dom"
 
 // Add these interfaces at the top of the file with other imports
 interface Catalog {
@@ -94,10 +95,14 @@ function FunctionItem({ name }: { name: string }) {
   )
 }
 
-export function AppSidebar() {
+export function AppSidebar({
+  selectedCatalog
+}: {
+  selectedCatalog?: string
+}) {
+  const navigate = useNavigate();
   const [catalogs, setCatalogs] = React.useState<Catalog[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
-  const [selectedCatalog, setSelectedCatalog] = React.useState<Catalog | null>(null)
   const [namespaces, setNamespaces] = React.useState<Namespace[]>([])
   const [namespacesLoading, setNamespacesLoading] = React.useState(false)
 
@@ -108,7 +113,6 @@ export function AppSidebar() {
         const response = await fetch('/api/catalogs')
         const data = await response.json()
         setCatalogs(data)
-        setSelectedCatalog(data[0]) // Select first catalog by default
       } catch (error) {
         console.error('Failed to fetch catalogs:', error)
       } finally {
@@ -126,7 +130,7 @@ export function AppSidebar() {
       
       setNamespacesLoading(true)
       try {
-        const api = new Api({ baseUrl: `/api/catalog/${selectedCatalog.name}`})
+        const api = new Api({ baseUrl: `/api/catalog/${selectedCatalog}`})
         const response = await api.v1.listNamespaces('')
         
         if (!response.ok) {
@@ -169,10 +173,9 @@ export function AppSidebar() {
       <SidebarHeader className="border-b px-2 py-2">
         <Select
           disabled={isLoading}
-          value={selectedCatalog?.name}
+          value={selectedCatalog}
           onValueChange={(value) => {
-            const catalog = catalogs.find((c) => c.name === value)
-            if (catalog) setSelectedCatalog(catalog)
+            navigate(`/catalog/${value}`)
           }}
         >
           <SelectTrigger>
