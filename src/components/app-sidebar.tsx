@@ -4,10 +4,12 @@ import {
   ChevronRight,
   Database,
   FileText,
+  Folder,
   FolderTree,
   ActivityIcon as Function,
   LayoutGrid,
   Table,
+  View,
 } from "lucide-react"
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
@@ -35,6 +37,7 @@ interface Catalog {
 interface NamespaceTables {
   name: string
   tables: string[]
+  views: string[]
 }
 
 function TreeItem({
@@ -73,6 +76,17 @@ function TableItem({ catalog, namespace, name }: { catalog: string, namespace: s
   )
 }
 
+function ViewItem({ catalog, namespace, name }: { catalog: string, namespace: string, name: string }) {
+  return (
+    <SidebarMenuButton asChild className="pl-6">
+      <Link to={`/catalog/${catalog}/namespace/${namespace}/view/${name}`}>
+        <View className="h-4 w-4 shrink-0" />
+        <span>{name}</span>
+      </Link>
+    </SidebarMenuButton>
+  )
+}
+
 async function loadCatalogs(): Promise<Catalog[]> {
   const response = await fetch('/api/catalogs')
   if (!response.ok) {
@@ -93,10 +107,11 @@ async function loadNamespacesAndTables(catalog: string) {
     namespacesList.map(async (namespace: string[]) => {
       const namespaceName = namespace.join('.')
       const tablesResponse = await api.v1.listTables('', namespaceName)
-      
+      const viewsResponse = await api.v1.listViews('', namespaceName)
       return {
         name: namespaceName,
         tables: tablesResponse.identifiers?.map((table: any) => table.name),
+        views: viewsResponse.identifiers?.map((view: any) => view.name),
       } as NamespaceTables
     })
   )
@@ -180,11 +195,20 @@ export function AppSidebar() {
                 <SidebarMenuItem key={namespace.name}>
                   <TreeItem label={namespace.name} icon={FolderTree}>
                     <SidebarMenu>
-                      <TreeItem label="Tables" icon={LayoutGrid}>
+                      <TreeItem label="Tables" icon={Folder}>
                         <SidebarMenu>
                           {namespace.tables.map((table) => (
                             <SidebarMenuItem key={table}>
                               <TableItem catalog={catalog!} namespace={namespace.name} name={table} />
+                            </SidebarMenuItem>
+                          ))}
+                        </SidebarMenu>
+                      </TreeItem>
+                      <TreeItem label="Views" icon={Folder}>
+                        <SidebarMenu>
+                          {namespace.views.map((view) => (
+                            <SidebarMenuItem key={view}>
+                              <ViewItem catalog={catalog!} namespace={namespace.name} name={view} />
                             </SidebarMenuItem>
                           ))}
                         </SidebarMenu>

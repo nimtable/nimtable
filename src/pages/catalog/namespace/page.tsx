@@ -24,6 +24,12 @@ async function getTables(catalog: string, namespace: string) {
   return response.identifiers
 }
 
+async function getViews(catalog: string, namespace: string) {
+  const api = new Api({ baseUrl: `/api/catalog/${catalog}`})
+  const response = await api.v1.listViews('', namespace)
+  return response.identifiers
+}
+
 export default function NamespacePage() {
   const { catalog, namespace } = useParams<{ catalog: string, namespace: string }>()
   if (!catalog || !namespace) {
@@ -32,10 +38,11 @@ export default function NamespacePage() {
   
   const [metadata, setMetadata] = useState<Record<string, string> | undefined>(undefined)
   const [tables, setTables] = useState<TableIdentifier[] | undefined>(undefined)
-
+  const [views, setViews] = useState<TableIdentifier[] | undefined>(undefined)
   useEffect(() => {
     getNamespaceMetadata(catalog, namespace).then(setMetadata)
     getTables(catalog, namespace).then(setTables)
+    getViews(catalog, namespace).then(setViews)
   }, [catalog, namespace])
 
   return (
@@ -121,6 +128,35 @@ export default function NamespacePage() {
                 </TableBody>
               </Table>
             </div>
+
+            {/* Views List */}
+            <div className="mt-8">
+              <h2 className="mb-4 text-lg font-semibold">Views</h2>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Namespace</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {views?.map((view) => (
+                    <TableRow key={view.name}>
+                      <TableCell>
+                        <Link 
+                          to={`/catalog/${catalog}/namespace/${namespace}/view/${view.name}`}
+                          className="hover:underline"
+                        >
+                          {view.name}
+                        </Link>
+                      </TableCell>
+                      <TableCell>{view.namespace.join('.')}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            
           </div>
         </div>
       </div>
