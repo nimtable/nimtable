@@ -12,7 +12,7 @@
  *   npx swagger-typescript-api -p https://raw.githubusercontent.com/apache/iceberg/refs/heads/main/open-api/rest-catalog-open-api.yaml -o ./src/lib -n api.ts --unwrap-response-data
  * 
  * If you make any changes to this file manually, please also note down here.
- * - Added `format: "json"` to all GET requests to ensure the response is parsed.
+ * - Added `format: "json"` to all requests to ensure the response is parsed.
  * - Modified `request()` to throw `r.error` instead of `data` if the response is not ok.
  */
 
@@ -1660,6 +1660,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         body: data,
         secure: true,
         type: ContentType.UrlEncoded,
+        format: "json",
         ...params,
       }),
 
@@ -1721,6 +1722,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         body: data,
         secure: true,
         type: ContentType.Json,
+        format: "json",
         ...params,
       }),
 
@@ -1756,6 +1758,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         path: `/v1/${prefix}/namespaces/${namespace}`,
         method: "HEAD",
         secure: true,
+        format: "json",
         ...params,
       }),
 
@@ -1773,6 +1776,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         path: `/v1/${prefix}/namespaces/${namespace}`,
         method: "DELETE",
         secure: true,
+        format: "json",
         ...params,
       }),
 
@@ -1797,6 +1801,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         body: data,
         secure: true,
         type: ContentType.Json,
+        format: "json",
         ...params,
       }),
 
@@ -1854,6 +1859,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         body: data,
         secure: true,
         type: ContentType.Json,
+        format: "json",
         ...params,
       }),
 
@@ -1879,6 +1885,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         body: data,
         secure: true,
         type: ContentType.Json,
+        format: "json",
         ...params,
       }),
 
@@ -1920,6 +1927,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         path: `/v1/${prefix}/namespaces/${namespace}/tables/${table}/plan/${planId}`,
         method: "DELETE",
         secure: true,
+        format: "json",
         ...params,
       }),
 
@@ -1945,6 +1953,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         body: data,
         secure: true,
         type: ContentType.Json,
+        format: "json",
         ...params,
       }),
 
@@ -1964,6 +1973,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         body: data,
         secure: true,
         type: ContentType.Json,
+        format: "json",
         ...params,
       }),
 
@@ -2020,6 +2030,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         body: data,
         secure: true,
         type: ContentType.Json,
+        format: "json",
         ...params,
       }),
 
@@ -2050,6 +2061,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         method: "DELETE",
         query: query,
         secure: true,
+        format: "json",
         ...params,
       }),
 
@@ -2067,6 +2079,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         path: `/v1/${prefix}/namespaces/${namespace}/tables/${table}`,
         method: "HEAD",
         secure: true,
+        format: "json",
         ...params,
       }),
 
@@ -2104,6 +2117,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         body: data,
         secure: true,
         type: ContentType.Json,
+        format: "json",
         ...params,
       }),
 
@@ -2129,6 +2143,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         body: data,
         secure: true,
         type: ContentType.Json,
+        format: "json",
         ...params,
       }),
 
@@ -2148,6 +2163,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         body: data,
         secure: true,
         type: ContentType.Json,
+        format: "json",
         ...params,
       }),
 
@@ -2205,6 +2221,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         body: data,
         secure: true,
         type: ContentType.Json,
+        format: "json",
         ...params,
       }),
 
@@ -2248,6 +2265,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         body: data,
         secure: true,
         type: ContentType.Json,
+        format: "json",
         ...params,
       }),
 
@@ -2265,6 +2283,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         path: `/v1/${prefix}/namespaces/${namespace}/views/${view}`,
         method: "DELETE",
         secure: true,
+        format: "json",
         ...params,
       }),
 
@@ -2282,6 +2301,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         path: `/v1/${prefix}/namespaces/${namespace}/views/${view}`,
         method: "HEAD",
         secure: true,
+        format: "json",
         ...params,
       }),
 
@@ -2301,6 +2321,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         body: data,
         secure: true,
         type: ContentType.Json,
+        format: "json",
         ...params,
       }),
   };

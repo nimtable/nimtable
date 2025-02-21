@@ -10,6 +10,16 @@ import { useToast } from "@/hooks/use-toast"
 import { errorToString } from "@/lib/utils"
 import { Table, TableHeader, TableBody, TableCell, TableHead, TableRow } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 
 export default function CatalogPage() {
@@ -19,6 +29,9 @@ export default function CatalogPage() {
   const { toast } = useToast()
   const api = new Api({ baseUrl: `/api/catalog/${catalog}`})
   const [showDetails, setShowDetails] = useState(true)
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [newNamespace, setNewNamespace] = useState("")
+  const [isCreating, setIsCreating] = useState(false)
 
   useEffect(() => {
     api.v1.listNamespaces('').then((response) => {
@@ -43,6 +56,44 @@ export default function CatalogPage() {
 
   }, [catalog])
 
+  const handleCreateNamespace = async () => {
+    if (!newNamespace.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Invalid namespace",
+        description: "Namespace name cannot be empty",
+      })
+      return
+    }
+
+    setIsCreating(true)
+    try {
+      await api.v1.createNamespace('', {
+        namespace: newNamespace.split('.'),
+        properties: {}
+      })
+
+      toast({
+        title: "Namespace created",
+        description: `Successfully created namespace "${newNamespace}"`,
+      })
+
+      const response = await api.v1.listNamespaces('')
+      setNamespaces(response.namespaces?.map(n => n.join('.')) || [])
+      
+      setCreateDialogOpen(false)
+      setNewNamespace("")
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Failed to create namespace",
+        description: errorToString(error),
+      })
+    } finally {
+      setIsCreating(false)
+    }
+  }
+
   return (
     <div className="flex flex-col h-full">
       <div className="border-b">
@@ -61,7 +112,7 @@ export default function CatalogPage() {
               <h1 className="text-xl font-semibold">{catalog}</h1>
             </div>
             <div className="flex items-center gap-2">
-              <Button>Create Namespace</Button>
+              <Button onClick={() => setCreateDialogOpen(true)}>Create Namespace</Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon">
@@ -187,6 +238,42 @@ export default function CatalogPage() {
           )}
         </div>
       </div>
+
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Namespace</DialogTitle>
+            <DialogDescription>
+              Enter a name for the new namespace. Use dots (.) to create nested namespaces.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Input
+              id="name"
+              value={newNamespace}
+              onChange={(e) => setNewNamespace(e.target.value)}
+              placeholder="e.g. my_namespace or parent.child"
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setCreateDialogOpen(false)
+                setNewNamespace("")
+              }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleCreateNamespace}
+              disabled={isCreating}
+            >
+              {isCreating ? "Creating..." : "Create"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
