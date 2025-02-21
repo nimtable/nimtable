@@ -6,7 +6,8 @@ import { Link } from "react-router-dom"
 import { Api, LoadTableResult, Schema, StructField } from "@/lib/api"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
+import { cn, errorToString } from "@/lib/utils"
+import { useToast } from "@/hooks/use-toast"
 
 async function loadTableData(catalog: string, namespace: string, table: string) {
   const api = new Api({ baseUrl: `/api/catalog/${catalog}` })
@@ -16,6 +17,7 @@ async function loadTableData(catalog: string, namespace: string, table: string) 
 
 export default function TablePage() {
   const { catalog, namespace, table } = useParams<{ catalog: string, namespace: string, table: string }>()
+  const { toast } = useToast()
   if (!catalog || !namespace || !table) {
     throw new Error("Invalid table path")
   }
@@ -24,8 +26,16 @@ export default function TablePage() {
   const [showDetails, setShowDetails] = useState(true)
 
   useEffect(() => {
-    loadTableData(catalog, namespace, table).then(setTableData)
-  }, [catalog, namespace, table])
+    loadTableData(catalog, namespace, table)
+      .then(setTableData)
+      .catch((error) => {
+        toast({
+          variant: "destructive",
+          title: "Error loading table",
+          description: errorToString(error),
+        })
+      })
+  }, [catalog, namespace, table, toast])
 
   if (!tableData) return null
 

@@ -13,6 +13,7 @@
  * 
  * If you make any changes to this file manually, please also note down here.
  * - Added `format: "json"` to all GET requests to ensure the response is parsed.
+ * - Modified `request()` to throw `r.error` instead of `data` if the response is not ok.
  */
 
 type UtilRequiredKeys<T, K extends keyof T> = Omit<T, K> & Required<Pick<T, K>>;
@@ -1601,7 +1602,7 @@ export class HttpClient<SecurityDataType = unknown> {
         this.abortControllers.delete(cancelToken);
       }
 
-      if (!response.ok) throw data;
+      if (!response.ok) throw r.error;
       return data.data;
     });
   };
