@@ -1,5 +1,5 @@
 // Move the existing page.tsx content here and update it
-import { ChevronRight, MoreVertical, Trash2 } from "lucide-react"
+import { ChevronRight, FolderTree, MenuIcon, MoreVertical, Trash2 } from "lucide-react"
 import { Link, useParams } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 
@@ -42,12 +42,8 @@ export default function NamespacePage() {
     <div className="flex flex-col">
       <div className="border-b">
         <div className="flex items-center gap-2 px-6 py-4 text-sm text-muted-foreground">
-          <Link to="/" className="hover:text-foreground">
-            Catalogs
-          </Link>
-          <ChevronRight className="h-4 w-4" />
           <Link to={`/catalog/${catalog}`} className="hover:text-foreground">
-            {catalog}
+            Namespaces
           </Link>
           <ChevronRight className="h-4 w-4" />
           <span className="text-foreground">{namespace}</span>
@@ -57,7 +53,8 @@ export default function NamespacePage() {
         <div className="flex-1 border-r">
           <div className="flex items-center justify-between border-b px-6 py-4">
             <div className="flex items-center gap-4">
-              <h1 className="text-xl font-semibold">{`${catalog}.${namespace}`}</h1>
+              <FolderTree className="h-4 w-4" />
+              <h1 className="text-xl font-semibold">{`${namespace}`}</h1>
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -100,9 +97,6 @@ export default function NamespacePage() {
             {/* Tables List */}
             <div>
               <h2 className="mb-4 text-lg font-semibold">Tables</h2>
-              <div className="mb-4">
-                <Input type="search" placeholder="Search tables" className="max-w-sm" />
-              </div>
               <Table>
                 <TableHeader>
                   <TableRow>

@@ -57,19 +57,11 @@ export default function CatalogPage() {
             </div>
           </div>
           <div className="p-6">
-            <div className="mb-8">
-              <h2 className="mb-2 text-lg font-semibold">Description</h2>
-              <p className="text-sm text-muted-foreground">Main catalog</p>
-            </div>
             <div>
               <h2 className="mb-4 text-lg font-semibold">Namespaces</h2>
-              <div className="mb-4">
-                <Input type="search" placeholder="Search" className="max-w-sm" />
-              </div>
               <div className="rounded-lg border">
                 <div className="grid grid-cols-2 gap-4 border-b px-6 py-3 font-medium">
                   <div>Name</div>
-                  <div>Created At</div>
                 </div>
                 <div className="divide-y">
                   {namespaces.map((namespace) => (
@@ -82,7 +74,6 @@ export default function CatalogPage() {
                           {namespace}
                         </Link>
                       </div>
-                      <div>-</div>
                     </div>
                   ))}
                 </div>
