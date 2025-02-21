@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "start": "webpack serve --mode development",
+    "dev": "webpack serve --mode development",
     "build": "webpack --mode production",
     "lint": "eslint src/**/*.{ts,tsx}"
   },
@@ -30,6 +30,7 @@
     "url": "^0.11.4"
   },
   "devDependencies": {
+    "@eslint/js": "^9.20.0",
     "@types/node": "^22",
     "@types/react": "^18",
     "@types/react-dom": "^18",
@@ -37,6 +38,7 @@
     "@types/webpack-dev-server": "^4.7.2",
     "autoprefixer": "^10.4.20",
     "css-loader": "^6.10.0",
+    "eslint": "^9.20.1",
     "html-webpack-plugin": "^5.6.0",
     "postcss": "^8",
     "postcss-loader": "^8.1.1",
@@ -45,7 +47,8 @@
     "tailwindcss": "^3.4.17",
     "ts-loader": "^9.5.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.24.1",
     "webpack": "^5.90.3",
     "webpack-cli": "^5.1.4",
     "webpack-dev-server": "^5.0.2"
