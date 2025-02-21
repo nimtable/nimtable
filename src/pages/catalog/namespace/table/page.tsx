@@ -55,6 +55,8 @@ export default function TablePage() {
             {namespace}
           </Link>
           <ChevronRight className="h-4 w-4" />
+          <span className="text-muted-foreground">Tables</span>
+          <ChevronRight className="h-4 w-4" />
           <span className="text-foreground">{table}</span>
         </div>
       </div>
