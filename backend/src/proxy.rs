@@ -44,7 +44,8 @@ impl Handler for ProxyHandler {
             let path = relative_path.strip_prefix("/v1/").unwrap_or(relative_path);
             let prefix = self.prefix.clone().unwrap_or("".to_string());
             format!("{}/v1/{}/{}", self.target_base, prefix, path)
-        };
+        }
+        .replace("//", "/");
 
         info!(
             "proxying {} {} to {}",
