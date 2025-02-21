@@ -21,7 +21,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { Api } from "@/lib/api"
-import { useNavigate, useParams } from "react-router-dom"
+import { Link, useNavigate, useParams } from "react-router-dom"
 
 // Add these interfaces at the top of the file with other imports
 interface Catalog {
@@ -30,7 +30,7 @@ interface Catalog {
   prefix: string
 }
 
-interface Namespace {
+interface NamespaceTables {
   name: string
   tables: string[]
 }
@@ -60,13 +60,13 @@ function TreeItem({
   )
 }
 
-function TableItem({ name }: { name: string }) {
+function TableItem({ catalog, namespace, name }: { catalog: string, namespace: string, name: string }) {
   return (
     <SidebarMenuButton asChild className="pl-6">
-      <a href={`#${name}`}>
+      <Link to={`/catalog/${catalog}/namespace/${namespace}/table/${name}`}>
         <Table className="h-4 w-4 shrink-0" />
         <span>{name}</span>
-      </a>
+      </Link>
     </SidebarMenuButton>
   )
 }
@@ -101,7 +101,7 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const [catalogs, setCatalogs] = React.useState<Catalog[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
-  const [namespaces, setNamespaces] = React.useState<Namespace[]>([])
+  const [namespaces, setNamespaces] = React.useState<NamespaceTables[]>([])
   const [namespacesLoading, setNamespacesLoading] = React.useState(false)
 
   // Fetch catalogs on mount
@@ -144,7 +144,7 @@ export function AppSidebar() {
             return {
               name: namespaceName,
               tables: tablesResponse.identifiers?.map((table: any) => table.name),
-            } as Namespace
+            } as NamespaceTables
           })
         )
 
@@ -200,7 +200,7 @@ export function AppSidebar() {
                         <SidebarMenu>
                           {namespace.tables.map((table) => (
                             <SidebarMenuItem key={table}>
-                              <TableItem name={table} />
+                              <TableItem catalog={catalog!} namespace={namespace.name} name={table} />
                             </SidebarMenuItem>
                           ))}
                         </SidebarMenu>

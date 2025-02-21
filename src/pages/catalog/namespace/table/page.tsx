@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
-import { ChevronRight, Database, PanelRightClose, PanelRightOpen } from "lucide-react"
+import { ChevronRight, Table as TableIcon, PanelRightClose, PanelRightOpen } from "lucide-react"
 import { Link } from "react-router-dom"
 
 import { Api, LoadTableResult, Schema, StructField } from "@/lib/api"
@@ -63,7 +63,7 @@ export default function TablePage() {
         <div className="flex-1 overflow-y-auto border-r">
           <div className="flex items-center justify-between border-b px-6 py-4">
             <div className="flex items-center gap-4">
-              <Database className="h-4 w-4" />
+              <TableIcon className="h-4 w-4" />
               <h1 className="text-xl font-semibold">{table}</h1>
             </div>
           </div>
