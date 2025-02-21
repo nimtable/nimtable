@@ -1,13 +1,13 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import CatalogPage from './pages/catalog/page';
+import CatalogPage from './pages/catalog/catalog';
 import RootLayout from './pages/layout';
 import WelcomePage from './pages/welcome';
 import NotFoundPage from './pages/not-found';
-import NamespacePage from './pages/catalog/namespace/page';
+import NamespacePage from './pages/catalog/namespace';
 import CatalogLayout from './layouts/catalog-layout';
-import TablePage from './pages/catalog/namespace/table/page';
-import ViewPage from './pages/catalog/namespace/view/page';
+import TablePage from './pages/catalog/table';
+import ViewPage from './pages/catalog/view';
 
 const App: React.FC = () => {
   return (
