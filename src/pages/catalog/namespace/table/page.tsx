@@ -126,23 +126,32 @@ export default function TablePage() {
         {/* Details Panel */}
         <div
           className={cn(
-            "border-l bg-muted/10 transition-all duration-300",
+            "border-l bg-muted/10 transition-all duration-300 relative",
             showDetails ? "w-[400px]" : "w-0"
           )}
         >
-          <div className="flex items-center justify-between p-6 border-b">
-            <h2 className="text-lg font-semibold">Details</h2>
+          {!showDetails && (
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setShowDetails(!showDetails)}
+              className="absolute -left-10 top-6"
+              onClick={() => setShowDetails(true)}
             >
-              {showDetails ? (
-                <PanelRightClose className="h-4 w-4" />
-              ) : (
-                <PanelRightOpen className="h-4 w-4" />
-              )}
+              <PanelRightOpen className="h-4 w-4" />
             </Button>
+          )}
+
+          <div className="flex items-center justify-between px-6 py-4 border-b">
+            <h2 className="text-lg font-semibold">Details</h2>
+            {showDetails && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowDetails(false)}
+              >
+                <PanelRightClose className="h-4 w-4" />
+              </Button>
+            )}
           </div>
 
           {showDetails && (
