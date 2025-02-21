@@ -2,24 +2,30 @@ import { ChevronRight, MoreVertical, PenSquare } from "lucide-react"
 import { Link } from "react-router-dom"
 
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useEffect, useState } from "react"
 import { Api } from "@/lib/api"
 import { useParams } from "react-router-dom"
+import { useToast } from "@/hooks/use-toast"
+import { errorToString } from "@/lib/utils"
 
-async function getNamespaces(catalog: string) {
-  const api = new Api({ baseUrl: `/api/catalog/${catalog}`})
-  const response = await api.v1.listNamespaces('')
-  
-  return response.namespaces?.map((namespace) => namespace.join('.')) || []
-}
 
 export default function CatalogPage() {
-  const [namespaces, setNamespaces] = useState<string[]>([])
+  const [namespaces, setNamespaces] = useState<string[] | undefined>(undefined)
   const { catalog } = useParams<{ catalog: string }>()
+  const { toast } = useToast()
+  const api = new Api({ baseUrl: `/api/catalog/${catalog}`})
+
   useEffect(() => {
-    getNamespaces(catalog!).then(setNamespaces)
+    api.v1.listNamespaces('').then((response) => {
+      setNamespaces(response.namespaces?.map(n => n.join('.')) || [])
+    }).catch((error) => {
+      toast({
+        variant: "destructive",
+        title: "Failed to list namespaces",
+        description: errorToString(error),
+      })
+    })
   }, [catalog])
 
   return (
@@ -64,7 +70,7 @@ export default function CatalogPage() {
                   <div>Name</div>
                 </div>
                 <div className="divide-y">
-                  {namespaces.map((namespace) => (
+                  {namespaces && namespaces.map((namespace) => (
                     <div key={namespace} className="grid grid-cols-2 gap-4 px-6 py-3">
                       <div>
                         <Link 

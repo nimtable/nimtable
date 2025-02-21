@@ -31,7 +31,7 @@ export default function TablePage() {
       .catch((error) => {
         toast({
           variant: "destructive",
-          title: "Error loading table",
+          title: "Failed to load table",
           description: errorToString(error),
         })
       })

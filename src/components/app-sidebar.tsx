@@ -22,6 +22,8 @@ import {
 } from "@/components/ui/sidebar"
 import { Api } from "@/lib/api"
 import { Link, useNavigate, useParams } from "react-router-dom"
+import { useToast } from "@/hooks/use-toast"
+import { errorToString } from "@/lib/utils"
 
 // Add these interfaces at the top of the file with other imports
 interface Catalog {
@@ -71,101 +73,83 @@ function TableItem({ catalog, namespace, name }: { catalog: string, namespace: s
   )
 }
 
-function VolumeItem({ name }: { name: string }) {
-  return (
-    <SidebarMenuButton asChild className="pl-6">
-      <a href={`#${name}`}>
-        <FileText className="h-4 w-4 shrink-0" />
-        <span>{name}</span>
-      </a>
-    </SidebarMenuButton>
-  )
+async function loadCatalogs(): Promise<Catalog[]> {
+  const response = await fetch('/api/catalogs')
+  if (!response.ok) {
+    throw new Error(`Failed to fetch catalogs: ${response.statusText}`)
+  }
+  return await response.json()
 }
 
-function FunctionItem({ name }: { name: string }) {
-  return (
-    <SidebarMenuButton asChild className="pl-6">
-      <a href={`#${name}`}>
-        <Function className="h-4 w-4 shrink-0" />
-        <span>{name}</span>
-      </a>
-    </SidebarMenuButton>
+async function loadNamespacesAndTables(catalog: string) {
+  const api = new Api({ baseUrl: `/api/catalog/${catalog}` })
+  const response = await api.v1.listNamespaces('')
+  
+  // Each namespace is an array where first element is the namespace name
+  const namespacesList = response.namespaces || []
+
+  // Fetch tables for each namespace
+  const namespacesWithTables = await Promise.all(
+    namespacesList.map(async (namespace: string[]) => {
+      const namespaceName = namespace.join('.')
+      const tablesResponse = await api.v1.listTables('', namespaceName)
+      
+      return {
+        name: namespaceName,
+        tables: tablesResponse.identifiers?.map((table: any) => table.name),
+      } as NamespaceTables
+    })
   )
+
+  return namespacesWithTables
 }
 
 export function AppSidebar() {
-  const {
-    catalog,
-  } = useParams<{ catalog: string }>()
+  const { toast } = useToast()
+  const { catalog } = useParams<{ catalog: string }>()
+  const navigate = useNavigate()
 
-  const navigate = useNavigate();
   const [catalogs, setCatalogs] = React.useState<Catalog[]>([])
-  const [isLoading, setIsLoading] = React.useState(true)
   const [namespaces, setNamespaces] = React.useState<NamespaceTables[]>([])
+  const [catalogListLoading, setCatalogListLoading] = React.useState(true)
   const [namespacesLoading, setNamespacesLoading] = React.useState(false)
 
-  // Fetch catalogs on mount
   React.useEffect(() => {
-    async function fetchCatalogs() {
-      try {
-        const response = await fetch('/api/catalogs')
-        const data = await response.json()
-        setCatalogs(data)
-      } catch (error) {
-        console.error('Failed to fetch catalogs:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
+    loadCatalogs()
+      .then(setCatalogs)
+      .catch((error) => {
+        toast({
+          title: "Failed to fetch catalogs",
+          description: errorToString(error),
+          variant: "destructive",
+        })
+      })
+      .finally(() => setCatalogListLoading(false))
+  }, [toast])
 
-    fetchCatalogs()
-  }, [])
-
-  // Fetch namespaces when catalog changes
   React.useEffect(() => {
-    async function fetchNamespacesAndTables() {
-      if (!catalog) return;
-      
-      setNamespacesLoading(true)
-      try {
-        const api = new Api({ baseUrl: `/api/catalog/${catalog}`})
-        const response = await api.v1.listNamespaces('')
-        
-        // Each namespace is an array where first element is the namespace name
-        const namespacesList = response.namespaces || []
+    if (!catalog) return
 
-        // Fetch tables for each namespace
-        const namespacesWithTables = await Promise.all(
-          namespacesList.map(async (namespace: string[]) => {
-            // Use the first element of the namespace array as the namespace name
-            const namespaceName = namespace.join('.')
-            const tablesResponse = await api.v1.listTables('', namespaceName)
-            
-            return {
-              name: namespaceName,
-              tables: tablesResponse.identifiers?.map((table: any) => table.name),
-            } as NamespaceTables
-          })
-        )
-
-        setNamespaces(namespacesWithTables)
-      } catch (error) {
-        console.error("Error fetching namespaces and tables:", error)
+    setNamespacesLoading(true)
+    loadNamespacesAndTables(catalog)
+      .then(setNamespaces)
+      .catch((error) => {
+        toast({
+          title: "Failed to fetch namespaces and tables",
+          description: errorToString(error),
+          variant: "destructive",
+        })
         setNamespaces([])
-      } finally {
-        setNamespacesLoading(false)
-      }
-    }
-
-    fetchNamespacesAndTables()
-  }, [catalog])
+      })
+      .finally(() => setNamespacesLoading(false))
+  }, [catalog, toast])
 
   return (
     <Sidebar>
       <SidebarContent>
         <SidebarHeader className="border-b px-2 py-2">
           <Select
-            disabled={isLoading}
+            disabled={catalogListLoading}
             value={catalog}
             onValueChange={(value) => {
               navigate(`/catalog/${value}`)
@@ -173,7 +157,7 @@ export function AppSidebar() {
           >
             <SelectTrigger>
               <Database className="mr-2 h-4 w-4" />
-              <SelectValue placeholder={isLoading ? "Loading..." : "Select catalog"} />
+              <SelectValue placeholder={catalogListLoading ? "Loading..." : "Select catalog"} />
             </SelectTrigger>
             <SelectContent>
               {catalogs.map((catalog) => (
