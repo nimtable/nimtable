@@ -20,7 +20,7 @@ const RootLayout: React.FC<RootLayoutProps> = ({ children }) => {
     <div className="flex min-h-screen flex-col">
       <SidebarProvider>
         <div className="flex flex-1">
-          <AppSidebar selectedCatalog={catalogName} />
+          <AppSidebar />
           <main className="flex-1 overflow-auto">{children}</main>
         </div>
       </SidebarProvider>

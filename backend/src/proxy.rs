@@ -94,10 +94,11 @@ impl Handler for ProxyHandler {
                     Some(status) => status,
                     None => return Outcome::Error(Status::InternalServerError),
                 };
-                match resp.text().await {
+                match resp.bytes().await {
                     Ok(body) => Outcome::Success(
                         Response::build()
                             .status(status)
+                            .header(rocket::http::ContentType::JSON)
                             .sized_body(body.len(), std::io::Cursor::new(body))
                             .finalize(),
                     ),

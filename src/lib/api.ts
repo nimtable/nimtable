@@ -7,6 +7,12 @@
  * ## AUTHOR: acacode                                           ##
  * ## SOURCE: https://github.com/acacode/swagger-typescript-api ##
  * ---------------------------------------------------------------
+ * NOTE(eric):
+ * As stated above, this file was generated via swagger-typescript-api by:
+ *   npx swagger-typescript-api -p https://raw.githubusercontent.com/apache/iceberg/refs/heads/main/open-api/rest-catalog-open-api.yaml -o ./src/lib -n api.ts --unwrap-response-data
+ * 
+ * If you make any changes to this file manually, please also note down here.
+ * - Added `format: "json"` to all GET requests to ensure the response is parsed.
  */
 
 type UtilRequiredKeys<T, K extends keyof T> = Omit<T, K> & Required<Pick<T, K>>;
@@ -1551,7 +1557,7 @@ export class HttpClient<SecurityDataType = unknown> {
     baseUrl,
     cancelToken,
     ...params
-  }: FullRequestParams): Promise<HttpResponse<T, E>> => {
+  }: FullRequestParams): Promise<T> => {
     const secureParams =
       ((typeof secure === "boolean" ? secure : this.baseApiParams.secure) &&
         this.securityWorker &&
@@ -1596,7 +1602,7 @@ export class HttpClient<SecurityDataType = unknown> {
       }
 
       if (!response.ok) throw data;
-      return data;
+      return data.data;
     });
   };
 }
@@ -1694,6 +1700,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         method: "GET",
         query: query,
         secure: true,
+        format: "json",
         ...params,
       }),
 
@@ -1730,6 +1737,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         path: `/v1/${prefix}/namespaces/${namespace}`,
         method: "GET",
         secure: true,
+        format: "json",
         ...params,
       }),
 
@@ -1825,6 +1833,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         method: "GET",
         query: query,
         secure: true,
+        format: "json",
         ...params,
       }),
 
@@ -1892,6 +1901,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         path: `/v1/${prefix}/namespaces/${namespace}/tables/${table}/plan/${planId}`,
         method: "GET",
         secure: true,
+        format: "json",
         ...params,
       }),
 
@@ -1983,6 +1993,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         method: "GET",
         query: query,
         secure: true,
+        format: "json",
         ...params,
       }),
 
@@ -2072,6 +2083,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         path: `/v1/${prefix}/namespaces/${namespace}/tables/${table}/credentials`,
         method: "GET",
         secure: true,
+        format: "json",
         ...params,
       }),
 
@@ -2172,6 +2184,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         method: "GET",
         query: query,
         secure: true,
+        format: "json",
         ...params,
       }),
 
@@ -2208,6 +2221,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         path: `/v1/${prefix}/namespaces/${namespace}/views/${view}`,
         method: "GET",
         secure: true,
+        format: "json",
         ...params,
       }),
 

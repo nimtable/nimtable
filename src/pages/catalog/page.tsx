@@ -9,24 +9,14 @@ import { Api } from "@/lib/api"
 import { useParams } from "react-router-dom"
 
 async function getNamespaces(catalog: string) {
-  try {
-    const api = new Api({ baseUrl: `/api/catalog/${catalog}`})
-    const response = await api.v1.listNamespaces('')
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch namespaces: ${response.statusText}`)
-    }
-
-    const data = await response.json()
-    return data.namespaces as string[][]
-  } catch (error) {
-    console.error("Error fetching namespaces:", error)
-    return []
-  }
+  const api = new Api({ baseUrl: `/api/catalog/${catalog}`})
+  const response = await api.v1.listNamespaces('')
+  
+  return response.namespaces?.map((namespace) => namespace.join('.')) || []
 }
 
 export default function CatalogPage() {
-  const [namespaces, setNamespaces] = useState<string[][]>([])
+  const [namespaces, setNamespaces] = useState<string[]>([])
   const { catalog } = useParams<{ catalog: string }>()
   useEffect(() => {
     getNamespaces(catalog!).then(setNamespaces)
@@ -50,7 +40,7 @@ export default function CatalogPage() {
               <h1 className="text-xl font-semibold">{catalog}</h1>
             </div>
             <div className="flex items-center gap-2">
-              <Button>Create Schema</Button>
+              <Button>Create Namespace</Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon">
@@ -72,7 +62,7 @@ export default function CatalogPage() {
               <p className="text-sm text-muted-foreground">Main catalog</p>
             </div>
             <div>
-              <h2 className="mb-4 text-lg font-semibold">Schemas</h2>
+              <h2 className="mb-4 text-lg font-semibold">Namespaces</h2>
               <div className="mb-4">
                 <Input type="search" placeholder="Search" className="max-w-sm" />
               </div>
@@ -82,11 +72,11 @@ export default function CatalogPage() {
                   <div>Created At</div>
                 </div>
                 <div className="divide-y">
-                  {namespaces.map(([namespace]) => (
+                  {namespaces.map((namespace) => (
                     <div key={namespace} className="grid grid-cols-2 gap-4 px-6 py-3">
                       <div>
                         <Link 
-                          to={`/${catalog}/${namespace}`} 
+                          to={`/catalog/${catalog}/namespace/${namespace}`} 
                           className="text-blue-600 hover:underline"
                         >
                           {namespace}

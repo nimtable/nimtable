@@ -23,7 +23,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { Api } from "@/lib/api"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 
 // Add these interfaces at the top of the file with other imports
 interface Catalog {
@@ -95,11 +95,11 @@ function FunctionItem({ name }: { name: string }) {
   )
 }
 
-export function AppSidebar({
-  selectedCatalog
-}: {
-  selectedCatalog?: string
-}) {
+export function AppSidebar() {
+  const {
+    catalog,
+  } = useParams<{ catalog: string }>()
+
   const navigate = useNavigate();
   const [catalogs, setCatalogs] = React.useState<Catalog[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
@@ -126,20 +126,15 @@ export function AppSidebar({
   // Fetch namespaces when catalog changes
   React.useEffect(() => {
     async function fetchNamespacesAndTables() {
-      if (!selectedCatalog) return;
+      if (!catalog) return;
       
       setNamespacesLoading(true)
       try {
-        const api = new Api({ baseUrl: `/api/catalog/${selectedCatalog}`})
+        const api = new Api({ baseUrl: `/api/catalog/${catalog}`})
         const response = await api.v1.listNamespaces('')
         
-        if (!response.ok) {
-          throw new Error(`Failed to fetch namespaces: ${response.statusText}`)
-        }
-
-        const data = await response.json()
         // Each namespace is an array where first element is the namespace name
-        const namespacesList = data.namespaces || []
+        const namespacesList = response.namespaces || []
 
         // Fetch tables for each namespace
         const namespacesWithTables = await Promise.all(
@@ -147,11 +142,10 @@ export function AppSidebar({
             // Use the first element of the namespace array as the namespace name
             const namespaceName = namespace.join('.')
             const tablesResponse = await api.v1.listTables('', namespaceName)
-            const tablesData = await tablesResponse.json()
             
             return {
               name: namespaceName,
-              tables: tablesData.identifiers.map((table: any) => table.name),
+              tables: tablesResponse.identifiers?.map((table: any) => table.name),
             } as Namespace
           })
         )
@@ -166,14 +160,14 @@ export function AppSidebar({
     }
 
     fetchNamespacesAndTables()
-  }, [selectedCatalog])
+  }, [catalog])
 
   return (
     <Sidebar>
       <SidebarHeader className="border-b px-2 py-2">
         <Select
           disabled={isLoading}
-          value={selectedCatalog}
+          value={catalog}
           onValueChange={(value) => {
             navigate(`/catalog/${value}`)
           }}
