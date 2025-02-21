@@ -1,5 +1,3 @@
-"use client"
-
 import * as React from "react"
 import {
   ChevronDown,
@@ -164,28 +162,28 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader className="border-b px-2 py-2">
-        <Select
-          disabled={isLoading}
-          value={catalog}
-          onValueChange={(value) => {
-            navigate(`/catalog/${value}`)
-          }}
-        >
-          <SelectTrigger>
-            <Database className="mr-2 h-4 w-4" />
-            <SelectValue placeholder={isLoading ? "Loading..." : "Select catalog"} />
-          </SelectTrigger>
-          <SelectContent>
-            {catalogs.map((catalog) => (
-              <SelectItem key={catalog.name} value={catalog.name}>
-                {catalog.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </SidebarHeader>
       <SidebarContent>
+        <SidebarHeader className="border-b px-2 py-2">
+          <Select
+            disabled={isLoading}
+            value={catalog}
+            onValueChange={(value) => {
+              navigate(`/catalog/${value}`)
+            }}
+          >
+            <SelectTrigger>
+              <Database className="mr-2 h-4 w-4" />
+              <SelectValue placeholder={isLoading ? "Loading..." : "Select catalog"} />
+            </SelectTrigger>
+            <SelectContent>
+              {catalogs.map((catalog) => (
+                <SelectItem key={catalog.name} value={catalog.name}>
+                  {catalog.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </SidebarHeader>
         <div className="px-2 py-2">
           <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">Browse</h2>
           {namespacesLoading ? (

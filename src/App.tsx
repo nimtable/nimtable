@@ -5,18 +5,21 @@ import RootLayout from './pages/layout';
 import WelcomePage from './pages/welcome';
 import NotFoundPage from './pages/not-found';
 import NamespacePage from './pages/catalog/namespace/page';
+import CatalogLayout from './layouts/catalog-layout';
 
 const App: React.FC = () => {
   return (
     <RootLayout>
       <Routes>
-        <Route path="/" element={<WelcomePage />} />
-        <Route path="/catalog/:catalog" element={<CatalogPage />} />
-        <Route path="/catalog/:catalog/namespace/:namespace" element={<NamespacePage />} />
+        <Route element={<CatalogLayout />}>
+          <Route path="/" element={<WelcomePage />} />
+          <Route path="/catalog/:catalog" element={<CatalogPage />} />
+          <Route path="/catalog/:catalog/namespace/:namespace" element={<NamespacePage />} />
+        </Route>
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </RootLayout>
   );
 };
 
-export default App; 
+export default App;

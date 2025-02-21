@@ -48,6 +48,7 @@ const config: Configuration = {
       changeOrigin: true,
     }],
   },
+  devtool: 'eval-source-map',
 };
 
 export default config;
