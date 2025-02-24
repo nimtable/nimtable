@@ -1,0 +1,23 @@
+*.swp
+.DS_Store
+.cache
+tmp/
+site
+
+# intellij files
+.idea
+.idea_modules/
+*.ipr
+*.iws
+*.iml
+out
+
+# gradle build
+.gradle
+.out/
+build
+dependencies.lock
+**/dependencies.lock
+gradle/
+gradle/wrapper/gradle-wrapper.jar
+
