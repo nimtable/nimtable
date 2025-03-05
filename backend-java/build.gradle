@@ -26,6 +26,7 @@ repositories {
 ext {
   icebergVersion = '1.6.0'
   hadoopVersion = '3.3.6'
+  jettyVersion = '11.0.15'
 }
 
 dependencies {
@@ -54,6 +55,15 @@ dependencies {
 
   implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.2'
   implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.18.2'
+
+  implementation "org.eclipse.jetty:jetty-server:${jettyVersion}"
+  implementation "org.eclipse.jetty:jetty-servlet:${jettyVersion}"
+  implementation "org.eclipse.jetty:jetty-util:${jettyVersion}"
+  implementation "org.eclipse.jetty:jetty-util-ajax:${jettyVersion}"
+
+  implementation 'org.slf4j:slf4j-api:2.0.12'
+  implementation 'org.slf4j:slf4j-log4j12:2.0.12'
+  implementation 'log4j:log4j:1.2.17'
 }
 
 jar {

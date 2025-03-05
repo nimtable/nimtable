@@ -23,7 +23,6 @@ import java.util.Map;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.iceberg.CatalogUtil;
 import org.apache.iceberg.catalog.Catalog;
-import org.apache.iceberg.util.PropertyUtil;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -61,10 +60,11 @@ public class RESTCatalogServer {
     Map<String, Object> serverConfig = (Map<String, Object>) config.get("server");
 
     try (RESTCatalogAdapter adapter = new RESTServerCatalogAdapter(catalogContext)) {
-      RESTCatalogServlet servlet = new RESTCatalogServlet(adapter);
+      IcebergRestCatalogServlet servlet = new IcebergRestCatalogServlet(adapter);
 
       ServletContextHandler context = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
-      context.setContextPath("/");
+      context.setContextPath("/api/catalog/sqlite-catalog-demo");
+
       ServletHolder servletHolder = new ServletHolder(servlet);
       servletHolder.setInitParameter("javax.ws.rs.Application", "ServiceListPublic");
       context.addServlet(servletHolder, "/*");
