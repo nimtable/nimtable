@@ -35,51 +35,44 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 public class RESTCatalogServer {
   private static final Logger LOG = LoggerFactory.getLogger(RESTCatalogServer.class);
 
-  private RESTCatalogServer() {}
+  private RESTCatalogServer() {
+  }
 
-  record CatalogContext(Catalog catalog, Map<String,String> configuration) { }
+  record CatalogContext(Catalog catalog, Map<String, String> configuration) {
+  }
 
-  @SuppressWarnings("unchecked")
   public static void main(String[] args) throws Exception {
     // Read and parse the config.yaml file
-    Map<String, String> catalogProperties = new HashMap<>();
     ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-    Map<String, Object> config = mapper.readValue(new File("config.yaml"), Map.class);
-    
+    Config config = mapper.readValue(new File("config.yaml"), Config.class);
+
+    Server httpServer = new Server(
+        new InetSocketAddress(config.getServer().getHost(), config.getServer().getPort()));
+
     // Extract catalog properties from config
-    Map<String, String> catalogConfig = (Map<String, String>) config.get("catalog");
-    if (catalogConfig != null) {
-      catalogProperties.putAll(catalogConfig);
+    for (Config.Catalog catalog : config.getCatalogs()) {
+      LOG.info("Creating catalog with properties: {}", catalog.getProperties());
+      CatalogContext catalogContext = new CatalogContext(
+          CatalogUtil.buildIcebergCatalog(catalog.getName(), catalog.getProperties(), new Configuration()),
+          catalog.getProperties());
+
+      try (RESTCatalogAdapter adapter = new RESTServerCatalogAdapter(catalogContext)) {
+        IcebergRestCatalogServlet servlet = new IcebergRestCatalogServlet(adapter);
+
+        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
+        context.setContextPath("/api/catalog/" + catalog.getName());
+
+        ServletHolder servletHolder = new ServletHolder(servlet);
+        servletHolder.setInitParameter("javax.ws.rs.Application", "ServiceListPublic");
+        context.addServlet(servletHolder, "/*");
+        context.setVirtualHosts(null);
+        context.insertHandler(new GzipHandler());
+
+        httpServer.insertHandler(context);
+      }
     }
 
-    LOG.info("Creating catalog with properties: {}", catalogProperties);
-    CatalogContext catalogContext = new CatalogContext(
-        CatalogUtil.buildIcebergCatalog("rest_backend", catalogProperties, new Configuration()),
-        catalogProperties);
-
-    Map<String, Object> serverConfig = (Map<String, Object>) config.get("server");
-
-    try (RESTCatalogAdapter adapter = new RESTServerCatalogAdapter(catalogContext)) {
-      IcebergRestCatalogServlet servlet = new IcebergRestCatalogServlet(adapter);
-
-      ServletContextHandler context = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
-      context.setContextPath("/api/catalog/sqlite-catalog-demo");
-
-      ServletHolder servletHolder = new ServletHolder(servlet);
-      servletHolder.setInitParameter("javax.ws.rs.Application", "ServiceListPublic");
-      context.addServlet(servletHolder, "/*");
-      context.setVirtualHosts(null);
-      context.insertHandler(new GzipHandler());
-
-      Server httpServer =
-          new Server(
-            new InetSocketAddress((String) serverConfig.getOrDefault("host", "0.0.0.0"),
-            (Integer) serverConfig.getOrDefault("port", 8181))
-          );
-      httpServer.setHandler(context);
-
-      httpServer.start();
-      httpServer.join();
-    }
+    httpServer.start();
+    httpServer.join();
   }
 }
