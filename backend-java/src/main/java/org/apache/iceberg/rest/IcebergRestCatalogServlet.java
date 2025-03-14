@@ -8,7 +8,7 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
+
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -33,18 +33,22 @@ public class IcebergRestCatalogServlet extends HttpServlet {
         this.restCatalogAdapter = restCatalogAdapter;
     }
 
+    @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         this.execute(IcebergRestCatalogServlet.ServletRequestContext.from(request), response);
     }
 
+    @Override
     protected void doHead(HttpServletRequest request, HttpServletResponse response) throws IOException {
         this.execute(IcebergRestCatalogServlet.ServletRequestContext.from(request), response);
     }
 
+    @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         this.execute(IcebergRestCatalogServlet.ServletRequestContext.from(request), response);
     }
 
+    @Override
     protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws IOException {
         this.execute(IcebergRestCatalogServlet.ServletRequestContext.from(request), response);
     }
@@ -62,14 +66,13 @@ public class IcebergRestCatalogServlet extends HttpServlet {
                 if (responseBody != null) {
                     RESTObjectMapper.mapper().writeValue(response.getWriter(), responseBody);
                 }
-            } catch (RESTException var4) {
-                LOG.error("Error processing REST request", var4);
+            } catch (RESTException e) {
+                LOG.error("Error processing REST request", e);
                 response.setStatus(500);
-            } catch (Exception var5) {
-                LOG.error("Unexpected exception when processing REST request", var5);
+            } catch (Exception e) {
+                LOG.error("Unexpected exception when processing REST request", e);
                 response.setStatus(500);
             }
-
         }
     }
 
@@ -109,10 +112,10 @@ public class IcebergRestCatalogServlet extends HttpServlet {
 
         static ServletRequestContext from(HttpServletRequest request) throws IOException {
             RESTCatalogAdapter.HTTPMethod method = HTTPMethod.valueOf(request.getMethod());
-            String path = Arrays.stream(request.getRequestURI()
-                            .split("/")).skip(4) // Note(eric): hack happens here
-                    .collect(Collectors.joining("/"));
-            LOG.debug("PATH is "  + path);
+            // NOTE(eric): IIUC, this entire file is used to ingest this hack
+            // i.e. skip the prefix of URL and pass to the Iceberg's default REST implementation
+            String path = Arrays.stream(request.getRequestURI().split("/")).skip(4).collect(Collectors.joining("/"));
+            LOG.debug("PATH is " + path);
             Pair<RESTCatalogAdapter.Route, Map<String, String>> routeContext = Route.from(method, path);
             if (routeContext == null) {
                 return new ServletRequestContext(ErrorResponse.builder().responseCode(400).withType("BadRequestException").withMessage(String.format("No route for request: %s %s", method, path)).build());
@@ -123,35 +126,32 @@ public class IcebergRestCatalogServlet extends HttpServlet {
                     requestBody = RESTObjectMapper.mapper().readValue(request.getReader(), route.requestClass());
                 } else if (route == Route.TOKENS) {
                     Reader reader = new InputStreamReader(request.getInputStream());
-                    Throwable var7 = null;
-
+                    Throwable ex = null;
                     try {
                         requestBody = RESTUtil.decodeFormData(CharStreams.toString(reader));
-                    } catch (Throwable var16) {
-                        var7 = var16;
-                        throw var16;
+                    } catch (Throwable e) {
+                        ex = e;
+                        throw e;
                     } finally {
-                        if (var7 != null) {
+                        if (ex != null) {
                             try {
                                 reader.close();
-                            } catch (Throwable var15) {
-                                var7.addSuppressed(var15);
+                            } catch (Throwable e2) {
+                                ex.addSuppressed(e2);
                             }
                         } else {
                             reader.close();
                         }
-
                     }
                 }
 
                 Map<String, String> queryParams = request.getParameterMap()
                         .entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey,
-                                (e) -> ((String[])e.getValue())[0]));
-                Stream<String> var10000 = Collections.list(request.getHeaderNames()).stream();
-                Function<Object, Object> var10001 = Function.identity();
-                Objects.requireNonNull(request);
-                Map<String, String> headers = (Map)var10000.collect(Collectors.toMap(var10001, request::getHeader));
+                                (e) -> ((String[]) e.getValue())[0]));
+                Map<String, String> headers = Collections.list(request.getHeaderNames())
+                        .stream()
+                        .collect(Collectors.toMap(Function.identity(), request::getHeader));
                 return new ServletRequestContext(method, route, path, headers, queryParams, requestBody);
             }
         }

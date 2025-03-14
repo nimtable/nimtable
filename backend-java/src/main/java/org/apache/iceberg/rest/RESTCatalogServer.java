@@ -69,7 +69,7 @@ public class RESTCatalogServer {
       servletHolder.setInitParameter("javax.ws.rs.Application", "ServiceListPublic");
       context.addServlet(servletHolder, "/*");
       context.setVirtualHosts(null);
-      context.setGzipHandler(new GzipHandler());
+      context.insertHandler(new GzipHandler());
 
       Server httpServer =
           new Server(
