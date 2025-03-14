@@ -15,7 +15,8 @@ out
 # gradle build
 .gradle
 .out/
-build
+build/
+bin/
 dependencies.lock
 **/dependencies.lock
 gradle/

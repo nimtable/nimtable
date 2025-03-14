@@ -5,11 +5,11 @@ This is a simple UI for browsing an Iceberg catalog. It's still under developmen
 
 ## Development
 
-Start the backend server:
+Start the backend server (requires JRE >= 17):
 
 ```bash
 cd backend
-cargo run --bin iceberg-catalog-webui-backend -- -c ../config.yaml
+./gradlew run
 ```
 
 Start the frontend:

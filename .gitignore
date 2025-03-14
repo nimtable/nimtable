@@ -27,4 +27,4 @@ next-env.d.ts
 /venv/
 
 # test sqlite catalog
-/catalog.db
+catalog.db
