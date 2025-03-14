@@ -44,7 +44,7 @@ const config: Configuration = {
     port: 3000,
     proxy: [{
       context: ['/api'],
-      target: 'http://localhost:8181/api/',
+      target: 'http://localhost:8182/',
       changeOrigin: true,
     }],
   },

@@ -1,9 +1,9 @@
 server:
   port: 8182
   host: 0.0.0.0
-catalog:
-  name: sqlite-catalog-demo
-  catalog-impl: org.apache.iceberg.jdbc.JdbcCatalog
-  uri: jdbc:sqlite:file:./catalog.db
-  jdbc.schema-version: V1
-  warehouse: ./data
+catalogs:
+  - name: sqlite-catalog-demo
+    catalog-impl: org.apache.iceberg.jdbc.JdbcCatalog
+    uri: jdbc:sqlite:file:./catalog.db
+    jdbc.schema-version: V1
+    warehouse: ./data

@@ -27,13 +27,6 @@ import { Link, useNavigate, useParams } from "react-router-dom"
 import { useToast } from "@/hooks/use-toast"
 import { errorToString } from "@/lib/utils"
 
-// Add these interfaces at the top of the file with other imports
-interface Catalog {
-  name: string
-  url: string
-  prefix: string
-}
-
 interface NamespaceTables {
   name: string
   tables: string[]
@@ -87,7 +80,7 @@ function ViewItem({ catalog, namespace, name }: { catalog: string, namespace: st
   )
 }
 
-async function loadCatalogs(): Promise<Catalog[]> {
+async function loadCatalogs(): Promise<string[]> {
   const response = await fetch('/api/catalogs')
   if (!response.ok) {
     throw new Error(`Failed to fetch catalogs: ${response.statusText}`)
@@ -124,7 +117,7 @@ export function AppSidebar() {
   const { catalog } = useParams<{ catalog: string }>()
   const navigate = useNavigate()
 
-  const [catalogs, setCatalogs] = React.useState<Catalog[]>([])
+  const [catalogs, setCatalogs] = React.useState<string[]>([])
   const [namespaces, setNamespaces] = React.useState<NamespaceTables[]>([])
   const [catalogListLoading, setCatalogListLoading] = React.useState(true)
   const [namespacesLoading, setNamespacesLoading] = React.useState(false)
@@ -176,8 +169,8 @@ export function AppSidebar() {
             </SelectTrigger>
             <SelectContent>
               {catalogs.map((catalog) => (
-                <SelectItem key={catalog.name} value={catalog.name}>
-                  {catalog.name}
+                <SelectItem key={catalog} value={catalog}>
+                  {catalog}
                 </SelectItem>
               ))}
             </SelectContent>

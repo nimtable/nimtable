@@ -46,10 +46,13 @@ public class RESTCatalogServer {
     ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
     Config config = mapper.readValue(new File("config.yaml"), Config.class);
 
-    Server httpServer = new Server(
-        new InetSocketAddress(config.getServer().getHost(), config.getServer().getPort()));
+    // Add CatalogsServlet to handle `/api/catalogs` endpoint
+    ServletContextHandler context = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
+    context.setContextPath("/api");
+    ServletHolder holder = new ServletHolder("catalogs", new CatalogsServlet(config));
+    context.addServlet(holder, "/catalogs");
 
-    // Extract catalog properties from config
+    // Add route for each `/api/catalog/<catalog-name>/*` endpoints
     for (Config.Catalog catalog : config.getCatalogs()) {
       LOG.info("Creating catalog with properties: {}", catalog.getProperties());
       CatalogContext catalogContext = new CatalogContext(
@@ -58,20 +61,15 @@ public class RESTCatalogServer {
 
       try (RESTCatalogAdapter adapter = new RESTServerCatalogAdapter(catalogContext)) {
         IcebergRestCatalogServlet servlet = new IcebergRestCatalogServlet(adapter);
-
-        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
-        context.setContextPath("/api/catalog/" + catalog.getName());
-
         ServletHolder servletHolder = new ServletHolder(servlet);
-        servletHolder.setInitParameter("javax.ws.rs.Application", "ServiceListPublic");
-        context.addServlet(servletHolder, "/*");
-        context.setVirtualHosts(null);
-        context.insertHandler(new GzipHandler());
-
-        httpServer.insertHandler(context);
+        context.addServlet(servletHolder, "/catalog/" + catalog.getName() + "/*");
       }
     }
 
+    context.insertHandler(new GzipHandler());
+    Server httpServer = new Server(
+            new InetSocketAddress(config.getServer().getHost(), config.getServer().getPort()));
+    httpServer.insertHandler(context);
     httpServer.start();
     httpServer.join();
   }
