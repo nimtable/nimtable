@@ -18,7 +18,6 @@ package org.apache.iceberg.rest;
 
 import java.io.File;
 import java.net.InetSocketAddress;
-import java.util.HashMap;
 import java.util.Map;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.iceberg.CatalogUtil;
@@ -51,6 +50,8 @@ public class RESTCatalogServer {
     context.setContextPath("/api");
     ServletHolder holder = new ServletHolder("catalogs", new CatalogsServlet(config));
     context.addServlet(holder, "/catalogs");
+    ServletHolder configHolder = new ServletHolder("catalog-config", new CatalogConfigServlet(config));
+    context.addServlet(configHolder, "/config/*");
 
     // Add route for each `/api/catalog/<catalog-name>/*` endpoints
     for (Config.Catalog catalog : config.getCatalogs()) {

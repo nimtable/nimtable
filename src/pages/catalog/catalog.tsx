@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 
 
 export default function CatalogPage() {
@@ -30,8 +31,10 @@ export default function CatalogPage() {
   const api = new Api({ baseUrl: `/api/catalog/${catalog}`})
   const [showDetails, setShowDetails] = useState(true)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [newNamespace, setNewNamespace] = useState("")
   const [isCreating, setIsCreating] = useState(false)
+  const [configJson, setConfigJson] = useState<string>("")
 
   useEffect(() => {
     api.v1.listNamespaces('').then((response) => {
@@ -94,6 +97,24 @@ export default function CatalogPage() {
     }
   }
 
+  const handleEditClick = async () => {
+    try {
+      const response = await fetch(`/api/config/${catalog}`)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      const data = await response.json()
+      setConfigJson(JSON.stringify(data, null, 2))
+      setEditDialogOpen(true)
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Failed to fetch config",
+        description: errorToString(error),
+      })
+    }
+  }
+
   return (
     <div className="flex flex-col h-full">
       <div className="border-b">
@@ -120,9 +141,9 @@ export default function CatalogPage() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleEditClick}>
                     <PenSquare className="mr-2 h-4 w-4" />
-                    <span>Edit</span>
+                    <span>View</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -270,6 +291,32 @@ export default function CatalogPage() {
               disabled={isCreating}
             >
               {isCreating ? "Creating..." : "Create"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Catalog Configuration</DialogTitle>
+            <DialogDescription>
+              View the current catalog configuration
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Textarea
+              value={configJson}
+              readOnly
+              className="font-mono h-[200px]"
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setEditDialogOpen(false)}
+            >
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>
