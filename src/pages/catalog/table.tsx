@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
-import { useParams } from "react-router-dom"
-import { ChevronRight, Table as TableIcon, PanelRightClose, PanelRightOpen } from "lucide-react"
+import { useParams, useNavigate } from "react-router-dom"
+import { ChevronRight, MoreVertical, Table as TableIcon, PanelRightClose, PanelRightOpen, Trash2 } from "lucide-react"
 import { Link } from "react-router-dom"
 
 import { Api, LoadTableResult, Schema, StructField } from "@/lib/api"
@@ -8,6 +8,20 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button"
 import { cn, errorToString } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 async function loadTableData(catalog: string, namespace: string, table: string) {
   const api = new Api({ baseUrl: `/api/catalog/${catalog}` })
@@ -18,12 +32,14 @@ async function loadTableData(catalog: string, namespace: string, table: string) 
 export default function TablePage() {
   const { catalog, namespace, table } = useParams<{ catalog: string, namespace: string, table: string }>()
   const { toast } = useToast()
+  const navigate = useNavigate()
   if (!catalog || !namespace || !table) {
     throw new Error("Invalid table path")
   }
 
   const [tableData, setTableData] = useState<LoadTableResult | undefined>(undefined)
   const [showDetails, setShowDetails] = useState(true)
+  const [showDropDialog, setShowDropDialog] = useState(false)
 
   useEffect(() => {
     loadTableData(catalog, namespace, table)
@@ -36,6 +52,25 @@ export default function TablePage() {
         })
       })
   }, [catalog, namespace, table, toast])
+
+  const handleDropTable = async () => {
+    try {
+      const api = new Api({ baseUrl: `/api/catalog/${catalog}` })
+      await api.v1.dropTable('', namespace, table)
+      toast({
+        title: "Table dropped successfully",
+        description: `Table ${table} has been dropped from namespace ${namespace}`,
+      })
+      navigate(`/catalog/${catalog}/namespace/${namespace}`)
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Failed to drop table",
+        description: errorToString(error),
+      })
+    }
+    setShowDropDialog(false)
+  }
 
   if (!tableData) return null
 
@@ -68,6 +103,19 @@ export default function TablePage() {
               <TableIcon className="h-4 w-4" />
               <h1 className="text-xl font-semibold">{table}</h1>
             </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setShowDropDialog(true)}>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  <span>Delete</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           <div className="p-6 space-y-8">
@@ -201,6 +249,25 @@ export default function TablePage() {
           )}
         </div>
       </div>
+
+      <Dialog open={showDropDialog} onOpenChange={setShowDropDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Drop Table</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to drop the table "{table}"? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDropDialog(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDropTable}>
+              Drop Table
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
