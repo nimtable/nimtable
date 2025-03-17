@@ -31,5 +31,4 @@ docker exec -it spark-iceberg spark-sql # create tables, insert data, etc.
 ## Roadmap
 
 - **UI Features**. There are many features missing now. Please check [Apache Iceberg REST Catalog API](https://raw.githubusercontent.com/apache/iceberg/refs/heads/main/open-api/rest-catalog-open-api.yaml) for the features that are not implemented yet. (Hint: *read the spec with [Swagger UI](https://petstore.swagger.io/) or [Swagger Editor](https://editor-next.swagger.io/)*)
-- **Backend Server**. Shall we move to the official Iceberg Java implementation to get more features? such as connecting to JDBC catalog, Hive Metastore, etc.
 - **Pluggable Query Engines**. Connect to different query engines, such as DuckDB (embedded), Spark, Flink, RisingWave, etc.

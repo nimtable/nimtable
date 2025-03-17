@@ -12,7 +12,7 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-public class Config {
+public final class Config {
     private Server server;
     private List<Catalog> catalogs;
 
@@ -32,7 +32,7 @@ public class Config {
         this.catalogs = catalogs;
     }
 
-    public static class Server {
+    public final static class Server {
         private int port;
         private String host;
 
@@ -54,7 +54,7 @@ public class Config {
     }
 
     @JsonDeserialize(using = CatalogDeserializer.class)
-    public static class Catalog {
+    public final static class Catalog {
         private String name;
 
         private Map<String, String> properties;
