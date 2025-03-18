@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom"
 import { ChevronRight, MoreVertical, Table as TableIcon, PanelRightClose, PanelRightOpen, Trash2, PenSquare } from "lucide-react"
 import { Link } from "react-router-dom"
 
-import { Api, LoadTableResult, Schema, StructField } from "@/lib/api"
+import { Api, LoadTableResult, Schema, Snapshot, StructField } from "@/lib/api"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { cn, errorToString } from "@/lib/utils"
@@ -44,6 +44,8 @@ export default function TablePage() {
   const [showDropDialog, setShowDropDialog] = useState(false)
   const [showRenameDialog, setShowRenameDialog] = useState(false)
   const [newTableName, setNewTableName] = useState(table)
+  const [showDetailDialog, setShowDetailDialog] = useState(false)
+  const [snapshotDetail, setSnapshotDetail] = useState<string | null>(null)
 
   useEffect(() => {
     loadTableData(catalog, namespace, table)
@@ -102,6 +104,11 @@ export default function TablePage() {
       })
     }
     setShowRenameDialog(false)
+  }
+
+  const handleShowDetail = (snapshot: Snapshot) => {
+    setSnapshotDetail(JSON.stringify(snapshot, null, 2))
+    setShowDetailDialog(true)
   }
 
   if (!tableData) return null
@@ -190,6 +197,7 @@ export default function TablePage() {
                     <TableHead>Parent ID</TableHead>
                     <TableHead>Sequence Number</TableHead>
                     <TableHead>Timestamp</TableHead>
+                    <TableHead>Detail</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -200,6 +208,11 @@ export default function TablePage() {
                       <TableCell>{snapshot["sequence-number"] || '-'}</TableCell>
                       <TableCell>
                         {new Date(snapshot["timestamp-ms"]).toLocaleString()}
+                      </TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="icon" onClick={() => handleShowDetail(snapshot)}>
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -332,6 +345,27 @@ export default function TablePage() {
             </Button>
             <Button onClick={handleRenameTable}>
               Rename Table
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Detail Dialog */}
+      <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Snapshot Detail</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <textarea
+              readOnly
+              value={snapshotDetail || ''}
+              className="w-full h-64 p-2 border rounded font-mono text-sm"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDetailDialog(false)}>
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>
