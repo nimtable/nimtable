@@ -1,5 +1,5 @@
 // Move the existing page.tsx content here and update it
-import { ChevronRight, FolderTree, MenuIcon, MoreVertical, Trash2 } from "lucide-react"
+import { ChevronRight, FolderTree, MenuIcon, MoreVertical, Trash2, PanelRightClose, PanelRightOpen } from "lucide-react"
 import { Link, useParams } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 
@@ -10,6 +10,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Api, TableIdentifier } from "@/lib/api"
 import { useEffect, useState } from "react"
+import { cn } from "@/lib/utils"
 
 
 async function getNamespaceMetadata(catalog: string, namespace: string) {
@@ -46,6 +47,8 @@ export default function NamespacePage() {
   const [tables, setTables] = useState<TableIdentifier[] | undefined>(undefined)
   const [views, setViews] = useState<TableIdentifier[] | undefined>(undefined)
   const [childNamespaces, setChildNamespaces] = useState<string[] | undefined>(undefined)
+  const [showDetails, setShowDetails] = useState(true)
+
   useEffect(() => {
     getNamespaceMetadata(catalog, namespace).then(setMetadata)
     getTables(catalog, namespace).then(setTables)
@@ -64,8 +67,8 @@ export default function NamespacePage() {
           <span className="text-foreground">{namespace}</span>
         </div>
       </div>
-      <div className="flex flex-1">
-        <div className="flex-1 border-r">
+      <div className="flex flex-1 overflow-hidden">
+        <div className="flex-1 overflow-y-auto border-r">
           <div className="flex items-center justify-between border-b px-6 py-4">
             <div className="flex items-center gap-4">
               <FolderTree className="h-4 w-4" />
@@ -86,29 +89,6 @@ export default function NamespacePage() {
             </DropdownMenu>
           </div>
           <div className="p-6">
-            {/* Properties Table */}
-            <div className="mb-8">
-              <h2 className="mb-4 text-lg font-semibold">Properties</h2>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Property</TableHead>
-                    <TableHead>Value</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {metadata && 
-                    Object.entries(metadata).map(([key, value]) => (
-                      <TableRow key={key}>
-                        <TableCell className="font-medium">{key}</TableCell>
-                        <TableCell>{value}</TableCell>
-                      </TableRow>
-                    ))
-                  }
-                </TableBody>
-              </Table>
-            </div>
-
             {/* Child Namespaces List */}
             <div className="mb-8">
               <h2 className="mb-4 text-lg font-semibold">Child Namespaces</h2>
@@ -186,8 +166,62 @@ export default function NamespacePage() {
                 </TableBody>
               </Table>
             </div>
-            
           </div>
+        </div>
+
+        {/* Details Panel */}
+        <div
+          className={cn(
+            "border-l bg-muted/10 transition-all duration-300 relative",
+            showDetails ? "w-[400px]" : "w-0"
+          )}
+        >
+          {!showDetails && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute -left-10 top-6"
+              onClick={() => setShowDetails(true)}
+            >
+              <PanelRightOpen className="h-4 w-4" />
+            </Button>
+          )}
+
+          <div className="flex items-center justify-between px-6 py-4 border-b">
+            <h2 className="text-lg font-semibold">Properties</h2>
+            {showDetails && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowDetails(false)}
+              >
+                <PanelRightClose className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+
+          {showDetails && (
+            <div className="p-6">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Property</TableHead>
+                    <TableHead>Value</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {metadata && 
+                    Object.entries(metadata).map(([key, value]) => (
+                      <TableRow key={key}>
+                        <TableCell className="font-medium">{key}</TableCell>
+                        <TableCell>{value}</TableCell>
+                      </TableRow>
+                    ))
+                  }
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </div>
       </div>
     </div>
