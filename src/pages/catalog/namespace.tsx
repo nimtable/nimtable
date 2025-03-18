@@ -108,7 +108,6 @@ export default function NamespacePage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
-                    <TableHead>Namespace</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -122,7 +121,6 @@ export default function NamespacePage() {
                           {table.name}
                         </Link>
                       </TableCell>
-                      <TableCell>{table.namespace.join('.')}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -136,7 +134,6 @@ export default function NamespacePage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
-                    <TableHead>Namespace</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -150,7 +147,6 @@ export default function NamespacePage() {
                           {view.name}
                         </Link>
                       </TableCell>
-                      <TableCell>{view.namespace.join('.')}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
