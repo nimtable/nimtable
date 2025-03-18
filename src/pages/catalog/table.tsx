@@ -25,6 +25,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useSidebarRefresh } from "@/contexts/sidebar-refresh"
 
 async function loadTableData(catalog: string, namespace: string, table: string) {
   const api = new Api({ baseUrl: `/api/catalog/${catalog}` })
@@ -49,6 +50,7 @@ export default function TablePage() {
   const [snapshotDetail, setSnapshotDetail] = useState<string | null>(null)
   const [detailType, setDetailType] = useState<'snapshot' | 'branch' | 'tag'>('snapshot')
   const [activeTab, setActiveTab] = useState('branches')
+  const { triggerRefresh } = useSidebarRefresh()
 
   useEffect(() => {
     loadTableData(catalog, namespace, table)
@@ -70,6 +72,7 @@ export default function TablePage() {
         title: "Table dropped successfully",
         description: `Table ${table} has been dropped from namespace ${namespace}`,
       })
+      triggerRefresh()
       navigate(`/catalog/${catalog}/namespace/${namespace}`)
     } catch (error) {
       toast({
@@ -98,6 +101,7 @@ export default function TablePage() {
         title: "Table renamed successfully",
         description: `Table ${table} has been renamed to ${newTableName}`,
       })
+      triggerRefresh()
       navigate(`/catalog/${catalog}/namespace/${namespace}/table/${newTableName}`)
     } catch (error) {
       toast({

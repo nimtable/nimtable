@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button"
 import { cn, errorToString } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
+import { useSidebarRefresh } from "@/contexts/sidebar-refresh"
 import {
   Dialog,
   DialogContent,
@@ -35,6 +36,7 @@ export default function ViewPage() {
   const { catalog, namespace, view } = useParams<{ catalog: string, namespace: string, view: string }>()
   const { toast } = useToast()
   const navigate = useNavigate()
+  const { triggerRefresh } = useSidebarRefresh()
   if (!catalog || !namespace || !view) {
     throw new Error("Invalid view path")
   }
@@ -72,6 +74,7 @@ export default function ViewPage() {
         title: "View dropped successfully",
         description: `View ${view} has been dropped from namespace ${namespace}`,
       })
+      triggerRefresh()
       navigate(`/catalog/${catalog}/namespace/${namespace}`)
     } catch (error) {
       toast({
@@ -100,6 +103,7 @@ export default function ViewPage() {
         title: "View renamed successfully",
         description: `View ${view} has been renamed to ${newViewName}`,
       })
+      triggerRefresh()
       navigate(`/catalog/${catalog}/namespace/${namespace}/view/${newViewName}`)
     } catch (error) {
       toast({

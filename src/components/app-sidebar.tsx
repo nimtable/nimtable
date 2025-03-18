@@ -26,6 +26,7 @@ import { Api } from "@/lib/api"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import { useToast } from "@/hooks/use-toast"
 import { errorToString } from "@/lib/utils"
+import { useSidebarRefresh } from "@/contexts/sidebar-refresh"
 
 interface NamespaceTables {
   name: string
@@ -116,6 +117,7 @@ export function AppSidebar() {
   const { toast } = useToast()
   const { catalog } = useParams<{ catalog: string }>()
   const navigate = useNavigate()
+  const { refreshTrigger } = useSidebarRefresh()
 
   const [catalogs, setCatalogs] = React.useState<string[]>([])
   const [namespaces, setNamespaces] = React.useState<NamespaceTables[]>([])
@@ -133,7 +135,7 @@ export function AppSidebar() {
         })
       })
       .finally(() => setCatalogListLoading(false))
-  }, [toast])
+  }, [toast, refreshTrigger])
 
   React.useEffect(() => {
     if (!catalog) return
@@ -150,7 +152,7 @@ export function AppSidebar() {
         setNamespaces([])
       })
       .finally(() => setNamespacesLoading(false))
-  }, [catalog, toast])
+  }, [catalog, toast, refreshTrigger])
 
   return (
     <Sidebar>
