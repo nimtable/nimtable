@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { ChevronRight, MoreVertical, Table as TableIcon, PanelRightClose, PanelRightOpen, Trash2 } from "lucide-react"
+import { ChevronRight, MoreVertical, Table as TableIcon, PanelRightClose, PanelRightOpen, Trash2, PenSquare } from "lucide-react"
 import { Link } from "react-router-dom"
 
 import { Api, LoadTableResult, Schema, StructField } from "@/lib/api"
@@ -22,6 +22,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 async function loadTableData(catalog: string, namespace: string, table: string) {
   const api = new Api({ baseUrl: `/api/catalog/${catalog}` })
@@ -40,6 +42,8 @@ export default function TablePage() {
   const [tableData, setTableData] = useState<LoadTableResult | undefined>(undefined)
   const [showDetails, setShowDetails] = useState(true)
   const [showDropDialog, setShowDropDialog] = useState(false)
+  const [showRenameDialog, setShowRenameDialog] = useState(false)
+  const [newTableName, setNewTableName] = useState(table)
 
   useEffect(() => {
     loadTableData(catalog, namespace, table)
@@ -70,6 +74,34 @@ export default function TablePage() {
       })
     }
     setShowDropDialog(false)
+  }
+
+  const handleRenameTable = async () => {
+    try {
+      const api = new Api({ baseUrl: `/api/catalog/${catalog}` })
+      await api.v1.renameTable('', {
+        source: {
+          namespace: namespace.split('/'),
+          name: table
+        },
+        destination: {
+          namespace: namespace.split('/'),
+          name: newTableName
+        }
+      })
+      toast({
+        title: "Table renamed successfully",
+        description: `Table ${table} has been renamed to ${newTableName}`,
+      })
+      navigate(`/catalog/${catalog}/namespace/${namespace}/table/${newTableName}`)
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Failed to rename table",
+        description: errorToString(error),
+      })
+    }
+    setShowRenameDialog(false)
   }
 
   if (!tableData) return null
@@ -110,6 +142,10 @@ export default function TablePage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setShowRenameDialog(true)}>
+                  <PenSquare className="mr-2 h-4 w-4" />
+                  <span>Rename</span>
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setShowDropDialog(true)}>
                   <Trash2 className="mr-2 h-4 w-4" />
                   <span>Delete</span>
@@ -250,6 +286,7 @@ export default function TablePage() {
         </div>
       </div>
 
+      {/* Drop Dialog */}
       <Dialog open={showDropDialog} onOpenChange={setShowDropDialog}>
         <DialogContent>
           <DialogHeader>
@@ -264,6 +301,37 @@ export default function TablePage() {
             </Button>
             <Button variant="destructive" onClick={handleDropTable}>
               Drop Table
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Rename Dialog */}
+      <Dialog open={showRenameDialog} onOpenChange={setShowRenameDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rename Table</DialogTitle>
+            <DialogDescription>
+              Enter a new name for the table "{table}".
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="name">New table name</Label>
+              <Input
+                id="name"
+                value={newTableName}
+                onChange={(e) => setNewTableName(e.target.value)}
+                placeholder="Enter new table name"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowRenameDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleRenameTable}>
+              Rename Table
             </Button>
           </DialogFooter>
         </DialogContent>
