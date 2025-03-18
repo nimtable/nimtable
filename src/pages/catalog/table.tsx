@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom"
 import { ChevronRight, MoreVertical, Table as TableIcon, PanelRightClose, PanelRightOpen, Trash2, PenSquare } from "lucide-react"
 import { Link } from "react-router-dom"
 
-import { Api, LoadTableResult, Schema, Snapshot, StructField } from "@/lib/api"
+import { Api, LoadTableResult, Schema, Snapshot, StructField, SnapshotReference } from "@/lib/api"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { cn, errorToString } from "@/lib/utils"
@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 async function loadTableData(catalog: string, namespace: string, table: string) {
   const api = new Api({ baseUrl: `/api/catalog/${catalog}` })
@@ -46,6 +47,8 @@ export default function TablePage() {
   const [newTableName, setNewTableName] = useState(table)
   const [showDetailDialog, setShowDetailDialog] = useState(false)
   const [snapshotDetail, setSnapshotDetail] = useState<string | null>(null)
+  const [detailType, setDetailType] = useState<'snapshot' | 'branch' | 'tag'>('snapshot')
+  const [activeTab, setActiveTab] = useState('branches')
 
   useEffect(() => {
     loadTableData(catalog, namespace, table)
@@ -106,9 +109,20 @@ export default function TablePage() {
     setShowRenameDialog(false)
   }
 
-  const handleShowDetail = (snapshot: Snapshot) => {
-    setSnapshotDetail(JSON.stringify(snapshot, null, 2))
+  const handleShowDetail = (data: Snapshot | SnapshotReference, type: 'snapshot' | 'branch' | 'tag') => {
+    setDetailType(type)
+    setSnapshotDetail(JSON.stringify(data, null, 2))
     setShowDetailDialog(true)
+  }
+
+  const handleSnapshotClick = (snapshotId: string | number) => {
+    setActiveTab('snapshots')
+    setTimeout(() => {
+      const element = document.getElementById(`snapshot-${String(snapshotId)}`)
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+    }, 100)
   }
 
   if (!tableData) return null
@@ -190,34 +204,115 @@ export default function TablePage() {
             {/* Snapshots Section */}
             <div>
               <h2 className="text-lg font-semibold mb-4">Snapshots</h2>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Snapshot ID</TableHead>
-                    <TableHead>Parent ID</TableHead>
-                    <TableHead>Sequence Number</TableHead>
-                    <TableHead>Timestamp</TableHead>
-                    <TableHead>Detail</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {tableData.metadata.snapshots?.map((snapshot) => (
-                    <TableRow key={snapshot["snapshot-id"]}>
-                      <TableCell>{snapshot["snapshot-id"]}</TableCell>
-                      <TableCell>{snapshot["parent-snapshot-id"] || '-'}</TableCell>
-                      <TableCell>{snapshot["sequence-number"] || '-'}</TableCell>
-                      <TableCell>
-                        {new Date(snapshot["timestamp-ms"]).toLocaleString()}
-                      </TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="icon" onClick={() => handleShowDetail(snapshot)}>
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <Tabs defaultValue="branches" className="w-full" value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="branches">Branches</TabsTrigger>
+                  <TabsTrigger value="tags">Tags</TabsTrigger>
+                  <TabsTrigger value="snapshots">Snapshots</TabsTrigger>
+                </TabsList>
+                <TabsContent value="branches">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Snapshot ID</TableHead>
+                        <TableHead>Max Age (ms)</TableHead>
+                        <TableHead>Min Snapshots</TableHead>
+                        <TableHead>Detail</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {tableData.metadata.refs && Object.entries(tableData.metadata.refs)
+                        .filter(([_, ref]) => ref.type === "branch")
+                        .map(([name, ref]) => (
+                          <TableRow key={name}>
+                            <TableCell>{name}</TableCell>
+                            <TableCell>
+                              <span 
+                                className="text-primary hover:underline cursor-pointer" 
+                                onClick={() => handleSnapshotClick(ref["snapshot-id"])}
+                              >
+                                {ref["snapshot-id"]}
+                              </span>
+                            </TableCell> 
+                            <TableCell>{ref["max-ref-age-ms"] || '-'}</TableCell>
+                            <TableCell>{ref["min-snapshots-to-keep"] || '-'}</TableCell>
+                            <TableCell>
+                              <Button variant="ghost" size="icon" onClick={() => handleShowDetail(ref, 'branch')}>
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                    </TableBody>
+                  </Table>
+                </TabsContent>
+                <TabsContent value="tags">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Snapshot ID</TableHead>
+                        <TableHead>Max Age (ms)</TableHead>
+                        <TableHead>Detail</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {tableData.metadata.refs && Object.entries(tableData.metadata.refs)
+                        .filter(([_, ref]) => ref.type === "tag")
+                        .map(([name, ref]) => (
+                          <TableRow key={name}>
+                            <TableCell>{name}</TableCell>
+                            <TableCell>
+                              <span 
+                                className="text-primary hover:underline cursor-pointer" 
+                                onClick={() => handleSnapshotClick(ref["snapshot-id"])}
+                              >
+                                {ref["snapshot-id"]}
+                              </span>
+                            </TableCell>
+                            <TableCell>{ref["max-ref-age-ms"] || '-'}</TableCell>
+                            <TableCell>
+                              <Button variant="ghost" size="icon" onClick={() => handleShowDetail(ref, 'tag')}>
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                    </TableBody>
+                  </Table>
+                </TabsContent>
+                <TabsContent value="snapshots">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Snapshot ID</TableHead>
+                        <TableHead>Parent ID</TableHead>
+                        <TableHead>Sequence Number</TableHead>
+                        <TableHead>Timestamp</TableHead>
+                        <TableHead>Detail</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {tableData.metadata.snapshots?.map((snapshot) => (
+                        <TableRow key={snapshot["snapshot-id"]} id={`snapshot-${String(snapshot["snapshot-id"])}`}>
+                          <TableCell>{snapshot["snapshot-id"]}</TableCell>
+                          <TableCell>{snapshot["parent-snapshot-id"] || '-'}</TableCell>
+                          <TableCell>{snapshot["sequence-number"] || '-'}</TableCell>
+                          <TableCell>
+                            {new Date(snapshot["timestamp-ms"]).toLocaleString()}
+                          </TableCell>
+                          <TableCell>
+                            <Button variant="ghost" size="icon" onClick={() => handleShowDetail(snapshot, 'snapshot')}>
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TabsContent>
+              </Tabs>
             </div>
           </div>
         </div>
@@ -354,7 +449,7 @@ export default function TablePage() {
       <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Snapshot Detail</DialogTitle>
+            <DialogTitle>{detailType.charAt(0).toUpperCase() + detailType.slice(1)} Detail</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <textarea
