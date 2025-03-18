@@ -89,8 +89,8 @@ export default function NamespacePage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {metadata?.properties && 
-                    Object.entries(metadata.properties).map(([key, value]) => (
+                  {metadata && 
+                    Object.entries(metadata).map(([key, value]) => (
                       <TableRow key={key}>
                         <TableCell className="font-medium">{key}</TableCell>
                         <TableCell>{value}</TableCell>

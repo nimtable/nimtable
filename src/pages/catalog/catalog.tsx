@@ -119,11 +119,7 @@ export default function CatalogPage() {
     <div className="flex flex-col h-full">
       <div className="border-b">
         <div className="flex items-center gap-2 px-6 py-4 text-sm text-muted-foreground">
-          <Link to="/" className="hover:text-foreground">
-            Catalogs
-          </Link>
-          <ChevronRight className="h-4 w-4" />
-          <span className="text-foreground">{catalog}</span>
+            Catalog
         </div>
       </div>
       <div className="flex flex-1 h-full">
