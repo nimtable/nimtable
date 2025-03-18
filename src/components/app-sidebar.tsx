@@ -29,9 +29,11 @@ import { errorToString } from "@/lib/utils"
 import { useSidebarRefresh } from "@/contexts/sidebar-refresh"
 
 interface NamespaceTables {
-  name: string
+  name: string // full namespace name
+  shortName: string // last part of the namespace name
   tables: string[]
   views: string[]
+  children: NamespaceTables[]
 }
 
 function TreeItem({
@@ -91,26 +93,81 @@ async function loadCatalogs(): Promise<string[]> {
 
 async function loadNamespacesAndTables(catalog: string) {
   const api = new Api({ baseUrl: `/api/catalog/${catalog}` })
-  const response = await api.v1.listNamespaces('')
   
-  // Each namespace is an array where first element is the namespace name
-  const namespacesList = response.namespaces || []
+  async function fetchNamespaceAndChildren(namespace: string[]): Promise<NamespaceTables> {
+    const namespaceName = namespace.join('.')
+    const tablesResponse = await api.v1.listTables('', namespaceName)
+    const viewsResponse = await api.v1.listViews('', namespaceName)
+    
+    // Get child namespaces
+    const childNamespacesResponse = await api.v1.listNamespaces('', { parent: namespaceName })
+    const childNamespaces = childNamespacesResponse.namespaces || []
+    
+    // Recursively fetch child namespaces
+    const children = await Promise.all(
+      childNamespaces.map(child => fetchNamespaceAndChildren(child))
+    )
+    
+    return {
+      name: namespaceName,
+      shortName: namespace[namespace.length - 1],
+      tables: tablesResponse.identifiers?.map((table: any) => table.name) || [],
+      views: viewsResponse.identifiers?.map((view: any) => view.name) || [],
+      children
+    }
+  }
 
-  // Fetch tables for each namespace
-  const namespacesWithTables = await Promise.all(
-    namespacesList.map(async (namespace: string[]) => {
-      const namespaceName = namespace.join('.')
-      const tablesResponse = await api.v1.listTables('', namespaceName)
-      const viewsResponse = await api.v1.listViews('', namespaceName)
-      return {
-        name: namespaceName,
-        tables: tablesResponse.identifiers?.map((table: any) => table.name),
-        views: viewsResponse.identifiers?.map((view: any) => view.name),
-      } as NamespaceTables
-    })
+  // Start with root namespaces
+  const response = await api.v1.listNamespaces('')
+  const rootNamespaces = response.namespaces || []
+  
+  // Fetch all namespaces and their children
+  return await Promise.all(
+    rootNamespaces.map(namespace => fetchNamespaceAndChildren(namespace))
   )
+}
 
-  return namespacesWithTables
+function NamespaceTreeItem({ catalog, namespace }: { catalog: string, namespace: NamespaceTables }) {
+  const [isOpen, setIsOpen] = React.useState(true)
+
+  return (
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <CollapsibleTrigger asChild>
+        <SidebarMenuButton className="w-full">
+          {isOpen ? <ChevronDown className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />}
+          <FolderTree className="h-4 w-4 shrink-0" />
+          <span>{namespace.shortName}</span>
+        </SidebarMenuButton>
+      </CollapsibleTrigger>
+      <CollapsibleContent className="pl-6">
+        <SidebarMenu>
+          <TreeItem label="Tables" icon={Folder}>
+            <SidebarMenu>
+              {namespace.tables.map((table) => (
+                <SidebarMenuItem key={table}>
+                  <TableItem catalog={catalog} namespace={namespace.name} name={table} />
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </TreeItem>
+          <TreeItem label="Views" icon={Folder}>
+            <SidebarMenu>
+              {namespace.views.map((view) => (
+                <SidebarMenuItem key={view}>
+                  <ViewItem catalog={catalog} namespace={namespace.name} name={view} />
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </TreeItem>
+          {namespace.children.map((child) => (
+            <SidebarMenuItem key={child.name}>
+              <NamespaceTreeItem catalog={catalog} namespace={child} />
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </CollapsibleContent>
+    </Collapsible>
+  )
 }
 
 export function AppSidebar() {
@@ -188,28 +245,7 @@ export function AppSidebar() {
             <SidebarMenu>
               {namespaces.map((namespace) => (
                 <SidebarMenuItem key={namespace.name}>
-                  <TreeItem label={namespace.name} icon={FolderTree}>
-                    <SidebarMenu>
-                      <TreeItem label="Tables" icon={Folder}>
-                        <SidebarMenu>
-                          {namespace.tables.map((table) => (
-                            <SidebarMenuItem key={table}>
-                              <TableItem catalog={catalog!} namespace={namespace.name} name={table} />
-                            </SidebarMenuItem>
-                          ))}
-                        </SidebarMenu>
-                      </TreeItem>
-                      <TreeItem label="Views" icon={Folder}>
-                        <SidebarMenu>
-                          {namespace.views.map((view) => (
-                            <SidebarMenuItem key={view}>
-                              <ViewItem catalog={catalog!} namespace={namespace.name} name={view} />
-                            </SidebarMenuItem>
-                          ))}
-                        </SidebarMenu>
-                      </TreeItem>
-                    </SidebarMenu>
-                  </TreeItem>
+                  <NamespaceTreeItem catalog={catalog!} namespace={namespace} />
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
