@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
-import { useParams } from "react-router-dom"
-import { ChevronRight, View as ViewIcon, PanelRightClose, PanelRightOpen, MoreVertical } from "lucide-react"
+import { useParams, useNavigate } from "react-router-dom"
+import { ChevronRight, View as ViewIcon, PanelRightClose, PanelRightOpen, MoreVertical, Trash2, PenSquare } from "lucide-react"
 import { Link } from "react-router-dom"
 
 import { Api, LoadViewResult, Schema, StructField, ViewVersion } from "@/lib/api"
@@ -16,6 +16,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 async function loadViewData(catalog: string, namespace: string, view: string) {
   const api = new Api({ baseUrl: `/api/catalog/${catalog}` })
@@ -26,6 +34,7 @@ async function loadViewData(catalog: string, namespace: string, view: string) {
 export default function ViewPage() {
   const { catalog, namespace, view } = useParams<{ catalog: string, namespace: string, view: string }>()
   const { toast } = useToast()
+  const navigate = useNavigate()
   if (!catalog || !namespace || !view) {
     throw new Error("Invalid view path")
   }
@@ -34,6 +43,9 @@ export default function ViewPage() {
   const [showDetails, setShowDetails] = useState(true)
   const [showDetailDialog, setShowDetailDialog] = useState(false)
   const [versionDetail, setVersionDetail] = useState<string | null>(null)
+  const [showDropDialog, setShowDropDialog] = useState(false)
+  const [showRenameDialog, setShowRenameDialog] = useState(false)
+  const [newViewName, setNewViewName] = useState(view)
 
   useEffect(() => {
     loadViewData(catalog, namespace, view)
@@ -50,6 +62,53 @@ export default function ViewPage() {
   const handleShowDetail = (version: ViewVersion) => {
     setVersionDetail(JSON.stringify(version, null, 2))
     setShowDetailDialog(true)
+  }
+
+  const handleDropView = async () => {
+    try {
+      const api = new Api({ baseUrl: `/api/catalog/${catalog}` })
+      await api.v1.dropView('', namespace, view)
+      toast({
+        title: "View dropped successfully",
+        description: `View ${view} has been dropped from namespace ${namespace}`,
+      })
+      navigate(`/catalog/${catalog}/namespace/${namespace}`)
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Failed to drop view",
+        description: errorToString(error),
+      })
+    }
+    setShowDropDialog(false)
+  }
+
+  const handleRenameView = async () => {
+    try {
+      const api = new Api({ baseUrl: `/api/catalog/${catalog}` })
+      await api.v1.renameView('', {
+        source: {
+          namespace: namespace.split('/'),
+          name: view
+        },
+        destination: {
+          namespace: namespace.split('/'),
+          name: newViewName
+        }
+      })
+      toast({
+        title: "View renamed successfully",
+        description: `View ${view} has been renamed to ${newViewName}`,
+      })
+      navigate(`/catalog/${catalog}/namespace/${namespace}/view/${newViewName}`)
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Failed to rename view",
+        description: errorToString(error),
+      })
+    }
+    setShowRenameDialog(false)
   }
 
   if (!viewData) return null
@@ -83,6 +142,23 @@ export default function ViewPage() {
               <ViewIcon className="h-4 w-4" />
               <h1 className="text-xl font-semibold">{view}</h1>
             </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setShowRenameDialog(true)}>
+                  <PenSquare className="mr-2 h-4 w-4" />
+                  <span>Rename</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowDropDialog(true)}>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  <span>Delete</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           <div className="p-6 space-y-8">
@@ -215,6 +291,57 @@ export default function ViewPage() {
           )}
         </div>
       </div>
+
+      {/* Drop Dialog */}
+      <Dialog open={showDropDialog} onOpenChange={setShowDropDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Drop View</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to drop the view "{view}"? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDropDialog(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDropView}>
+              Drop View
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Rename Dialog */}
+      <Dialog open={showRenameDialog} onOpenChange={setShowRenameDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rename View</DialogTitle>
+            <DialogDescription>
+              Enter a new name for the view "{view}".
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="name">New view name</Label>
+              <Input
+                id="name"
+                value={newViewName}
+                onChange={(e) => setNewViewName(e.target.value)}
+                placeholder="Enter new view name"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowRenameDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleRenameView}>
+              Rename View
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Detail Dialog */}
       <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
