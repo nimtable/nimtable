@@ -1,6 +1,6 @@
 // Move the existing page.tsx content here and update it
 import { ChevronRight, FolderTree, MenuIcon, MoreVertical, Trash2, PanelRightClose, PanelRightOpen } from "lucide-react"
-import { Link, useParams } from "react-router-dom"
+import { Link, useParams, useNavigate } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 
 import { Badge } from "@/components/ui/badge"
@@ -10,7 +10,17 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Api, TableIdentifier } from "@/lib/api"
 import { useEffect, useState } from "react"
-import { cn } from "@/lib/utils"
+import { cn, errorToString } from "@/lib/utils"
+import { useToast } from "@/hooks/use-toast"
+import { useSidebarRefresh } from "@/contexts/sidebar-refresh"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 
 async function getNamespaceMetadata(catalog: string, namespace: string) {
@@ -39,6 +49,9 @@ async function getChildNamespaces(catalog: string, namespace: string) {
 
 export default function NamespacePage() {
   const { catalog, namespace } = useParams<{ catalog: string, namespace: string }>()
+  const { toast } = useToast()
+  const navigate = useNavigate()
+  const { triggerRefresh } = useSidebarRefresh()
   if (!catalog || !namespace) {
     throw new Error("Invalid namespace")
   }
@@ -48,6 +61,7 @@ export default function NamespacePage() {
   const [views, setViews] = useState<TableIdentifier[] | undefined>(undefined)
   const [childNamespaces, setChildNamespaces] = useState<string[] | undefined>(undefined)
   const [showDetails, setShowDetails] = useState(true)
+  const [showDropDialog, setShowDropDialog] = useState(false)
 
   useEffect(() => {
     getNamespaceMetadata(catalog, namespace).then(setMetadata)
@@ -55,6 +69,26 @@ export default function NamespacePage() {
     getViews(catalog, namespace).then(setViews)
     getChildNamespaces(catalog, namespace).then(setChildNamespaces)
   }, [catalog, namespace])
+
+  const handleDropNamespace = async () => {
+    try {
+      const api = new Api({ baseUrl: `/api/catalog/${catalog}` })
+      await api.v1.dropNamespace('', namespace)
+      toast({
+        title: "Namespace dropped successfully",
+        description: `Namespace ${namespace} has been dropped`,
+      })
+      triggerRefresh()
+      navigate(`/catalog/${catalog}`)
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Failed to drop namespace",
+        description: errorToString(error),
+      })
+    }
+    setShowDropDialog(false)
+  }
 
   return (
     <div className="flex flex-col">
@@ -81,7 +115,7 @@ export default function NamespacePage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowDropDialog(true)}>
                   <Trash2 className="mr-2 h-4 w-4" />
                   <span>Delete</span>
                 </DropdownMenuItem>
@@ -224,6 +258,26 @@ export default function NamespacePage() {
           )}
         </div>
       </div>
+
+      {/* Drop Dialog */}
+      <Dialog open={showDropDialog} onOpenChange={setShowDropDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Drop Namespace</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to drop the namespace "{namespace}"? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDropDialog(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDropNamespace}>
+              Drop Namespace
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
