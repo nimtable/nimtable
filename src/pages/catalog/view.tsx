@@ -1,13 +1,21 @@
 import { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
-import { ChevronRight, View as ViewIcon, PanelRightClose, PanelRightOpen } from "lucide-react"
+import { ChevronRight, View as ViewIcon, PanelRightClose, PanelRightOpen, MoreVertical } from "lucide-react"
 import { Link } from "react-router-dom"
 
-import { Api, LoadViewResult, Schema, StructField } from "@/lib/api"
+import { Api, LoadViewResult, Schema, StructField, ViewVersion } from "@/lib/api"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { cn, errorToString } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 async function loadViewData(catalog: string, namespace: string, view: string) {
   const api = new Api({ baseUrl: `/api/catalog/${catalog}` })
@@ -24,6 +32,8 @@ export default function ViewPage() {
 
   const [viewData, setViewData] = useState<LoadViewResult | undefined>(undefined)
   const [showDetails, setShowDetails] = useState(true)
+  const [showDetailDialog, setShowDetailDialog] = useState(false)
+  const [versionDetail, setVersionDetail] = useState<string | null>(null)
 
   useEffect(() => {
     loadViewData(catalog, namespace, view)
@@ -36,6 +46,11 @@ export default function ViewPage() {
         })
       })
   }, [catalog, namespace, view, toast])
+
+  const handleShowDetail = (version: ViewVersion) => {
+    setVersionDetail(JSON.stringify(version, null, 2))
+    setShowDetailDialog(true)
+  }
 
   if (!viewData) return null
 
@@ -105,6 +120,7 @@ export default function ViewPage() {
                     <TableHead>Version ID</TableHead>
                     <TableHead>Timestamp</TableHead>
                     <TableHead>Schema ID</TableHead>
+                    <TableHead>Detail</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -118,6 +134,11 @@ export default function ViewPage() {
                       </TableCell>
                       <TableCell>
                         {version["schema-id"]}
+                      </TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="icon" onClick={() => handleShowDetail(version)}>
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -194,6 +215,27 @@ export default function ViewPage() {
           )}
         </div>
       </div>
+
+      {/* Detail Dialog */}
+      <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Version Detail</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <textarea
+              readOnly
+              value={versionDetail || ''}
+              className="w-full h-64 p-2 border rounded font-mono text-sm"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDetailDialog(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
