@@ -30,6 +30,12 @@ async function getViews(catalog: string, namespace: string) {
   return response.identifiers
 }
 
+async function getChildNamespaces(catalog: string, namespace: string) {
+  const api = new Api({ baseUrl: `/api/catalog/${catalog}`})
+  const response = await api.v1.listNamespaces('', { parent: namespace })
+  return response.namespaces?.map(n => n.join('.')) || []
+}
+
 export default function NamespacePage() {
   const { catalog, namespace } = useParams<{ catalog: string, namespace: string }>()
   if (!catalog || !namespace) {
@@ -39,10 +45,12 @@ export default function NamespacePage() {
   const [metadata, setMetadata] = useState<Record<string, string> | undefined>(undefined)
   const [tables, setTables] = useState<TableIdentifier[] | undefined>(undefined)
   const [views, setViews] = useState<TableIdentifier[] | undefined>(undefined)
+  const [childNamespaces, setChildNamespaces] = useState<string[] | undefined>(undefined)
   useEffect(() => {
     getNamespaceMetadata(catalog, namespace).then(setMetadata)
     getTables(catalog, namespace).then(setTables)
     getViews(catalog, namespace).then(setViews)
+    getChildNamespaces(catalog, namespace).then(setChildNamespaces)
   }, [catalog, namespace])
 
   return (
@@ -97,6 +105,32 @@ export default function NamespacePage() {
                       </TableRow>
                     ))
                   }
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Child Namespaces List */}
+            <div className="mb-8">
+              <h2 className="mb-4 text-lg font-semibold">Child Namespaces</h2>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {childNamespaces?.map((childNamespace) => (
+                    <TableRow key={childNamespace}>
+                      <TableCell>
+                        <Link 
+                          to={`/catalog/${catalog}/namespace/${childNamespace}`}
+                          className="hover:underline"
+                        >
+                          {childNamespace}
+                        </Link>
+                      </TableCell>
+                    </TableRow>
+                  ))}
                 </TableBody>
               </Table>
             </div>
