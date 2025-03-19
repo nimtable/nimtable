@@ -3,6 +3,8 @@ Iceberg Catalog UI
 
 This is a simple UI for browsing an Iceberg catalog. It's still under development. 🚧
 
+![Screenshot](./docs/screenshot.png)
+
 ## Development
 
 Start the backend server (requires JRE >= 17):
@@ -32,3 +34,4 @@ docker exec -it spark-iceberg spark-sql # create tables, insert data, etc.
 
 - **UI Features**. There are many features missing now. Please check [Apache Iceberg REST Catalog API](https://raw.githubusercontent.com/apache/iceberg/refs/heads/main/open-api/rest-catalog-open-api.yaml) for the features that are not implemented yet. (Hint: *read the spec with [Swagger UI](https://petstore.swagger.io/) or [Swagger Editor](https://editor-next.swagger.io/)*)
 - **Pluggable Query Engines**. Connect to different query engines, such as DuckDB (embedded), Spark, Flink, RisingWave, etc.
+- **Table Maintenance**. Run table maintenance operations, such as compaction and garbage collection with pluggable backends.
