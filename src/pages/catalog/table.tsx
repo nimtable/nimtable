@@ -54,7 +54,7 @@ export default function TablePage() {
   const [activeTab, setActiveTab] = useState('branches')
   const { triggerRefresh } = useSidebarRefresh()
   const [showQueryDialog, setShowQueryDialog] = useState(false)
-  const [query, setQuery] = useState(`select * from "${catalog}".${namespace}.${table} limit 100`)
+  const [query, setQuery] = useState('')
   const [queryResults, setQueryResults] = useState<{ columns: string[], rows: any[][] } | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
@@ -135,6 +135,12 @@ export default function TablePage() {
     }, 100)
   }
 
+  const openQueryDialog = () => {
+    setShowQueryDialog(true)
+    setQuery(`select * from "${catalog}".${namespace}.${table} limit 100`)
+    setQueryResults(null)
+  }
+  
   const handleRunQuery = async () => {
     try {
       setIsLoading(true)
@@ -187,7 +193,7 @@ export default function TablePage() {
               <h1 className="text-xl font-semibold">{table}</h1>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="default" size="sm" onClick={() => setShowQueryDialog(true)}>
+              <Button variant="default" size="sm" onClick={openQueryDialog}>
                 <Play className="h-4 w-4" />
                 Query
               </Button>
