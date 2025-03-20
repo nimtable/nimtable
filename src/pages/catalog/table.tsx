@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { ChevronRight, MoreVertical, Table as TableIcon, PanelRightClose, PanelRightOpen, Trash2, PenSquare } from "lucide-react"
+import { ChevronRight, MoreVertical, Table as TableIcon, PanelRightClose, PanelRightOpen, Trash2, PenSquare, Play } from "lucide-react"
 import { Link } from "react-router-dom"
 
 import { Api, LoadTableResult, Schema, Snapshot, StructField, SnapshotReference } from "@/lib/api"
@@ -26,6 +26,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useSidebarRefresh } from "@/contexts/sidebar-refresh"
+import { DataTable } from "@/components/query/data-table"
+import { createColumns } from "@/components/query/columns"
 
 async function loadTableData(catalog: string, namespace: string, table: string) {
   const api = new Api({ baseUrl: `/api/catalog/${catalog}` })
@@ -51,6 +53,10 @@ export default function TablePage() {
   const [detailType, setDetailType] = useState<'snapshot' | 'branch' | 'tag'>('snapshot')
   const [activeTab, setActiveTab] = useState('branches')
   const { triggerRefresh } = useSidebarRefresh()
+  const [showQueryDialog, setShowQueryDialog] = useState(false)
+  const [query, setQuery] = useState(`select * from "${catalog}".${namespace}.${table} limit 100`)
+  const [queryResults, setQueryResults] = useState<{ columns: string[], rows: any[][] } | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
     loadTableData(catalog, namespace, table)
@@ -129,6 +135,26 @@ export default function TablePage() {
     }, 100)
   }
 
+  const handleRunQuery = async () => {
+    try {
+      setIsLoading(true)
+      const response = await fetch(`/api/query/${catalog}?query=${encodeURIComponent(query)}`)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      const data = await response.json()
+      setQueryResults(data)
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Failed to execute query",
+        description: errorToString(error),
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   if (!tableData) return null
 
   const schema = tableData.metadata.schemas?.find(
@@ -160,23 +186,29 @@ export default function TablePage() {
               <TableIcon className="h-4 w-4" />
               <h1 className="text-xl font-semibold">{table}</h1>
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setShowRenameDialog(true)}>
-                  <PenSquare className="mr-2 h-4 w-4" />
-                  <span>Rename</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setShowDropDialog(true)}>
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  <span>Delete</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="flex items-center gap-2">
+              <Button variant="default" size="sm" onClick={() => setShowQueryDialog(true)}>
+                <Play className="h-4 w-4" />
+                Query
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setShowRenameDialog(true)}>
+                    <PenSquare className="mr-2 h-4 w-4" />
+                    <span>Rename</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setShowDropDialog(true)}>
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    <span>Delete</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
 
           <div className="p-6 space-y-8">
@@ -467,6 +499,52 @@ export default function TablePage() {
               Close
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Query Dialog */}
+      <Dialog open={showQueryDialog} onOpenChange={setShowQueryDialog}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Query Table</DialogTitle>
+            <DialogDescription>
+              Execute SQL query on table {table}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-8 gap-4 py-4">
+            <div className="col-span-7">
+              <textarea
+                id="query"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="w-full h-16 p-2 border rounded font-mono text-sm"
+                placeholder={`select * from "${catalog}".${namespace}.${table} limit 100`}
+              />
+            </div>
+            <div className="col-span-1 flex">
+              <Button 
+                onClick={handleRunQuery} 
+                disabled={isLoading}
+                className="w-full min-h-16 text-base"
+              >
+                {isLoading ? "Running..." : "Run"}
+              </Button>
+            </div>
+            {queryResults && (
+              <div className="col-span-8 mt-4">
+                <DataTable 
+                  columns={createColumns(queryResults.columns)} 
+                  data={queryResults.rows.map(row => {
+                    const obj: { [key: string]: any } = {}
+                    queryResults.columns.forEach((col, idx) => {
+                      obj[col] = row[idx]
+                    })
+                    return obj
+                  })} 
+                />
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
