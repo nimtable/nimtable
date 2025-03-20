@@ -50,7 +50,7 @@ public class RESTCatalogServer {
     context.setContextPath("/api");
     context.addServlet(new ServletHolder("catalogs", new CatalogsServlet(config)), "/catalogs");
     context.addServlet(new ServletHolder("catalog-config", new CatalogConfigServlet(config)), "/config/*");
-    context.addServlet(new ServletHolder("duckdb-query", new DuckDBQueryServlet(config)), "/query/*");
+    context.addServlet(new ServletHolder("duckdb-query", new DuckDBQueryServlet(config)), "/query");
 
     // Add route for each `/api/catalog/<catalog-name>/*` endpoints
     for (Config.Catalog catalog : config.getCatalogs()) {

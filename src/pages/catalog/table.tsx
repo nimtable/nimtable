@@ -148,7 +148,7 @@ export default function TablePage() {
       setIsLoading(true)
       setQueryError(null)
       setQueryResults(null)
-      const response = await fetch(`/api/query/${catalog}?query=${encodeURIComponent(query)}`)
+      const response = await fetch(`/api/query?query=${encodeURIComponent(query)}`)
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
