@@ -10,11 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -138,8 +134,13 @@ public class DuckDBQueryServlet extends HttpServlet {
                 mapper.writeValue(response.getWriter(), responseData);
             }
         } catch (Exception e) {
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, 
-                "Error executing query: " + e.getMessage() + "\n\n" + Throwables.getStackTraceAsString(e));
+            logger.error("Error executing query", e);
+
+            response.setContentType("application/json");
+            Map<String, String> errorResponse = new HashMap<>();
+            // HACK(eric): The `getCause()` is because DuckDB library wraps a redundant layer of SQLException.
+            errorResponse.put("error", e.getCause().getMessage());
+            mapper.writeValue(response.getWriter(), errorResponse);
         }
     }
 }

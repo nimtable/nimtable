@@ -57,6 +57,7 @@ export default function TablePage() {
   const [query, setQuery] = useState('')
   const [queryResults, setQueryResults] = useState<{ columns: string[], rows: any[][] } | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [queryError, setQueryError] = useState<string | null>(null)
 
   useEffect(() => {
     loadTableData(catalog, namespace, table)
@@ -139,17 +140,24 @@ export default function TablePage() {
     setShowQueryDialog(true)
     setQuery(`select * from "${catalog}".${namespace}.${table} limit 100`)
     setQueryResults(null)
+    setQueryError(null)
   }
   
   const handleRunQuery = async () => {
     try {
       setIsLoading(true)
+      setQueryError(null)
+      setQueryResults(null)
       const response = await fetch(`/api/query/${catalog}?query=${encodeURIComponent(query)}`)
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
       const data = await response.json()
-      setQueryResults(data)
+      if (data.error) {
+        setQueryError(data.error)
+      } else {
+        setQueryResults(data)
+      }
     } catch (error) {
       toast({
         variant: "destructive",
@@ -514,7 +522,7 @@ export default function TablePage() {
           <DialogHeader>
             <DialogTitle>Query Table</DialogTitle>
             <DialogDescription>
-              Execute SQL query on table {table}
+              Execute SQL query with embedded DuckDB
             </DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-8 gap-4 py-4">
@@ -536,8 +544,15 @@ export default function TablePage() {
                 {isLoading ? "Running..." : "Run"}
               </Button>
             </div>
+            {queryError && (
+              <div className="col-span-8">
+                <div className="p-4 bg-destructive/10 text-destructive rounded-md font-mono text-sm">
+                  {queryError}
+                </div>
+              </div>
+            )}
             {queryResults && (
-              <div className="col-span-8 mt-4">
+              <div className="col-span-8">
                 <DataTable 
                   columns={createColumns(queryResults.columns)} 
                   data={queryResults.rows.map(row => {
