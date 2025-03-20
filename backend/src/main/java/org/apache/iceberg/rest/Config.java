@@ -59,6 +59,12 @@ public final class Config {
 
         private Map<String, String> properties;
 
+        // See `org.apache.iceberg.CatalogProperties`
+        public static final String TYPE = "type";
+        public static final String CATALOG_IMPL = "catalog-impl";
+        public static final String FILE_IO_IMPL = "io-impl";
+        public static final String WAREHOUSE_LOCATION = "warehouse";
+
         public String getName() {
             return name;
         }
