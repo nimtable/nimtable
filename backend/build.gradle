@@ -29,7 +29,7 @@ application {
 }
 
 ext {
-  icebergVersion = '1.6.0'
+  icebergVersion = '1.8.1'
   hadoopVersion = '3.3.6'
   jettyVersion = '11.0.15'
 }
@@ -73,7 +73,7 @@ dependencies {
 
 jar {
   manifest {
-    attributes 'Main-Class': 'org.apache.iceberg.rest.RESTCatalogServer'
+    attributes 'Main-Class': 'io.nimtable.Server'
   }
 }
 

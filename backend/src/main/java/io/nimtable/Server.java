@@ -22,7 +22,7 @@ import java.net.InetSocketAddress;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.iceberg.CatalogUtil;
 import org.apache.iceberg.catalog.Catalog;
-import org.apache.iceberg.rest.IcebergRestCatalogServlet;
+import org.apache.iceberg.rest.RESTCatalogServlet;
 import org.apache.iceberg.rest.RESTCatalogAdapter;
 import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -56,7 +56,7 @@ public class Server {
       Catalog icebergCatalog = CatalogUtil.buildIcebergCatalog(catalog.getName(), catalog.getProperties(), new Configuration());
 
       try (RESTCatalogAdapter adapter = new RESTCatalogAdapter(icebergCatalog)) {
-        IcebergRestCatalogServlet servlet = new IcebergRestCatalogServlet(adapter);
+        RESTCatalogServlet servlet = new RESTCatalogServlet(adapter);
         ServletHolder servletHolder = new ServletHolder(servlet);
         context.addServlet(servletHolder, "/catalog/" + catalog.getName() + "/*");
       }
