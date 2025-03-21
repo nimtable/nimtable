@@ -18,13 +18,12 @@ package io.nimtable;
 
 import java.io.File;
 import java.net.InetSocketAddress;
-import java.util.Map;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.iceberg.CatalogUtil;
 import org.apache.iceberg.catalog.Catalog;
 import org.apache.iceberg.rest.IcebergRestCatalogServlet;
 import org.apache.iceberg.rest.RESTCatalogAdapter;
-import org.apache.iceberg.rest.RESTServerCatalogAdapter;
 import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
@@ -54,11 +53,9 @@ public class Server {
     // Add route for each `/api/catalog/<catalog-name>/*` endpoints
     for (Config.Catalog catalog : config.getCatalogs()) {
       LOG.info("Creating catalog with properties: {}", catalog.getProperties());
-      RESTServerCatalogAdapter.CatalogContext catalogContext = new RESTServerCatalogAdapter.CatalogContext(
-          CatalogUtil.buildIcebergCatalog(catalog.getName(), catalog.getProperties(), new Configuration()),
-          catalog.getProperties());
+      Catalog icebergCatalog = CatalogUtil.buildIcebergCatalog(catalog.getName(), catalog.getProperties(), new Configuration());
 
-      try (RESTCatalogAdapter adapter = new RESTServerCatalogAdapter(catalogContext)) {
+      try (RESTCatalogAdapter adapter = new RESTCatalogAdapter(icebergCatalog)) {
         IcebergRestCatalogServlet servlet = new IcebergRestCatalogServlet(adapter);
         ServletHolder servletHolder = new ServletHolder(servlet);
         context.addServlet(servletHolder, "/catalog/" + catalog.getName() + "/*");

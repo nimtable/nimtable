@@ -115,7 +115,7 @@ public class IcebergRestCatalogServlet extends HttpServlet {
             // NOTE(eric): IIUC, this entire file is used to ingest this hack
             // i.e. skip the prefix of URL and pass to the Iceberg's default REST implementation
             String path = Arrays.stream(request.getRequestURI().split("/")).skip(4).collect(Collectors.joining("/"));
-            LOG.debug("PATH is " + path);
+            LOG.debug("Path is " + path);
             Pair<RESTCatalogAdapter.Route, Map<String, String>> routeContext = Route.from(method, path);
             if (routeContext == null) {
                 return new ServletRequestContext(ErrorResponse.builder().responseCode(400).withType("BadRequestException").withMessage(String.format("No route for request: %s %s", method, path)).build());
