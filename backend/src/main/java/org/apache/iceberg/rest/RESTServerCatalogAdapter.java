@@ -18,8 +18,8 @@ package org.apache.iceberg.rest;
 
 import org.apache.iceberg.aws.s3.S3FileIOProperties;
 import org.apache.iceberg.azure.AzureProperties;
+import org.apache.iceberg.catalog.Catalog;
 import org.apache.iceberg.gcp.GCPProperties;
-import org.apache.iceberg.rest.RESTCatalogServer.CatalogContext;
 import org.apache.iceberg.rest.responses.LoadTableResponse;
 import org.apache.iceberg.util.PropertyUtil;
 
@@ -28,8 +28,10 @@ import java.util.Map;
 public class RESTServerCatalogAdapter extends RESTCatalogAdapter {
     private static final String INCLUDE_CREDENTIALS = "include-credentials";
 
-    private final CatalogContext catalogContext;
+    public record CatalogContext(Catalog catalog, Map<String, String> configuration) {
+    }
 
+    private final CatalogContext catalogContext;
 
     public RESTServerCatalogAdapter(CatalogContext catalogContext) {
         super(catalogContext.catalog());

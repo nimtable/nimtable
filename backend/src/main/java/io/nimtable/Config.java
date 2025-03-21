@@ -1,4 +1,4 @@
-package org.apache.iceberg.rest;
+package io.nimtable;
 
 import java.io.IOException;
 import java.util.HashMap;

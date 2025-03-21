@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.apache.iceberg.rest;
+package io.nimtable;
 
 import java.io.File;
 import java.net.InetSocketAddress;
@@ -22,7 +22,9 @@ import java.util.Map;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.iceberg.CatalogUtil;
 import org.apache.iceberg.catalog.Catalog;
-import org.eclipse.jetty.server.Server;
+import org.apache.iceberg.rest.IcebergRestCatalogServlet;
+import org.apache.iceberg.rest.RESTCatalogAdapter;
+import org.apache.iceberg.rest.RESTServerCatalogAdapter;
 import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
@@ -31,13 +33,10 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
-public class RESTCatalogServer {
-  private static final Logger LOG = LoggerFactory.getLogger(RESTCatalogServer.class);
+public class Server {
+  private static final Logger LOG = LoggerFactory.getLogger(Server.class);
 
-  private RESTCatalogServer() {
-  }
-
-  record CatalogContext(Catalog catalog, Map<String, String> configuration) {
+  private Server() {
   }
 
   public static void main(String[] args) throws Exception {
@@ -55,7 +54,7 @@ public class RESTCatalogServer {
     // Add route for each `/api/catalog/<catalog-name>/*` endpoints
     for (Config.Catalog catalog : config.getCatalogs()) {
       LOG.info("Creating catalog with properties: {}", catalog.getProperties());
-      CatalogContext catalogContext = new CatalogContext(
+      RESTServerCatalogAdapter.CatalogContext catalogContext = new RESTServerCatalogAdapter.CatalogContext(
           CatalogUtil.buildIcebergCatalog(catalog.getName(), catalog.getProperties(), new Configuration()),
           catalog.getProperties());
 
@@ -67,7 +66,7 @@ public class RESTCatalogServer {
     }
 
     context.insertHandler(new GzipHandler());
-    Server httpServer = new Server(
+    org.eclipse.jetty.server.Server httpServer = new org.eclipse.jetty.server.Server(
             new InetSocketAddress(config.getServer().getHost(), config.getServer().getPort()));
     httpServer.insertHandler(context);
     httpServer.start();

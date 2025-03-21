@@ -1,4 +1,4 @@
-package org.apache.iceberg.rest;
+package io.nimtable;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
