@@ -51,20 +51,20 @@ public class Server {
     context.addServlet(new ServletHolder("duckdb-query", new DuckDBQueryServlet(config)), "/query");
 
     // Add route for each `/api/catalog/<catalog-name>/*` endpoints
-    for (Config.Catalog catalog : config.getCatalogs()) {
-      LOG.info("Creating catalog with properties: {}", catalog.getProperties());
-      Catalog icebergCatalog = CatalogUtil.buildIcebergCatalog(catalog.getName(), catalog.getProperties(), new Configuration());
+    for (Config.Catalog catalog : config.catalogs()) {
+      LOG.info("Creating catalog with properties: {}", catalog.properties());
+      Catalog icebergCatalog = CatalogUtil.buildIcebergCatalog(catalog.name(), catalog.properties(), new Configuration());
 
       try (RESTCatalogAdapter adapter = new RESTCatalogAdapter(icebergCatalog)) {
         RESTCatalogServlet servlet = new RESTCatalogServlet(adapter);
         ServletHolder servletHolder = new ServletHolder(servlet);
-        context.addServlet(servletHolder, "/catalog/" + catalog.getName() + "/*");
+        context.addServlet(servletHolder, "/catalog/" + catalog.name() + "/*");
       }
     }
 
     context.insertHandler(new GzipHandler());
     org.eclipse.jetty.server.Server httpServer = new org.eclipse.jetty.server.Server(
-            new InetSocketAddress(config.getServer().getHost(), config.getServer().getPort()));
+            new InetSocketAddress(config.server().host(), config.server().port()));
     httpServer.insertHandler(context);
     httpServer.start();
     httpServer.join();

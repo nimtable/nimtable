@@ -27,8 +27,8 @@ public class CatalogConfigServlet extends HttpServlet {
         }
 
         String catalogName = pathInfo.substring(1); // Remove leading slash
-        Config.Catalog catalog = config.getCatalogs().stream()
-                .filter(c -> c.getName().equals(catalogName))
+        Config.Catalog catalog = config.catalogs().stream()
+                .filter(c -> c.name().equals(catalogName))
                 .findFirst()
                 .orElse(null);
 
@@ -37,7 +37,7 @@ public class CatalogConfigServlet extends HttpServlet {
             return;
         }
 
-        Map<String, String> catalogConfig = catalog.getProperties();
+        Map<String, String> catalogConfig = catalog.properties();
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         mapper.writeValue(response.getOutputStream(), catalogConfig);

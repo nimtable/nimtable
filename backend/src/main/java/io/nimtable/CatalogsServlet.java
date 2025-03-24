@@ -23,8 +23,8 @@ public class CatalogsServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
-        List<String> catalogs = config.getCatalogs().stream()
-                .map(Config.Catalog::getName)
+        List<String> catalogs = config.catalogs().stream()
+                .map(Config.Catalog::name)
                 .collect(Collectors.toList());
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
