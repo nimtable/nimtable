@@ -11,6 +11,8 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import org.apache.iceberg.CatalogProperties;
+import org.apache.iceberg.CatalogUtil;
 
 public final class Config {
     private Server server;
@@ -59,11 +61,12 @@ public final class Config {
 
         private Map<String, String> properties;
 
-        // See `org.apache.iceberg.CatalogProperties`
-        public static final String TYPE = "type";
-        public static final String CATALOG_IMPL = "catalog-impl";
-        public static final String FILE_IO_IMPL = "io-impl";
-        public static final String WAREHOUSE_LOCATION = "warehouse";
+        // Options: "hadoop", "hive", "rest", "glue", "nessie", "jdbc"
+        public static final String TYPE = CatalogUtil.ICEBERG_CATALOG_TYPE;
+
+        public static final String CATALOG_IMPL = CatalogProperties.CATALOG_IMPL;
+        public static final String FILE_IO_IMPL = CatalogProperties.FILE_IO_IMPL;
+        public static final String WAREHOUSE_LOCATION = CatalogProperties.WAREHOUSE_LOCATION;
 
         public String getName() {
             return name;
