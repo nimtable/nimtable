@@ -27,10 +27,7 @@ public class CatalogConfigServlet extends HttpServlet {
         }
 
         String catalogName = pathInfo.substring(1); // Remove leading slash
-        Config.Catalog catalog = config.catalogs().stream()
-                .filter(c -> c.name().equals(catalogName))
-                .findFirst()
-                .orElse(null);
+        Config.Catalog catalog = config.getCatalog(catalogName);
 
         if (catalog == null) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND, "Catalog not found: " + catalogName);

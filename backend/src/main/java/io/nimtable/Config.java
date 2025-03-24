@@ -60,4 +60,11 @@ public record Config(
             return new Catalog(name, properties);
         }
     }
+
+    public Catalog getCatalog(String name) {
+        return catalogs.stream()
+            .filter(c -> c.name().equals(name))
+            .findFirst()
+            .orElse(null);
+    }
 }

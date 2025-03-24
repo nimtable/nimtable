@@ -14,4 +14,4 @@
  * limitations under the License.
  */
 
-rootProject.name = 'iceberg-webui-backend'
+rootProject.name = 'nimtable'
