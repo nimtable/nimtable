@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory;
  * The RESTCatalogServlet provides a servlet implementation used in combination with a
  * RESTCatalogAdaptor to proxy the REST Spec to any Catalog implementation.
  * <p>
- * NOTE: This file is to overwrite the code of
+ * NOTE: This file is modified from
  * <a href="https://github.com/apache/iceberg/blob/main/core/src/test/java/org/apache/iceberg/rest/RESTCatalogServlet.java">RESTCatalogServlet</a>
  */
 public class RESTCatalogServlet extends HttpServlet {

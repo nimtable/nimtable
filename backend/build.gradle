@@ -37,7 +37,6 @@ ext {
 dependencies {
   implementation "org.apache.iceberg:iceberg-api:${icebergVersion}"
   implementation "org.apache.iceberg:iceberg-core:${icebergVersion}"
-  implementation "org.apache.iceberg:iceberg-core:${icebergVersion}:tests"
   implementation "org.apache.iceberg:iceberg-aws:${icebergVersion}"
   implementation "org.apache.iceberg:iceberg-azure:${icebergVersion}"
   implementation "org.apache.iceberg:iceberg-gcp:${icebergVersion}"
