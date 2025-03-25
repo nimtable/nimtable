@@ -50,7 +50,8 @@ export default function TablePage() {
   const [newTableName, setNewTableName] = useState(table)
   const [showDetailDialog, setShowDetailDialog] = useState(false)
   const [snapshotDetail, setSnapshotDetail] = useState<string | null>(null)
-  const [detailType, setDetailType] = useState<'snapshot' | 'branch' | 'tag' | 'manifest'>('snapshot')
+  const [detailTitle, setDetailTitle] = useState<string>('')
+  const [detailDescription, setDetailDescription] = useState<string>('')
   const [activeTab, setActiveTab] = useState('branches')
   const { triggerRefresh } = useSidebarRefresh()
   const [showQueryDialog, setShowQueryDialog] = useState(false)
@@ -132,8 +133,9 @@ export default function TablePage() {
     setShowRenameDialog(false)
   }
 
-  const handleShowDetail = (data: Snapshot | SnapshotReference, type: 'snapshot' | 'branch' | 'tag') => {
-    setDetailType(type)
+  const handleShowDetail = (data: any, title: string, description: string = '') => {
+    setDetailTitle(title)
+    setDetailDescription(description)
     setSnapshotDetail(JSON.stringify(data, null, 2))
     setShowDetailDialog(true)
   }
@@ -225,12 +227,6 @@ export default function TablePage() {
     } finally {
       setManifestDetailsLoading(false)
     }
-  }
-
-  const handleShowManifestJson = (manifest: any) => {
-    setDetailType('manifest')
-    setSnapshotDetail(JSON.stringify(manifest, null, 2))
-    setShowDetailDialog(true)
   }
 
   if (!tableData) return null
@@ -352,7 +348,7 @@ export default function TablePage() {
                             <TableCell>{ref["max-ref-age-ms"] || '-'}</TableCell>
                             <TableCell>{ref["min-snapshots-to-keep"] || '-'}</TableCell>
                             <TableCell>
-                              <Button variant="ghost" size="icon" onClick={() => handleShowDetail(ref, 'branch')}>
+                              <Button variant="ghost" size="icon" onClick={() => handleShowDetail(ref, `Branch ${name}`, '')}>
                                 <MoreVertical className="h-4 w-4" />
                               </Button>
                             </TableCell>
@@ -387,7 +383,7 @@ export default function TablePage() {
                             </TableCell>
                             <TableCell>{ref["max-ref-age-ms"] || '-'}</TableCell>
                             <TableCell>
-                              <Button variant="ghost" size="icon" onClick={() => handleShowDetail(ref, 'tag')}>
+                              <Button variant="ghost" size="icon" onClick={() => handleShowDetail(ref, `Tag ${name}`, '')}>
                                 <MoreVertical className="h-4 w-4" />
                               </Button>
                             </TableCell>
@@ -428,7 +424,7 @@ export default function TablePage() {
                             </Button>
                           </TableCell>
                           <TableCell>
-                            <Button variant="ghost" size="icon" onClick={() => handleShowDetail(snapshot, 'snapshot')}>
+                            <Button variant="ghost" size="icon" onClick={() => handleShowDetail(snapshot, `Snapshot ${snapshot["snapshot-id"]}`, '')}>
                               <MoreVertical className="h-4 w-4" />
                             </Button>
                           </TableCell>
@@ -574,7 +570,10 @@ export default function TablePage() {
       <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{detailType.charAt(0).toUpperCase() + detailType.slice(1)} Detail</DialogTitle>
+            <DialogTitle>{detailTitle}</DialogTitle>
+            {detailDescription && (
+              <DialogDescription>{detailDescription}</DialogDescription>
+            )}
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <textarea
@@ -711,7 +710,7 @@ export default function TablePage() {
                       <Button 
                         variant="ghost" 
                         size="icon" 
-                        onClick={() => handleShowManifestJson(row.original)}
+                        onClick={() => handleShowDetail(row.original, 'File Manifest', `File location: ${row.original.file_path}`)}
                       >
                         <FileText className="h-4 w-4" />
                       </Button>
