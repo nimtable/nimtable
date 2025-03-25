@@ -100,7 +100,6 @@ public class RESTCatalogServlet extends HttpServlet {
         }
 
         try {
-
             HTTPRequest request =
                     restCatalogAdapter.buildRequest(
                             context.method(),

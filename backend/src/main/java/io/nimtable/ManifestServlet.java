@@ -43,6 +43,7 @@ public class ManifestServlet extends HttpServlet {
             return;
         }
 
+        // Format: /manifest/{catalog-name}/{namespace}/{table-name}/{snapshot-id}
         String catalogName = parts[3];
         String namespace = parts[4];
         String tableName = parts[5];

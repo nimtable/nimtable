@@ -14,6 +14,7 @@
  * If you make any changes to this file manually, please also note down here.
  * - Added `format: "json"` to all requests to ensure the response is parsed.
  * - Modified `request()` to throw `r.error` instead of `data` if the response is not ok.
+ * - Modified `response.json()` to parse `snapshot-id` as strings because it may be greater than MAX_SAFE_INTEGER
  */
 
 type UtilRequiredKeys<T, K extends keyof T> = Omit<T, K> & Required<Pick<T, K>>;
@@ -237,9 +238,9 @@ export interface SortOrder {
 
 export interface Snapshot {
   /** @format int64 */
-  "snapshot-id": number;
+  "snapshot-id": string;
   /** @format int64 */
-  "parent-snapshot-id"?: number;
+  "parent-snapshot-id"?: string;
   /** @format int64 */
   "sequence-number"?: number;
   /** @format int64 */
@@ -256,7 +257,7 @@ export interface Snapshot {
 export interface SnapshotReference {
   type: "tag" | "branch";
   /** @format int64 */
-  "snapshot-id": number;
+  "snapshot-id": string;
   /** @format int64 */
   "max-ref-age-ms"?: number;
   /** @format int64 */
@@ -268,7 +269,7 @@ export type SnapshotReferences = Record<string, SnapshotReference>;
 
 export type SnapshotLog = {
   /** @format int64 */
-  "snapshot-id": number;
+  "snapshot-id": string;
   /** @format int64 */
   "timestamp-ms": number;
 }[];
@@ -301,7 +302,7 @@ export interface TableMetadata {
   snapshots?: Snapshot[];
   refs?: SnapshotReferences;
   /** @format int64 */
-  "current-snapshot-id"?: number;
+  "current-snapshot-id"?: string;
   /** @format int64 */
   "last-sequence-number"?: number;
   "snapshot-log"?: SnapshotLog;
@@ -483,14 +484,14 @@ export type SetStatisticsUpdate = BaseBaseUpdate & {
    * @deprecated
    * @format int64
    */
-  "snapshot-id"?: number;
+  "snapshot-id"?: string;
   statistics: StatisticsFile;
 };
 
 export type RemoveStatisticsUpdate = BaseBaseUpdate & {
   action?: "remove-statistics";
   /** @format int64 */
-  "snapshot-id": number;
+  "snapshot-id": string;
 };
 
 export type SetPartitionStatisticsUpdate = BaseBaseUpdate & {
@@ -501,7 +502,7 @@ export type SetPartitionStatisticsUpdate = BaseBaseUpdate & {
 export type RemovePartitionStatisticsUpdate = BaseBaseUpdate & {
   action?: "remove-partition-statistics";
   /** @format int64 */
-  "snapshot-id": number;
+  "snapshot-id": string;
 };
 
 export type RemovePartitionSpecsUpdate = BaseBaseUpdate & {
@@ -578,7 +579,7 @@ export type AssertRefSnapshotId = BaseTableRequirement & {
   type?: "assert-ref-snapshot-id";
   ref: string;
   /** @format int64 */
-  "snapshot-id": number;
+  "snapshot-id": string;
 };
 
 /** The table's last assigned column id must match the requirement's `last-assigned-field-id` */
@@ -920,7 +921,7 @@ export type ReportMetricsRequest = (ScanReport | CommitReport) & {
 export interface ScanReport {
   "table-name": string;
   /** @format int64 */
-  "snapshot-id": number;
+  "snapshot-id": string;
   filter: Expression;
   "schema-id": number;
   "projected-field-ids": number[];
@@ -932,7 +933,7 @@ export interface ScanReport {
 export interface CommitReport {
   "table-name": string;
   /** @format int64 */
-  "snapshot-id": number;
+  "snapshot-id": string;
   /** @format int64 */
   "sequence-number": number;
   operation: string;
@@ -1059,7 +1060,7 @@ export interface CommitTableResponse {
 
 export interface StatisticsFile {
   /** @format int64 */
-  "snapshot-id": number;
+  "snapshot-id": string;
   "statistics-path": string;
   /** @format int64 */
   "file-size-in-bytes": number;
@@ -1071,7 +1072,7 @@ export interface StatisticsFile {
 export interface BlobMetadata {
   type: string;
   /** @format int64 */
-  "snapshot-id": number;
+  "snapshot-id": string;
   /** @format int64 */
   "sequence-number": number;
   fields: number[];
@@ -1080,7 +1081,7 @@ export interface BlobMetadata {
 
 export interface PartitionStatisticsFile {
   /** @format int64 */
-  "snapshot-id": number;
+  "snapshot-id": string;
   "statistics-path": string;
   /** @format int64 */
   "file-size-in-bytes": number;
@@ -1275,7 +1276,7 @@ export interface PlanTableScanRequest {
    * Identifier for the snapshot to scan in a point-in-time scan
    * @format int64
    */
-  "snapshot-id"?: number;
+  "snapshot-id"?: string;
   /** List of selected schema fields */
   select?: FieldName[];
   /** Expression used to filter the table data */
@@ -1295,13 +1296,13 @@ export interface PlanTableScanRequest {
    * Starting snapshot ID for an incremental scan (exclusive)
    * @format int64
    */
-  "start-snapshot-id"?: number;
+  "start-snapshot-id"?: string;
   /**
    * Ending snapshot ID for an incremental scan (inclusive).
    * Required when start-snapshot-id is specified.
    * @format int64
    */
-  "end-snapshot-id"?: number;
+  "end-snapshot-id"?: string;
   /** List of fields for which the service should send column stats. */
   "stats-fields"?: FieldName[];
 }
@@ -1581,6 +1582,13 @@ export class HttpClient<SecurityDataType = unknown> {
       const r = response.clone() as HttpResponse<T, E>;
       r.data = null as unknown as T;
       r.error = null as unknown as E;
+
+      // Parse snapshot-id as strings because it may be greater than MAX_SAFE_INTEGER
+      const JSONbigintString = require("json-bigint")({ storeAsString: true });
+      response.json = async () => {
+        const text = await response.text();
+        return JSONbigintString.parse(text);
+      };
 
       const data = !responseFormat
         ? r
