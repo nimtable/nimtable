@@ -1,14 +1,20 @@
 package io.nimtable;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.iceberg.CatalogUtil;
+import org.apache.iceberg.DataFile;
+import org.apache.iceberg.DeleteFile;
 import org.apache.iceberg.ManifestFile;
+import org.apache.iceberg.ManifestFiles;
 import org.apache.iceberg.Table;
 import org.apache.iceberg.catalog.TableIdentifier;
 import org.apache.iceberg.io.FileIO;
+import org.apache.iceberg.transforms.Transforms;
+import org.apache.iceberg.types.Types;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,11 +49,12 @@ public class ManifestServlet extends HttpServlet {
             return;
         }
 
-        // Format: /manifest/{catalog-name}/{namespace}/{table-name}/{snapshot-id}
+        // Format: /manifest/{catalog-name}/{namespace}/{table-name}/{snapshot-id}[/{manifest-number}]
         String catalogName = parts[3];
         String namespace = parts[4];
         String tableName = parts[5];
         String snapshotId = parts[6];
+        Integer manifestNumber = parts.length > 7 ? Integer.parseInt(parts[7]) : null;
 
         // Get catalog
         Config.Catalog catalog = config.getCatalog(catalogName);
@@ -86,14 +93,41 @@ public class ManifestServlet extends HttpServlet {
         try (FileIO fileIO = table.io()) {
             List<ManifestFile> manifests = snapshot.allManifests(fileIO);
             var rootNode = objectMapper.createObjectNode();
-            rootNode.put("snapshot_id", snapshotId);
-            rootNode.put("manifest_list_location", snapshot.manifestListLocation());
-            var manifestsNode = objectMapper.createArrayNode();
-            for (ManifestFile manifest : manifests) {
-                manifestsNode.add(manifestToJson(manifest));
+            if (manifestNumber == null) {
+                rootNode.put("snapshot_id", snapshotId);
+                rootNode.put("manifest_list_location", snapshot.manifestListLocation());
+                var manifestsNode = objectMapper.createArrayNode();
+                for (ManifestFile manifest : manifests) {
+                    manifestsNode.add(manifestToJson(manifest));
+                }
+                rootNode.set("manifests", manifestsNode);
+            } else {
+                ManifestFile manifest = manifests.get(manifestNumber);
+                if (manifest == null) {
+                    response.sendError(HttpServletResponse.SC_NOT_FOUND, "Invalid manifest number: " + manifestNumber);
+                    return;
+                }
+                rootNode.put("path", manifest.path());
+                rootNode.put("content", manifest.content().name());
+                var filesNode = objectMapper.createArrayNode();
+
+                var reader = ManifestFiles.read(manifest, fileIO, table.specs());
+                switch (manifest.content()) {
+                    case DATA: 
+                        for (DataFile file : reader) {
+                            filesNode.add(dataFileToJson(file));
+                        }
+                        break;
+                    case DELETES:
+                        for (DeleteFile file : ManifestFiles.readDeleteManifest(manifest, fileIO, table.specs())) {
+                            filesNode.add(deleteFileToJson(file));
+                        }
+                        break;
+                    default:
+                        throw new RuntimeException("unreachable");
+                }
+                rootNode.set("files", filesNode);
             }
-            rootNode.set("manifests", manifestsNode);
-            
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
             objectMapper.writeValue(response.getWriter(), rootNode);
@@ -130,5 +164,109 @@ public class ManifestServlet extends HttpServlet {
             node.put("deleted_rows_count", manifest.deletedRowsCount());
         }
         return node;
+    }
+
+    private ObjectNode dataFileToJson(DataFile file) {
+        var fileNode = objectMapper.createObjectNode();
+        fileNode.put("content", file.content().name());
+        fileNode.put("file_path", file.location());
+        fileNode.put("file_format", file.format().name());
+        fileNode.put("spec_id", file.specId());
+        fileNode.put("record_count", file.recordCount());
+        fileNode.put("file_size_in_bytes", file.fileSizeInBytes());
+        
+        if (file.columnSizes() != null) {
+            var columnSizesNode = objectMapper.createObjectNode();
+            file.columnSizes().forEach((key, value) -> columnSizesNode.put(key.toString(), value));
+            fileNode.set("column_sizes", columnSizesNode);
+        }
+        
+        if (file.valueCounts() != null) {
+            var valueCountsNode = objectMapper.createObjectNode();
+            file.valueCounts().forEach((key, value) -> valueCountsNode.put(key.toString(), value));
+            fileNode.set("value_counts", valueCountsNode);
+        }
+        
+        if (file.nullValueCounts() != null) {
+            var nullValueCountsNode = objectMapper.createObjectNode();
+            file.nullValueCounts().forEach((key, value) -> nullValueCountsNode.put(key.toString(), value));
+            fileNode.set("null_value_counts", nullValueCountsNode);
+        }
+        
+        if (file.nanValueCounts() != null) {
+            var nanValueCountsNode = objectMapper.createObjectNode();
+            file.nanValueCounts().forEach((key, value) -> nanValueCountsNode.put(key.toString(), value));
+            fileNode.set("nan_value_counts", nanValueCountsNode);
+        }
+        
+        if (file.lowerBounds() != null) {
+            var lowerBoundsNode = objectMapper.createObjectNode();
+            file.lowerBounds().forEach((key, value) -> lowerBoundsNode.put(key.toString(), formatBinary(value)));
+            fileNode.set("lower_bounds", lowerBoundsNode);
+        }
+        
+        if (file.upperBounds() != null) {
+            var upperBoundsNode = objectMapper.createObjectNode();
+            file.upperBounds().forEach((key, value) -> upperBoundsNode.put(key.toString(), formatBinary(value)));
+            fileNode.set("upper_bounds", upperBoundsNode);
+        }
+        
+        if (file.keyMetadata() != null) {
+            fileNode.put("key_metadata", formatBinary(file.keyMetadata()));
+        }
+        
+        if (file.splitOffsets() != null) {
+            var splitOffsetsNode = objectMapper.createArrayNode();
+            file.splitOffsets().forEach(splitOffsetsNode::add);
+            fileNode.set("split_offsets", splitOffsetsNode);
+        }
+        
+        if (file.equalityFieldIds() != null) {
+            var equalityIdsNode = objectMapper.createArrayNode();
+            file.equalityFieldIds().forEach(equalityIdsNode::add);
+            fileNode.set("equality_ids", equalityIdsNode);
+        }
+        
+        fileNode.put("sort_order_id", file.sortOrderId());
+        return fileNode;
+    }
+
+    private ObjectNode deleteFileToJson(DeleteFile file) {
+        var fileNode = objectMapper.createObjectNode();
+        fileNode.put("content", file.content().name().toLowerCase());
+        fileNode.put("file_path", file.location());
+        fileNode.put("file_format", file.format().name().toLowerCase());
+        fileNode.put("record_count", file.recordCount());
+        fileNode.put("file_size_in_bytes", file.fileSizeInBytes());
+
+        if (file.splitOffsets() != null) {
+            var splitOffsetsNode = objectMapper.createArrayNode();
+            file.splitOffsets().forEach(splitOffsetsNode::add);
+            fileNode.set("split_offsets", splitOffsetsNode);
+        }
+
+        if (file.referencedDataFile() != null) {
+            fileNode.put("referenced_data_file", file.referencedDataFile());
+        }
+
+        if (file.contentOffset() != null) {
+            fileNode.put("content_offset", file.contentOffset());
+        }
+
+        if (file.contentSizeInBytes() != null) {
+            fileNode.put("content_size_in_bytes", file.contentSizeInBytes());
+        }
+
+        if (file.equalityFieldIds() != null) {
+            var equalityIdsNode = objectMapper.createArrayNode();
+            file.equalityFieldIds().forEach(equalityIdsNode::add);
+            fileNode.set("equality_ids", equalityIdsNode);
+        }
+
+        return fileNode;
+    }
+
+    private static String formatBinary(ByteBuffer buffer) {
+        return Transforms.identity().toHumanString(Types.BinaryType.get(), buffer);
     }
 }
