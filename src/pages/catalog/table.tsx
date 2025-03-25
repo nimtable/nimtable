@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { ChevronRight, MoreVertical, Table as TableIcon, PanelRightClose, PanelRightOpen, Trash2, PenSquare, Play } from "lucide-react"
+import { ChevronRight, MoreVertical, Table as TableIcon, PanelRightClose, PanelRightOpen, Trash2, PenSquare, Play, FileText } from "lucide-react"
 import { Link } from "react-router-dom"
 
 import { Api, LoadTableResult, Schema, Snapshot, StructField, SnapshotReference } from "@/lib/api"
@@ -58,6 +58,10 @@ export default function TablePage() {
   const [queryResults, setQueryResults] = useState<{ columns: string[], rows: any[][] } | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [queryError, setQueryError] = useState<string | null>(null)
+  const [showManifestDialog, setShowManifestDialog] = useState(false)
+  const [manifestData, setManifestData] = useState<any[]>([])
+  const [manifestLoading, setManifestLoading] = useState(false)
+  const [manifestError, setManifestError] = useState<string | null>(null)
 
   useEffect(() => {
     loadTableData(catalog, namespace, table)
@@ -166,6 +170,29 @@ export default function TablePage() {
       })
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleShowManifest = async (snapshotId: string | number) => {
+    try {
+      setManifestLoading(true)
+      setManifestError(null)
+      const response = await fetch(`/api/manifest/${catalog}/${namespace}/${table}/${snapshotId}`)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      const data = await response.json()
+      setManifestData(data)
+      setShowManifestDialog(true)
+    } catch (error) {
+      setManifestError(errorToString(error))
+      toast({
+        variant: "destructive",
+        title: "Failed to load manifest",
+        description: errorToString(error),
+      })
+    } finally {
+      setManifestLoading(false)
     }
   }
 
@@ -340,6 +367,7 @@ export default function TablePage() {
                         <TableHead>Parent ID</TableHead>
                         <TableHead>Sequence Number</TableHead>
                         <TableHead>Timestamp</TableHead>
+                        <TableHead>Files</TableHead>
                         <TableHead>Detail</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -351,6 +379,16 @@ export default function TablePage() {
                           <TableCell>{snapshot["sequence-number"] || '-'}</TableCell>
                           <TableCell>
                             {new Date(snapshot["timestamp-ms"]).toLocaleString()}
+                          </TableCell>
+                          <TableCell>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => handleShowManifest(snapshot["snapshot-id"])}
+                              disabled={manifestLoading}
+                            >
+                              <FileText className="h-4 w-4" />
+                            </Button>
                           </TableCell>
                           <TableCell>
                             <Button variant="ghost" size="icon" onClick={() => handleShowDetail(snapshot, 'snapshot')}>
@@ -564,6 +602,34 @@ export default function TablePage() {
                   })} 
                 />
               </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Manifest Dialog */}
+      <Dialog open={showManifestDialog} onOpenChange={setShowManifestDialog}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Manifest List</DialogTitle>
+            <DialogDescription>
+              
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            {manifestError ? (
+              <div className="p-4 bg-destructive/10 text-destructive rounded-md font-mono text-sm">
+                {manifestError}
+              </div>
+            ) : manifestLoading ? (
+              <div className="text-center py-4">Loading...</div>
+            ) : manifestData.length > 0 ? (
+              <DataTable 
+                columns={createColumns(Object.keys(manifestData[0]))} 
+                data={manifestData} 
+              />
+            ) : (
+              <div className="text-center py-4">No files found</div>
             )}
           </div>
         </DialogContent>
