@@ -58,8 +58,12 @@ export default function TablePage() {
   const [queryResults, setQueryResults] = useState<{ columns: string[], rows: any[][] } | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [queryError, setQueryError] = useState<string | null>(null)
-  const [showManifestDialog, setShowManifestDialog] = useState(false)
-  const [manifestData, setManifestData] = useState<any[]>([])
+  const [showManifestListDialog, setShowManifestListDialog] = useState(false)
+  const [manifestListData, setManifestListData] = useState<{
+    snapshot_id: string;
+    manifest_list_location: string;
+    manifests: any[];
+  } | null>(null)
   const [manifestLoading, setManifestLoading] = useState(false)
   const [manifestError, setManifestError] = useState<string | null>(null)
 
@@ -182,8 +186,8 @@ export default function TablePage() {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
       const data = await response.json()
-      setManifestData(data)
-      setShowManifestDialog(true)
+      setManifestListData(data)
+      setShowManifestListDialog(true)
     } catch (error) {
       setManifestError(errorToString(error))
       toast({
@@ -607,13 +611,13 @@ export default function TablePage() {
         </DialogContent>
       </Dialog>
 
-      {/* Manifest Dialog */}
-      <Dialog open={showManifestDialog} onOpenChange={setShowManifestDialog}>
+      {/* Manifest List Dialog */}
+      <Dialog open={showManifestListDialog} onOpenChange={setShowManifestListDialog}>
         <DialogContent className="max-w-4xl">
           <DialogHeader>
-            <DialogTitle>Manifest List</DialogTitle>
+            <DialogTitle>Snapshot <code>{manifestListData?.snapshot_id}</code></DialogTitle>
             <DialogDescription>
-              
+              Manifest List Location: <code>{manifestListData?.manifest_list_location}</code>
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
@@ -623,10 +627,10 @@ export default function TablePage() {
               </div>
             ) : manifestLoading ? (
               <div className="text-center py-4">Loading...</div>
-            ) : manifestData.length > 0 ? (
+            ) : manifestListData?.manifests && manifestListData.manifests.length > 0 ? (
               <DataTable 
-                columns={createColumns(Object.keys(manifestData[0]))} 
-                data={manifestData} 
+                columns={createColumns(Object.keys(manifestListData.manifests[0]))} 
+                data={manifestListData.manifests} 
               />
             ) : (
               <div className="text-center py-4">No files found</div>

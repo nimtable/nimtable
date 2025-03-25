@@ -85,10 +85,15 @@ public class ManifestServlet extends HttpServlet {
         // Read manifest list file
         try (FileIO fileIO = table.io()) {
             List<ManifestFile> manifests = snapshot.allManifests(fileIO);
-            var rootNode = objectMapper.createArrayNode();
+            var rootNode = objectMapper.createObjectNode();
+            rootNode.put("snapshot_id", snapshotId);
+            rootNode.put("manifest_list_location", snapshot.manifestListLocation());
+            var manifestsNode = objectMapper.createArrayNode();
             for (ManifestFile manifest : manifests) {
-                rootNode.add(manifestToJson(manifest));
+                manifestsNode.add(manifestToJson(manifest));
             }
+            rootNode.set("manifests", manifestsNode);
+            
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
             objectMapper.writeValue(response.getWriter(), rootNode);
