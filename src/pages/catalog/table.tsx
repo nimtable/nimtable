@@ -50,7 +50,7 @@ export default function TablePage() {
   const [newTableName, setNewTableName] = useState(table)
   const [showDetailDialog, setShowDetailDialog] = useState(false)
   const [snapshotDetail, setSnapshotDetail] = useState<string | null>(null)
-  const [detailType, setDetailType] = useState<'snapshot' | 'branch' | 'tag'>('snapshot')
+  const [detailType, setDetailType] = useState<'snapshot' | 'branch' | 'tag' | 'manifest'>('snapshot')
   const [activeTab, setActiveTab] = useState('branches')
   const { triggerRefresh } = useSidebarRefresh()
   const [showQueryDialog, setShowQueryDialog] = useState(false)
@@ -66,6 +66,10 @@ export default function TablePage() {
   } | null>(null)
   const [manifestLoading, setManifestLoading] = useState(false)
   const [manifestError, setManifestError] = useState<string | null>(null)
+  const [showManifestDetailsDialog, setShowManifestDetailsDialog] = useState(false)
+  const [manifestDetailsData, setManifestDetailsData] = useState<any>(null)
+  const [manifestDetailsLoading, setManifestDetailsLoading] = useState(false)
+  const [manifestDetailsError, setManifestDetailsError] = useState<string | null>(null)
 
   useEffect(() => {
     loadTableData(catalog, namespace, table)
@@ -198,6 +202,35 @@ export default function TablePage() {
     } finally {
       setManifestLoading(false)
     }
+  }
+
+  const handleShowManifestDetails = async (manifestIndex: number) => {
+    try {
+      setManifestDetailsLoading(true)
+      setManifestDetailsError(null)
+      const response = await fetch(`/api/manifest/${catalog}/${namespace}/${table}/${manifestListData!.snapshot_id}/${manifestIndex}`)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      const data = await response.json()
+      setManifestDetailsData(data)
+      setShowManifestDetailsDialog(true)
+    } catch (error) {
+      setManifestDetailsError(errorToString(error))
+      toast({
+        variant: "destructive",
+        title: "Failed to load manifest details",
+        description: errorToString(error),
+      })
+    } finally {
+      setManifestDetailsLoading(false)
+    }
+  }
+
+  const handleShowManifestJson = (manifest: any) => {
+    setDetailType('manifest')
+    setSnapshotDetail(JSON.stringify(manifest, null, 2))
+    setShowDetailDialog(true)
   }
 
   if (!tableData) return null
@@ -629,13 +662,73 @@ export default function TablePage() {
               <div className="text-center py-4">Loading...</div>
             ) : manifestListData?.manifests && manifestListData.manifests.length > 0 ? (
               <DataTable 
-                columns={createColumns(Object.keys(manifestListData.manifests[0]))} 
+                columns={[
+                  ...createColumns(Object.keys(manifestListData.manifests[0])),
+                  {
+                    id: "files",
+                    header: "Files",
+                    cell: ({ row }) => (
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => handleShowManifestDetails(row.index)}
+                      >
+                        <FileText className="h-4 w-4" />
+                      </Button>
+                    )
+                  }
+                ]} 
                 data={manifestListData.manifests} 
               />
             ) : (
               <div className="text-center py-4">No files found</div>
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Manifest Details Dialog */}
+      <Dialog open={showManifestDetailsDialog} onOpenChange={setShowManifestDetailsDialog}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Manifest Details</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            {manifestDetailsError ? (
+              <div className="p-4 bg-destructive/10 text-destructive rounded-md font-mono text-sm">
+                {manifestDetailsError}
+              </div>
+            ) : manifestDetailsLoading ? (
+              <div className="text-center py-4">Loading...</div>
+            ) : manifestDetailsData?.files && manifestDetailsData.files.length > 0 ? (
+              <DataTable 
+                columns={[
+                  ...createColumns(['content', 'file_path', 'file_format', 'record_count', 'file_size_in_bytes']),
+                  {
+                    id: "details",
+                    header: "Details",
+                    cell: ({ row }) => (
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => handleShowManifestJson(row.original)}
+                      >
+                        <FileText className="h-4 w-4" />
+                      </Button>
+                    )
+                  }
+                ]} 
+                data={manifestDetailsData.files} 
+              />
+            ) : (
+              <div className="text-center py-4">No files found</div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowManifestDetailsDialog(false)}>
+              Close
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

@@ -6,6 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function errorToString(error: any) {
+  console.log(error)
   // IcebergErrorResponse
   if (error.error && error.error.message) {
     return error.error.message
@@ -15,5 +16,5 @@ export function errorToString(error: any) {
     return error.message
   }
   // Fallback
-  return String(error)
+  return error.message || String(error)
 }
