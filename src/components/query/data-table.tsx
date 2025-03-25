@@ -48,7 +48,7 @@ export function DataTable<TData, TValue>({
       <ScrollArea className="h-[400px] w-[53rem] rounded-md border">
         <div className="relative">
           <Table>
-            <TableHeader className="sticky top-0 bg-white z-10">
+            <TableHeader className="sticky top-0 z-10 bg-gray-100">
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => {
@@ -74,7 +74,7 @@ export function DataTable<TData, TValue>({
                     data-state={row.getIsSelected() && "selected"}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className="whitespace-nowrap">
+                      <TableCell key={cell.id} className="whitespace-nowrap text-sm">
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext()
