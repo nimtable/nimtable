@@ -85,6 +85,7 @@ build.dependsOn(shadowJar)
 
 task buildFrontend(type: Exec) {
   workingDir '../'
+  environment 'NODE_OPTIONS', '--loader ts-node/esm'
   commandLine 'sh', '-c', 'npm install && npm run build'
 }
 
