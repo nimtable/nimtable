@@ -85,8 +85,7 @@ build.dependsOn(shadowJar)
 
 task buildFrontend(type: Exec) {
   workingDir '../'
-  commandLine 'npm', 'install'
-  commandLine 'npm', 'run', 'build'
+  commandLine 'sh', '-c', 'npm install && npm run build'
 }
 
 task copyFrontend(type: Copy, dependsOn: buildFrontend) {
