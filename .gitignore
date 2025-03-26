@@ -28,3 +28,10 @@ next-env.d.ts
 
 # test sqlite catalog
 catalog.db
+
+.env
+.env.*
+!.env.example
+
+# build
+dist/
