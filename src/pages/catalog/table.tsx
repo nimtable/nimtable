@@ -152,7 +152,7 @@ export default function TablePage() {
 
   const openQueryDialog = () => {
     setShowQueryDialog(true)
-    setQuery(`select * from "${catalog}".${namespace}.${table} limit 100`)
+    setQuery(`select * from \`${catalog}\`.${namespace}.${table} limit 100`)
     setQueryResults(null)
     setQueryError(null)
   }
@@ -596,7 +596,7 @@ export default function TablePage() {
           <DialogHeader>
             <DialogTitle>Query Table</DialogTitle>
             <DialogDescription>
-              Execute SQL query with embedded DuckDB
+              Execute SQL query with embedded Spark
             </DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-8 gap-4 py-4">
@@ -606,7 +606,7 @@ export default function TablePage() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 className="w-full h-16 p-2 border rounded font-mono text-sm"
-                placeholder={`select * from "${catalog}".${namespace}.${table} limit 100`}
+                placeholder={`select * from \`${catalog}\`.${namespace}.${table} limit 100`}
               />
             </div>
             <div className="col-span-1 flex">
