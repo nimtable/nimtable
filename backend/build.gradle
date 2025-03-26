@@ -85,6 +85,7 @@ build.dependsOn(shadowJar)
 
 task buildFrontend(type: Exec) {
   workingDir '../'
+  commandLine 'npm', 'install'
   commandLine 'npm', 'run', 'build'
 }
 
