@@ -14,7 +14,7 @@ cd backend
 ./gradlew run
 ```
 
-Start the frontend:
+Start the frontend (requires Node.js >= 20):
 
 ```bash
 npm install
