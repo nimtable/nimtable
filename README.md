@@ -29,8 +29,7 @@ docker exec -it spark-iceberg spark-sql # create tables, insert data, etc.
 
 ### Develop frontend
 
-The frontend can also be developed separately with.
-
+The frontend can also be developed separately by running the following commands:
 ```bash
 npm install
 npm run dev
