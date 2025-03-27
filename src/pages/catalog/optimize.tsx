@@ -20,7 +20,7 @@ import { Switch } from "@/components/ui/switch"
 
 async function loadTableData(catalog: string, namespace: string, table: string) {
   const api = new Api({ baseUrl: `/api/catalog/${catalog}` })
-  const response = await api.v1.loadTable('', namespace, table)
+  const response = await api.v1.loadTable(namespace, table)
   return response
 }
 

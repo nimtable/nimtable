@@ -39,11 +39,8 @@ public class SparkQueryServlet extends HttpServlet {
         try {
             // Execute the query using Spark SQL
             Dataset<Row> result = localSpark.getSpark().sql(query);
-            
-            // Get column names
             String[] columns = result.columns();
-            
-            // Convert results to a list of rows
+
             List<List<Object>> rows = new ArrayList<>();
             result.collectAsList().forEach(row -> {
                 List<Object> rowData = new ArrayList<>();

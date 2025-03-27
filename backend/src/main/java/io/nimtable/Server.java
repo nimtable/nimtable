@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
- package io.nimtable;
+package io.nimtable;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,100 +46,101 @@ import jakarta.servlet.ServletException;
 import org.eclipse.jetty.util.resource.Resource;
 
 public class Server {
-  private static final Logger LOG = LoggerFactory.getLogger(Server.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Server.class);
 
-  private Server() {
-  }
+    private Server() {
+    }
 
-  public static void main(String[] args) throws Exception {
-    // Read and parse the config.yaml file
-    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-    Config config = mapper.readValue(new File("config.yaml"), Config.class);
+    public static void main(String[] args) throws Exception {
+        // Read and parse the config.yaml file
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        Config config = mapper.readValue(new File("config.yaml"), Config.class);
 
-    // Add CatalogsServlet to handle `/api/catalogs` endpoint
-    ServletContextHandler apiContext = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
-    apiContext.setContextPath("/api");
-    apiContext.addServlet(new ServletHolder("catalogs", new CatalogsServlet(config)), "/catalogs");
-    apiContext.addServlet(new ServletHolder("catalog-config", new CatalogConfigServlet(config)), "/config/*");
-    apiContext.addServlet(new ServletHolder("spark-query", new SparkQueryServlet(config)), "/query");
-    apiContext.addServlet(new ServletHolder("manifest", new ManifestServlet(config)), "/manifest/*");
-      apiContext.addServlet(new ServletHolder("optimize", new ManifestServlet(config)), "/manifest/*");
+        // Add CatalogsServlet to handle `/api/catalogs` endpoint
+        ServletContextHandler apiContext = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
+        apiContext.setContextPath("/api");
+        apiContext.addServlet(new ServletHolder("catalogs", new CatalogsServlet(config)), "/catalogs");
+        apiContext.addServlet(new ServletHolder("catalog-config", new CatalogConfigServlet(config)), "/config/*");
+        apiContext.addServlet(new ServletHolder("spark-query", new SparkQueryServlet(config)), "/query");
+        apiContext.addServlet(new ServletHolder("manifest", new ManifestServlet(config)), "/manifest/*");
+        apiContext.addServlet(new ServletHolder("optimize", new ManifestServlet(config)), "/manifest/*");
 
-     // Add route for each `/api/catalog/<catalog-name>/*` endpoints
-     for (Config.Catalog catalog : config.catalogs()) {
-       LOG.info("Creating catalog with properties: {}", catalog.properties());
-       Catalog icebergCatalog = CatalogUtil.buildIcebergCatalog(catalog.name(), catalog.properties(), new Configuration());
+        // Add route for each `/api/catalog/<catalog-name>/*` endpoints
+        for (Config.Catalog catalog : config.catalogs()) {
+            LOG.info("Creating catalog with properties: {}", catalog.properties());
+            Catalog icebergCatalog = CatalogUtil.buildIcebergCatalog(catalog.name(), catalog.properties(), new Configuration());
 
-       try (RESTCatalogAdapter adapter = new RESTCatalogAdapter(icebergCatalog)) {
-         RESTCatalogServlet servlet = new RESTCatalogServlet(adapter);
-         ServletHolder servletHolder = new ServletHolder(servlet);
-         apiContext.addServlet(servletHolder, "/catalog/" + catalog.name() + "/*");
-       }
-     }
-
-     // Create a handler for serving static files and SPA routing
-    Resource baseResource = Resource.newResource(Server.class.getClassLoader().getResource("static").toExternalForm());
-    AbstractHandler staticHandler = new AbstractHandler() {
-      @Override
-      public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
-          throws IOException, ServletException {
-        if (request.getRequestURI().startsWith("/api/")) {
-          return; // Let API handler handle this
+            try (RESTCatalogAdapter adapter = new RESTCatalogAdapter(icebergCatalog)) {
+                RESTCatalogServlet servlet = new RESTCatalogServlet(adapter);
+                ServletHolder servletHolder = new ServletHolder(servlet);
+                apiContext.addServlet(servletHolder, "/catalog/" + catalog.name() + "/*");
+            }
         }
 
-        // For root path or empty target, serve index.html directly
-        if (target == null || target.isEmpty() || "/".equals(target)) {
-          serveIndexHtml(baseRequest, response);
-          return;
-        }
+        // Create a handler for serving static files and SPA routing
+        Resource baseResource = Resource.newResource(Server.class.getClassLoader().getResource("static").toExternalForm());
+        AbstractHandler staticHandler = new AbstractHandler() {
+            @Override
+            public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
+                    throws IOException, ServletException {
+                if (request.getRequestURI().startsWith("/api/")) {
+                    return; // Let API handler handle this
+                }
 
-        // Try to serve the requested file
-        Resource resource = baseResource.addPath(target.startsWith("/") ? target.substring(1) : target);
-        if (resource.exists()) {
-          response.setContentType(getContentType(target));
-          try (InputStream in = resource.getInputStream()) {
-            in.transferTo(response.getOutputStream());
-          }
-          baseRequest.setHandled(true);
-          return;
-        }
+                // For root path or empty target, serve index.html directly
+                if (target == null || target.isEmpty() || "/".equals(target)) {
+                    serveIndexHtml(baseRequest, response);
+                    return;
+                }
 
-        // If file doesn't exist, serve index.html for SPA routing
-        serveIndexHtml(baseRequest, response);
-      }
+                // Try to serve the requested file
+                Resource resource = baseResource.addPath(target.startsWith("/") ? target.substring(1) : target);
+                if (resource.exists()) {
+                    response.setContentType(getContentType(target));
+                    try (InputStream in = resource.getInputStream()) {
+                        in.transferTo(response.getOutputStream());
+                    }
+                    baseRequest.setHandled(true);
+                    return;
+                }
 
-      private void serveIndexHtml(Request baseRequest, HttpServletResponse response) throws IOException {
-        Resource indexHtml = baseResource.addPath("index.html");
-        response.setContentType("text/html");
-        try (InputStream in = indexHtml.getInputStream()) {
-          in.transferTo(response.getOutputStream());
-        }
-        baseRequest.setHandled(true);
-      }
+                // If file doesn't exist, serve index.html for SPA routing
+                serveIndexHtml(baseRequest, response);
+            }
 
-      private String getContentType(String path) {
-        if (path.endsWith(".js"))
-          return "application/javascript";
-        if (path.endsWith(".css"))
-          return "text/css";
-        if (path.endsWith(".html"))
-          return "text/html";
-        if (path.endsWith(".json"))
-          return "application/json";
-        return "application/octet-stream";
-      }
-    };
+            private void serveIndexHtml(Request baseRequest, HttpServletResponse response) throws IOException {
+                Resource indexHtml = baseResource.addPath("index.html");
+                response.setContentType("text/html");
+                try (InputStream in = indexHtml.getInputStream()) {
+                    in.transferTo(response.getOutputStream());
+                }
+                baseRequest.setHandled(true);
+            }
 
-    // Add gzip compression
-    GzipHandler gzipHandler = new GzipHandler();
-     gzipHandler.setHandler(staticHandler);
+            private String getContentType(String path) {
+                if (path.endsWith(".js"))
+                    return "application/javascript";
+                if (path.endsWith(".css"))
+                    return "text/css";
+                if (path.endsWith(".html"))
+                    return "text/html";
+                if (path.endsWith(".json"))
+                    return "application/json";
+                return "application/octet-stream";
+            }
+        };
 
-    HandlerList handlers = new HandlerList();
-    handlers.addHandler(gzipHandler);
-    handlers.addHandler(apiContext);org.eclipse.jetty.server.Server httpServer = new org.eclipse.jetty.server.Server(
-             new InetSocketAddress(config.server().host(), config.server().port()));
-     httpServer.setHandler(handlers);
-     httpServer.start();
-     httpServer.join();
-   }
- }
+        // Add gzip compression
+        GzipHandler gzipHandler = new GzipHandler();
+        gzipHandler.setHandler(staticHandler);
+
+        HandlerList handlers = new HandlerList();
+        handlers.addHandler(gzipHandler);
+        handlers.addHandler(apiContext);
+        org.eclipse.jetty.server.Server httpServer = new org.eclipse.jetty.server.Server(
+                new InetSocketAddress(config.server().host(), config.server().port()));
+        httpServer.setHandler(handlers);
+        httpServer.start();
+        httpServer.join();
+    }
+}
