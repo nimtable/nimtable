@@ -19,6 +19,7 @@ build/
 bin/
 dependencies.lock
 **/dependencies.lock
-gradle/
-gradle/wrapper/gradle-wrapper.jar
+
+# frontend build files
+src/main/resources/static/
 

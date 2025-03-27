@@ -17,6 +17,8 @@
 package io.nimtable;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 
 import org.apache.hadoop.conf.Configuration;
@@ -31,6 +33,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import org.eclipse.jetty.server.handler.ContextHandler;
+import org.eclipse.jetty.server.handler.HandlerList;
+import org.eclipse.jetty.server.handler.ResourceHandler;
+import org.eclipse.jetty.server.handler.DefaultHandler;
+import org.eclipse.jetty.server.handler.ErrorHandler;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.handler.AbstractHandler;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import org.eclipse.jetty.util.resource.Resource;
 
 public class Server {
   private static final Logger LOG = LoggerFactory.getLogger(Server.class);
@@ -44,12 +57,12 @@ public class Server {
     Config config = mapper.readValue(new File("config.yaml"), Config.class);
 
     // Add CatalogsServlet to handle `/api/catalogs` endpoint
-    ServletContextHandler context = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
-    context.setContextPath("/api");
-    context.addServlet(new ServletHolder("catalogs", new CatalogsServlet(config)), "/catalogs");
-    context.addServlet(new ServletHolder("catalog-config", new CatalogConfigServlet(config)), "/config/*");
-    context.addServlet(new ServletHolder("duckdb-query", new DuckDBQueryServlet(config)), "/query");
-    context.addServlet(new ServletHolder("manifest", new ManifestServlet(config)), "/manifest/*");
+    ServletContextHandler apiContext = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
+    apiContext.setContextPath("/api");
+    apiContext.addServlet(new ServletHolder("catalogs", new CatalogsServlet(config)), "/catalogs");
+    apiContext.addServlet(new ServletHolder("catalog-config", new CatalogConfigServlet(config)), "/config/*");
+    apiContext.addServlet(new ServletHolder("duckdb-query", new DuckDBQueryServlet(config)), "/query");
+    apiContext.addServlet(new ServletHolder("manifest", new ManifestServlet(config)), "/manifest/*");
 
     // Add route for each `/api/catalog/<catalog-name>/*` endpoints
     for (Config.Catalog catalog : config.catalogs()) {
@@ -59,14 +72,74 @@ public class Server {
       try (RESTCatalogAdapter adapter = new RESTCatalogAdapter(icebergCatalog)) {
         RESTCatalogServlet servlet = new RESTCatalogServlet(adapter);
         ServletHolder servletHolder = new ServletHolder(servlet);
-        context.addServlet(servletHolder, "/catalog/" + catalog.name() + "/*");
+        apiContext.addServlet(servletHolder, "/catalog/" + catalog.name() + "/*");
       }
     }
 
-    context.insertHandler(new GzipHandler());
+    // Create a handler for serving static files and SPA routing
+    Resource baseResource = Resource.newResource(Server.class.getClassLoader().getResource("static").toExternalForm());
+    AbstractHandler staticHandler = new AbstractHandler() {
+      @Override
+      public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
+          throws IOException, ServletException {
+        if (request.getRequestURI().startsWith("/api/")) {
+          return; // Let API handler handle this
+        }
+
+        // For root path or empty target, serve index.html directly
+        if (target == null || target.isEmpty() || "/".equals(target)) {
+          serveIndexHtml(baseRequest, response);
+          return;
+        }
+
+        // Try to serve the requested file
+        Resource resource = baseResource.addPath(target.startsWith("/") ? target.substring(1) : target);
+        if (resource.exists()) {
+          response.setContentType(getContentType(target));
+          try (InputStream in = resource.getInputStream()) {
+            in.transferTo(response.getOutputStream());
+          }
+          baseRequest.setHandled(true);
+          return;
+        }
+
+        // If file doesn't exist, serve index.html for SPA routing
+        serveIndexHtml(baseRequest, response);
+      }
+
+      private void serveIndexHtml(Request baseRequest, HttpServletResponse response) throws IOException {
+        Resource indexHtml = baseResource.addPath("index.html");
+        response.setContentType("text/html");
+        try (InputStream in = indexHtml.getInputStream()) {
+          in.transferTo(response.getOutputStream());
+        }
+        baseRequest.setHandled(true);
+      }
+
+      private String getContentType(String path) {
+        if (path.endsWith(".js"))
+          return "application/javascript";
+        if (path.endsWith(".css"))
+          return "text/css";
+        if (path.endsWith(".html"))
+          return "text/html";
+        if (path.endsWith(".json"))
+          return "application/json";
+        return "application/octet-stream";
+      }
+    };
+
+    // Add gzip compression
+    GzipHandler gzipHandler = new GzipHandler();
+    gzipHandler.setHandler(staticHandler);
+
+    HandlerList handlers = new HandlerList();
+    handlers.addHandler(gzipHandler);
+    handlers.addHandler(apiContext);
+
     org.eclipse.jetty.server.Server httpServer = new org.eclipse.jetty.server.Server(
-            new InetSocketAddress(config.server().host(), config.server().port()));
-    httpServer.insertHandler(context);
+        new InetSocketAddress(config.server().host(), config.server().port()));
+    httpServer.setHandler(handlers);
     httpServer.start();
     httpServer.join();
   }

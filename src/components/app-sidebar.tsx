@@ -96,11 +96,11 @@ async function loadNamespacesAndTables(catalog: string) {
   
   async function fetchNamespaceAndChildren(namespace: string[]): Promise<NamespaceTables> {
     const namespaceName = namespace.join('.')
-    const tablesResponse = await api.v1.listTables('', namespaceName)
-    const viewsResponse = await api.v1.listViews('', namespaceName)
+    const tablesResponse = await api.v1.listTables(namespaceName)
+    const viewsResponse = await api.v1.listViews(namespaceName)
     
     // Get child namespaces
-    const childNamespacesResponse = await api.v1.listNamespaces('', { parent: namespaceName })
+    const childNamespacesResponse = await api.v1.listNamespaces({ parent: namespaceName })
     const childNamespaces = childNamespacesResponse.namespaces || []
     
     // Recursively fetch child namespaces
@@ -118,7 +118,7 @@ async function loadNamespacesAndTables(catalog: string) {
   }
 
   // Start with root namespaces
-  const response = await api.v1.listNamespaces('')
+  const response = await api.v1.listNamespaces()
   const rootNamespaces = response.namespaces || []
   
   // Fetch all namespaces and their children

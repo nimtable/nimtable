@@ -82,3 +82,33 @@ shadowJar {
 }
 
 build.dependsOn(shadowJar)
+
+task buildFrontend(type: Exec) {
+  workingDir '../'
+  commandLine 'sh', '-c', 'npm install && npm run build'
+}
+
+task copyFrontend(type: Copy, dependsOn: buildFrontend) {
+  from '../dist'
+  into 'src/main/resources/static'
+  duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+
+processResources {
+  dependsOn copyFrontend
+  from('src/main/resources') {
+    include '**/*'
+  }
+  duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+
+// Ensure run task has access to resources
+run {
+  dependsOn processResources
+  classpath += sourceSets.main.runtimeClasspath
+}
+
+// Clean up copied frontend files
+clean {
+  delete 'src/main/resources/static'
+}
