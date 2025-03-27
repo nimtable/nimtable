@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { ChevronRight, Settings as SettingsIcon, PanelRightClose, PanelRightOpen } from "lucide-react"
+import { ChevronRight, Settings as SettingsIcon, PanelRightClose, PanelRightOpen, CheckCircle2, Circle, Loader2 } from "lucide-react"
 import { Link } from "react-router-dom"
 import { Api, LoadTableResult } from "@/lib/api"
 import { Button } from "@/components/ui/button"
@@ -24,6 +24,13 @@ async function loadTableData(catalog: string, namespace: string, table: string) 
   return response
 }
 
+type OptimizationStep = {
+  name: string;
+  status: 'pending' | 'running' | 'done' | 'error';
+  error?: string;
+  result?: any;
+};
+
 export default function OptimizePage() {
   const { catalog, namespace, table } = useParams<{ catalog: string, namespace: string, table: string }>()
   const { toast } = useToast()
@@ -35,6 +42,12 @@ export default function OptimizePage() {
   const [tableData, setTableData] = useState<LoadTableResult | undefined>(undefined)
   const [showOptimizeDialog, setShowOptimizeDialog] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [showProgressDialog, setShowProgressDialog] = useState(false);
+  const [optimizationSteps, setOptimizationSteps] = useState<OptimizationStep[]>([
+    { name: 'Snapshot Expiration', status: 'pending' },
+    { name: 'Orphan File Cleanup', status: 'pending' },
+    { name: 'Compaction', status: 'pending' },
+  ]);
 
   // Optimization settings
   const [snapshotRetention, setSnapshotRetention] = useState(true)
@@ -54,46 +67,120 @@ export default function OptimizePage() {
     })
   }, [catalog, namespace, table])
 
-  const handleOptimize = async (action: 'enable' | 'run') => {
+  const runOptimizationStep = async (step: OptimizationStep, index: number) => {
     try {
-      setIsLoading(true)
-      const response = await fetch(`/api/optimize/${catalog}/${namespace}/${table}/${action}`, {
+      setOptimizationSteps(steps => {
+        const newSteps = [...steps];
+        newSteps[index] = { ...step, status: 'running' };
+        return newSteps;
+      });
+
+      const operation = step.name === 'Compaction' ? 'compact' :
+                       step.name === 'Snapshot Expiration' ? 'expire-snapshots' :
+                       'clean-orphan-files';
+
+      const response = await fetch(`/api/optimize/${catalog}/${namespace}/${table}/${operation}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           snapshotRetention: snapshotRetention,
-          retentionPeriod: parseInt(retentionPeriod) * 24 * 60 * 60 * 1000, // Convert days to milliseconds
+          retentionPeriod: parseInt(retentionPeriod) * 24 * 60 * 60 * 1000,
           minSnapshotsToKeep: parseInt(minSnapshotsToKeep),
           orphanFileDeletion: orphanFileDeletion,
-          orphanFileRetention: parseInt(orphanFileRetention) * 24 * 60 * 60 * 1000, // Convert days to milliseconds
+          orphanFileRetention: parseInt(orphanFileRetention) * 24 * 60 * 60 * 1000,
           compaction: compaction,
         }),
-      })
+      });
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || `Failed to ${action} optimization`)
+        const error = await response.json();
+        throw new Error(error.message || `Failed to run ${step.name}`);
+      }
+
+      const result = await response.json();
+      
+      setOptimizationSteps(steps => {
+        const newSteps = [...steps];
+        newSteps[index] = { ...step, status: 'done', result };
+        return newSteps;
+      });
+
+      return true;
+    } catch (error) {
+      setOptimizationSteps(steps => {
+        const newSteps = [...steps];
+        newSteps[index] = { ...step, status: 'error', error: errorToString(error) };
+        return newSteps;
+      });
+      return false;
+    }
+  };
+
+  const handleOptimize = async (action: 'enable' | 'run') => {
+    if (action === 'run') {
+      setShowProgressDialog(true);
+      setOptimizationSteps(steps => steps.map(step => ({ ...step, status: 'pending' })));
+
+      // Run steps sequentially
+      for (let i = 0; i < optimizationSteps.length; i++) {
+        const step = optimizationSteps[i];
+        const success = await runOptimizationStep(step, i);
+        if (!success) {
+          toast({
+            variant: "destructive",
+            title: `Failed to run ${step.name}`,
+            description: step.error,
+          });
+          return;
+        }
       }
 
       toast({
-        title: action === 'enable' ? "Optimization enabled" : "Optimization completed",
-        description: action === 'enable' 
-          ? "Table optimization settings have been updated successfully."
-          : "Table optimization has been completed successfully.",
-      })
-      setShowOptimizeDialog(false)
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: `Failed to ${action} optimization`,
-        description: errorToString(error),
-      })
-    } finally {
-      setIsLoading(false)
+        title: "Optimization completed",
+        description: "All optimization steps have been completed successfully.",
+      });
+    } else {
+      // Handle schedule case (just update properties)
+      try {
+        setIsLoading(true);
+        const response = await fetch(`/api/optimize/${catalog}/${namespace}/${table}/schedule`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            snapshotRetention: snapshotRetention,
+            retentionPeriod: parseInt(retentionPeriod) * 24 * 60 * 60 * 1000,
+            minSnapshotsToKeep: parseInt(minSnapshotsToKeep),
+            orphanFileDeletion: orphanFileDeletion,
+            orphanFileRetention: parseInt(orphanFileRetention) * 24 * 60 * 60 * 1000,
+            compaction: compaction,
+          }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || 'Failed to schedule optimization');
+        }
+
+        toast({
+          title: "Optimization scheduled",
+          description: "Table optimization has been scheduled successfully.",
+        });
+        setShowOptimizeDialog(false);
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Failed to schedule optimization",
+          description: errorToString(error),
+        });
+      } finally {
+        setIsLoading(false);
+      }
     }
-  }
+  };
 
   if (!tableData) return null
 
@@ -239,6 +326,62 @@ export default function OptimizePage() {
             </Button>
             <Button onClick={() => handleOptimize('enable')} disabled={isLoading}>
               Enable
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Progress Dialog */}
+      <Dialog open={showProgressDialog} onOpenChange={setShowProgressDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Optimization Progress</DialogTitle>
+            <DialogDescription>
+              Running optimization operations. This may take several minutes.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {optimizationSteps.map((step, index) => (
+              <div key={step.name} className="flex items-center gap-4">
+                <div className="flex-shrink-0">
+                  {step.status === 'pending' && <Circle className="h-5 w-5 text-muted-foreground" />}
+                  {step.status === 'running' && <Loader2 className="h-5 w-5 animate-spin text-primary" />}
+                  {step.status === 'done' && <CheckCircle2 className="h-5 w-5 text-green-500" />}
+                  {step.status === 'error' && <Circle className="h-5 w-5 text-red-500" />}
+                </div>
+                <div className="flex-1">
+                  <div className="font-medium">{step.name}</div>
+                  {step.status === 'error' && (
+                    <div className="text-sm text-red-500">{step.error}</div>
+                  )}
+                  {step.status === 'done' && step.result && (
+                    <div className="text-sm text-muted-foreground">
+                      {step.name === 'Compaction' && (
+                        <>
+                          Rewritten: {step.result.rewrittenDataFilesCount} files,{' '}
+                          Added: {step.result.addedDataFilesCount} files
+                        </>
+                      )}
+                      {step.name === 'Snapshot Expiration' && (
+                        <>
+                          Deleted: {step.result.deletedDataFilesCount} data files,{' '}
+                          {step.result.deletedManifestFilesCount} manifest files
+                        </>
+                      )}
+                      {step.name === 'Orphan File Cleanup' && (
+                        <>
+                          Cleaned: {step.result.orphanFileLocations.length} orphan files
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowProgressDialog(false)}>
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>

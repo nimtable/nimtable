@@ -117,11 +117,11 @@ public class OptimizeServlet extends HttpServlet {
             return;
         }
 
-        // Format: /optimize/{catalog-name}/{namespace}/{table-name}/{action}
+        // Format: /optimize/{catalog-name}/{namespace}/{table-name}/{operation}
         String catalogName = parts[3];
         String namespace = parts[4];
         String tableName = parts[5];
-        String action = parts[6];
+        String operation = parts[6];
 
         // Get catalog
         Config.Catalog catalog = config.getCatalog(catalogName);
@@ -141,19 +141,6 @@ public class OptimizeServlet extends HttpServlet {
             return;
         }
 
-        boolean isRunOnce;
-        switch (action) {
-            case "enable":
-                isRunOnce = false;
-                break;
-            case "run":
-                isRunOnce = true;
-                break;
-            default:
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid action: " + action);
-                return;
-        }
-
         Map<String, Object> requestBody = objectMapper.readValue(request.getReader(), new TypeReference<Map<String, Object>>() {});
         
         // Extract request parameters with defaults
@@ -164,76 +151,101 @@ public class OptimizeServlet extends HttpServlet {
         long orphanFileRetention = Long.parseLong(requestBody.getOrDefault("orphanFileRetention", "86400000").toString());
         boolean compaction = Boolean.parseBoolean(requestBody.getOrDefault("compaction", false).toString());
 
-        Map<String, String> properties = new HashMap<>();
+        Map<String, Object> result = new HashMap<>();
 
-        // Handle snapshot retention
-        if (snapshotRetention) {
-            properties.put("nimtable.retention.enabled", "true");
-            properties.put("history.expire.max-snapshot-age-ms", String.valueOf(retentionPeriod));
-            properties.put("history.expire.min-snapshots-to-keep", String.valueOf(minSnapshotsToKeep));
-        } else {
-            properties.put("nimtable.retention.enabled", "false");
-        }
-
-        // Handle orphan file deletion
-        if (orphanFileDeletion) {
-            properties.put("nimtable.orphan-file-deletion.enabled", "true");
-            properties.put("nimtable.orphan-file-deletion.retention-ms", String.valueOf(orphanFileRetention));
-        } else {
-            properties.put("nimtable.orphan-file-deletion.enabled", "false");
-        }
-
-        // Handle compaction
-        if (compaction) {
-            properties.put("nimtable.compaction.enabled", "true");
-        } else {
-            properties.put("nimtable.compaction.enabled", "false");
-        }
-
-        // If this is a one-time run, execute the maintenance operations
-        if (isRunOnce) {
-            SparkSession spark = LocalSpark.getInstance(config).getSpark();
-            try {
-                // Execute compaction if enabled
+        // Handle each operation separately
+        switch (operation) {
+            case "compact":
                 if (compaction) {
-                    compactTable(spark, catalogName, namespace, tableName);
+                    SparkSession spark = LocalSpark.getInstance(config).getSpark();
+                    try {
+                        CompactionResult compactionResult = compactTable(spark, catalogName, namespace, tableName);
+                        result.put("rewrittenDataFilesCount", compactionResult.rewrittenDataFilesCount());
+                        result.put("addedDataFilesCount", compactionResult.addedDataFilesCount());
+                        result.put("rewrittenBytesCount", compactionResult.rewrittenBytesCount());
+                        result.put("failedDataFilesCount", compactionResult.failedDataFilesCount());
+                    } catch (Exception e) {
+                        logger.error("Failed to execute compaction: {}.{}", namespace, tableName, e);
+                        response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to execute compaction: " + e.getMessage());
+                        return;
+                    }
                 }
+                break;
 
-                // Execute snapshot expiration if enabled
+            case "expire-snapshots":
                 if (snapshotRetention) {
-                    expireSnapshots(spark, catalogName, namespace, tableName, retentionPeriod, minSnapshotsToKeep);
+                    SparkSession spark = LocalSpark.getInstance(config).getSpark();
+                    try {
+                        ExpireSnapshotResult expireResult = expireSnapshots(spark, catalogName, namespace, tableName, retentionPeriod, minSnapshotsToKeep);
+                        result.put("deletedDataFilesCount", expireResult.deletedDataFilesCount());
+                        result.put("deletedManifestFilesCount", expireResult.deletedManifestFilesCount());
+                        result.put("deletedManifestListsCount", expireResult.deletedManifestListsCount());
+                    } catch (Exception e) {
+                        logger.error("Failed to expire snapshots: {}.{}", namespace, tableName, e);
+                        response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to expire snapshots: " + e.getMessage());
+                        return;
+                    }
+                }
+                break;
+
+            case "clean-orphan-files":
+                if (orphanFileDeletion) {
+                    SparkSession spark = LocalSpark.getInstance(config).getSpark();
+                    try {
+                        CleanOrphanFilesResult cleanResult = cleanOrphanFiles(spark, catalogName, namespace, tableName, orphanFileRetention);
+                        result.put("orphanFileLocations", cleanResult.orphanFileLocations());
+                    } catch (Exception e) {
+                        logger.error("Failed to clean orphan files: {}.{}", namespace, tableName, e);
+                        response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to clean orphan files: " + e.getMessage());
+                        return;
+                    }
+                }
+                break;
+
+            case "schedule":
+                Map<String, String> properties = new HashMap<>();
+                if (snapshotRetention) {
+                    properties.put("nimtable.retention.enabled", "true");
+                    properties.put("history.expire.max-snapshot-age-ms", String.valueOf(retentionPeriod));
+                    properties.put("history.expire.min-snapshots-to-keep", String.valueOf(minSnapshotsToKeep));
+                } else {
+                    properties.put("nimtable.retention.enabled", "false");
                 }
 
-                // Execute orphan file cleanup if enabled
                 if (orphanFileDeletion) {
-                    cleanOrphanFiles(spark, catalogName, namespace, tableName, orphanFileRetention);
+                    properties.put("nimtable.orphan-file-deletion.enabled", "true");
+                    properties.put("nimtable.orphan-file-deletion.retention-ms", String.valueOf(orphanFileRetention));
+                } else {
+                    properties.put("nimtable.orphan-file-deletion.enabled", "false");
                 }
-            } catch (Exception e) {
-                logger.error("Failed to execute maintenance operations: {}.{}", namespace, tableName, e);
-                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to execute maintenance operations: " + e.getMessage());
+
+                if (compaction) {
+                    properties.put("nimtable.compaction.enabled", "true");
+                } else {
+                    properties.put("nimtable.compaction.enabled", "false");
+                }
+                // Update table properties
+                try {
+                    UpdateProperties updates = table.updateProperties();
+                    for (Map.Entry<String, String> entry : properties.entrySet()) {
+                        updates.set(entry.getKey(), entry.getValue());
+                    }
+                    updates.commit();
+                } catch (Exception e) {
+                    logger.error("Failed to update table properties: {}.{}", namespace, tableName, e);
+                    response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to update table properties: " + e.getMessage());
+                }
+                break;
+            default:
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid operation: " + operation);
                 return;
-            }
         }
         
-        // Update table properties
-        try {
-            UpdateProperties updates = table.updateProperties();
-            for (Map.Entry<String, String> entry : properties.entrySet()) {
-                updates.set(entry.getKey(), entry.getValue());
-            }
-            updates.commit();
-        } catch (Exception e) {
-            logger.error("Failed to update table properties: {}.{}", namespace, tableName, e);
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to update table properties: " + e.getMessage());
-        }
-
-
-        // Return success response
+        // Return success response with operation results
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        objectMapper.writeValue(response.getOutputStream(), Map.of(
-            "success", true,
-            "message", isRunOnce ? "Optimization completed" : "Optimization settings updated"
-        ));
+        result.put("success", true);
+        result.put("message", "Operation completed successfully");
+        objectMapper.writeValue(response.getOutputStream(), result);
     }
 } 
