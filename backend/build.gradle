@@ -22,9 +22,6 @@ plugins {
 
 repositories {
   mavenCentral()
-  maven {
-    url "https://repository.apache.org/content/repositories/releases/"
-  }
 }
 
 application {
@@ -41,6 +38,7 @@ ext {
   hadoopVersion = '3.3.6'
   jettyVersion = '11.0.15'
   sparkVersion = '3.5.1'
+  scalaVersion = '2.12.18'
 }
 
 dependencies {
@@ -82,6 +80,8 @@ dependencies {
   implementation "org.apache.spark:spark-sql_2.12:${sparkVersion}"
   implementation "org.apache.spark:spark-hive_2.12:${sparkVersion}"
   implementation "org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:${icebergVersion}"
+  implementation 'org.scala-lang.modules:scala-collection-compat_2.12:2.12.0'
+  implementation "org.apache.spark:spark-hadoop-cloud_2.12:${sparkVersion}" // For accessing S3
 }
 
 jar {

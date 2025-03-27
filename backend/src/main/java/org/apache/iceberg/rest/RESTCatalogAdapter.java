@@ -253,6 +253,7 @@ public class RESTCatalogAdapter extends BaseHTTPClient {
   }
 
   private static OAuthTokenResponse handleOAuthRequest(Object body) {
+    @SuppressWarnings("unchecked")
     Map<String, String> request = (Map<String, String>) castRequest(Map.class, body);
     String grantType = request.get("grant_type");
     switch (grantType) {
