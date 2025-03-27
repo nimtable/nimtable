@@ -14,61 +14,60 @@
  * limitations under the License.
  */
 
-package io.nimtable;
+ package io.nimtable;
 
-import java.io.File;
-import java.net.InetSocketAddress;
+ import java.io.File;
+ import java.net.InetSocketAddress;
+ 
+ import org.apache.hadoop.conf.Configuration;
+ import org.apache.iceberg.CatalogUtil;
+ import org.apache.iceberg.catalog.Catalog;
+ import org.apache.iceberg.rest.RESTCatalogServlet;
+ import org.apache.iceberg.rest.RESTCatalogAdapter;
+ import org.eclipse.jetty.server.handler.gzip.GzipHandler;
+ import org.eclipse.jetty.servlet.ServletContextHandler;
+ import org.eclipse.jetty.servlet.ServletHolder;
+ import org.slf4j.Logger;
+ import org.slf4j.LoggerFactory;
+ import com.fasterxml.jackson.databind.ObjectMapper;
+ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+ 
+ public class Server {
+   private static final Logger LOG = LoggerFactory.getLogger(Server.class);
+ 
+   private Server() {
+   }
+ 
+   public static void main(String[] args) throws Exception {
+     // Read and parse the config.yaml file
+     ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+     Config config = mapper.readValue(new File("config.yaml"), Config.class);
+ 
+     // Add CatalogsServlet to handle `/api/catalogs` endpoint
+     ServletContextHandler context = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
+     context.setContextPath("/api");
+     context.addServlet(new ServletHolder("catalogs", new CatalogsServlet(config)), "/catalogs");
+     context.addServlet(new ServletHolder("catalog-config", new CatalogConfigServlet(config)), "/config/*");
+     context.addServlet(new ServletHolder("manifest", new ManifestServlet(config)), "/manifest/*");
+     context.addServlet(new ServletHolder("spark-query", new SparkQueryServlet(config)), "/query");
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.iceberg.CatalogUtil;
-import org.apache.iceberg.catalog.Catalog;
-import org.apache.iceberg.rest.RESTCatalogServlet;
-import org.apache.iceberg.rest.RESTCatalogAdapter;
-import org.eclipse.jetty.server.handler.gzip.GzipHandler;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-
-public class Server {
-  private static final Logger LOG = LoggerFactory.getLogger(Server.class);
-
-  private Server() {
-  }
-
-  public static void main(String[] args) throws Exception {
-    // Read and parse the config.yaml file
-    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-    Config config = mapper.readValue(new File("config.yaml"), Config.class);
-
-    // Add CatalogsServlet to handle `/api/catalogs` endpoint
-    ServletContextHandler context = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
-    context.setContextPath("/api");
-    context.addServlet(new ServletHolder("catalogs", new CatalogsServlet(config)), "/catalogs");
-    context.addServlet(new ServletHolder("catalog-config", new CatalogConfigServlet(config)), "/config/*");
-    context.addServlet(new ServletHolder("duckdb-query", new DuckDBQueryServlet(config)), "/query");
-    context.addServlet(new ServletHolder("manifest", new ManifestServlet(config)), "/manifest/*");
-    context.addServlet(new ServletHolder("optimize", new OptimizeServlet(config)), "/optimize/*");
-
-    // Add route for each `/api/catalog/<catalog-name>/*` endpoints
-    for (Config.Catalog catalog : config.catalogs()) {
-      LOG.info("Creating catalog with properties: {}", catalog.properties());
-      Catalog icebergCatalog = CatalogUtil.buildIcebergCatalog(catalog.name(), catalog.properties(), new Configuration());
-
-      try (RESTCatalogAdapter adapter = new RESTCatalogAdapter(icebergCatalog)) {
-        RESTCatalogServlet servlet = new RESTCatalogServlet(adapter);
-        ServletHolder servletHolder = new ServletHolder(servlet);
-        context.addServlet(servletHolder, "/catalog/" + catalog.name() + "/*");
-      }
-    }
-
-    context.insertHandler(new GzipHandler());
-    org.eclipse.jetty.server.Server httpServer = new org.eclipse.jetty.server.Server(
-            new InetSocketAddress(config.server().host(), config.server().port()));
-    httpServer.insertHandler(context);
-    httpServer.start();
-    httpServer.join();
-  }
-}
+     // Add route for each `/api/catalog/<catalog-name>/*` endpoints
+     for (Config.Catalog catalog : config.catalogs()) {
+       LOG.info("Creating catalog with properties: {}", catalog.properties());
+       Catalog icebergCatalog = CatalogUtil.buildIcebergCatalog(catalog.name(), catalog.properties(), new Configuration());
+ 
+       try (RESTCatalogAdapter adapter = new RESTCatalogAdapter(icebergCatalog)) {
+         RESTCatalogServlet servlet = new RESTCatalogServlet(adapter);
+         ServletHolder servletHolder = new ServletHolder(servlet);
+         context.addServlet(servletHolder, "/catalog/" + catalog.name() + "/*");
+       }
+     }
+ 
+     context.insertHandler(new GzipHandler());
+     org.eclipse.jetty.server.Server httpServer = new org.eclipse.jetty.server.Server(
+             new InetSocketAddress(config.server().host(), config.server().port()));
+     httpServer.insertHandler(context);
+     httpServer.start();
+     httpServer.join();
+   }
+ }

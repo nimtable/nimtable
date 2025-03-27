@@ -152,7 +152,7 @@ export default function TablePage() {
 
   const openQueryDialog = () => {
     setShowQueryDialog(true)
-    setQuery(`select * from "${catalog}".${namespace}.${table} limit 100`)
+    setQuery(`select * from \`${catalog}\`.${namespace}.${table} limit 100`)
     setQueryResults(null)
     setQueryError(null)
   }
@@ -600,7 +600,7 @@ export default function TablePage() {
           <DialogHeader>
             <DialogTitle>Query Table</DialogTitle>
             <DialogDescription>
-              Execute SQL query with embedded DuckDB
+              Execute SQL query with embedded Spark
             </DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-8 gap-4 py-4">
