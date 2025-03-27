@@ -28,7 +28,7 @@ import { Label } from "@/components/ui/label"
 
 async function loadViewData(catalog: string, namespace: string, view: string) {
   const api = new Api({ baseUrl: `/api/catalog/${catalog}` })
-  const response = await api.v1.loadView('', namespace, view)
+  const response = await api.v1.loadView(namespace, view)
   return response
 }
 
@@ -69,7 +69,7 @@ export default function ViewPage() {
   const handleDropView = async () => {
     try {
       const api = new Api({ baseUrl: `/api/catalog/${catalog}` })
-      await api.v1.dropView('', namespace, view)
+      await api.v1.dropView(namespace, view)
       toast({
         title: "View dropped successfully",
         description: `View ${view} has been dropped from namespace ${namespace}`,
@@ -89,7 +89,7 @@ export default function ViewPage() {
   const handleRenameView = async () => {
     try {
       const api = new Api({ baseUrl: `/api/catalog/${catalog}` })
-      await api.v1.renameView('', {
+      await api.v1.renameView({
         source: {
           namespace: namespace.split('/'),
           name: view

@@ -37,7 +37,7 @@ export default function CatalogPage() {
   const [configJson, setConfigJson] = useState<string>("")
 
   useEffect(() => {
-    api.v1.listNamespaces('').then((response) => {
+    api.v1.listNamespaces().then((response) => {
       setNamespaces(response.namespaces?.map(n => n.join('.')) || [])
     }).catch((error) => {
       toast({
@@ -71,7 +71,7 @@ export default function CatalogPage() {
 
     setIsCreating(true)
     try {
-      await api.v1.createNamespace('', {
+      await api.v1.createNamespace({
         namespace: newNamespace.split('.'),
         properties: {}
       })
@@ -81,7 +81,7 @@ export default function CatalogPage() {
         description: `Successfully created namespace "${newNamespace}"`,
       })
 
-      const response = await api.v1.listNamespaces('')
+      const response = await api.v1.listNamespaces()
       setNamespaces(response.namespaces?.map(n => n.join('.')) || [])
       
       setCreateDialogOpen(false)

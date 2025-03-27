@@ -31,7 +31,7 @@ import { createColumns } from "@/components/query/columns"
 
 async function loadTableData(catalog: string, namespace: string, table: string) {
   const api = new Api({ baseUrl: `/api/catalog/${catalog}` })
-  const response = await api.v1.loadTable('', namespace, table)
+  const response = await api.v1.loadTable(namespace, table)
   return response
 }
 
@@ -88,7 +88,7 @@ export default function TablePage() {
   const handleDropTable = async () => {
     try {
       const api = new Api({ baseUrl: `/api/catalog/${catalog}` })
-      await api.v1.dropTable('', namespace, table)
+      await api.v1.dropTable(namespace, table)
       toast({
         title: "Table dropped successfully",
         description: `Table ${table} has been dropped from namespace ${namespace}`,
@@ -108,7 +108,7 @@ export default function TablePage() {
   const handleRenameTable = async () => {
     try {
       const api = new Api({ baseUrl: `/api/catalog/${catalog}` })
-      await api.v1.renameTable('', {
+      await api.v1.renameTable({
         source: {
           namespace: namespace.split('/'),
           name: table

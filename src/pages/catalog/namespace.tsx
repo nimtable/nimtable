@@ -25,25 +25,25 @@ import {
 
 async function getNamespaceMetadata(catalog: string, namespace: string) {
   const api = new Api({ baseUrl: `/api/catalog/${catalog}`})
-  const response = await api.v1.loadNamespaceMetadata('', namespace)
+  const response = await api.v1.loadNamespaceMetadata(namespace)
   return response.properties
 }
 
 async function getTables(catalog: string, namespace: string) {
   const api = new Api({ baseUrl: `/api/catalog/${catalog}`})
-  const response = await api.v1.listTables('', namespace)
+  const response = await api.v1.listTables(namespace)
   return response.identifiers
 }
 
 async function getViews(catalog: string, namespace: string) {
   const api = new Api({ baseUrl: `/api/catalog/${catalog}`})
-  const response = await api.v1.listViews('', namespace)
+  const response = await api.v1.listViews(namespace)
   return response.identifiers
 }
 
 async function getChildNamespaces(catalog: string, namespace: string) {
   const api = new Api({ baseUrl: `/api/catalog/${catalog}`})
-  const response = await api.v1.listNamespaces('', { parent: namespace })
+  const response = await api.v1.listNamespaces({ parent: namespace })
   return response.namespaces?.map(n => n.join('.')) || []
 }
 
@@ -73,7 +73,7 @@ export default function NamespacePage() {
   const handleDropNamespace = async () => {
     try {
       const api = new Api({ baseUrl: `/api/catalog/${catalog}` })
-      await api.v1.dropNamespace('', namespace)
+      await api.v1.dropNamespace(namespace)
       toast({
         title: "Namespace dropped successfully",
         description: `Namespace ${namespace} has been dropped`,
