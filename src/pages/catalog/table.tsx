@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { ChevronRight, MoreVertical, Table as TableIcon, PanelRightClose, PanelRightOpen, Trash2, PenSquare, Play, FileText } from "lucide-react"
+import { ChevronRight, MoreVertical, Table as TableIcon, PanelRightClose, PanelRightOpen, Trash2, PenSquare, Play, FileText, SettingsIcon } from "lucide-react"
 import { Link } from "react-router-dom"
 
 import { Api, LoadTableResult, Schema, Snapshot, StructField, SnapshotReference } from "@/lib/api"
@@ -261,6 +261,10 @@ export default function TablePage() {
               <h1 className="text-xl font-semibold">{table}</h1>
             </div>
             <div className="flex items-center gap-2">
+              <Button variant="default" size="sm" onClick={() => navigate(`/catalog/${catalog}/namespace/${namespace}/table/${table}/optimize`)}>
+                <SettingsIcon className="h-4 w-4 mr-2" />
+                Optimize
+              </Button>
               <Button variant="default" size="sm" onClick={openQueryDialog}>
                 <Play className="h-4 w-4" />
                 Query
