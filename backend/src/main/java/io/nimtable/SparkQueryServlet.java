@@ -26,6 +26,7 @@ public class SparkQueryServlet extends HttpServlet {
     public SparkQueryServlet(Config config) {
         this.config = config;
         this.mapper = new ObjectMapper();
+        this.mapper.findAndRegisterModules();
     }
 
     @Override

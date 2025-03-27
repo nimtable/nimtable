@@ -88,6 +88,7 @@ shadowJar {
 tasks.withType(JavaExec) {
   jvmArgs '--add-opens', 'java.base/sun.nio.ch=ALL-UNNAMED'
   jvmArgs '--add-opens', 'java.base/java.nio=ALL-UNNAMED'
+  jvmArgs '--add-opens', 'java.base/sun.util.calendar=ALL-UNNAMED'
 }
 
 build.dependsOn(shadowJar)
