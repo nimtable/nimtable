@@ -7,27 +7,32 @@ This is a simple UI for browsing an Iceberg catalog. It's still under developmen
 
 ## Development
 
-Start the backend server (requires JRE >= 17):
+To develop, JRE >= 17 and Node.js >= 20 are required.
+
+Start the server with:
 
 ```bash
 cd backend
 ./gradlew run
 ```
 
-Start the frontend (requires Node.js >= 20):
+The UI will be available at http://localhost:8182.
 
-```bash
-npm install
-npm run dev
-```
-
-To test the UI, you need to run a catalog server. For example, you can use the [Spark + Iceberg Quickstart Image](https://github.com/databricks/docker-spark-iceberg/).
+To test the UI, you need to run a catalog server separately. For example, you can use the [Spark + Iceberg Quickstart Image](https://github.com/databricks/docker-spark-iceberg/).
 
 ```bash
 git clone https://github.com/databricks/docker-spark-iceberg.git
 docker-compose up
 
 docker exec -it spark-iceberg spark-sql # create tables, insert data, etc.
+```
+
+### Develop frontend
+
+The frontend can also be developed separately by running the following commands:
+```bash
+npm install
+npm run dev
 ```
 
 ## Roadmap

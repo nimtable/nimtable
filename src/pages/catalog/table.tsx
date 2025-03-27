@@ -31,7 +31,7 @@ import { createColumns } from "@/components/query/columns"
 
 async function loadTableData(catalog: string, namespace: string, table: string) {
   const api = new Api({ baseUrl: `/api/catalog/${catalog}` })
-  const response = await api.v1.loadTable('', namespace, table)
+  const response = await api.v1.loadTable(namespace, table)
   return response
 }
 
@@ -87,7 +87,7 @@ export default function TablePage() {
   const handleDropTable = async () => {
     try {
       const api = new Api({ baseUrl: `/api/catalog/${catalog}` })
-      await api.v1.dropTable('', namespace, table)
+      await api.v1.dropTable(namespace, table)
       toast({
         title: "Table dropped successfully",
         description: `Table ${table} has been dropped from namespace ${namespace}`,
@@ -107,7 +107,7 @@ export default function TablePage() {
   const handleRenameTable = async () => {
     try {
       const api = new Api({ baseUrl: `/api/catalog/${catalog}` })
-      await api.v1.renameTable('', {
+      await api.v1.renameTable({
         source: {
           namespace: namespace.split('/'),
           name: table
@@ -162,7 +162,7 @@ export default function TablePage() {
       setIsLoading(true)
       setQueryError(null)
       setQueryResults(null)
-      const response = await fetch(`/api/query?query=${encodeURIComponent(query)}`)
+      const response = await fetch(`/api/query?query=${encodeURIComponent(query)}&catalog=${catalogName}`)
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
@@ -610,7 +610,7 @@ export default function TablePage() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 className="w-full h-16 p-2 border rounded font-mono text-sm"
-                placeholder={`select * from "${catalog}".${namespace}.${table} limit 100`}
+                placeholder={`select * from \`${catalog}\`.${namespace}.${table} limit 100`}
               />
             </div>
             <div className="col-span-1 flex">

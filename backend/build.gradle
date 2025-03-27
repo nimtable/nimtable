@@ -62,6 +62,7 @@ dependencies {
   implementation 'com.google.guava:guava:33.3.0-jre'
 
   implementation 'org.xerial:sqlite-jdbc:3.46.1.0'
+  implementation 'org.postgresql:postgresql:42.7.4'
 
   implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.2'
   implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.18.2'
@@ -95,4 +96,40 @@ shadowJar {
   zip64 true
 }
 
+tasks.withType(JavaExec) {
+  jvmArgs '--add-opens', 'java.base/sun.nio.ch=ALL-UNNAMED'
+  jvmArgs '--add-opens', 'java.base/java.nio=ALL-UNNAMED'
+  jvmArgs '--add-opens', 'java.base/sun.util.calendar=ALL-UNNAMED'
+}
+
 build.dependsOn(shadowJar)
+
+task buildFrontend(type: Exec) {
+  workingDir '../'
+  commandLine 'sh', '-c', 'npm install && npm run build'
+}
+
+task copyFrontend(type: Copy, dependsOn: buildFrontend) {
+  from '../dist'
+  into 'src/main/resources/static'
+  duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+
+processResources {
+  dependsOn copyFrontend
+  from('src/main/resources') {
+    include '**/*'
+  }
+  duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+
+// Ensure run task has access to resources
+run {
+  dependsOn processResources
+  classpath += sourceSets.main.runtimeClasspath
+}
+
+// Clean up copied frontend files
+clean {
+  delete 'src/main/resources/static'
+}
