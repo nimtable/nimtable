@@ -49,44 +49,25 @@ public class SparkQueryServlet extends HttpServlet {
         }
 
         try {
-            String warehouse = catalog.properties().get("warehouse");
-            String s3Region = catalog.properties().getOrDefault("s3.region", "us-east-1");
-            String uri = catalog.properties().get("uri");
             String catalogType = catalog.properties().get("type");
-            var sparkBuilder = SparkSession.builder()
-                    .appName("IcebergSparkQuery")
-                    .master("local[*]")
-                    .config("spark.sql.extensions", "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions")
-                    .config(String.format("spark.sql.catalog.%s.io-impl", catalogName), "org.apache.iceberg.aws.s3.S3FileIO")
-                    .config(String.format("spark.sql.catalog.%s", catalogName), "org.apache.iceberg.spark.SparkCatalog")
-                    .config(String.format("spark.sql.catalog.%s.type", catalogName), catalogType)
-                    .config(String.format("spark.sql.catalog.%s.warehouse", catalogName), warehouse)
-                    .config(String.format("spark.sql.catalog.%s.uri", catalogName), uri)
-                    .config(String.format("spark.sql.catalog.%s.client.region", catalogName), s3Region);
-
-            for (Map.Entry<String, String> entry : catalog.properties().entrySet()) {
-                if (entry.getKey().startsWith("s3.")) {
-                    sparkBuilder.config(String.format("spark.sql.catalog.%s.%s", catalogName, entry.getKey()), entry.getValue());
-                }
-            }
-
-            SparkSession spark;
-            if (catalogType.equalsIgnoreCase("rest")) {
-                spark = sparkBuilder.getOrCreate();
-            } else if (catalogType.equalsIgnoreCase("jdbc")) {
-                for (Map.Entry<String, String> entry : catalog.properties().entrySet()) {
-                    if (entry.getKey().startsWith("jdbc.")) {
-                        sparkBuilder.config(String.format("spark.sql.catalog.%s.%s", catalogName, entry.getKey()), entry.getValue());
-                    }
-                }
-                spark = sparkBuilder.getOrCreate();
-            } else {
+            if (!catalogType.equalsIgnoreCase("rest") && !catalogType.equalsIgnoreCase("jdbc")) {
                 response.setContentType("application/json");
                 Map<String, String> errorResponse = new HashMap<>();
                 errorResponse.put("error", "only support rest and jdbc catalog for now");
                 mapper.writeValue(response.getWriter(), errorResponse);
                 return;
             }
+            var sparkBuilder = SparkSession.builder()
+                    .appName("IcebergSparkQuery")
+                    .master("local[*]")
+                    .config("spark.sql.extensions", "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions")
+                    .config(String.format("spark.sql.catalog.%s", catalogName), "org.apache.iceberg.spark.SparkCatalog");
+
+            for (Map.Entry<String, String> entry : catalog.properties().entrySet()) {
+                sparkBuilder.config(String.format("spark.sql.catalog.%s.%s", catalogName, entry.getKey()), entry.getValue());
+            }
+            SparkSession spark = sparkBuilder.getOrCreate();
+
 
             Dataset<Row> ds = spark.sql(query);
             List<String> columns = new ArrayList<>();
