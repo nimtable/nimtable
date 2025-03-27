@@ -56,6 +56,7 @@ export default function TablePage() {
   const { triggerRefresh } = useSidebarRefresh()
   const [showQueryDialog, setShowQueryDialog] = useState(false)
   const [query, setQuery] = useState('')
+  const [catalogName, setCatalogName] = useState(catalog)
   const [queryResults, setQueryResults] = useState<{ columns: string[], rows: any[][] } | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [queryError, setQueryError] = useState<string | null>(null)
@@ -153,6 +154,7 @@ export default function TablePage() {
   const openQueryDialog = () => {
     setShowQueryDialog(true)
     setQuery(`select * from \`${catalog}\`.${namespace}.${table} limit 100`)
+    setCatalogName(catalog)
     setQueryResults(null)
     setQueryError(null)
   }
@@ -162,7 +164,7 @@ export default function TablePage() {
       setIsLoading(true)
       setQueryError(null)
       setQueryResults(null)
-      const response = await fetch(`/api/query?query=${encodeURIComponent(query)}`)
+      const response = await fetch(`/api/query?query=${encodeURIComponent(query)}&catalog=${catalogName}`)
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
