@@ -118,7 +118,7 @@ export default function OptimizePage() {
     }
   };
 
-  const handleOptimize = async (action: 'enable' | 'run') => {
+  const handleOptimize = async (action: 'schedule' | 'run') => {
     if (action === 'run') {
       setShowProgressDialog(true);
       setOptimizationSteps(steps => steps.map(step => ({ ...step, status: 'pending' })));
@@ -324,8 +324,8 @@ export default function OptimizePage() {
             <Button onClick={() => handleOptimize('run')} disabled={isLoading}>
               Run Once
             </Button>
-            <Button onClick={() => handleOptimize('enable')} disabled={isLoading}>
-              Enable
+            <Button onClick={() => handleOptimize('schedule')} disabled={isLoading}>
+              Schedule
             </Button>
           </DialogFooter>
         </DialogContent>
