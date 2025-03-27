@@ -56,6 +56,7 @@ export default function TablePage() {
   const { triggerRefresh } = useSidebarRefresh()
   const [showQueryDialog, setShowQueryDialog] = useState(false)
   const [query, setQuery] = useState('')
+  const [catalogName, setCatalogName] = useState(catalog)
   const [queryResults, setQueryResults] = useState<{ columns: string[], rows: any[][] } | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [queryError, setQueryError] = useState<string | null>(null)
@@ -152,7 +153,8 @@ export default function TablePage() {
 
   const openQueryDialog = () => {
     setShowQueryDialog(true)
-    setQuery(`select * from "${catalog}".${namespace}.${table} limit 100`)
+    setQuery(`select * from \`${catalog}\`.${namespace}.${table} limit 100`)
+    setCatalogName(catalog)
     setQueryResults(null)
     setQueryError(null)
   }
@@ -162,7 +164,7 @@ export default function TablePage() {
       setIsLoading(true)
       setQueryError(null)
       setQueryResults(null)
-      const response = await fetch(`/api/query?query=${encodeURIComponent(query)}`)
+      const response = await fetch(`/api/query?query=${encodeURIComponent(query)}&catalog=${catalogName}`)
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
@@ -596,7 +598,7 @@ export default function TablePage() {
           <DialogHeader>
             <DialogTitle>Query Table</DialogTitle>
             <DialogDescription>
-              Execute SQL query with embedded DuckDB
+              Execute SQL query with embedded Spark
             </DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-8 gap-4 py-4">
@@ -606,7 +608,7 @@ export default function TablePage() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 className="w-full h-16 p-2 border rounded font-mono text-sm"
-                placeholder={`select * from "${catalog}".${namespace}.${table} limit 100`}
+                placeholder={`select * from \`${catalog}\`.${namespace}.${table} limit 100`}
               />
             </div>
             <div className="col-span-1 flex">

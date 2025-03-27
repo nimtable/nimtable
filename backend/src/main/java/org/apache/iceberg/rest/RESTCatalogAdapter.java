@@ -323,8 +323,13 @@ public class RESTCatalogAdapter extends BaseHTTPClient {
                 responseType,
                 CatalogHandlers.listNamespaces(asNamespaceCatalog, ns, pageToken, pageSize));
           } else {
-            return castResponse(
-                responseType, CatalogHandlers.listNamespaces(asNamespaceCatalog, ns));
+            if (ns.length() > 0) {
+              // only support one level of namespace listing
+                return castResponse(responseType, ListNamespacesResponse.builder().build());
+            } else {
+              return castResponse(
+                      responseType, CatalogHandlers.listNamespaces(asNamespaceCatalog, ns));
+            }
           }
         }
         break;

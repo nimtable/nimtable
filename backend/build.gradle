@@ -55,7 +55,7 @@ dependencies {
   implementation 'com.google.guava:guava:33.3.0-jre'
 
   implementation 'org.xerial:sqlite-jdbc:3.46.1.0'
-  implementation 'org.duckdb:duckdb_jdbc:1.2.1'
+  implementation 'org.postgresql:postgresql:42.7.4'
 
   implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.2'
   implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.18.2'
@@ -68,6 +68,10 @@ dependencies {
   implementation 'org.slf4j:slf4j-api:2.0.12'
   implementation 'org.slf4j:slf4j-log4j12:2.0.12'
   implementation 'log4j:log4j:1.2.17'
+
+  implementation "org.apache.spark:spark-core_2.12:3.5.4"
+  implementation "org.apache.spark:spark-sql_2.12:3.5.4"
+  implementation "org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.4.3"
 }
 
 jar {
@@ -79,6 +83,12 @@ jar {
 shadowJar {
   mergeServiceFiles()
   zip64 true
+}
+
+tasks.withType(JavaExec) {
+  jvmArgs '--add-opens', 'java.base/sun.nio.ch=ALL-UNNAMED'
+  jvmArgs '--add-opens', 'java.base/java.nio=ALL-UNNAMED'
+  jvmArgs '--add-opens', 'java.base/sun.util.calendar=ALL-UNNAMED'
 }
 
 build.dependsOn(shadowJar)

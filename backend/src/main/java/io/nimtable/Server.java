@@ -61,7 +61,7 @@ public class Server {
     apiContext.setContextPath("/api");
     apiContext.addServlet(new ServletHolder("catalogs", new CatalogsServlet(config)), "/catalogs");
     apiContext.addServlet(new ServletHolder("catalog-config", new CatalogConfigServlet(config)), "/config/*");
-    apiContext.addServlet(new ServletHolder("duckdb-query", new DuckDBQueryServlet(config)), "/query");
+    apiContext.addServlet(new ServletHolder("spark-query", new SparkQueryServlet(config)), "/query");
     apiContext.addServlet(new ServletHolder("manifest", new ManifestServlet(config)), "/manifest/*");
 
     // Add route for each `/api/catalog/<catalog-name>/*` endpoints
