@@ -1,7 +1,7 @@
-Iceberg Catalog UI
+Nimtable
 ===================
 
-This is a simple UI for browsing an Iceberg catalog. It's still under development. 🚧
+This is a simple UI for browsing Apache Iceberg catalogs. It's still under development. 🚧
 
 ![Screenshot](./docs/screenshot.png)
 
