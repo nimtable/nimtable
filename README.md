@@ -7,7 +7,7 @@ This is a simple UI for browsing an Iceberg catalog. It's still under developmen
 
 ## Development
 
-To develop, JRE >= 17 and Node.js >= 23 are required.
+To develop, JDK 17 and Node.js >= 23 are required.
 
 Start the server with:
 
