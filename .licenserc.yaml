@@ -1,0 +1,20 @@
+header:
+  license:
+    spdx-id: Apache-2.0
+    copyright-owner: RisingWave Labs
+
+  paths:
+    - "**/*.rs"
+    - "**/*.py"
+    - "**/*.html"
+    - "**/*.js"
+    - "**/*.ts"
+    - "**/*.java"
+
+  paths-ignore:
+    - "**/gen/**"
+    - "**/*.d.ts"
+    - "**/java/org/apache/iceberg/**"
+    - "**/*.config.*"
+
+  comment: on-failure
