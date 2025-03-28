@@ -10,6 +10,7 @@ header:
     - "**/*.js"
     - "**/*.ts"
     - "**/*.java"
+    - "**/*.gradle"
 
   paths-ignore:
     - "**/gen/**"
