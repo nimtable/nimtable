@@ -24,6 +24,7 @@ public class SparkQueryServlet extends HttpServlet {
 
     public SparkQueryServlet(Config config) {
         this.mapper = new ObjectMapper();
+        this.mapper.findAndRegisterModules();
         this.localSpark = LocalSpark.getInstance(config);
     }
 
