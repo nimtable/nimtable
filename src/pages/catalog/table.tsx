@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { ChevronRight, MoreVertical, Table as TableIcon, PanelRightClose, PanelRightOpen, Trash2, PenSquare, Play, FileText } from "lucide-react"
+import { ChevronRight, MoreVertical, Table as TableIcon, PanelRightClose, PanelRightOpen, Trash2, PenSquare, Play, FileText, SettingsIcon } from "lucide-react"
 import { Link } from "react-router-dom"
 
 import { Api, LoadTableResult, Schema, Snapshot, StructField, SnapshotReference } from "@/lib/api"
@@ -56,7 +56,6 @@ export default function TablePage() {
   const { triggerRefresh } = useSidebarRefresh()
   const [showQueryDialog, setShowQueryDialog] = useState(false)
   const [query, setQuery] = useState('')
-  const [catalogName, setCatalogName] = useState(catalog)
   const [queryResults, setQueryResults] = useState<{ columns: string[], rows: any[][] } | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [queryError, setQueryError] = useState<string | null>(null)
@@ -154,7 +153,6 @@ export default function TablePage() {
   const openQueryDialog = () => {
     setShowQueryDialog(true)
     setQuery(`select * from \`${catalog}\`.${namespace}.${table} limit 100`)
-    setCatalogName(catalog)
     setQueryResults(null)
     setQueryError(null)
   }
@@ -164,7 +162,7 @@ export default function TablePage() {
       setIsLoading(true)
       setQueryError(null)
       setQueryResults(null)
-      const response = await fetch(`/api/query?query=${encodeURIComponent(query)}&catalog=${catalogName}`)
+      const response = await fetch(`/api/query?query=${encodeURIComponent(query)}`)
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
@@ -263,6 +261,10 @@ export default function TablePage() {
               <h1 className="text-xl font-semibold">{table}</h1>
             </div>
             <div className="flex items-center gap-2">
+              <Button variant="default" size="sm" onClick={() => navigate(`/catalog/${catalog}/namespace/${namespace}/table/${table}/optimize`)}>
+                <SettingsIcon className="h-4 w-4 mr-2" />
+                Optimize
+              </Button>
               <Button variant="default" size="sm" onClick={openQueryDialog}>
                 <Play className="h-4 w-4" />
                 Query

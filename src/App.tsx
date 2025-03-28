@@ -8,6 +8,7 @@ import NamespacePage from './pages/catalog/namespace';
 import CatalogLayout from './layouts/catalog-layout';
 import TablePage from './pages/catalog/table';
 import ViewPage from './pages/catalog/view';
+import OptimizePage from './pages/catalog/optimize';
 
 const App: React.FC = () => {
   return (
@@ -19,6 +20,7 @@ const App: React.FC = () => {
           <Route path="/catalog/:catalog/namespace/:namespace" element={<NamespacePage />} />
           <Route path="/catalog/:catalog/namespace/:namespace/table/:table" element={<TablePage />} />
           <Route path="/catalog/:catalog/namespace/:namespace/view/:view" element={<ViewPage />} />
+          <Route path="/catalog/:catalog/namespace/:namespace/table/:table/optimize" element={<OptimizePage />} />
         </Route>
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
