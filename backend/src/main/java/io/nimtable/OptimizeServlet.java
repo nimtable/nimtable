@@ -75,7 +75,7 @@ public class OptimizeServlet extends HttpServlet {
 
     private CompactionResult compactTable(SparkSession spark, String catalogName, String namespace, String tableName) {
         String sql = String.format(
-            "CALL `%s`.system.rewrite_data_files(table => '%s.%s')",
+            "CALL `%s`.system.rewrite_data_files(table => '%s.%s', options => map('rewrite-all', 'true'))",
             catalogName, namespace, tableName
         );
         Row result = spark.sql(sql).collectAsList().get(0);
