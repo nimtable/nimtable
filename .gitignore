@@ -35,3 +35,5 @@ catalog.db
 
 # build
 dist/
+
+.vscode/settings.json
