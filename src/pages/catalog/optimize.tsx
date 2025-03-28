@@ -356,19 +356,19 @@ export default function OptimizePage() {
                   )}
                   {step.status === 'done' && step.result && (
                     <div className="text-sm text-muted-foreground">
-                      {step.name === 'Compaction' && (
+                      {step.name === 'Compaction' && step.result?.rewrittenDataFilesCount != null && step.result?.addedDataFilesCount != null && (
                         <>
                           Rewritten: {step.result.rewrittenDataFilesCount} files,{' '}
                           Added: {step.result.addedDataFilesCount} files
                         </>
                       )}
-                      {step.name === 'Snapshot Expiration' && (
+                      {step.name === 'Snapshot Expiration' && step.result?.deletedDataFilesCount != null && step.result?.deletedManifestFilesCount != null && (
                         <>
                           Deleted: {step.result.deletedDataFilesCount} data files,{' '}
                           {step.result.deletedManifestFilesCount} manifest files
                         </>
                       )}
-                      {step.name === 'Orphan File Cleanup' && (
+                      {step.name === 'Orphan File Cleanup' && step.result?.orphanFileLocations != null && (
                         <>
                           Cleaned: {step.result.orphanFileLocations.length} orphan files
                         </>
