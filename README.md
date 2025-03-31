@@ -33,8 +33,7 @@ docker compose down
 
 This will build and start Nimtable at http://localhost:8182.
 
-You can customize the configuration by editing `backend/config.yaml` before starting the container. The configuration and data directories are mounted as volumes for persistence.
-
+You can customize the configuration by editing `docker/config.yaml` before starting the container. The configuration and data directories are mounted as volumes for persistence.
 For other ways to run or develop Nimtable, please refer to the following sections.
 
 ## Development
