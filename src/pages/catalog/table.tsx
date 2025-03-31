@@ -28,6 +28,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useSidebarRefresh } from "@/contexts/sidebar-refresh"
 import { DataTable } from "@/components/query/data-table"
 import { createColumns } from "@/components/query/columns"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+
+type Distribution = {
+  distribution: Record<string, number>
+}
 
 async function loadTableData(catalog: string, namespace: string, table: string) {
   const api = new Api({ baseUrl: `/api/catalog/${catalog}` })

@@ -23,10 +23,12 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.iceberg.CatalogUtil;
-import org.apache.iceberg.Table;
-import org.apache.iceberg.UpdateProperties;
+import org.apache.iceberg.*;
+import org.apache.iceberg.actions.BaseRewriteDataFilesAction;
+import org.apache.iceberg.actions.RewriteDataFiles;
 import org.apache.iceberg.catalog.TableIdentifier;
+import org.apache.iceberg.rest.CatalogHandlers;
+import org.apache.iceberg.rest.requests.UpdateTableRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import io.nimtable.spark.LocalSpark;
@@ -79,7 +81,6 @@ public class OptimizeServlet extends HttpServlet {
             catalogName, namespace, tableName
         );
         Row result = spark.sql(sql).collectAsList().get(0);
-
         return new CompactionResult(
             result.getAs("rewritten_data_files_count"),
             result.getAs("added_data_files_count"),
