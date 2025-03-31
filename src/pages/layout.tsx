@@ -1,9 +1,5 @@
-import { GalleryVerticalEnd } from "lucide-react"
 import type { ReactNode } from "react"
-import { useLocation } from "react-router-dom"
 
-import { SidebarProvider } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
 import { Toaster } from "@/components/ui/toaster"
 
 interface RootLayoutProps {

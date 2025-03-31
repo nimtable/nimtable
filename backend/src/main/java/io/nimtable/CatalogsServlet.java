@@ -17,12 +17,10 @@
 package io.nimtable;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -37,11 +35,10 @@ public class CatalogsServlet extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) 
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        List<String> catalogs = config.catalogs().stream()
-                .map(Config.Catalog::name)
-                .collect(Collectors.toList());
+        List<String> catalogs =
+                config.catalogs().stream().map(Config.Catalog::name).collect(Collectors.toList());
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         mapper.writeValue(response.getOutputStream(), catalogs);

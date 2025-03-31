@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-
 plugins {
   id 'java'
   id 'application'
   id 'com.github.johnrengelman.shadow' version '8.1.1'
+  id 'com.diffplug.spotless' version '6.25.0'
 }
 
 java {
@@ -148,4 +148,15 @@ run {
 // Clean up copied frontend files
 clean {
   delete 'src/main/resources/static'
+}
+
+// Spotless configuration
+spotless {
+  java {
+    googleJavaFormat("1.22.0").aosp()
+    importOrder()
+    removeUnusedImports()
+    trimTrailingWhitespace()
+    endWithNewline()
+  }
 }

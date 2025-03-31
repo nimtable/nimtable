@@ -17,21 +17,20 @@
 package io.nimtable;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.nimtable.spark.LocalSpark;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import io.nimtable.spark.LocalSpark;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SparkQueryServlet extends HttpServlet {
     private final ObjectMapper mapper;
@@ -45,7 +44,7 @@ public class SparkQueryServlet extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) 
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String query = request.getParameter("query");
         if (query == null || query.trim().isEmpty()) {
@@ -59,13 +58,15 @@ public class SparkQueryServlet extends HttpServlet {
             String[] columns = result.columns();
 
             List<List<Object>> rows = new ArrayList<>();
-            result.collectAsList().forEach(row -> {
-                List<Object> rowData = new ArrayList<>();
-                for (String column : columns) {
-                    rowData.add(row.getAs(column));
-                }
-                rows.add(rowData);
-            });
+            result.collectAsList()
+                    .forEach(
+                            row -> {
+                                List<Object> rowData = new ArrayList<>();
+                                for (String column : columns) {
+                                    rowData.add(row.getAs(column));
+                                }
+                                rows.add(rowData);
+                            });
 
             // Prepare response
             Map<String, Object> responseData = new HashMap<>();
@@ -83,4 +84,4 @@ public class SparkQueryServlet extends HttpServlet {
             mapper.writeValue(response.getWriter(), errorResponse);
         }
     }
-} 
+}

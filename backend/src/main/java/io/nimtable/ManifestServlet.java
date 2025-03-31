@@ -15,10 +15,14 @@
  */
 package io.nimtable;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.iceberg.CatalogUtil;
 import org.apache.iceberg.DataFile;
@@ -33,16 +37,7 @@ import org.apache.iceberg.types.Types;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
-/**
- * Servlet for fetching manifests for a given table and snapshot.
- */
+/** Servlet for fetching manifests for a given table and snapshot. */
 public class ManifestServlet extends HttpServlet {
     private static final Logger logger = LoggerFactory.getLogger(ManifestServlet.class);
 
@@ -55,7 +50,8 @@ public class ManifestServlet extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
         // Parse path parameters
         String path = request.getRequestURI();
         String[] parts = path.split("/");
@@ -75,18 +71,23 @@ public class ManifestServlet extends HttpServlet {
         // Get catalog
         Config.Catalog catalog = config.getCatalog(catalogName);
         if (catalog == null) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Catalog not found: " + catalogName);
+            response.sendError(
+                    HttpServletResponse.SC_NOT_FOUND, "Catalog not found: " + catalogName);
             return;
         }
 
         // Load table
         Table table;
         try {
-            table = CatalogUtil.buildIcebergCatalog(catalog.name(), catalog.properties(), new Configuration())
-                    .loadTable(TableIdentifier.of(namespace, tableName));
+            table =
+                    CatalogUtil.buildIcebergCatalog(
+                                    catalog.name(), catalog.properties(), new Configuration())
+                            .loadTable(TableIdentifier.of(namespace, tableName));
         } catch (Exception e) {
             logger.error("Failed to load table: {}.{}", namespace, tableName, e);
-            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Table not found: " + namespace + "." + tableName);
+            response.sendError(
+                    HttpServletResponse.SC_NOT_FOUND,
+                    "Table not found: " + namespace + "." + tableName);
             return;
         }
 
@@ -95,13 +96,15 @@ public class ManifestServlet extends HttpServlet {
         try {
             snapshotIdLong = Long.parseLong(snapshotId);
         } catch (NumberFormatException e) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid snapshot ID: " + snapshotId);
+            response.sendError(
+                    HttpServletResponse.SC_BAD_REQUEST, "Invalid snapshot ID: " + snapshotId);
             return;
         }
 
         var snapshot = table.snapshot(snapshotIdLong);
         if (snapshot == null) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Snapshot not found: " + snapshotId);
+            response.sendError(
+                    HttpServletResponse.SC_NOT_FOUND, "Snapshot not found: " + snapshotId);
             return;
         }
 
@@ -120,7 +123,9 @@ public class ManifestServlet extends HttpServlet {
             } else {
                 ManifestFile manifest = manifests.get(manifestNumber);
                 if (manifest == null) {
-                    response.sendError(HttpServletResponse.SC_NOT_FOUND, "Invalid manifest number: " + manifestNumber);
+                    response.sendError(
+                            HttpServletResponse.SC_NOT_FOUND,
+                            "Invalid manifest number: " + manifestNumber);
                     return;
                 }
                 rootNode.put("path", manifest.path());
@@ -135,7 +140,8 @@ public class ManifestServlet extends HttpServlet {
                         }
                         break;
                     case DELETES:
-                        for (DeleteFile file : ManifestFiles.readDeleteManifest(manifest, fileIO, table.specs())) {
+                        for (DeleteFile file :
+                                ManifestFiles.readDeleteManifest(manifest, fileIO, table.specs())) {
                             filesNode.add(deleteFileToJson(file));
                         }
                         break;
@@ -205,25 +211,33 @@ public class ManifestServlet extends HttpServlet {
 
         if (file.nullValueCounts() != null) {
             var nullValueCountsNode = objectMapper.createObjectNode();
-            file.nullValueCounts().forEach((key, value) -> nullValueCountsNode.put(key.toString(), value));
+            file.nullValueCounts()
+                    .forEach((key, value) -> nullValueCountsNode.put(key.toString(), value));
             fileNode.set("null_value_counts", nullValueCountsNode);
         }
 
         if (file.nanValueCounts() != null) {
             var nanValueCountsNode = objectMapper.createObjectNode();
-            file.nanValueCounts().forEach((key, value) -> nanValueCountsNode.put(key.toString(), value));
+            file.nanValueCounts()
+                    .forEach((key, value) -> nanValueCountsNode.put(key.toString(), value));
             fileNode.set("nan_value_counts", nanValueCountsNode);
         }
 
         if (file.lowerBounds() != null) {
             var lowerBoundsNode = objectMapper.createObjectNode();
-            file.lowerBounds().forEach((key, value) -> lowerBoundsNode.put(key.toString(), formatBinary(value)));
+            file.lowerBounds()
+                    .forEach(
+                            (key, value) ->
+                                    lowerBoundsNode.put(key.toString(), formatBinary(value)));
             fileNode.set("lower_bounds", lowerBoundsNode);
         }
 
         if (file.upperBounds() != null) {
             var upperBoundsNode = objectMapper.createObjectNode();
-            file.upperBounds().forEach((key, value) -> upperBoundsNode.put(key.toString(), formatBinary(value)));
+            file.upperBounds()
+                    .forEach(
+                            (key, value) ->
+                                    upperBoundsNode.put(key.toString(), formatBinary(value)));
             fileNode.set("upper_bounds", upperBoundsNode);
         }
 

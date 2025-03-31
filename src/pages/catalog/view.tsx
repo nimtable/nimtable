@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom"
 import { ChevronRight, View as ViewIcon, PanelRightClose, PanelRightOpen, MoreVertical, Trash2, PenSquare } from "lucide-react"
 import { Link } from "react-router-dom"
 
-import { Api, LoadViewResult, Schema, StructField, ViewVersion } from "@/lib/api"
+import { Api, LoadViewResult, StructField, ViewVersion } from "@/lib/api"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { cn, errorToString } from "@/lib/utils"
