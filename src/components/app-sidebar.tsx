@@ -3,11 +3,8 @@ import {
   ChevronDown,
   ChevronRight,
   Database,
-  FileText,
   Folder,
   FolderTree,
-  ActivityIcon as Function,
-  LayoutGrid,
   Table,
   View,
 } from "lucide-react"
@@ -111,8 +108,8 @@ async function loadNamespacesAndTables(catalog: string) {
     return {
       name: namespaceName,
       shortName: namespace[namespace.length - 1],
-      tables: tablesResponse.identifiers?.map((table: any) => table.name) || [],
-      views: viewsResponse?.identifiers?.map((view: any) => view.name) || [],
+      tables: tablesResponse.identifiers?.map((table) => table.name) || [],
+      views: viewsResponse?.identifiers?.map((view) => view.name) || [],
       children
     }
   }

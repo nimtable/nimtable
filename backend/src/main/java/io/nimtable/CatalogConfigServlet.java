@@ -34,7 +34,7 @@ public class CatalogConfigServlet extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) 
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String pathInfo = request.getPathInfo();
         if (pathInfo == null || pathInfo.equals("/")) {
@@ -46,7 +46,8 @@ public class CatalogConfigServlet extends HttpServlet {
         Config.Catalog catalog = config.getCatalog(catalogName);
 
         if (catalog == null) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Catalog not found: " + catalogName);
+            response.sendError(
+                    HttpServletResponse.SC_NOT_FOUND, "Catalog not found: " + catalogName);
             return;
         }
 

@@ -17,8 +17,8 @@
 package io.nimtable.spark;
 
 import io.nimtable.Config;
-import org.apache.spark.sql.SparkSession;
 import java.util.Map;
+import org.apache.spark.sql.SparkSession;
 
 public class LocalSpark {
     private static LocalSpark instance;
@@ -36,24 +36,33 @@ public class LocalSpark {
     }
 
     private SparkSession initializeSpark(Config config) {
-        SparkSession.Builder builder = SparkSession.builder()
-            .appName("Nimtable")
-            .master("local[*]")
-            .config("spark.sql.extensions", "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions")
-            .config("spark.jars.packages", "org.apache.spark:spark-hadoop-cloud_2.12:3.5.1") // for S3
-            .config("spark.hadoop.fs.s3.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
-            // FIXME: remove these hard-coded parameters
-            .config("spark.hadoop.fs.s3a.endpoint", "http://localhost:9000")
-            .config("spark.hadoop.fs.s3a.access.key", "admin")
-            .config("spark.hadoop.fs.s3a.secret.key", "password")
-            .config("spark.hadoop.fs.s3a.path.style.access", "true");
-        
+        SparkSession.Builder builder =
+                SparkSession.builder()
+                        .appName("Nimtable")
+                        .master("local[*]")
+                        .config(
+                                "spark.sql.extensions",
+                                "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions")
+                        .config(
+                                "spark.jars.packages",
+                                "org.apache.spark:spark-hadoop-cloud_2.12:3.5.1") // for S3
+                        .config("spark.hadoop.fs.s3.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
+                        // FIXME: remove these hard-coded parameters
+                        .config("spark.hadoop.fs.s3a.endpoint", "http://localhost:9000")
+                        .config("spark.hadoop.fs.s3a.access.key", "admin")
+                        .config("spark.hadoop.fs.s3a.secret.key", "password")
+                        .config("spark.hadoop.fs.s3a.path.style.access", "true");
+
         // Pass all catalog properties to Spark
         for (Config.Catalog catalog : config.catalogs()) {
             String catalogName = catalog.name();
-            builder.config(String.format("spark.sql.catalog.%s", catalogName), "org.apache.iceberg.spark.SparkCatalog");
+            builder.config(
+                    String.format("spark.sql.catalog.%s", catalogName),
+                    "org.apache.iceberg.spark.SparkCatalog");
             for (Map.Entry<String, String> property : catalog.properties().entrySet()) {
-                builder.config(String.format("spark.sql.catalog.%s.%s", catalogName, property.getKey()), property.getValue());
+                builder.config(
+                        String.format("spark.sql.catalog.%s.%s", catalogName, property.getKey()),
+                        property.getValue());
             }
         }
 

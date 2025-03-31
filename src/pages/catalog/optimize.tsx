@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react"
-import { useParams, useNavigate } from "react-router-dom"
-import { ChevronRight, Settings as SettingsIcon, PanelRightClose, PanelRightOpen, CheckCircle2, Circle, Loader2 } from "lucide-react"
+import { useParams } from "react-router-dom"
+import { ChevronRight, Settings as SettingsIcon, CheckCircle2, Circle, Loader2 } from "lucide-react"
 import { Link } from "react-router-dom"
 import { Api, LoadTableResult } from "@/lib/api"
 import { Button } from "@/components/ui/button"
-import { cn, errorToString } from "@/lib/utils"
+import { errorToString } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 import {
   Dialog,
@@ -29,6 +29,7 @@ type OptimizationStep = {
   name: string;
   status: 'pending' | 'running' | 'done' | 'error';
   error?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   result?: any;
 };
 
@@ -136,7 +137,6 @@ function FileDistributionSection({ tableId }: { tableId: string }) {
 export default function OptimizePage() {
   const { catalog, namespace, table } = useParams<{ catalog: string, namespace: string, table: string }>()
   const { toast } = useToast()
-  const navigate = useNavigate()
   if (!catalog || !namespace || !table) {
     throw new Error("Invalid table path")
   }
@@ -443,7 +443,7 @@ export default function OptimizePage() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            {optimizationSteps.map((step, index) => (
+            {optimizationSteps.map((step, _index) => (
               <div key={step.name} className="flex items-center gap-4">
                 <div className="flex-shrink-0">
                   {step.status === 'pending' && <Circle className="h-5 w-5 text-muted-foreground" />}

@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom"
 import { ChevronRight, MoreVertical, Table as TableIcon, PanelRightClose, PanelRightOpen, Trash2, PenSquare, Play, FileText, SettingsIcon } from "lucide-react"
 import { Link } from "react-router-dom"
 
-import { Api, LoadTableResult, Schema, Snapshot, StructField, SnapshotReference } from "@/lib/api"
+import { Api, LoadTableResult, StructField } from "@/lib/api"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { cn, errorToString } from "@/lib/utils"
@@ -56,6 +56,7 @@ export default function TablePage() {
   const { triggerRefresh } = useSidebarRefresh()
   const [showQueryDialog, setShowQueryDialog] = useState(false)
   const [query, setQuery] = useState('')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [queryResults, setQueryResults] = useState<{ columns: string[], rows: any[][] } | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [queryError, setQueryError] = useState<string | null>(null)
@@ -63,11 +64,13 @@ export default function TablePage() {
   const [manifestListData, setManifestListData] = useState<{
     snapshot_id: string;
     manifest_list_location: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     manifests: any[];
   } | null>(null)
   const [manifestLoading, setManifestLoading] = useState(false)
   const [manifestError, setManifestError] = useState<string | null>(null)
   const [showManifestDetailsDialog, setShowManifestDetailsDialog] = useState(false)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [manifestDetailsData, setManifestDetailsData] = useState<any>(null)
   const [manifestDetailsLoading, setManifestDetailsLoading] = useState(false)
   const [manifestDetailsError, setManifestDetailsError] = useState<string | null>(null)
@@ -133,6 +136,7 @@ export default function TablePage() {
     setShowRenameDialog(false)
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleShowDetail = (data: any, title: string, description: string = '') => {
     setDetailTitle(title)
     setDetailDescription(description)
@@ -634,6 +638,7 @@ export default function TablePage() {
                 <DataTable 
                   columns={createColumns(queryResults.columns)} 
                   data={queryResults.rows.map(row => {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     const obj: { [key: string]: any } = {}
                     queryResults.columns.forEach((col, idx) => {
                       obj[col] = row[idx]
