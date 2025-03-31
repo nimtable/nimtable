@@ -13,6 +13,30 @@ Besides, Nimtable also serves as a standard Iceberg REST Catalog, which means it
 
 <img src="docs/nimtable-arch.drawio.png" alt="Architecture" width=491>
 
+
+## Get Started
+
+You can use Docker to run Nimtable without installing any dependencies locally:
+
+```bash
+cd docker
+
+# Build and start container
+docker compose up -d
+
+# View logs
+docker compose logs -f
+
+# Stop the service
+docker compose down
+```
+
+This will build and start Nimtable at http://localhost:8182.
+
+You can customize the configuration by editing `docker/config.yaml` and `docker/docker-compose.yml` before starting the container.
+
+For other ways to run or develop Nimtable, please refer to the following sections.
+
 ## Development
 
 To develop, JDK 17 and Node.js 23 are required.

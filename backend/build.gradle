@@ -150,6 +150,19 @@ clean {
   delete 'src/main/resources/static'
 }
 
+// Task to download all dependencies
+task downloadDependencies {
+  description 'Downloads all project dependencies for offline development and cache warming.'
+  group 'build setup'
+  
+  doLast {
+    def allDeps = configurations.compileClasspath.resolve() + configurations.runtimeClasspath.resolve()
+    println "Dependencies resolved and downloaded to Gradle cache"
+    println "Total dependencies: ${allDeps.size()}"
+    allDeps.each { println " - ${it.name}" }
+  }
+}
+
 // Spotless configuration
 spotless {
   java {

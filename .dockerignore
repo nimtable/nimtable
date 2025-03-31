@@ -1,0 +1,26 @@
+# Version control
+.git
+.github
+
+# Build artifacts
+dist
+node_modules
+backend/build
+backend/.gradle
+backend/bin
+
+# IDE files
+.vscode
+.idea
+
+# Logs and temporary files
+*.log
+*.tmp
+
+# Data files
+data/
+backend/catalog.db 
+
+Dockerfile
+docker-compose.yml
+docs/
