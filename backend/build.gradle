@@ -160,21 +160,3 @@ spotless {
     endWithNewline()
   }
 }
-
-// Update lintFix task
-task lintFix(group: 'verification') {
-  description = 'Run lint auto-fix where possible'
-  dependsOn 'spotlessApply'
-}
-
-// Update verifyFormat task
-task verifyFormat(group: 'verification') {
-  description = 'Verify code formatting'
-  dependsOn 'spotlessCheck'
-}
-
-task lint(group: 'verification') {
-  description = 'Run all linting tools'
-  dependsOn verifyFormat
-}
-

@@ -56,9 +56,9 @@ npm run lint -- --fix
 
 # Backend
 # check lint
-cd backend && ./gradlew lint
+cd backend && ./gradlew spotlessCheck
 # fix lint
-cd backend && ./gradlew lintFix
+cd backend && ./gradlew spotlessApply
 ```
 
 ## Roadmap

@@ -326,10 +326,10 @@ public class RESTCatalogAdapter extends BaseHTTPClient {
           } else {
             if (ns.length() > 0) {
               // only support one level of namespace listing
-                return castResponse(responseType, ListNamespacesResponse.builder().build());
+              return castResponse(responseType, ListNamespacesResponse.builder().build());
             } else {
               return castResponse(
-                      responseType, CatalogHandlers.listNamespaces(asNamespaceCatalog, ns));
+                  responseType, CatalogHandlers.listNamespaces(asNamespaceCatalog, ns));
             }
           }
         }
