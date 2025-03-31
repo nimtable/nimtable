@@ -16,21 +16,21 @@
 
 package io.nimtable;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.apache.iceberg.*;
 import org.apache.iceberg.catalog.Catalog;
 import org.apache.iceberg.catalog.TableIdentifier;
 import org.apache.iceberg.io.FileIO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
 
 public class DistributionServlet extends HttpServlet {
     private static final Logger LOG = LoggerFactory.getLogger(DistributionServlet.class);
@@ -41,7 +41,6 @@ public class DistributionServlet extends HttpServlet {
     public DistributionServlet(Config config) {
         this.config = config;
         this.objectMapper = new ObjectMapper();
-
     }
 
     @Override
@@ -55,7 +54,9 @@ public class DistributionServlet extends HttpServlet {
         // Parse path: /catalogName/namespace/table
         String[] parts = pathInfo.split("/");
         if (parts.length != 4) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid path format. Expected: /catalogName/namespace/table");
+            response.sendError(
+                    HttpServletResponse.SC_BAD_REQUEST,
+                    "Invalid path format. Expected: /catalogName/namespace/table");
             return;
         }
 
@@ -64,23 +65,24 @@ public class DistributionServlet extends HttpServlet {
         String tableName = parts[3];
 
         try {
-            Config.Catalog catalogConfig = config.catalogs().stream()
-                    .filter(c -> c.name().equals(catalogName))
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException("Catalog not found: " + catalogName));
+            Config.Catalog catalogConfig =
+                    config.catalogs().stream()
+                            .filter(c -> c.name().equals(catalogName))
+                            .findFirst()
+                            .orElseThrow(
+                                    () ->
+                                            new IllegalArgumentException(
+                                                    "Catalog not found: " + catalogName));
 
-            Catalog catalog = CatalogUtil.buildIcebergCatalog(
-                    catalogConfig.name(),
-                    catalogConfig.properties(),
-                    new org.apache.hadoop.conf.Configuration()
-            );
+            Catalog catalog =
+                    CatalogUtil.buildIcebergCatalog(
+                            catalogConfig.name(),
+                            catalogConfig.properties(),
+                            new org.apache.hadoop.conf.Configuration());
 
             Table table = catalog.loadTable(TableIdentifier.of(namespace, tableName));
-            
-            // Calculate distribution statistics
-            Map<String, Integer> distribution = calculateDistributionStats(table);
 
-            // Calculate the total count of files
+            Map<String, Integer> distribution = calculateDistributionStats(table);
             int totalFiles = 0;
             for (Map.Entry<String, Integer> entry : distribution.entrySet()) {
                 totalFiles += entry.getValue();
@@ -90,9 +92,7 @@ public class DistributionServlet extends HttpServlet {
             for (Map.Entry<String, Integer> entry : distribution.entrySet()) {
                 String range = entry.getKey();
                 int count = entry.getValue();
-                double percentage = totalFiles > 0 
-                    ? Math.round((count * 100.0) / totalFiles) 
-                    : 0;
+                double percentage = totalFiles > 0 ? Math.round((count * 100.0) / totalFiles) : 0;
 
                 ObjectNode rangeData = objectMapper.createObjectNode();
                 rangeData.put("count", count);
@@ -101,8 +101,6 @@ public class DistributionServlet extends HttpServlet {
                 rootNode.set(range, rangeData);
             }
 
-            // add distribution to rootNode
-            // No need to nest the distribution data since rootNode already contains it
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
             objectMapper.writeValue(response.getWriter(), rootNode);
@@ -114,19 +112,7 @@ public class DistributionServlet extends HttpServlet {
 
     private Map<String, Integer> calculateDistributionStats(Table table) {
         var snapshot = table.currentSnapshot();
-
-        // help me we calculate the distribution statistics
-        // Example
-        // 0-8 MB
-        // 8-32 MB
-        // 32-128 MB
-        // 128-512 MB
-        // 512 MB+
-
-
-
         Map<String, Integer> distribution = new HashMap<>();
-        // init
         distribution.put("0-8M", 0);
         distribution.put("8M-32M", 0);
         distribution.put("32M-128M", 0);
@@ -143,7 +129,8 @@ public class DistributionServlet extends HttpServlet {
                         }
                         break;
                     case DELETES:
-                        for (DeleteFile file : ManifestFiles.readDeleteManifest(manifest, fileIO, table.specs())) {
+                        for (DeleteFile file :
+                                ManifestFiles.readDeleteManifest(manifest, fileIO, table.specs())) {
                             processFileSize(distribution, file.fileSizeInBytes());
                         }
                         break;
@@ -152,7 +139,7 @@ public class DistributionServlet extends HttpServlet {
                 }
             }
         }
-        
+
         return distribution;
     }
 
@@ -169,4 +156,4 @@ public class DistributionServlet extends HttpServlet {
             distribution.merge("512M+", 1, Integer::sum);
         }
     }
-} 
+}
