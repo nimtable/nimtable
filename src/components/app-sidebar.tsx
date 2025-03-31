@@ -109,7 +109,7 @@ async function loadNamespacesAndTables(catalog: string) {
       name: namespaceName,
       shortName: namespace[namespace.length - 1],
       tables: tablesResponse.identifiers?.map((table) => table.name) || [],
-      views: viewsResponse.identifiers?.map((view) => view.name) || [],
+      views: viewsResponse?.identifiers?.map((view) => view.name) || [],
       children
     }
   }
