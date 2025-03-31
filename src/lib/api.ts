@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 RisingWave Labs
+ * Copyright 2025 Nimtable
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,6 @@
  * - Modified `request()` to throw `r.error` instead of `data` if the response is not ok.
  * - Modified `response.json()` to parse `snapshot-id` as strings because it may be greater than MAX_SAFE_INTEGER
  */
-
 type UtilRequiredKeys<T, K extends keyof T> = Omit<T, K> & Required<Pick<T, K>>;
 
 /** JSON error payload returned in a response with further details on the error */
