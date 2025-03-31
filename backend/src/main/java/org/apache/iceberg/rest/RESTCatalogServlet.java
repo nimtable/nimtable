@@ -49,9 +49,9 @@ import org.slf4j.LoggerFactory;
 /**
  * The RESTCatalogServlet provides a servlet implementation used in combination with a
  * RESTCatalogAdaptor to proxy the REST Spec to any Catalog implementation.
- * <p>
- * NOTE: This file is modified from
- * <a href="https://github.com/apache/iceberg/blob/main/core/src/test/java/org/apache/iceberg/rest/RESTCatalogServlet.java">RESTCatalogServlet</a>
+ *
+ * <p>NOTE: This file is modified from <a
+ * href="https://github.com/apache/iceberg/blob/main/core/src/test/java/org/apache/iceberg/rest/RESTCatalogServlet.java">RESTCatalogServlet</a>
  */
 public class RESTCatalogServlet extends HttpServlet {
     private static final Logger LOG = LoggerFactory.getLogger(RESTCatalogServlet.class);
@@ -166,8 +166,12 @@ public class RESTCatalogServlet extends HttpServlet {
         static ServletRequestContext from(HttpServletRequest request) throws IOException {
             HTTPMethod method = HTTPMethod.valueOf(request.getMethod());
 
-            // HACK(eric): skip the prefix of URL and pass to the Iceberg's default REST implementation
-            String path = Arrays.stream(request.getRequestURI().split("/")).skip(4).collect(Collectors.joining("/"));
+            // HACK(eric): skip the prefix of URL and pass to the Iceberg's default REST
+            // implementation
+            String path =
+                    Arrays.stream(request.getRequestURI().split("/"))
+                            .skip(4)
+                            .collect(Collectors.joining("/"));
             LOG.debug("Path is " + path);
 
             Pair<Route, Map<String, String>> routeContext = Route.from(method, path);
@@ -185,7 +189,8 @@ public class RESTCatalogServlet extends HttpServlet {
             Object requestBody = null;
             if (route.requestClass() != null) {
                 requestBody =
-                        RESTObjectMapper.mapper().readValue(request.getReader(), route.requestClass());
+                        RESTObjectMapper.mapper()
+                                .readValue(request.getReader(), route.requestClass());
             } else if (route == Route.TOKENS) {
                 try (Reader reader = new InputStreamReader(request.getInputStream())) {
                     requestBody = RESTUtil.decodeFormData(CharStreams.toString(reader));
@@ -199,7 +204,8 @@ public class RESTCatalogServlet extends HttpServlet {
                     Collections.list(request.getHeaderNames()).stream()
                             .collect(Collectors.toMap(Function.identity(), request::getHeader));
 
-            return new ServletRequestContext(method, route, path, headers, queryParams, requestBody);
+            return new ServletRequestContext(
+                    method, route, path, headers, queryParams, requestBody);
         }
 
         public HTTPMethod method() {

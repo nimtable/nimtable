@@ -1,11 +1,8 @@
 // Move the existing page.tsx content here and update it
-import { ChevronRight, FolderTree, MenuIcon, MoreVertical, Trash2, PanelRightClose, PanelRightOpen } from "lucide-react"
+import { ChevronRight, FolderTree, MoreVertical, Trash2, PanelRightClose, PanelRightOpen } from "lucide-react"
 import { Link, useParams, useNavigate } from "react-router-dom"
-import { useQuery } from "@tanstack/react-query"
 
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Api, TableIdentifier } from "@/lib/api"

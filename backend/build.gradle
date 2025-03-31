@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-
 plugins {
   id 'java'
   id 'application'
   id 'com.github.johnrengelman.shadow' version '8.1.1'
+  id 'com.diffplug.spotless' version '6.25.0'
 }
 
 java {
@@ -160,5 +160,15 @@ task downloadDependencies {
     println "Dependencies resolved and downloaded to Gradle cache"
     println "Total dependencies: ${allDeps.size()}"
     allDeps.each { println " - ${it.name}" }
+}
+
+// Spotless configuration
+spotless {
+  java {
+    googleJavaFormat("1.22.0").aosp()
+    importOrder()
+    removeUnusedImports()
+    trimTrailingWhitespace()
+    endWithNewline()
   }
 }
