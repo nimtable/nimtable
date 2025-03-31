@@ -160,6 +160,7 @@ task downloadDependencies {
     println "Dependencies resolved and downloaded to Gradle cache"
     println "Total dependencies: ${allDeps.size()}"
     allDeps.each { println " - ${it.name}" }
+  }
 }
 
 // Spotless configuration
