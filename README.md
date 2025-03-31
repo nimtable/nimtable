@@ -44,6 +44,23 @@ npm install
 npm run dev
 ```
 
+### Lints
+
+Fix lint issues:
+```bash
+# Frontend
+# check lint
+npm run lint
+# fix lint
+npm run lint -- --fix
+
+# Backend
+# check lint
+cd backend && ./gradlew lint
+# fix lint
+cd backend && ./gradlew lintFix
+```
+
 ## Roadmap
 
 - **Pluggable Query Engines**. Connect to different query engines, such as DuckDB (embedded), Spark, Flink, RisingWave, etc.
