@@ -54,183 +54,186 @@ import org.slf4j.LoggerFactory;
  * href="https://github.com/apache/iceberg/blob/main/core/src/test/java/org/apache/iceberg/rest/RESTCatalogServlet.java">RESTCatalogServlet</a>
  */
 public class RESTCatalogServlet extends HttpServlet {
-  private static final Logger LOG = LoggerFactory.getLogger(RESTCatalogServlet.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RESTCatalogServlet.class);
 
-  private final RESTCatalogAdapter restCatalogAdapter;
-  private final Map<String, String> responseHeaders =
-      ImmutableMap.of(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.getMimeType());
+    private final RESTCatalogAdapter restCatalogAdapter;
+    private final Map<String, String> responseHeaders =
+            ImmutableMap.of(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.getMimeType());
 
-  public RESTCatalogServlet(RESTCatalogAdapter restCatalogAdapter) {
-    this.restCatalogAdapter = restCatalogAdapter;
-  }
-
-  @Override
-  protected void doGet(HttpServletRequest request, HttpServletResponse response)
-      throws IOException {
-    execute(ServletRequestContext.from(request), response);
-  }
-
-  @Override
-  protected void doHead(HttpServletRequest request, HttpServletResponse response)
-      throws IOException {
-    execute(ServletRequestContext.from(request), response);
-  }
-
-  @Override
-  protected void doPost(HttpServletRequest request, HttpServletResponse response)
-      throws IOException {
-    execute(ServletRequestContext.from(request), response);
-  }
-
-  @Override
-  protected void doDelete(HttpServletRequest request, HttpServletResponse response)
-      throws IOException {
-    execute(ServletRequestContext.from(request), response);
-  }
-
-  protected void execute(ServletRequestContext context, HttpServletResponse response)
-      throws IOException {
-    response.setStatus(HttpServletResponse.SC_OK);
-    responseHeaders.forEach(response::setHeader);
-
-    if (context.error().isPresent()) {
-      response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-      RESTObjectMapper.mapper().writeValue(response.getWriter(), context.error().get());
-      return;
+    public RESTCatalogServlet(RESTCatalogAdapter restCatalogAdapter) {
+        this.restCatalogAdapter = restCatalogAdapter;
     }
 
-    try {
-      HTTPRequest request =
-          restCatalogAdapter.buildRequest(
-              context.method(),
-              context.path(),
-              context.queryParams(),
-              context.headers(),
-              context.body());
-      Object responseBody =
-          restCatalogAdapter.execute(
-              request, context.route().responseClass(), handle(response), h -> {});
-
-      if (responseBody != null) {
-        RESTObjectMapper.mapper().writeValue(response.getWriter(), responseBody);
-      }
-    } catch (RESTException e) {
-      LOG.error("Error processing REST request", e);
-      response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-    } catch (Exception e) {
-      LOG.error("Unexpected exception when processing REST request", e);
-      response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-    }
-  }
-
-  protected Consumer<ErrorResponse> handle(HttpServletResponse response) {
-    return (errorResponse) -> {
-      response.setStatus(errorResponse.code());
-      try {
-        RESTObjectMapper.mapper().writeValue(response.getWriter(), errorResponse);
-      } catch (IOException e) {
-        throw new UncheckedIOException(e);
-      }
-    };
-  }
-
-  public static class ServletRequestContext {
-    private HTTPMethod method;
-    private Route route;
-    private String path;
-    private Map<String, String> headers;
-    private Map<String, String> queryParams;
-    private Object body;
-
-    private ErrorResponse errorResponse;
-
-    private ServletRequestContext(ErrorResponse errorResponse) {
-      this.errorResponse = errorResponse;
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        execute(ServletRequestContext.from(request), response);
     }
 
-    private ServletRequestContext(
-        HTTPMethod method,
-        Route route,
-        String path,
-        Map<String, String> headers,
-        Map<String, String> queryParams,
-        Object body) {
-      this.method = method;
-      this.route = route;
-      this.path = path;
-      this.headers = headers;
-      this.queryParams = queryParams;
-      this.body = body;
+    @Override
+    protected void doHead(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        execute(ServletRequestContext.from(request), response);
     }
 
-    static ServletRequestContext from(HttpServletRequest request) throws IOException {
-      HTTPMethod method = HTTPMethod.valueOf(request.getMethod());
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        execute(ServletRequestContext.from(request), response);
+    }
 
-      // HACK(eric): skip the prefix of URL and pass to the Iceberg's default REST implementation
-      String path =
-          Arrays.stream(request.getRequestURI().split("/"))
-              .skip(4)
-              .collect(Collectors.joining("/"));
-      LOG.debug("Path is " + path);
+    @Override
+    protected void doDelete(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        execute(ServletRequestContext.from(request), response);
+    }
 
-      Pair<Route, Map<String, String>> routeContext = Route.from(method, path);
+    protected void execute(ServletRequestContext context, HttpServletResponse response)
+            throws IOException {
+        response.setStatus(HttpServletResponse.SC_OK);
+        responseHeaders.forEach(response::setHeader);
 
-      if (routeContext == null) {
-        return new ServletRequestContext(
-            ErrorResponse.builder()
-                .responseCode(400)
-                .withType("BadRequestException")
-                .withMessage(format("No route for request: %s %s", method, path))
-                .build());
-      }
-
-      Route route = routeContext.first();
-      Object requestBody = null;
-      if (route.requestClass() != null) {
-        requestBody =
-            RESTObjectMapper.mapper().readValue(request.getReader(), route.requestClass());
-      } else if (route == Route.TOKENS) {
-        try (Reader reader = new InputStreamReader(request.getInputStream())) {
-          requestBody = RESTUtil.decodeFormData(CharStreams.toString(reader));
+        if (context.error().isPresent()) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            RESTObjectMapper.mapper().writeValue(response.getWriter(), context.error().get());
+            return;
         }
-      }
 
-      Map<String, String> queryParams =
-          request.getParameterMap().entrySet().stream()
-              .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue()[0]));
-      Map<String, String> headers =
-          Collections.list(request.getHeaderNames()).stream()
-              .collect(Collectors.toMap(Function.identity(), request::getHeader));
+        try {
+            HTTPRequest request =
+                    restCatalogAdapter.buildRequest(
+                            context.method(),
+                            context.path(),
+                            context.queryParams(),
+                            context.headers(),
+                            context.body());
+            Object responseBody =
+                    restCatalogAdapter.execute(
+                            request, context.route().responseClass(), handle(response), h -> {});
 
-      return new ServletRequestContext(method, route, path, headers, queryParams, requestBody);
+            if (responseBody != null) {
+                RESTObjectMapper.mapper().writeValue(response.getWriter(), responseBody);
+            }
+        } catch (RESTException e) {
+            LOG.error("Error processing REST request", e);
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        } catch (Exception e) {
+            LOG.error("Unexpected exception when processing REST request", e);
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
     }
 
-    public HTTPMethod method() {
-      return method;
+    protected Consumer<ErrorResponse> handle(HttpServletResponse response) {
+        return (errorResponse) -> {
+            response.setStatus(errorResponse.code());
+            try {
+                RESTObjectMapper.mapper().writeValue(response.getWriter(), errorResponse);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        };
     }
 
-    public Route route() {
-      return route;
-    }
+    public static class ServletRequestContext {
+        private HTTPMethod method;
+        private Route route;
+        private String path;
+        private Map<String, String> headers;
+        private Map<String, String> queryParams;
+        private Object body;
 
-    public String path() {
-      return path;
-    }
+        private ErrorResponse errorResponse;
 
-    public Map<String, String> headers() {
-      return headers;
-    }
+        private ServletRequestContext(ErrorResponse errorResponse) {
+            this.errorResponse = errorResponse;
+        }
 
-    public Map<String, String> queryParams() {
-      return queryParams;
-    }
+        private ServletRequestContext(
+                HTTPMethod method,
+                Route route,
+                String path,
+                Map<String, String> headers,
+                Map<String, String> queryParams,
+                Object body) {
+            this.method = method;
+            this.route = route;
+            this.path = path;
+            this.headers = headers;
+            this.queryParams = queryParams;
+            this.body = body;
+        }
 
-    public Object body() {
-      return body;
-    }
+        static ServletRequestContext from(HttpServletRequest request) throws IOException {
+            HTTPMethod method = HTTPMethod.valueOf(request.getMethod());
 
-    public Optional<ErrorResponse> error() {
-      return Optional.ofNullable(errorResponse);
+            // HACK(eric): skip the prefix of URL and pass to the Iceberg's default REST
+            // implementation
+            String path =
+                    Arrays.stream(request.getRequestURI().split("/"))
+                            .skip(4)
+                            .collect(Collectors.joining("/"));
+            LOG.debug("Path is " + path);
+
+            Pair<Route, Map<String, String>> routeContext = Route.from(method, path);
+
+            if (routeContext == null) {
+                return new ServletRequestContext(
+                        ErrorResponse.builder()
+                                .responseCode(400)
+                                .withType("BadRequestException")
+                                .withMessage(format("No route for request: %s %s", method, path))
+                                .build());
+            }
+
+            Route route = routeContext.first();
+            Object requestBody = null;
+            if (route.requestClass() != null) {
+                requestBody =
+                        RESTObjectMapper.mapper()
+                                .readValue(request.getReader(), route.requestClass());
+            } else if (route == Route.TOKENS) {
+                try (Reader reader = new InputStreamReader(request.getInputStream())) {
+                    requestBody = RESTUtil.decodeFormData(CharStreams.toString(reader));
+                }
+            }
+
+            Map<String, String> queryParams =
+                    request.getParameterMap().entrySet().stream()
+                            .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue()[0]));
+            Map<String, String> headers =
+                    Collections.list(request.getHeaderNames()).stream()
+                            .collect(Collectors.toMap(Function.identity(), request::getHeader));
+
+            return new ServletRequestContext(
+                    method, route, path, headers, queryParams, requestBody);
+        }
+
+        public HTTPMethod method() {
+            return method;
+        }
+
+        public Route route() {
+            return route;
+        }
+
+        public String path() {
+            return path;
+        }
+
+        public Map<String, String> headers() {
+            return headers;
+        }
+
+        public Map<String, String> queryParams() {
+            return queryParams;
+        }
+
+        public Object body() {
+            return body;
+        }
+
+        public Optional<ErrorResponse> error() {
+            return Optional.ofNullable(errorResponse);
+        }
     }
-  }
 }

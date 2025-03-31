@@ -25,34 +25,35 @@ import java.io.IOException;
 import java.util.Map;
 
 public class CatalogConfigServlet extends HttpServlet {
-  private final Config config;
-  private final ObjectMapper mapper;
+    private final Config config;
+    private final ObjectMapper mapper;
 
-  public CatalogConfigServlet(Config config) {
-    this.config = config;
-    this.mapper = new ObjectMapper();
-  }
-
-  @Override
-  protected void doGet(HttpServletRequest request, HttpServletResponse response)
-      throws ServletException, IOException {
-    String pathInfo = request.getPathInfo();
-    if (pathInfo == null || pathInfo.equals("/")) {
-      response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Catalog name is required");
-      return;
+    public CatalogConfigServlet(Config config) {
+        this.config = config;
+        this.mapper = new ObjectMapper();
     }
 
-    String catalogName = pathInfo.substring(1); // Remove leading slash
-    Config.Catalog catalog = config.getCatalog(catalogName);
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String pathInfo = request.getPathInfo();
+        if (pathInfo == null || pathInfo.equals("/")) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Catalog name is required");
+            return;
+        }
 
-    if (catalog == null) {
-      response.sendError(HttpServletResponse.SC_NOT_FOUND, "Catalog not found: " + catalogName);
-      return;
+        String catalogName = pathInfo.substring(1); // Remove leading slash
+        Config.Catalog catalog = config.getCatalog(catalogName);
+
+        if (catalog == null) {
+            response.sendError(
+                    HttpServletResponse.SC_NOT_FOUND, "Catalog not found: " + catalogName);
+            return;
+        }
+
+        Map<String, String> catalogConfig = catalog.properties();
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        mapper.writeValue(response.getOutputStream(), catalogConfig);
     }
-
-    Map<String, String> catalogConfig = catalog.properties();
-    response.setContentType("application/json");
-    response.setCharacterEncoding("UTF-8");
-    mapper.writeValue(response.getOutputStream(), catalogConfig);
-  }
 }
