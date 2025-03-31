@@ -33,23 +33,23 @@ type OptimizationStep = {
   result?: any;
 };
 
+interface DistributionItem {
+  count: number;
+  percentage: number;
+}
+
+interface DistributionData {
+  [range: string]: DistributionItem;
+}
+
+// Define the order of size ranges
+const rangeOrder = ["0-8M", "8M-32M", "32M-128M", "128M-512M", "512M+"];
+
 function FileDistributionSection({ tableId }: { tableId: string }) {
   const { catalog, namespace } = useParams<{ catalog: string, namespace: string }>();
   const [loading, setLoading] = useState(true);
-  
-  interface DistributionItem {
-    count: number;
-    percentage: number;
-  }
-  
-  interface DistributionData {
-    [range: string]: DistributionItem;
-  }
-  
-  const [distribution, setDistribution] = useState<DistributionData>({});
 
-  // Define the order of size ranges
-  const rangeOrder = ["0-8M", "8M-32M", "32M-128M", "128M-512M", "512M+"];
+  const [distribution, setDistribution] = useState<DistributionData>({});
 
   useEffect(() => {
     async function fetchDistribution() {
