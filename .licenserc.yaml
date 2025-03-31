@@ -1,0 +1,21 @@
+header:
+  license:
+    spdx-id: Apache-2.0
+    copyright-owner: Nimtable
+
+  paths:
+    - "**/*.rs"
+    - "**/*.py"
+    - "**/*.html"
+    - "**/*.js"
+    - "**/*.ts"
+    - "**/*.java"
+    - "**/*.gradle"
+
+  paths-ignore:
+    - "**/gen/**"
+    - "**/*.d.ts"
+    - "**/java/org/apache/iceberg/**"
+    - "**/*.config.*"
+
+  comment: on-failure

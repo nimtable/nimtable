@@ -1,3 +1,18 @@
+/*
+ * Copyright 2025 Nimtable
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package io.nimtable;
 
 import java.io.IOException;
@@ -49,7 +64,8 @@ public class ManifestServlet extends HttpServlet {
             return;
         }
 
-        // Format: /manifest/{catalog-name}/{namespace}/{table-name}/{snapshot-id}[/{manifest-number}]
+        // Format:
+        // /manifest/{catalog-name}/{namespace}/{table-name}/{snapshot-id}[/{manifest-number}]
         String catalogName = parts[3];
         String namespace = parts[4];
         String tableName = parts[5];
@@ -67,7 +83,7 @@ public class ManifestServlet extends HttpServlet {
         Table table;
         try {
             table = CatalogUtil.buildIcebergCatalog(catalog.name(), catalog.properties(), new Configuration())
-              .loadTable(TableIdentifier.of(namespace, tableName));
+                    .loadTable(TableIdentifier.of(namespace, tableName));
         } catch (Exception e) {
             logger.error("Failed to load table: {}.{}", namespace, tableName, e);
             response.sendError(HttpServletResponse.SC_NOT_FOUND, "Table not found: " + namespace + "." + tableName);
@@ -113,7 +129,7 @@ public class ManifestServlet extends HttpServlet {
 
                 var reader = ManifestFiles.read(manifest, fileIO, table.specs());
                 switch (manifest.content()) {
-                    case DATA: 
+                    case DATA:
                         for (DataFile file : reader) {
                             filesNode.add(dataFileToJson(file));
                         }
@@ -174,59 +190,59 @@ public class ManifestServlet extends HttpServlet {
         fileNode.put("spec_id", file.specId());
         fileNode.put("record_count", file.recordCount());
         fileNode.put("file_size_in_bytes", file.fileSizeInBytes());
-        
+
         if (file.columnSizes() != null) {
             var columnSizesNode = objectMapper.createObjectNode();
             file.columnSizes().forEach((key, value) -> columnSizesNode.put(key.toString(), value));
             fileNode.set("column_sizes", columnSizesNode);
         }
-        
+
         if (file.valueCounts() != null) {
             var valueCountsNode = objectMapper.createObjectNode();
             file.valueCounts().forEach((key, value) -> valueCountsNode.put(key.toString(), value));
             fileNode.set("value_counts", valueCountsNode);
         }
-        
+
         if (file.nullValueCounts() != null) {
             var nullValueCountsNode = objectMapper.createObjectNode();
             file.nullValueCounts().forEach((key, value) -> nullValueCountsNode.put(key.toString(), value));
             fileNode.set("null_value_counts", nullValueCountsNode);
         }
-        
+
         if (file.nanValueCounts() != null) {
             var nanValueCountsNode = objectMapper.createObjectNode();
             file.nanValueCounts().forEach((key, value) -> nanValueCountsNode.put(key.toString(), value));
             fileNode.set("nan_value_counts", nanValueCountsNode);
         }
-        
+
         if (file.lowerBounds() != null) {
             var lowerBoundsNode = objectMapper.createObjectNode();
             file.lowerBounds().forEach((key, value) -> lowerBoundsNode.put(key.toString(), formatBinary(value)));
             fileNode.set("lower_bounds", lowerBoundsNode);
         }
-        
+
         if (file.upperBounds() != null) {
             var upperBoundsNode = objectMapper.createObjectNode();
             file.upperBounds().forEach((key, value) -> upperBoundsNode.put(key.toString(), formatBinary(value)));
             fileNode.set("upper_bounds", upperBoundsNode);
         }
-        
+
         if (file.keyMetadata() != null) {
             fileNode.put("key_metadata", formatBinary(file.keyMetadata()));
         }
-        
+
         if (file.splitOffsets() != null) {
             var splitOffsetsNode = objectMapper.createArrayNode();
             file.splitOffsets().forEach(splitOffsetsNode::add);
             fileNode.set("split_offsets", splitOffsetsNode);
         }
-        
+
         if (file.equalityFieldIds() != null) {
             var equalityIdsNode = objectMapper.createArrayNode();
             file.equalityFieldIds().forEach(equalityIdsNode::add);
             fileNode.set("equality_ids", equalityIdsNode);
         }
-        
+
         fileNode.put("sort_order_id", file.sortOrderId());
         return fileNode;
     }
