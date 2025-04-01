@@ -36,7 +36,8 @@ public class LoginServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
         ObjectNode requestNode = objectMapper.readValue(request.getReader(), ObjectNode.class);
         String username = requestNode.path("username").asText();
         String password = requestNode.path("password").asText();
@@ -68,4 +69,4 @@ public class LoginServlet extends HttpServlet {
 
         objectMapper.writeValue(response.getWriter(), responseNode);
     }
-} 
+}

@@ -31,14 +31,15 @@ public class LogoutServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
         // Simple logout - in a real app with sessions, you would invalidate the session here
-        
+
         ObjectNode responseNode = objectMapper.createObjectNode();
         responseNode.put("success", true);
-        
+
         response.setContentType("application/json");
         response.setStatus(HttpServletResponse.SC_OK);
         objectMapper.writeValue(response.getWriter(), responseNode);
     }
-} 
+}
