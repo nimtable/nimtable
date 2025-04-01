@@ -37,6 +37,102 @@ You can customize the configuration by editing `docker/config.yaml` and `docker/
 
 For other ways to run or develop Nimtable, please refer to the following sections.
 
+## Configuration
+
+Nimtable uses a YAML configuration file (`config.yaml`) to define server settings and catalog connections. The configuration is compatible with Spark's Iceberg catalog configuration format.
+
+You can find the example configuration file at [`docker/config.yaml`](docker/config.yaml).
+
+### Basic Server Configuration
+
+```yaml
+server:
+  port: 8182
+  host: 0.0.0.0
+auth:
+  username: admin
+  password: admin
+```
+
+### Catalog Configuration
+
+You can configure multiple catalogs in the `catalogs` section. Here are examples for different catalog types:
+
+#### 1. JDBC Catalog (PostgreSQL, MySQL, etc.)
+
+```yaml
+catalogs:
+  - name: jdbc-catalog
+    type: jdbc
+    jdbc.schema-version: V1
+    uri: jdbc:postgresql://localhost:5432/db
+    warehouse: s3://warehouse/wh/
+    jdbc.user: admin
+    jdbc.password: password
+    # S3 Configuration (when using S3 as warehouse)
+    io-impl: org.apache.iceberg.aws.s3.S3FileIO
+    s3.endpoint: http://localhost:9000  # Optional, for custom S3 endpoints
+    s3.access-key-id: admin
+    s3.secret-access-key: password
+    s3.region: us-east-1
+    s3.path-style-access: true
+    client.region: us-east-1
+```
+
+#### 2. REST Catalog
+
+```yaml
+catalogs:
+  - name: rest-catalog
+    type: rest
+    uri: http://localhost:8181
+    warehouse: s3://warehouse/wh/
+    # S3 Configuration (when using S3 as warehouse)
+    io-impl: org.apache.iceberg.aws.s3.S3FileIO
+    s3.endpoint: http://localhost:9000  # Optional, for custom S3 endpoints
+    s3.access-key-id: admin
+    s3.secret-access-key: password
+    s3.region: us-east-1
+    s3.path-style-access: true
+    client.region: us-east-1
+```
+
+#### 3. S3 Tables Catalog
+
+For AWS S3 Tables, you can configure the catalog as follows. Note that you need to replace `xxxxx` with your AWS account ID and configure the appropriate bucket name. You can also provide AWS credentials through environment variables.
+
+```yaml
+catalogs:
+  - name: s3-tables-catalog
+    type: rest
+    uri: https://s3tables.us-east-1.amazonaws.com/iceberg
+    warehouse: arn:aws:s3tables:us-east-1:xxxxx:bucket/your-bucket
+    io-impl: org.apache.iceberg.aws.s3.S3FileIO
+    s3.access-key-id: admin
+    s3.secret-access-key: password
+    s3.region: us-east-1
+    s3.path-style-access: true
+    rest.sigv4-enabled: true
+    rest.signing-name: s3tables
+    rest.signing-region: us-east-1
+```
+
+#### 4. AWS Glue Catalog
+
+For Glue catalog, you need to provide AWS credentials through environment variables:
+```bash
+AWS_REGION=us-east-1
+AWS_ACCESS_KEY_ID=your-access-key
+AWS_SECRET_ACCESS_KEY=your-secret-key
+```
+
+```yaml
+catalogs:
+  - name: glue-catalog
+    type: glue
+    warehouse: s3://your-bucket/test
+```
+
 ## Development
 
 To develop, JDK 17 and Node.js 23 are required.
