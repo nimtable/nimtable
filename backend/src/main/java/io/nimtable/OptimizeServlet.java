@@ -30,9 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.iceberg.CatalogUtil;
-import org.apache.iceberg.Table;
-import org.apache.iceberg.UpdateProperties;
+import org.apache.iceberg.*;
 import org.apache.iceberg.catalog.TableIdentifier;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -74,7 +72,6 @@ public class OptimizeServlet extends HttpServlet {
                         "CALL `%s`.system.rewrite_data_files(table => '%s.%s', options => map('rewrite-all', 'true'))",
                         catalogName, namespace, tableName);
         Row result = spark.sql(sql).collectAsList().get(0);
-
         return new CompactionResult(
                 result.getAs("rewritten_data_files_count"),
                 result.getAs("added_data_files_count"),

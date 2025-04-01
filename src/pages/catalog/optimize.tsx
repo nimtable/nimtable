@@ -17,6 +17,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 
 async function loadTableData(catalog: string, namespace: string, table: string) {
   const api = new Api({ baseUrl: `/api/catalog/${catalog}` })
@@ -31,6 +32,107 @@ type OptimizationStep = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   result?: any;
 };
+
+interface DistributionItem {
+  count: number;
+  percentage: number;
+}
+
+interface DistributionData {
+  [range: string]: DistributionItem;
+}
+
+// Define the order of size ranges
+const rangeOrder = ["0-8M", "8M-32M", "32M-128M", "128M-512M", "512M+"];
+
+function FileDistributionSection({ tableId }: { tableId: string }) {
+  const { catalog, namespace } = useParams<{ catalog: string, namespace: string }>();
+  const [loading, setLoading] = useState(true);
+
+  const [distribution, setDistribution] = useState<DistributionData>({});
+
+  useEffect(() => {
+    async function fetchDistribution() {
+      try {
+        setLoading(true);
+        // Use the same API path format as in table.tsx
+        const response = await fetch(`/api/distribution/${catalog}/${namespace}/${tableId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setDistribution(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch distribution data", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    if (tableId && catalog && namespace) {
+      fetchDistribution();
+    }
+  }, [tableId, catalog, namespace]);
+
+  if (loading) {
+    return (
+      <Card className="w-full mb-6">
+        <CardHeader>
+          <CardTitle>File Size Distribution</CardTitle>
+          <CardDescription>Loading distribution data...</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Skeleton UI for loading state */}
+          {["0-8M", "8M-32M", "32M-128M", "128M-512M", "512M+"].map((range) => (
+            <div key={range} className="space-y-1">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium">{range}</span>
+                <div className="h-4 w-24 bg-secondary/50 rounded animate-pulse"></div>
+              </div>
+              <div className="h-2 bg-secondary/30 rounded-full w-full overflow-hidden">
+                <div className="h-full bg-secondary/50 rounded-full w-1/6 animate-pulse"></div>
+              </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Sort the distribution data according to our predefined size order
+  const sortedDistributionEntries = Object.entries(distribution)
+    .sort((a, b) => {
+      const indexA = rangeOrder.indexOf(a[0]);
+      const indexB = rangeOrder.indexOf(b[0]);
+      return indexA - indexB;
+    });
+
+  return (
+    <Card className="w-full mb-6">
+      <CardHeader>
+        <CardTitle>File Size Distribution</CardTitle>
+        <CardDescription>Current distribution of file sizes in the table</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {sortedDistributionEntries.map(([range, data]) => (
+          <div key={range} className="space-y-1">
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium">{range}</span>
+              <span className="text-sm text-muted-foreground">
+                {data.count} files ({data.percentage}%)
+              </span>
+            </div>
+            <div className="h-2 bg-secondary/30 rounded-full w-full overflow-hidden">
+              <div 
+                className="h-full bg-primary rounded-full" 
+                style={{ width: `${data.percentage}%` }}
+              />
+            </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function OptimizePage() {
   const { catalog, namespace, table } = useParams<{ catalog: string, namespace: string, table: string }>()
@@ -386,6 +488,8 @@ export default function OptimizePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <FileDistributionSection tableId={table} />
     </div>
   )
 }
