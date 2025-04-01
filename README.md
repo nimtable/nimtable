@@ -41,6 +41,8 @@ For other ways to run or develop Nimtable, please refer to the following section
 
 Nimtable uses a YAML configuration file (`config.yaml`) to define server settings and catalog connections. The configuration is compatible with Spark's Iceberg catalog configuration format.
 
+You can find the example configuration file at [`docker/config.yaml`](docker/config.yaml).
+
 ### Basic Server Configuration
 
 ```yaml
