@@ -9,7 +9,7 @@ interface RootLayoutProps {
 // Remove the default export and html/body tags since this is now a React component
 const RootLayout: React.FC<RootLayoutProps> = ({ children }) => {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex-1">
       {children}
       <Toaster />
     </div>
