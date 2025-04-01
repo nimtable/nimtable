@@ -145,19 +145,34 @@ export default function OptimizePage() {
   const [showOptimizeDialog, setShowOptimizeDialog] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [showProgressDialog, setShowProgressDialog] = useState(false);
-  const [optimizationSteps, setOptimizationSteps] = useState<OptimizationStep[]>([
-    { name: 'Snapshot Expiration', status: 'pending' },
-    { name: 'Orphan File Cleanup', status: 'pending' },
-    { name: 'Compaction', status: 'pending' },
-  ]);
+  const [optimizationSteps, setOptimizationSteps] = useState<OptimizationStep[]>([]);
 
   // Optimization settings
   const [snapshotRetention, setSnapshotRetention] = useState(true)
   const [retentionPeriod, setRetentionPeriod] = useState("5")
   const [minSnapshotsToKeep, setMinSnapshotsToKeep] = useState("1")
-  const [orphanFileDeletion, setOrphanFileDeletion] = useState(true)
+  const [orphanFileDeletion, setOrphanFileDeletion] = useState(false)
   const [orphanFileRetention, setOrphanFileRetention] = useState("3")
   const [compaction, setCompaction] = useState(true)
+
+  // Update optimization steps based on enabled settings
+  useEffect(() => {
+    const steps: OptimizationStep[] = [];
+    
+    if (snapshotRetention) {
+      steps.push({ name: 'Snapshot Expiration', status: 'pending' });
+    }
+    
+    if (compaction) {
+      steps.push({ name: 'Compaction', status: 'pending' });
+    }
+    
+    if (orphanFileDeletion) {
+      steps.push({ name: 'Orphan File Cleanup', status: 'pending' });
+    }
+    
+    setOptimizationSteps(steps);
+  }, [snapshotRetention, compaction, orphanFileDeletion]);
 
   useEffect(() => {
     loadTableData(catalog, namespace, table).then(setTableData).catch((error) => {
@@ -313,125 +328,123 @@ export default function OptimizePage() {
               <SettingsIcon className="h-4 w-4" />
               <h1 className="text-xl font-semibold">Table Optimization</h1>
             </div>
-            <Button onClick={() => setShowOptimizeDialog(true)}>
-              Configure
-            </Button>
           </div>
 
-          <div className="p-6 space-y-8">
-            {/* Optimization History Section */}
-            <div>
-              <h2 className="text-lg font-semibold mb-4">Optimization History</h2>
-              {/* TODO: Add optimization history table */}
+          <div className="p-6">
+            <div className="grid grid-cols-2 gap-6">
+              {/* Left Column - Optimization Settings */}
+              <div>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Optimization Settings</CardTitle>
+                    <CardDescription>Configure optimization settings for the table.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {/* Snapshot Retention */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label>Snapshot retention</Label>
+                          <p className="text-sm text-muted-foreground">
+                            Removing old snapshots.
+                          </p>
+                        </div>
+                        <Switch
+                          checked={snapshotRetention}
+                          onCheckedChange={setSnapshotRetention}
+                        />
+                      </div>
+                      {snapshotRetention && (
+                        <div className="grid gap-4 pl-4">
+                          <div className="grid gap-2">
+                            <Label htmlFor="retention-period">Retention period (days)</Label>
+                            <Input
+                              id="retention-period"
+                              type="number"
+                              min="1"
+                              value={retentionPeriod}
+                              onChange={(e) => setRetentionPeriod(e.target.value)}
+                              placeholder="5"
+                            />
+                          </div>
+                          <div className="grid gap-2">
+                            <Label htmlFor="min-snapshots">Minimum snapshots to retain</Label>
+                            <Input
+                              id="min-snapshots"
+                              type="number"
+                              min="1"
+                              value={minSnapshotsToKeep}
+                              onChange={(e) => setMinSnapshotsToKeep(e.target.value)}
+                              placeholder="1"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Compaction */}
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label>Compaction</Label>
+                        <p className="text-sm text-muted-foreground">
+                          Combine small data files into larger files.
+                        </p>
+                      </div>
+                      <Switch
+                        checked={compaction}
+                        onCheckedChange={setCompaction}
+                      />
+                    </div>
+
+                    {/* Orphan File Deletion */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label>Orphan file deletion</Label>
+                          <p className="text-sm text-muted-foreground">
+                            Automatically clean up unused files periodically.
+                          </p>
+                        </div>
+                        <Switch
+                          checked={orphanFileDeletion}
+                          onCheckedChange={setOrphanFileDeletion}
+                        />
+                      </div>
+                      {orphanFileDeletion && (
+                        <div className="grid gap-2 pl-4">
+                          <Label htmlFor="orphan-retention">Delete orphan files after (days)</Label>
+                          <Input
+                            id="orphan-retention"
+                            type="number"
+                            min="1"
+                            value={orphanFileRetention}
+                            onChange={(e) => setOrphanFileRetention(e.target.value)}
+                            placeholder="3"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex justify-end gap-2 pt-4">
+                      <Button onClick={() => handleOptimize('run')} disabled={isLoading}>
+                        Run Once
+                      </Button>
+                      <Button onClick={() => handleOptimize('schedule')} disabled={isLoading}>
+                        Schedule
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Right Column - File Distribution */}
+              <div>
+                <FileDistributionSection tableId={table} />
+              </div>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Enable Optimization Dialog */}
-      <Dialog open={showOptimizeDialog} onOpenChange={setShowOptimizeDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Configure Optimization</DialogTitle>
-            <DialogDescription>
-              Configure optimization settings for the table.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            {/* Snapshot Retention */}
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Snapshot retention</Label>
-                <p className="text-sm text-muted-foreground">
-                  Removing old snapshots.
-                </p>
-              </div>
-              <Switch
-                checked={snapshotRetention}
-                onCheckedChange={setSnapshotRetention}
-              />
-            </div>
-            {snapshotRetention && (
-              <div className="grid gap-4 pl-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="retention-period">Retention period (days)</Label>
-                  <Input
-                    id="retention-period"
-                    type="number"
-                    min="1"
-                    value={retentionPeriod}
-                    onChange={(e) => setRetentionPeriod(e.target.value)}
-                    placeholder="5"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="min-snapshots">Minimum snapshots to retain</Label>
-                  <Input
-                    id="min-snapshots"
-                    type="number"
-                    min="1"
-                    value={minSnapshotsToKeep}
-                    onChange={(e) => setMinSnapshotsToKeep(e.target.value)}
-                    placeholder="1"
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Orphan File Deletion */}
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Orphan file deletion</Label>
-                <p className="text-sm text-muted-foreground">
-                  Automatically clean up unused files periodically.
-                </p>
-              </div>
-              <Switch
-                checked={orphanFileDeletion}
-                onCheckedChange={setOrphanFileDeletion}
-              />
-            </div>
-            {orphanFileDeletion && (
-              <div className="grid gap-2 pl-4">
-                <Label htmlFor="orphan-retention">Delete orphan files after (days)</Label>
-                <Input
-                  id="orphan-retention"
-                  type="number"
-                  min="1"
-                  value={orphanFileRetention}
-                  onChange={(e) => setOrphanFileRetention(e.target.value)}
-                  placeholder="3"
-                />
-              </div>
-            )}
-
-            {/* Compaction */}
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Compaction</Label>
-                <p className="text-sm text-muted-foreground">
-                  Combine small data files into larger files.
-                </p>
-              </div>
-              <Switch
-                checked={compaction}
-                onCheckedChange={setCompaction}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowOptimizeDialog(false)}>
-              Cancel
-            </Button>
-            <Button onClick={() => handleOptimize('run')} disabled={isLoading}>
-              Run Once
-            </Button>
-            <Button onClick={() => handleOptimize('schedule')} disabled={isLoading}>
-              Schedule
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Progress Dialog */}
       <Dialog open={showProgressDialog} onOpenChange={setShowProgressDialog}>
@@ -488,8 +501,6 @@ export default function OptimizePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <FileDistributionSection tableId={table} />
     </div>
   )
 }
