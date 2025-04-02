@@ -57,7 +57,7 @@ application {
 }
 
 ext {
-  icebergVersion = '1.8.1' 
+  icebergVersion = '1.8.1'
   hadoopVersion = '3.3.6'
   jettyVersion = '11.0.15'
   sparkVersion = '3.5.1'
