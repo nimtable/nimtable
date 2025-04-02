@@ -68,11 +68,11 @@ ext {
 
 protobuf {
     protoc {
-        artifact = "com.google.protobuf:protoc:{$protobufVersion}"
+        artifact = "com.google.protobuf:protoc:${protobufVersion}"
     }
     plugins {
         grpc {
-            artifact = "io.grpc:protoc-gen-grpc-java:{$grpcVersion}"
+            artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}"
         }
     }
 
