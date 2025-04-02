@@ -29,9 +29,7 @@ public class IcebergCompactionClient implements AutoCloseable {
     private final CompactorServiceGrpc.CompactorServiceBlockingStub blockingStub;
 
     public IcebergCompactionClient(String host, int port) {
-        this(ManagedChannelBuilder.forAddress(host, port)
-                .usePlaintext()
-                .build());
+        this(ManagedChannelBuilder.forAddress(host, port).usePlaintext().build());
     }
 
     public IcebergCompactionClient(ManagedChannel channel) {

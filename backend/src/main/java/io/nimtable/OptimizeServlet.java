@@ -69,11 +69,11 @@ public class OptimizeServlet extends HttpServlet {
             SparkSession spark, String catalogName, String namespace, String tableName) {
 
         try (IcebergCompactionClient client = new IcebergCompactionClient("127.0.0.1", 7777)) {
-                client.echo("Testing compaction service connection");
-                System.out.println("777777777 Connected to compaction service");
+            client.echo("Testing compaction service connection");
+            System.out.println("777777777 Connected to compaction service");
         } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                        throw new RuntimeException("Failed to connect to compaction service", e);
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Failed to connect to compaction service", e);
         }
 
         String sql =
