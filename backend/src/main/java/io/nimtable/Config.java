@@ -42,6 +42,10 @@ public record Config(Server server, Auth auth, List<Catalog> catalogs) {
         public static final String CATALOG_IMPL = CatalogProperties.CATALOG_IMPL;
         public static final String FILE_IO_IMPL = CatalogProperties.FILE_IO_IMPL;
         public static final String WAREHOUSE_LOCATION = CatalogProperties.WAREHOUSE_LOCATION;
+        public static final String S3_ACCESS_KEY_ID = "s3.access-key-id";
+        public static final String S3_SECRET_ACCESS_KEY = "s3.secret-access-key";
+        public static final String S3_REGION = "s3.region";
+        public static final String S3_PATH_STYLE_ACCESS = "s3.path-style-access";
     }
 
     public static class CatalogDeserializer extends JsonDeserializer<Catalog> {

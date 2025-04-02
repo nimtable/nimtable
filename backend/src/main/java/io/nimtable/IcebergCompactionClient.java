@@ -22,6 +22,8 @@ import io.grpc.StatusRuntimeException;
 import io.nimtable.iceberg.CompactorServiceGrpc;
 import io.nimtable.iceberg.IcebergProto.EchoRequest;
 import io.nimtable.iceberg.IcebergProto.EchoResponse;
+import io.nimtable.iceberg.IcebergProto.RewriteFilesRequest;
+import io.nimtable.iceberg.IcebergProto.RewriteFilesResponse;
 import java.util.concurrent.TimeUnit;
 
 public class IcebergCompactionClient implements AutoCloseable {
@@ -41,16 +43,25 @@ public class IcebergCompactionClient implements AutoCloseable {
         channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
     }
 
-    public void echo(String message) {
+    public void echo(String message) throws Exception {
         EchoRequest request = EchoRequest.newBuilder().setMessage(message).build();
         EchoResponse response;
         try {
             response = blockingStub.echo(request);
         } catch (StatusRuntimeException e) {
             System.out.println("RPC failed: " + e.getStatus());
-            return;
+            throw new RuntimeException("Failed to echo", e);
         }
         System.out.println("Echo response: " + response.getMessage());
+    }
+
+    public RewriteFilesResponse rewriteFiles(RewriteFilesRequest request) {
+        try {
+            return blockingStub.rewriteFiles(request);
+        } catch (StatusRuntimeException e) {
+            System.out.println("RPC failed: " + e.getStatus());
+            throw new RuntimeException("Failed to rewrite files", e);
+        }
     }
 
     @Override

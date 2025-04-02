@@ -2,17 +2,175 @@ syntax = "proto3";
 option java_package = "io.nimtable.iceberg";
 option java_outer_classname = "IcebergProto";
 
-package io.nimtable.iceberg;
+package compactor;
+
+enum DataContentType {
+    DATA = 0;
+    POSITION_DELETES = 1;
+    EQUALIRY_DELETES = 2;
+}
+
+enum DataFileFormat {
+    AVRO = 0;
+    ORC = 1;
+    PARQUET = 2;
+}
+
+message PrimitiveType {
+      message Decimal {
+        uint32 precision = 1;
+        uint32 scale = 2;
+    }
+    enum KindWithoutInner{
+        BOOLEAN = 0;
+        INT =1;
+        LONG = 2;
+        FLOAT = 3;
+        DOUBLE = 4;
+        DATE = 5;
+        TIME = 6;
+        TIMESTAMP = 7;
+        TIMESTAMPTZ = 8;
+        TIMESTAMP_NS = 9;
+        TIMESTAMPTZ_NS = 10;
+        STRING = 11;
+        UUID = 12;
+        BINARY = 13;
+    }
+  oneof kind {
+    KindWithoutInner kind_without_inner =1;
+    Decimal decimal = 2;
+    uint64 fixed = 3;
+  }
+}
+
+message StructType {
+    repeated NestedFieldDescriptor fields = 1;
+}
+
+message MapType {
+    NestedFieldDescriptor key_field = 1;
+    NestedFieldDescriptor value_field = 2;
+}
+
+message NestedFieldDescriptor{
+    int32 id = 1;
+    string name = 2;
+    bool required = 3;
+    oneof field_type {
+        PrimitiveType primitive = 4;
+        StructType struct = 5;
+        NestedFieldDescriptor list = 6;
+        MapType map = 7;
+    }
+}
+
+message SchemaDescriptor {
+    uint64 schema_id = 1;
+    repeated NestedFieldDescriptor fields = 2;
+}
+
+message FileScanTaskDescriptor {
+    uint64 start = 1;
+    uint64 length = 2;
+    uint64 record_count = 3;
+    string data_file_path = 4;
+    DataContentType data_file_content = 5;
+    DataFileFormat data_file_format = 6;
+    repeated int64 project_field_ids = 7;
+    int64 sequence_number = 8;
+    repeated int32 equality_ids = 9;
+}
+
+message FileIoBuilder {
+    string scheme_str = 1;
+    map<string, string> props = 2;
+}
+
+message PrimitiveLiteral {
+    enum KindWithoutInnerLiteral {
+        ABOVE_MAX = 0;
+        BELOW_MIN = 1;
+    }
+  oneof kindLiteral {
+    bool boolean = 1;
+    int32 int = 2;
+    int64 long = 3;
+    float float = 4;
+    double double = 5;
+    string string = 6;
+    bytes binary = 7;
+    bytes int128 = 8;
+    bytes uint128 = 9;
+    KindWithoutInnerLiteral kind_without_inner_literal = 10;
+  }
+}
+
+message OptionalLiteral {
+  optional Literal value = 1;
+}
+
+message StructLiteralDescriptor{
+    repeated OptionalLiteral inner = 1;
+}
+
+message MapLiteral {
+    repeated Literal keys = 1;
+    repeated OptionalLiteral values = 2;
+}
+
+message Literal{
+    oneof literal {
+        PrimitiveLiteral primitive = 1;
+        StructLiteralDescriptor struct = 2;
+        StructLiteralDescriptor list = 3;
+        MapLiteral map = 4;
+    }
+}
+
+message Datum {
+    PrimitiveType type = 1;
+    PrimitiveLiteral literal = 2;
+}
 
 message DataFile {
-    string file_path = 1;
+    DataContentType content = 1;
+    string file_path = 2;
+    DataFileFormat file_format = 3;
+    StructLiteralDescriptor partition = 4;
+    uint64 record_count = 5;
+    uint64 file_size_in_bytes = 6;
+    map<int32, uint64> column_sizes = 7;
+    map<int32, uint64> value_counts = 8;
+    map<int32, uint64> null_value_counts = 9;
+    map<int32, uint64> nan_value_counts = 10;
+    map<int32, Datum> lower_bounds = 11;
+    map<int32, Datum> upper_bounds = 12;
+    optional bytes key_metadata = 13;
+    repeated int64 split_offsets = 14;
+    repeated int32 equality_ids = 15;
+    optional int32 sort_order_id = 16;
+    int32 partition_spec_id = 17;
 }
 
 message RewriteFilesRequest {
-    repeated DataFile data_files = 1;
+    repeated FileScanTaskDescriptor file_scan_task_descriptor = 1;
+    map<string, string> rewrite_file_config = 2;
+    string dir_path = 3;
+    FileIoBuilder file_io_builder = 4;
+    SchemaDescriptor schema = 5;
+}
+
+message RewriteFilesStat {
+    int32 rewritten_files_count = 2;
+    int32 added_files_count = 3;
+    int64 rewritten_bytes = 4;
+    int32 failed_data_files_count = 5;
 }
 
 message RewriteFilesResponse {
+    repeated DataFile rewritten_files = 1;
+    RewriteFilesStat stat = 2;
 }
 
 message EchoRequest {

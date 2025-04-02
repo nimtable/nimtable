@@ -18,6 +18,13 @@ package io.nimtable;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.nimtable.Config.Catalog;
+import io.nimtable.iceberg.IcebergProto.DataFileFormat;
+import io.nimtable.iceberg.IcebergProto.FileIoBuilder;
+import io.nimtable.iceberg.IcebergProto.FileScanTaskDescriptor;
+import io.nimtable.iceberg.IcebergProto.RewriteFilesRequest;
+import io.nimtable.iceberg.IcebergProto.RewriteFilesResponse;
+import io.nimtable.iceberg.IcebergProto.SchemaDescriptor;
 import io.nimtable.spark.LocalSpark;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
@@ -25,6 +32,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,25 +75,79 @@ public class OptimizeServlet extends HttpServlet {
 
     private CompactionResult compactTable(
             SparkSession spark, String catalogName, String namespace, String tableName) {
+        Table table =
+                CatalogUtil.buildIcebergCatalog(
+                                catalogName,
+                                config.getCatalog(catalogName).properties(),
+                                new Configuration())
+                        .loadTable(TableIdentifier.of(namespace, tableName));
+
+        List<FileScanTaskDescriptor> fileScanTasks = new ArrayList<>();
+        for (FileScanTask task : table.newScan().planFiles()) {
+            var file = task.file();
+            fileScanTasks.add(
+                    FileScanTaskDescriptor.newBuilder()
+                            .setDataFilePath(file.location())
+                            .setRecordCount(file.recordCount())
+                            .setDataFileContentValue(file.content().id())
+                            .setDataFileFormat(
+                                    // TODO(li0k): use the correct format of file
+                                    DataFileFormat.PARQUET)
+                            .setStart(0) // 暂时设置为 0
+                            .setLength(file.fileSizeInBytes())
+                            .setSequenceNumber(
+                                    file.dataSequenceNumber() == null
+                                            ? 0
+                                            : file.dataSequenceNumber())
+                            .addAllEqualityIds(
+                                    file.equalityFieldIds() == null
+                                            ? new ArrayList<>()
+                                            : file.equalityFieldIds())
+                            .build());
+        }
+
+        var file_io_builder = FileIoBuilder.newBuilder();
+        // set properties
+        for (var entry : table.properties().entrySet()) {
+            file_io_builder.putProps(entry.getKey(), entry.getValue());
+        }
+
+        // set scheme
+        file_io_builder.setSchemeStr(table.location());
+
+        // build schema
+        var schema =
+                SchemaDescriptor.newBuilder()
+                        .setSchemaId(table.schema().schemaId())
+                        .addAllFields(
+                                table.schema().columns().stream()
+                                        .map(column -> TypeConverter.convert(column))
+                                        .collect(Collectors.toList()))
+                        .build();
+
+        // build request
+        RewriteFilesRequest request =
+                RewriteFilesRequest.newBuilder()
+                        .addAllFileScanTaskDescriptor(fileScanTasks)
+                        .setDirPath(table.location())
+                        .setFileIoBuilder(file_io_builder)
+                        .setSchema(schema)
+                        .build();
+
+        System.out.println("DEBUG request: " + request.toString());
 
         try (IcebergCompactionClient client = new IcebergCompactionClient("127.0.0.1", 7777)) {
-            client.echo("Testing compaction service connection");
-            System.out.println("777777777 Connected to compaction service");
+            RewriteFilesResponse rewrite_files_stat_response = client.rewriteFiles(request);
+            var rewrite_files_stat = rewrite_files_stat_response.getStat();
+            return new CompactionResult(
+                    rewrite_files_stat.getRewrittenFilesCount(),
+                    rewrite_files_stat.getAddedFilesCount(),
+                    rewrite_files_stat.getRewrittenBytes(),
+                    rewrite_files_stat.getFailedDataFilesCount());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("Failed to connect to compaction service", e);
         }
-
-        String sql =
-                String.format(
-                        "CALL `%s`.system.rewrite_data_files(table => '%s.%s', options => map('rewrite-all', 'true'))",
-                        catalogName, namespace, tableName);
-        Row result = spark.sql(sql).collectAsList().get(0);
-        return new CompactionResult(
-                result.getAs("rewritten_data_files_count"),
-                result.getAs("added_data_files_count"),
-                result.getAs("rewritten_bytes_count"),
-                result.getAs("failed_data_files_count"));
     }
 
     private ExpireSnapshotResult expireSnapshots(
@@ -293,6 +355,15 @@ public class OptimizeServlet extends HttpServlet {
 
                 if (compaction) {
                     properties.put("nimtable.compaction.enabled", "true");
+                    properties.put(
+                            "s3.access-key-id", catalog.properties().get(Catalog.S3_ACCESS_KEY_ID));
+                    properties.put(
+                            "s3.secret-access-key",
+                            catalog.properties().get(Catalog.S3_SECRET_ACCESS_KEY));
+                    properties.put("s3.region", catalog.properties().get(Catalog.S3_REGION));
+                    properties.put(
+                            "s3.path-style-access",
+                            catalog.properties().get(Catalog.S3_PATH_STYLE_ACCESS));
                 } else {
                     properties.put("nimtable.compaction.enabled", "false");
                 }
