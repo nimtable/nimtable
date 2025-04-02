@@ -319,6 +319,43 @@ export default function TablePage() {
               </Table>
             </div>
 
+            {/* Partition Section */}
+            <div>
+              <h2 className="text-lg font-semibold mb-4">Partitions</h2>
+              {tableData.metadata["partition-specs"] && tableData.metadata["partition-specs"].length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Source Field</TableHead>
+                      <TableHead>Transform</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {tableData.metadata["partition-specs"].map((spec) => (
+                      spec.fields.map((field) => {
+                        // Find the source field name from the schema using source-id
+                        const sourceField = schema?.fields.find(f => f.id === field["source-id"]);
+                        const sourceFieldName = sourceField ? sourceField.name : 'Unknown';
+                        
+                        return (
+                          <TableRow key={`${spec["spec-id"]}-${field["source-id"]}`}>
+                            <TableCell>{sourceFieldName}</TableCell>
+                            <TableCell>
+                              {typeof field.transform === 'string' 
+                                ? field.transform 
+                                : (field.transform as { type: string }).type}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <p className="text-sm text-muted-foreground">No partition specifications defined for this table.</p>
+              )}
+            </div>
+
             {/* Snapshots Section */}
             <div>
               <h2 className="text-lg font-semibold mb-4">Snapshots</h2>
