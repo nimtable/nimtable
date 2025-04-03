@@ -1,58 +1,27 @@
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import CatalogPage from './pages/catalog/catalog';
-import RootLayout from './pages/layout';
-import WelcomePage from './pages/welcome';
-import NotFoundPage from './pages/not-found';
-import NamespacePage from './pages/catalog/namespace';
-import CatalogLayout from './layouts/catalog-layout';
-import TablePage from './pages/catalog/table';
-import ViewPage from './pages/catalog/view';
-import OptimizePage from './pages/catalog/optimize';
-import LoginPage from './pages/login';
+import React, { Suspense } from 'react';
+import { useRoutes } from 'react-router-dom';
+import { routes } from './routes';
 import { AuthProvider } from './contexts/auth-context';
-import RequireAuth from './components/require-auth';
-import RedirectIfAuthenticated from './components/redirect-if-authenticated';
 import Header from './components/header';
 
+// 创建一个更好的加载状态组件
+const LoadingFallback = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+  </div>
+);
+
 const App: React.FC = () => {
+  const element = useRoutes(routes);
+
   return (
     <AuthProvider>
       <div className="min-h-screen flex flex-col">
         <Header />
         <div className="flex-1">
-          <Routes>
-            {/* Public routes */}
-            <Route path="/login" element={
-              <RedirectIfAuthenticated>
-                <LoginPage />
-              </RedirectIfAuthenticated>
-            } />
-            
-            {/* Redirect root to welcome if authenticated, otherwise to login */}
-            <Route path="/" element={<Navigate to="/welcome" replace />} />
-            
-            {/* All protected routes (welcome and catalog pages) */}
-            <Route element={
-              <RequireAuth>
-                <RootLayout>
-                  <CatalogLayout />
-                </RootLayout>
-              </RequireAuth>
-            }>
-              {/* Welcome page */}
-              <Route path="/welcome" element={<WelcomePage />} />
-              
-              {/* Catalog routes */}
-              <Route path="/catalog/:catalog" element={<CatalogPage />} />
-              <Route path="/catalog/:catalog/namespace/:namespace" element={<NamespacePage />} />
-              <Route path="/catalog/:catalog/namespace/:namespace/table/:table" element={<TablePage />} />
-              <Route path="/catalog/:catalog/namespace/:namespace/view/:view" element={<ViewPage />} />
-              <Route path="/catalog/:catalog/namespace/:namespace/table/:table/optimize" element={<OptimizePage />} />
-            </Route>
-            
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
+          <Suspense fallback={<LoadingFallback />}>
+            {element}
+          </Suspense>
         </div>
       </div>
     </AuthProvider>

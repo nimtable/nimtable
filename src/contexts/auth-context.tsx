@@ -4,12 +4,14 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (username: string, password: string) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Check for existing auth on mount
   useEffect(() => {
@@ -17,11 +19,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (token) {
       setIsAuthenticated(true);
     }
+    setIsLoading(false);
   }, []);
 
   const login = async (username: string, password: string): Promise<{ success: boolean; message?: string }> => {
     try {
-      // Call backend API to validate credentials
       const response = await fetch('/api/login', {
         method: 'POST',
         headers: {
@@ -38,7 +40,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: true };
       }
       
-      // Return the error message from the server or a default message
       return { 
         success: false, 
         message: data.message || "Invalid username or password"
@@ -56,7 +57,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('auth-token');
     setIsAuthenticated(false);
     
-    // Optional: Call logout endpoint to invalidate server-side session
     fetch('/api/logout', { 
       method: 'POST',
       headers: { 'Content-Type': 'application/json' }
@@ -68,7 +68,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{ 
         isAuthenticated, 
         login, 
-        logout
+        logout,
+        isLoading
       }}
     >
       {children}

@@ -115,7 +115,7 @@ jar {
 
 shadowJar {
   mergeServiceFiles()
-  zip64 true
+  zip64 = true
 }
 
 build.dependsOn(shadowJar)
@@ -152,8 +152,8 @@ clean {
 
 // Task to download all dependencies
 task downloadDependencies {
-  description 'Downloads all project dependencies for offline development and cache warming.'
-  group 'build setup'
+  description = 'Downloads all project dependencies for offline development and cache warming.'
+  group = 'build setup'
   
   doLast {
     def allDeps = configurations.compileClasspath.resolve() + configurations.runtimeClasspath.resolve()

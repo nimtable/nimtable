@@ -142,7 +142,6 @@ export default function OptimizePage() {
   }
 
   const [tableData, setTableData] = useState<LoadTableResult | undefined>(undefined)
-  const [showOptimizeDialog, setShowOptimizeDialog] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [showProgressDialog, setShowProgressDialog] = useState(false);
   const [optimizationSteps, setOptimizationSteps] = useState<OptimizationStep[]>([]);
@@ -286,7 +285,6 @@ export default function OptimizePage() {
           title: "Optimization scheduled",
           description: "Table optimization has been scheduled successfully.",
         });
-        setShowOptimizeDialog(false);
       } catch (error) {
         toast({
           variant: "destructive",
