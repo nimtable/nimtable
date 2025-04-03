@@ -67,6 +67,8 @@ public class Server {
         apiContext.addServlet(
                 new ServletHolder("distribution", new DistributionServlet(config)),
                 "/distribution/*");
+        apiContext.addServlet(new ServletHolder(new LoginServlet(config)), "/login");
+        apiContext.addServlet(new ServletHolder(new LogoutServlet()), "/logout");
 
         // Add route for each `/api/catalog/<catalog-name>/*` endpoints
         for (Config.Catalog catalog : config.catalogs()) {

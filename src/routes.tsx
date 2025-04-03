@@ -1,7 +1,9 @@
 import { lazy, Suspense } from 'react';
-import { RouteObject, Outlet } from 'react-router-dom';
+import { RouteObject, Outlet, Navigate } from 'react-router-dom';
 import RootLayout from './pages/layout';
 import CatalogLayout from './layouts/catalog-layout';
+import RequireAuth from './components/require-auth';
+import RedirectIfAuthenticated from './components/redirect-if-authenticated';
 
 // loading fallback
 const LoadingFallback = () => (
@@ -25,6 +27,7 @@ const TablePage = lazy(() => import(/* webpackPrefetch: true */ './pages/catalog
 const ViewPage = lazy(() => import(/* webpackPrefetch: true */ './pages/catalog/view'));
 const OptimizePage = lazy(() => import(/* webpackPrefetch: true */ './pages/catalog/optimize'));
 const NotFoundPage = lazy(() => import(/* webpackPrefetch: true */ './pages/not-found'));
+const LoginPage = lazy(() => import(/* webpackPrefetch: true */ './pages/login'));
 
 // wrapper for RootLayout
 const RootLayoutWrapper = () => (
@@ -33,42 +36,69 @@ const RootLayoutWrapper = () => (
   </RootLayout>
 );
 
+// wrapper for protected routes
+const ProtectedRoutesWrapper = () => (
+  <RequireAuth>
+    <Outlet />
+  </RequireAuth>
+);
+
 export const routes: RouteObject[] = [
+  // Public routes
   {
-    element: <RootLayoutWrapper />,
+    path: '/login',
+    element: (
+      <RedirectIfAuthenticated>
+        {withSuspense(LoginPage)}
+      </RedirectIfAuthenticated>
+    ),
+  },
+  {
+    path: '/',
+    element: <Navigate to="/welcome" replace />,
+  },
+  
+  // Protected routes
+  {
+    element: <ProtectedRoutesWrapper />,
     children: [
       {
-        element: <CatalogLayout />,
+        element: <RootLayoutWrapper />,
         children: [
           {
-            path: '/',
-            element: withSuspense(WelcomePage),
+            element: <CatalogLayout />,
+            children: [
+              {
+                path: '/welcome',
+                element: withSuspense(WelcomePage),
+              },
+              {
+                path: '/catalog/:catalog',
+                element: withSuspense(CatalogPage),
+              },
+              {
+                path: '/catalog/:catalog/namespace/:namespace',
+                element: withSuspense(NamespacePage),
+              },
+              {
+                path: '/catalog/:catalog/namespace/:namespace/table/:table',
+                element: withSuspense(TablePage),
+              },
+              {
+                path: '/catalog/:catalog/namespace/:namespace/view/:view',
+                element: withSuspense(ViewPage),
+              },
+              {
+                path: '/catalog/:catalog/namespace/:namespace/table/:table/optimize',
+                element: withSuspense(OptimizePage),
+              },
+            ],
           },
           {
-            path: '/catalog/:catalog',
-            element: withSuspense(CatalogPage),
-          },
-          {
-            path: '/catalog/:catalog/namespace/:namespace',
-            element: withSuspense(NamespacePage),
-          },
-          {
-            path: '/catalog/:catalog/namespace/:namespace/table/:table',
-            element: withSuspense(TablePage),
-          },
-          {
-            path: '/catalog/:catalog/namespace/:namespace/view/:view',
-            element: withSuspense(ViewPage),
-          },
-          {
-            path: '/catalog/:catalog/namespace/:namespace/table/:table/optimize',
-            element: withSuspense(OptimizePage),
+            path: '*',
+            element: withSuspense(NotFoundPage),
           },
         ],
-      },
-      {
-        path: '*',
-        element: withSuspense(NotFoundPage),
       },
     ],
   },

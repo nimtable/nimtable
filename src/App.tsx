@@ -1,6 +1,8 @@
 import React, { Suspense } from 'react';
 import { useRoutes } from 'react-router-dom';
 import { routes } from './routes';
+import { AuthProvider } from './contexts/auth-context';
+import Header from './components/header';
 
 // 创建一个更好的加载状态组件
 const LoadingFallback = () => (
@@ -13,9 +15,16 @@ const App: React.FC = () => {
   const element = useRoutes(routes);
 
   return (
-    <Suspense fallback={<LoadingFallback />}>
-      {element}
-    </Suspense>
+    <AuthProvider>
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <div className="flex-1">
+          <Suspense fallback={<LoadingFallback />}>
+            {element}
+          </Suspense>
+        </div>
+      </div>
+    </AuthProvider>
   );
 };
 
