@@ -82,7 +82,7 @@ export default function NotFound() {
                 <footer className="border-t bg-background py-5 px-8">
                     <div className="mx-auto max-w-5xl flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
-                            <Image src="/horizontal-dark.svg" alt="Nimtable Logo" width={120} height={24} className="h-6 w-auto" />
+                            <Image src="/horizontal-light.svg" alt="Nimtable Logo" width={120} height={24} className="h-10 w-auto -mr-5 -mt-[2px]" />
                             <p className="text-sm text-muted-foreground">v1.0 — Managed Iceberg Made Simple</p>
                         </div>
                         <div className="flex items-center gap-4">
