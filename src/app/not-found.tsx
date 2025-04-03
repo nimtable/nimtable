@@ -2,9 +2,10 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Mountain, ArrowLeft, Home, Search, AlertTriangle } from "lucide-react"
+import { ArrowLeft, Home, Search, AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { SidebarInset } from "@/components/ui/sidebar"
+import Image from "next/image"
 
 export default function NotFound() {
     const router = useRouter()
@@ -16,12 +17,9 @@ export default function NotFound() {
                 <header className="border-b bg-background relative overflow-hidden">
                     <div className="absolute inset-0 bg-blue-50 dark:bg-blue-950/20 opacity-50"></div>
                     <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 to-blue-600"></div>
-                    <div className="relative mx-auto max-w-5xl p-8">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="h-10 w-10 rounded-lg bg-blue-600 flex items-center justify-center shadow-sm">
-                                <Mountain className="h-6 w-6 text-white" />
-                            </div>
-                            <div className="h-8 w-[140px] bg-foreground/90 rounded-md" aria-label="Nimtable logo placeholder" />
+                    <div className="relative mx-auto max-w-5xl p-4">
+                        <div className="flex items-center justify-center">
+                            <img src="/square-light.svg" alt="Nimtable Logo" className="h-32 w-auto" />
                         </div>
                     </div>
                 </header>
@@ -83,11 +81,9 @@ export default function NotFound() {
                 {/* Footer */}
                 <footer className="border-t bg-background py-5 px-8">
                     <div className="mx-auto max-w-5xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div className="flex items-center gap-2">
-                            <div className="h-6 w-6 rounded-md bg-blue-600 flex items-center justify-center">
-                                <Mountain className="h-3.5 w-3.5 text-white" />
-                            </div>
-                            <p className="text-sm text-muted-foreground">Nimtable v1.0 — Managed Iceberg Made Simple</p>
+                        <div className="flex items-center gap-3">
+                            <Image src="/horizontal-dark.svg" alt="Nimtable Logo" width={120} height={24} className="h-6 w-auto" />
+                            <p className="text-sm text-muted-foreground">v1.0 — Managed Iceberg Made Simple</p>
                         </div>
                         <div className="flex items-center gap-4">
                             <Button variant="ghost" size="sm" className="text-sm gap-1.5 h-8 hover:bg-muted/80" asChild>

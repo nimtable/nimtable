@@ -4,12 +4,13 @@ import type React from "react"
 
 import { useState, useEffect, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { Mountain, User, Lock, AlertCircle } from "lucide-react"
+import { User, Lock, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useAuth } from "@/contexts/auth-context"
 import { useToast } from "@/hooks/use-toast"
+import Image from "next/image"
 
 // Add a pulse animation for error states
 const pulseErrorAnimation = `
@@ -149,13 +150,13 @@ export default function LoginPage() {
                         className="w-full md:w-1/2 text-center md:text-left mb-10 md:mb-0 animate-fade-in-up"
                         style={{ animationDelay: "0.2s" }}
                     >
-                        <div className="flex items-center justify-center md:justify-start gap-4 mb-8">
-                            <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30 animate-subtle-pulse">
-                                <Mountain className="h-8 w-8 text-white" />
-                            </div>
-                            <div
-                                className="h-10 w-[180px] bg-gradient-to-r from-white/95 to-white/85 rounded-md"
-                                aria-label="Nimtable logo placeholder"
+                        <div className="flex items-center justify-center md:justify-start -ml-10">
+                            <Image
+                                src="/horizontal-dark.svg"
+                                alt="Nimtable Logo"
+                                width={160}
+                                height={50}
+                                className="h-32 w-auto filter"
                             />
                         </div>
 
@@ -169,26 +170,6 @@ export default function LoginPage() {
                         <p className="text-blue-100/80 text-lg md:text-xl max-w-md mx-auto md:mx-0 leading-relaxed">
                             Access your Apache Iceberg tables with an intuitive, powerful interface designed for data professionals.
                         </p>
-
-                        {/* Added feature highlights */}
-                        <div className="mt-8 grid grid-cols-2 gap-4 max-w-md mx-auto md:mx-0">
-                            <div className="flex items-center gap-2 text-blue-200/90 text-sm">
-                                <div className="h-1.5 w-1.5 rounded-full bg-blue-400"></div>
-                                <span>Intuitive Navigation</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-blue-200/90 text-sm">
-                                <div className="h-1.5 w-1.5 rounded-full bg-blue-400"></div>
-                                <span>Powerful SQL Editor</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-blue-200/90 text-sm">
-                                <div className="h-1.5 w-1.5 rounded-full bg-blue-400"></div>
-                                <span>Schema Management</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-blue-200/90 text-sm">
-                                <div className="h-1.5 w-1.5 rounded-full bg-blue-400"></div>
-                                <span>Snapshot Control</span>
-                            </div>
-                        </div>
                     </div>
 
                     {/* Enhanced right side - Login form with improved styling and interactions */}
@@ -283,11 +264,9 @@ export default function LoginPage() {
 
                         {/* Enhanced footer text with better styling */}
                         <div className="mt-8 text-center">
-                            <div className="flex items-center justify-center gap-2">
-                                <div className="h-5 w-5 rounded-md bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-                                    <Mountain className="h-3 w-3 text-white" />
-                                </div>
-                                <p className="text-xs text-blue-200/70">Nimtable v1.0 — Managed Iceberg Made Simple</p>
+                            <div className="flex items-center justify-center">
+                                <img src="/horizontal-dark.svg" alt="Nimtable Logo" className="h-8 w-auto filter brightness-0 invert -mr-2 -mt-[2px]" />
+                                <p className="text-xs text-blue-200/70">v1.0 — Managed Iceberg Made Simple</p>
                             </div>
                         </div>
                     </div>

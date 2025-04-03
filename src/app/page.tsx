@@ -5,6 +5,7 @@ import { Database, Layers, Zap, Mountain, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { SidebarInset } from "@/components/ui/sidebar"
+import Image from "next/image"
 
 export default function Page() {
     const params = useParams<{ catalog: string }>()
@@ -21,13 +22,10 @@ export default function Page() {
                         <div className="absolute inset-0 bg-blue-50 dark:bg-blue-950/20 opacity-50"></div>
                         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 to-blue-600"></div>
                         <div className="relative mx-auto max-w-5xl p-8">
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="h-10 w-10 rounded-lg bg-blue-600 flex items-center justify-center shadow-sm">
-                                    <Mountain className="h-6 w-6 text-white" />
-                                </div>
-                                <div className="h-8 w-[140px] bg-foreground/90 rounded-md" aria-label="Nimtable logo placeholder" />
-                            </div>
-                            <h1 className="text-3xl font-bold mb-3 tracking-tight">Welcome to Nimtable</h1>
+                            <h1 className="text-3xl font-bold mb-3 tracking-tight flex items-center">
+                                Welcome to
+                                <Image src="/horizontal-light.svg" alt="Nimtable Logo" width={160} height={40} className="h-20 w-auto inline-block -ml-2" />
+                            </h1>
                             <p className="text-muted-foreground text-lg max-w-2xl">
                                 <span className="font-medium text-foreground">Managed Iceberg Made Simple</span> — Explore and manage
                                 your Apache Iceberg tables with an intuitive, powerful interface.
@@ -35,7 +33,9 @@ export default function Page() {
                             {catalog && (
                                 <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 rounded-full text-sm text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50">
                                     <Database className="h-3.5 w-3.5" />
-                                    <span>Active catalog: <strong>{catalog}</strong></span>
+                                    <span>
+                                        Active catalog: <strong>{catalog}</strong>
+                                    </span>
                                 </div>
                             )}
                         </div>
@@ -203,11 +203,9 @@ export default function Page() {
                     {/* Enhanced Footer */}
                     <footer className="border-t bg-background py-5 px-8">
                         <div className="mx-auto max-w-5xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-                            <div className="flex items-center gap-2">
-                                <div className="h-6 w-6 rounded-md bg-blue-600 flex items-center justify-center">
-                                    <Mountain className="h-3.5 w-3.5 text-white" />
-                                </div>
-                                <p className="text-sm text-muted-foreground">Nimtable v1.0 — Managed Iceberg Made Simple</p>
+                            <div className="flex items-center gap-3">
+                                <img src="/horizontal-light.svg" alt="Nimtable Logo" className="h-12 w-auto -mr-5" />
+                                <p className="text-sm text-muted-foreground">v1.0 — Managed Iceberg Made Simple</p>
                             </div>
                             <div className="flex items-center gap-4">
                                 <Button
@@ -246,21 +244,20 @@ export default function Page() {
                     <div className="absolute inset-0 bg-blue-50 dark:bg-blue-950/20 opacity-50"></div>
                     <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 to-blue-600"></div>
                     <div className="relative mx-auto max-w-5xl p-8">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="h-10 w-10 rounded-lg bg-blue-600 flex items-center justify-center shadow-sm">
-                                <Mountain className="h-6 w-6 text-white" />
-                            </div>
-                            <div className="h-8 w-[140px] bg-foreground/90 rounded-md" aria-label="Nimtable logo placeholder" />
-                        </div>
-                        <h1 className="text-3xl font-bold mb-3 tracking-tight">Welcome to Nimtable</h1>
+                        <h1 className="text-3xl font-bold mb-3 tracking-tight flex items-center">
+                            Welcome to
+                            <Image src="/horizontal-light.svg" alt="Nimtable Logo" width={160} height={40} className="h-20 w-auto inline-block -ml-2" />
+                        </h1>
                         <p className="text-muted-foreground text-lg max-w-2xl">
-                            <span className="font-medium text-foreground">Managed Iceberg Made Simple</span> — Explore and manage
-                            your Apache Iceberg tables with an intuitive, powerful interface.
+                            <span className="font-medium text-foreground">Managed Iceberg Made Simple</span> — Explore and manage your
+                            Apache Iceberg tables with an intuitive, powerful interface.
                         </p>
                         {catalog && (
                             <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 rounded-full text-sm text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50">
                                 <Database className="h-3.5 w-3.5" />
-                                <span>Active catalog: <strong>{catalog}</strong></span>
+                                <span>
+                                    Active catalog: <strong>{catalog}</strong>
+                                </span>
                             </div>
                         )}
                     </div>
@@ -428,11 +425,9 @@ export default function Page() {
                 {/* Enhanced Footer */}
                 <footer className="border-t bg-background py-5 px-8">
                     <div className="mx-auto max-w-5xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div className="flex items-center gap-2">
-                            <div className="h-6 w-6 rounded-md bg-blue-600 flex items-center justify-center">
-                                <Mountain className="h-3.5 w-3.5 text-white" />
-                            </div>
-                            <p className="text-sm text-muted-foreground">Nimtable v1.0 — Managed Iceberg Made Simple</p>
+                        <div className="flex items-center gap-3">
+                            <img src="/horizontal-dark.svg" alt="Nimtable Logo" className="h-6 w-auto" />
+                            <p className="text-sm text-muted-foreground">v1.0 — Managed Iceberg Made Simple</p>
                         </div>
                         <div className="flex items-center gap-4">
                             <Button
