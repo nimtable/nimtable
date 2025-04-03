@@ -82,7 +82,8 @@ export default function TablePage() {
     loadTableData(catalog, namespace, table)
       .then(data => {
         setTableData(data)
-        setSelectedSchemaId(data.metadata["current-schema-id"] || null)
+        const currentSchemaId = data.metadata["current-schema-id"]
+        setSelectedSchemaId(currentSchemaId || (data.metadata.schemas?.[0]?.["schema-id"] ?? null))
       })
       .catch((error) => {
         toast({
@@ -285,7 +286,7 @@ export default function TablePage() {
 
   const selectedSchema = tableData.metadata.schemas?.find(
     s => s["schema-id"] === selectedSchemaId
-  )
+  ) || schema
 
   return (
     <div className="flex flex-col h-full">
@@ -373,26 +374,32 @@ export default function TablePage() {
                   </div>
                 )}
               </div>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Required</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {selectedSchema?.fields.map((field: StructField) => (
-                    <TableRow key={field.id}>
-                      <TableCell>{field.id}</TableCell>
-                      <TableCell>{field.name}</TableCell>
-                      <TableCell>{typeof field.type === 'string' ? field.type : field.type.type}</TableCell>
-                      <TableCell>{field.required ? 'Yes' : 'No'}</TableCell>
+              {!tableData.metadata.schemas || tableData.metadata.schemas.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No schema defined for this table.</p>
+              ) : !selectedSchema ? (
+                <p className="text-sm text-muted-foreground">Failed to load schema.</p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>ID</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Required</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {selectedSchema.fields.map((field: StructField) => (
+                      <TableRow key={field.id}>
+                        <TableCell>{field.id}</TableCell>
+                        <TableCell>{field.name}</TableCell>
+                        <TableCell>{typeof field.type === 'string' ? field.type : field.type.type}</TableCell>
+                        <TableCell>{field.required ? 'Yes' : 'No'}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
             </div>
 
             {/* Partition Section */}
