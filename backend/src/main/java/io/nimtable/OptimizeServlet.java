@@ -19,6 +19,7 @@ package io.nimtable;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.nimtable.Config.Catalog;
+import io.nimtable.iceberg.IcebergProto.DataContentType;
 import io.nimtable.iceberg.IcebergProto.DataFileFormat;
 import io.nimtable.iceberg.IcebergProto.FileIoBuilder;
 import io.nimtable.iceberg.IcebergProto.FileScanTaskDescriptor;
@@ -31,6 +32,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,7 +41,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.iceberg.*;
+import org.apache.iceberg.Metrics;
 import org.apache.iceberg.catalog.TableIdentifier;
+import org.apache.iceberg.util.SortOrderUtil;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.slf4j.Logger;
@@ -83,7 +87,8 @@ public class OptimizeServlet extends HttpServlet {
                         .loadTable(TableIdentifier.of(namespace, tableName));
 
         List<FileScanTaskDescriptor> fileScanTasks = new ArrayList<>();
-        for (FileScanTask task : table.newScan().planFiles()) {
+        var inputFiles = table.newScan().planFiles();
+        for (FileScanTask task : inputFiles) {
             var file = task.file();
             fileScanTasks.add(
                     FileScanTaskDescriptor.newBuilder()
@@ -106,14 +111,14 @@ public class OptimizeServlet extends HttpServlet {
                             .build());
         }
 
-        var file_io_builder = FileIoBuilder.newBuilder();
+        var fileIoBuilder = FileIoBuilder.newBuilder();
         // set properties
         for (var entry : table.properties().entrySet()) {
-            file_io_builder.putProps(entry.getKey(), entry.getValue());
+            fileIoBuilder.putProps(entry.getKey(), entry.getValue());
         }
 
         // set scheme
-        file_io_builder.setSchemeStr(table.location());
+        fileIoBuilder.setSchemeStr(table.location());
 
         // build schema
         var schema =
@@ -130,7 +135,7 @@ public class OptimizeServlet extends HttpServlet {
                 RewriteFilesRequest.newBuilder()
                         .addAllFileScanTaskDescriptor(fileScanTasks)
                         .setDirPath(table.location())
-                        .setFileIoBuilder(file_io_builder)
+                        .setFileIoBuilder(fileIoBuilder)
                         .setSchema(schema)
                         .build();
 
@@ -139,6 +144,77 @@ public class OptimizeServlet extends HttpServlet {
         try (IcebergCompactionClient client = new IcebergCompactionClient("127.0.0.1", 7777)) {
             RewriteFilesResponse rewrite_files_stat_response = client.rewriteFiles(request);
             var rewrite_files_stat = rewrite_files_stat_response.getStat();
+
+            List<DataFile> dataFiles = new ArrayList<>();
+            List<DeleteFile> deleteFiles = new ArrayList<>();
+            for (var protoFile : rewrite_files_stat_response.getRewrittenFilesList()) {
+                // TODO(li0k): lowerBounds and upperBounds are not supported yet
+                var metrics =
+                        new Metrics(
+                                protoFile.getRecordCount(),
+                                protoFile.getColumnSizesMap(),
+                                protoFile.getValueCountsMap(),
+                                protoFile.getNullValueCountsMap(),
+                                protoFile.getNanValueCountsMap());
+                if (protoFile.getContent() == DataContentType.DATA) {
+                    var dataFile =
+                            DataFiles.builder(table.spec())
+                                    .withPath(protoFile.getFilePath())
+                                    .withFormat(
+                                            FileFormat.valueOf(protoFile.getFileFormat().name()))
+                                    .withRecordCount(protoFile.getRecordCount())
+                                    .withFileSizeInBytes(protoFile.getFileSizeInBytes())
+                                    .withMetrics(metrics)
+                                    .withEncryptionKeyMetadata(
+                                            ByteBuffer.wrap(
+                                                    protoFile.getKeyMetadata().toByteArray()))
+                                    .withSplitOffsets(protoFile.getSplitOffsetsList())
+                                    .withSortOrder(SortOrderUtil.buildSortOrder(table))
+                                    .build();
+                    dataFiles.add(dataFile);
+                } else if (protoFile.getContent() == DataContentType.POSITION_DELETES) {
+                    var deleteFile =
+                            FileMetadata.deleteFileBuilder(table.spec())
+                                    .ofPositionDeletes()
+                                    .withPath(protoFile.getFilePath())
+                                    .withFormat(
+                                            FileFormat.valueOf(protoFile.getFileFormat().name()))
+                                    .withRecordCount(protoFile.getRecordCount())
+                                    .withFileSizeInBytes(protoFile.getFileSizeInBytes())
+                                    .withMetrics(metrics)
+                                    .withEncryptionKeyMetadata(
+                                            ByteBuffer.wrap(
+                                                    protoFile.getKeyMetadata().toByteArray()))
+                                    .withSplitOffsets(protoFile.getSplitOffsetsList())
+                                    .withSortOrder(SortOrderUtil.buildSortOrder(table))
+                                    .build();
+                    deleteFiles.add(deleteFile);
+                } else if (protoFile.getContent() == DataContentType.EQUALIRY_DELETES) {
+                    var deleteFile =
+                            FileMetadata.deleteFileBuilder(table.spec())
+                                    .ofEqualityDeletes()
+                                    .withPath(protoFile.getFilePath())
+                                    .withFormat(
+                                            FileFormat.valueOf(protoFile.getFileFormat().name()))
+                                    .withRecordCount(protoFile.getRecordCount())
+                                    .withFileSizeInBytes(protoFile.getFileSizeInBytes())
+                                    .withMetrics(metrics)
+                                    .withEncryptionKeyMetadata(
+                                            ByteBuffer.wrap(
+                                                    protoFile.getKeyMetadata().toByteArray()))
+                                    .withSplitOffsets(protoFile.getSplitOffsetsList())
+                                    .withSortOrder(SortOrderUtil.buildSortOrder(table))
+                                    .build();
+                    deleteFiles.add(deleteFile);
+                } else {
+                    throw new RuntimeException(
+                            "Unsupported data content type: " + protoFile.getContent());
+                }
+            }
+
+            // commit RewriteFiles Action to iceberg catalog
+            var rewrite_files_action = table.newRewrite();
+
             return new CompactionResult(
                     rewrite_files_stat.getRewrittenFilesCount(),
                     rewrite_files_stat.getAddedFilesCount(),

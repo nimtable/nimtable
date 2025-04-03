@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 package io.nimtable;
 
 import io.nimtable.iceberg.IcebergProto.MapType;
