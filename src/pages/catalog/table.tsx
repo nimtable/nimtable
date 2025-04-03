@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { ChevronRight, MoreVertical, Table as TableIcon, PanelRightClose, PanelRightOpen, Trash2, PenSquare, Play, FileText, SettingsIcon } from "lucide-react"
+import { ChevronRight, MoreVertical, Table as TableIcon, PanelRightClose, PanelRightOpen, Trash2, PenSquare, Play, FileText, SettingsIcon, Plus, Minus } from "lucide-react"
 import { Link } from "react-router-dom"
 
 import { Api, LoadTableResult, StructField } from "@/lib/api"
@@ -74,10 +74,16 @@ export default function TablePage() {
   const [manifestDetailsData, setManifestDetailsData] = useState<any>(null)
   const [manifestDetailsLoading, setManifestDetailsLoading] = useState(false)
   const [manifestDetailsError, setManifestDetailsError] = useState<string | null>(null)
+  const [showSchemaHistoryDialog, setShowSchemaHistoryDialog] = useState(false)
+  const [selectedHistorySchema, setSelectedHistorySchema] = useState<any | null>(null)
+  const [selectedSchemaId, setSelectedSchemaId] = useState<number | null>(null)
 
   useEffect(() => {
     loadTableData(catalog, namespace, table)
-      .then(setTableData)
+      .then(data => {
+        setTableData(data)
+        setSelectedSchemaId(data.metadata["current-schema-id"] || null)
+      })
       .catch((error) => {
         toast({
           variant: "destructive",
@@ -233,10 +239,52 @@ export default function TablePage() {
     }
   }
 
+  // Function to get schema diff
+  const getSchemaDiff = (schema1: { fields: StructField[] } | null | undefined, schema2: { fields: StructField[] } | null | undefined) => {
+    if (!schema1 || !schema2) return { added: [], removed: [], modified: [] }
+
+    const fields1 = new Map(schema1.fields.map((f: StructField) => [f.id, f]))
+    const fields2 = new Map(schema2.fields.map((f: StructField) => [f.id, f]))
+
+    const added = schema2.fields.filter((f: StructField) => !fields1.has(f.id))
+    const removed = schema1.fields.filter((f: StructField) => !fields2.has(f.id))
+    const modified = schema2.fields.filter((f: StructField) => {
+      const field1 = fields1.get(f.id)
+      return field1 && (
+        field1.name !== f.name ||
+        JSON.stringify(field1.type) !== JSON.stringify(f.type) ||
+        field1.required !== f.required
+      )
+    })
+
+    return { added, removed, modified }
+  }
+
+  // Function to format field type
+  const formatFieldType = (type: any): string => {
+    if (typeof type === 'string') return type
+    if (type.type === 'struct') return 'struct'
+    if (type.type === 'list') return `list<${formatFieldType(type.element)}>`
+    if (type.type === 'map') return `map<${formatFieldType(type.key)}, ${formatFieldType(type.value)}>`
+    return JSON.stringify(type)
+  }
+
+  // Function to handle showing schema history
+  const handleShowSchemaHistory = (schema: { fields: StructField[] } | undefined) => {
+    if (schema) {
+      setSelectedHistorySchema(schema)
+      setShowSchemaHistoryDialog(true)
+    }
+  }
+
   if (!tableData) return null
 
   const schema = tableData.metadata.schemas?.find(
     s => s["schema-id"] === tableData.metadata["current-schema-id"]
+  )
+
+  const selectedSchema = tableData.metadata.schemas?.find(
+    s => s["schema-id"] === selectedSchemaId
   )
 
   return (
@@ -296,7 +344,35 @@ export default function TablePage() {
           <div className="p-6 space-y-8">
             {/* Schema Section */}
             <div>
-              <h2 className="text-lg font-semibold mb-4">Schema</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold">Schema</h2>
+                {tableData.metadata.schemas && tableData.metadata.schemas.length > 1 && (
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="schema-select" className="text-sm">Schema Version:</Label>
+                    <select
+                      id="schema-select"
+                      className="h-9 w-[200px] rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      value={selectedSchemaId || ''}
+                      onChange={(e) => setSelectedSchemaId(Number(e.target.value))}
+                    >
+                      {tableData.metadata.schemas.map((schema) => (
+                        <option key={schema["schema-id"]} value={schema["schema-id"]}>
+                          Schema {schema["schema-id"]} {schema["schema-id"] === tableData.metadata["current-schema-id"] ? '(Current)' : ''}
+                        </option>
+                      ))}
+                    </select>
+                    {selectedSchemaId !== tableData.metadata["current-schema-id"] && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handleShowSchemaHistory(selectedSchema)}
+                      >
+                        View Diff
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -307,7 +383,7 @@ export default function TablePage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {schema?.fields.map((field: StructField) => (
+                  {selectedSchema?.fields.map((field: StructField) => (
                     <TableRow key={field.id}>
                       <TableCell>{field.id}</TableCell>
                       <TableCell>{field.name}</TableCell>
@@ -771,6 +847,108 @@ export default function TablePage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowManifestDetailsDialog(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Schema History Dialog */}
+      <Dialog open={showSchemaHistoryDialog} onOpenChange={setShowSchemaHistoryDialog}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Schema Diff</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            {selectedHistorySchema ? (
+              <div>
+                <div className="border rounded-md overflow-hidden">
+                  <div className="font-mono text-sm">
+                    {selectedHistorySchema.fields.map((oldField: StructField) => {
+                      const newField = schema?.fields.find((f: StructField) => f.id === oldField.id)
+                      if (!newField) {
+                        // Field was removed
+                        return (
+                          <div key={oldField.id} className="flex items-center gap-2 p-2 bg-red-50/50">
+                            <span className="text-red-600">-</span>
+                            <span className="flex-1">
+                              <span className="font-medium">{oldField.name}</span>
+                              <span className="text-muted-foreground">: {formatFieldType(oldField.type)}</span>
+                              <span className="text-muted-foreground"> (ID: {oldField.id})</span>
+                              <span className="text-muted-foreground"> {oldField.required ? '(required)' : '(optional)'}</span>
+                            </span>
+                          </div>
+                        )
+                      }
+
+                      const isModified = 
+                        oldField.name !== newField.name ||
+                        JSON.stringify(oldField.type) !== JSON.stringify(newField.type) ||
+                        oldField.required !== newField.required
+
+                      if (isModified) {
+                        // Field was modified
+                        return (
+                          <div key={oldField.id} className="flex flex-col gap-1 p-2 bg-yellow-50/50">
+                            <div className="flex items-center gap-2">
+                              <span className="text-yellow-600">~</span>
+                              <span className="flex-1">
+                                <span className="font-medium">{newField.name}</span>
+                                <span className="text-muted-foreground"> (ID: {newField.id})</span>
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 pl-6">
+                              <span className="text-red-600">-</span>
+                              <span className="text-muted-foreground">
+                                {oldField.name}: {formatFieldType(oldField.type)} {oldField.required ? '(required)' : '(optional)'}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 pl-6">
+                              <span className="text-green-600">+</span>
+                              <span className="text-muted-foreground">
+                                {newField.name}: {formatFieldType(newField.type)} {newField.required ? '(required)' : '(optional)'}
+                              </span>
+                            </div>
+                          </div>
+                        )
+                      }
+
+                      // Field is unchanged
+                      return (
+                        <div key={oldField.id} className="flex items-center gap-2 p-2">
+                          <span className="text-muted-foreground"> </span>
+                          <span className="flex-1">
+                            <span className="font-medium">{oldField.name}</span>
+                            <span className="text-muted-foreground">: {formatFieldType(oldField.type)}</span>
+                            <span className="text-muted-foreground"> (ID: {oldField.id})</span>
+                            <span className="text-muted-foreground"> {oldField.required ? '(required)' : '(optional)'}</span>
+                          </span>
+                        </div>
+                      )
+                    })}
+                    {/* Show added fields that don't exist in the old schema */}
+                    {schema?.fields
+                      .filter((newField: StructField) => !selectedHistorySchema.fields.some((f: StructField) => f.id === newField.id))
+                      .map((field: StructField) => (
+                        <div key={field.id} className="flex items-center gap-2 p-2 bg-green-50/50">
+                          <span className="text-green-600">+</span>
+                          <span className="flex-1">
+                            <span className="font-medium">{field.name}</span>
+                            <span className="text-muted-foreground">: {formatFieldType(field.type)}</span>
+                            <span className="text-muted-foreground"> (ID: {field.id})</span>
+                            <span className="text-muted-foreground"> {field.required ? '(required)' : '(optional)'}</span>
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-4">No schema history available</div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSchemaHistoryDialog(false)}>
               Close
             </Button>
           </DialogFooter>
