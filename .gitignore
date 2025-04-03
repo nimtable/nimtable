@@ -29,6 +29,10 @@ next-env.d.ts
 # test sqlite catalog
 catalog.db
 
+# next
+.next/
+out/
+
 .env
 .env.*
 !.env.example

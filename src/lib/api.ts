@@ -1,19 +1,3 @@
-/*
- * Copyright 2025 Nimtable
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 /* eslint-disable */
 /* tslint:disable */
 /*
@@ -32,6 +16,7 @@
  * - Modified `request()` to throw `r.error` instead of `data` if the response is not ok.
  * - Modified `response.json()` to parse `snapshot-id` as strings because it may be greater than MAX_SAFE_INTEGER
  */
+
 type UtilRequiredKeys<T, K extends keyof T> = Omit<T, K> & Required<Pick<T, K>>;
 
 /** JSON error payload returned in a response with further details on the error */
@@ -1697,6 +1682,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @secure
      */
     listNamespaces: (
+      prefix: string,
       query?: {
         /**
          * An opaque token that allows clients to make use of pagination for list APIs (e.g. ListTables). Clients may initiate the first paginated request by sending an empty query parameter `pageToken` to the server.
@@ -1720,7 +1706,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
       params: RequestParams = {},
     ) =>
       this.request<ListNamespacesResponse, IcebergErrorResponse>({
-        path: `/v1/namespaces`,
+        path: `/v1/${prefix}/namespaces`,
         method: "GET",
         query: query,
         secure: true,
@@ -1737,9 +1723,9 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @request POST:/v1/{prefix}/namespaces
      * @secure
      */
-    createNamespace: ( data: CreateNamespaceRequest, params: RequestParams = {}) =>
+    createNamespace: (prefix: string, data: CreateNamespaceRequest, params: RequestParams = {}) =>
       this.request<CreateNamespaceResponse, IcebergErrorResponse | ErrorModel>({
-        path: `/v1/namespaces`,
+        path: `/v1/${prefix}/namespaces`,
         method: "POST",
         body: data,
         secure: true,
@@ -1757,9 +1743,9 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @request GET:/v1/{prefix}/namespaces/{namespace}
      * @secure
      */
-    loadNamespaceMetadata: ( namespace: string, params: RequestParams = {}) =>
+    loadNamespaceMetadata: (prefix: string, namespace: string, params: RequestParams = {}) =>
       this.request<GetNamespaceResponse, IcebergErrorResponse>({
-        path: `/v1/namespaces/${namespace}`,
+        path: `/v1/${prefix}/namespaces/${namespace}`,
         method: "GET",
         secure: true,
         format: "json",
@@ -1775,9 +1761,9 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @request HEAD:/v1/{prefix}/namespaces/{namespace}
      * @secure
      */
-    namespaceExists: ( namespace: string, params: RequestParams = {}) =>
+    namespaceExists: (prefix: string, namespace: string, params: RequestParams = {}) =>
       this.request<void, IcebergErrorResponse>({
-        path: `/v1/namespaces/${namespace}`,
+        path: `/v1/${prefix}/namespaces/${namespace}`,
         method: "HEAD",
         secure: true,
         format: "json",
@@ -1793,9 +1779,9 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @request DELETE:/v1/{prefix}/namespaces/{namespace}
      * @secure
      */
-    dropNamespace: ( namespace: string, params: RequestParams = {}) =>
+    dropNamespace: (prefix: string, namespace: string, params: RequestParams = {}) =>
       this.request<void, IcebergErrorResponse>({
-        path: `/v1/namespaces/${namespace}`,
+        path: `/v1/${prefix}/namespaces/${namespace}`,
         method: "DELETE",
         secure: true,
         format: "json",
@@ -1812,12 +1798,13 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @secure
      */
     updateProperties: (
+      prefix: string,
       namespace: string,
       data: UpdateNamespacePropertiesRequest,
       params: RequestParams = {},
     ) =>
       this.request<UpdateNamespacePropertiesResponse, IcebergErrorResponse | ErrorModel>({
-        path: `/v1/namespaces/${namespace}/properties`,
+        path: `/v1/${prefix}/namespaces/${namespace}/properties`,
         method: "POST",
         body: data,
         secure: true,
@@ -1836,6 +1823,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @secure
      */
     listTables: (
+      prefix: string,
       namespace: string,
       query?: {
         /**
@@ -1855,7 +1843,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
       params: RequestParams = {},
     ) =>
       this.request<ListTablesResponse, IcebergErrorResponse>({
-        path: `/v1/namespaces/${namespace}/tables`,
+        path: `/v1/${prefix}/namespaces/${namespace}/tables`,
         method: "GET",
         query: query,
         secure: true,
@@ -1872,9 +1860,9 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @request POST:/v1/{prefix}/namespaces/{namespace}/tables
      * @secure
      */
-    createTable: ( namespace: string, data: CreateTableRequest, params: RequestParams = {}) =>
+    createTable: (prefix: string, namespace: string, data: CreateTableRequest, params: RequestParams = {}) =>
       this.request<LoadTableResult, IcebergErrorResponse>({
-        path: `/v1/namespaces/${namespace}/tables`,
+        path: `/v1/${prefix}/namespaces/${namespace}/tables`,
         method: "POST",
         body: data,
         secure: true,
@@ -1893,13 +1881,14 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @secure
      */
     planTableScan: (
+      prefix: string,
       namespace: string,
       table: string,
       data: PlanTableScanRequest,
       params: RequestParams = {},
     ) =>
       this.request<PlanTableScanResult, IcebergErrorResponse | ErrorModel>({
-        path: `/v1/namespaces/${namespace}/tables/${table}/plan`,
+        path: `/v1/${prefix}/namespaces/${namespace}/tables/${table}/plan`,
         method: "POST",
         body: data,
         secure: true,
@@ -1918,13 +1907,14 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @secure
      */
     fetchPlanningResult: (
+      prefix: string,
       namespace: string,
       table: string,
       planId: string,
       params: RequestParams = {},
     ) =>
       this.request<FetchPlanningResult, IcebergErrorResponse>({
-        path: `/v1/namespaces/${namespace}/tables/${table}/plan/${planId}`,
+        path: `/v1/${prefix}/namespaces/${namespace}/tables/${table}/plan/${planId}`,
         method: "GET",
         secure: true,
         format: "json",
@@ -1940,9 +1930,9 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @request DELETE:/v1/{prefix}/namespaces/{namespace}/tables/{table}/plan/{plan-id}
      * @secure
      */
-    cancelPlanning: ( namespace: string, table: string, planId: string, params: RequestParams = {}) =>
+    cancelPlanning: (prefix: string, namespace: string, table: string, planId: string, params: RequestParams = {}) =>
       this.request<void, IcebergErrorResponse>({
-        path: `/v1/namespaces/${namespace}/tables/${table}/plan/${planId}`,
+        path: `/v1/${prefix}/namespaces/${namespace}/tables/${table}/plan/${planId}`,
         method: "DELETE",
         secure: true,
         format: "json",
@@ -1959,13 +1949,14 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @secure
      */
     fetchScanTasks: (
+      prefix: string,
       namespace: string,
       table: string,
       data: FetchScanTasksRequest,
       params: RequestParams = {},
     ) =>
       this.request<FetchScanTasksResult, IcebergErrorResponse>({
-        path: `/v1/namespaces/${namespace}/tables/${table}/tasks`,
+        path: `/v1/${prefix}/namespaces/${namespace}/tables/${table}/tasks`,
         method: "POST",
         body: data,
         secure: true,
@@ -1983,9 +1974,9 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @request POST:/v1/{prefix}/namespaces/{namespace}/register
      * @secure
      */
-    registerTable: ( namespace: string, data: RegisterTableRequest, params: RequestParams = {}) =>
+    registerTable: (prefix: string, namespace: string, data: RegisterTableRequest, params: RequestParams = {}) =>
       this.request<LoadTableResult, IcebergErrorResponse>({
-        path: `/v1/namespaces/${namespace}/register`,
+        path: `/v1/${prefix}/namespaces/${namespace}/register`,
         method: "POST",
         body: data,
         secure: true,
@@ -2004,6 +1995,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @secure
      */
     loadTable: (
+      prefix: string,
       namespace: string,
       table: string,
       query?: {
@@ -2016,7 +2008,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
       params: RequestParams = {},
     ) =>
       this.request<LoadTableResult, void | IcebergErrorResponse>({
-        path: `/v1/namespaces/${namespace}/tables/${table}`,
+        path: `/v1/${prefix}/namespaces/${namespace}/tables/${table}`,
         method: "GET",
         query: query,
         secure: true,
@@ -2034,13 +2026,14 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @secure
      */
     updateTable: (
+      prefix: string,
       namespace: string,
       table: string,
       data: CommitTableRequest,
       params: RequestParams = {},
     ) =>
       this.request<CommitTableResponse, IcebergErrorResponse>({
-        path: `/v1/namespaces/${namespace}/tables/${table}`,
+        path: `/v1/${prefix}/namespaces/${namespace}/tables/${table}`,
         method: "POST",
         body: data,
         secure: true,
@@ -2059,6 +2052,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @secure
      */
     dropTable: (
+      prefix: string,
       namespace: string,
       table: string,
       query?: {
@@ -2071,7 +2065,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
       params: RequestParams = {},
     ) =>
       this.request<void, IcebergErrorResponse>({
-        path: `/v1/namespaces/${namespace}/tables/${table}`,
+        path: `/v1/${prefix}/namespaces/${namespace}/tables/${table}`,
         method: "DELETE",
         query: query,
         secure: true,
@@ -2088,9 +2082,9 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @request HEAD:/v1/{prefix}/namespaces/{namespace}/tables/{table}
      * @secure
      */
-    tableExists: ( namespace: string, table: string, params: RequestParams = {}) =>
+    tableExists: (prefix: string, namespace: string, table: string, params: RequestParams = {}) =>
       this.request<void, IcebergErrorResponse>({
-        path: `/v1/namespaces/${namespace}/tables/${table}`,
+        path: `/v1/${prefix}/namespaces/${namespace}/tables/${table}`,
         method: "HEAD",
         secure: true,
         format: "json",
@@ -2106,9 +2100,9 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @request GET:/v1/{prefix}/namespaces/{namespace}/tables/{table}/credentials
      * @secure
      */
-    loadCredentials: ( namespace: string, table: string, params: RequestParams = {}) =>
+    loadCredentials: (prefix: string, namespace: string, table: string, params: RequestParams = {}) =>
       this.request<LoadCredentialsResponse, IcebergErrorResponse>({
-        path: `/v1/namespaces/${namespace}/tables/${table}/credentials`,
+        path: `/v1/${prefix}/namespaces/${namespace}/tables/${table}/credentials`,
         method: "GET",
         secure: true,
         format: "json",
@@ -2124,9 +2118,9 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @request POST:/v1/{prefix}/tables/rename
      * @secure
      */
-    renameTable: ( data: RenameTableRequest, params: RequestParams = {}) =>
+    renameTable: (prefix: string, data: RenameTableRequest, params: RequestParams = {}) =>
       this.request<void, IcebergErrorResponse | ErrorModel>({
-        path: `/v1/tables/rename`,
+        path: `/v1/${prefix}/tables/rename`,
         method: "POST",
         body: data,
         secure: true,
@@ -2145,13 +2139,14 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @secure
      */
     reportMetrics: (
+      prefix: string,
       namespace: string,
       table: string,
       data: ReportMetricsRequest,
       params: RequestParams = {},
     ) =>
       this.request<void, IcebergErrorResponse>({
-        path: `/v1/namespaces/${namespace}/tables/${table}/metrics`,
+        path: `/v1/${prefix}/namespaces/${namespace}/tables/${table}/metrics`,
         method: "POST",
         body: data,
         secure: true,
@@ -2169,9 +2164,9 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @request POST:/v1/{prefix}/transactions/commit
      * @secure
      */
-    commitTransaction: ( data: CommitTransactionRequest, params: RequestParams = {}) =>
+    commitTransaction: (prefix: string, data: CommitTransactionRequest, params: RequestParams = {}) =>
       this.request<void, IcebergErrorResponse>({
-        path: `/v1/transactions/commit`,
+        path: `/v1/${prefix}/transactions/commit`,
         method: "POST",
         body: data,
         secure: true,
@@ -2190,6 +2185,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @secure
      */
     listViews: (
+      prefix: string,
       namespace: string,
       query?: {
         /**
@@ -2209,7 +2205,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
       params: RequestParams = {},
     ) =>
       this.request<ListTablesResponse, IcebergErrorResponse | ErrorModel>({
-        path: `/v1/namespaces/${namespace}/views`,
+        path: `/v1/${prefix}/namespaces/${namespace}/views`,
         method: "GET",
         query: query,
         secure: true,
@@ -2226,9 +2222,9 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @request POST:/v1/{prefix}/namespaces/{namespace}/views
      * @secure
      */
-    createView: ( namespace: string, data: CreateViewRequest, params: RequestParams = {}) =>
+    createView: (prefix: string, namespace: string, data: CreateViewRequest, params: RequestParams = {}) =>
       this.request<LoadViewResult, IcebergErrorResponse | ErrorModel>({
-        path: `/v1/namespaces/${namespace}/views`,
+        path: `/v1/${prefix}/namespaces/${namespace}/views`,
         method: "POST",
         body: data,
         secure: true,
@@ -2246,9 +2242,9 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @request GET:/v1/{prefix}/namespaces/{namespace}/views/{view}
      * @secure
      */
-    loadView: ( namespace: string, view: string, params: RequestParams = {}) =>
+    loadView: (prefix: string, namespace: string, view: string, params: RequestParams = {}) =>
       this.request<LoadViewResult, IcebergErrorResponse | ErrorModel>({
-        path: `/v1/namespaces/${namespace}/views/${view}`,
+        path: `/v1/${prefix}/namespaces/${namespace}/views/${view}`,
         method: "GET",
         secure: true,
         format: "json",
@@ -2265,13 +2261,14 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @secure
      */
     replaceView: (
+      prefix: string,
       namespace: string,
       view: string,
       data: CommitViewRequest,
       params: RequestParams = {},
     ) =>
       this.request<LoadViewResult, IcebergErrorResponse | ErrorModel>({
-        path: `/v1/namespaces/${namespace}/views/${view}`,
+        path: `/v1/${prefix}/namespaces/${namespace}/views/${view}`,
         method: "POST",
         body: data,
         secure: true,
@@ -2289,9 +2286,9 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @request DELETE:/v1/{prefix}/namespaces/{namespace}/views/{view}
      * @secure
      */
-    dropView: ( namespace: string, view: string, params: RequestParams = {}) =>
+    dropView: (prefix: string, namespace: string, view: string, params: RequestParams = {}) =>
       this.request<void, IcebergErrorResponse | ErrorModel>({
-        path: `/v1/namespaces/${namespace}/views/${view}`,
+        path: `/v1/${prefix}/namespaces/${namespace}/views/${view}`,
         method: "DELETE",
         secure: true,
         format: "json",
@@ -2307,9 +2304,9 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @request HEAD:/v1/{prefix}/namespaces/{namespace}/views/{view}
      * @secure
      */
-    viewExists: ( namespace: string, view: string, params: RequestParams = {}) =>
+    viewExists: (prefix: string, namespace: string, view: string, params: RequestParams = {}) =>
       this.request<void, void | IcebergErrorResponse>({
-        path: `/v1/namespaces/${namespace}/views/${view}`,
+        path: `/v1/${prefix}/namespaces/${namespace}/views/${view}`,
         method: "HEAD",
         secure: true,
         format: "json",
@@ -2325,9 +2322,9 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @request POST:/v1/{prefix}/views/rename
      * @secure
      */
-    renameView: ( data: RenameTableRequest, params: RequestParams = {}) =>
+    renameView: (prefix: string, data: RenameTableRequest, params: RequestParams = {}) =>
       this.request<void, IcebergErrorResponse | ErrorModel>({
-        path: `/v1/views/rename`,
+        path: `/v1/${prefix}/views/rename`,
         method: "POST",
         body: data,
         secure: true,

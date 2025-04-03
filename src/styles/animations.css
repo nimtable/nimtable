@@ -1,0 +1,368 @@
+@keyframes gradient-x {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.animate-gradient-x {
+    background-size: 200% 100%;
+    animation: gradient-x 8s ease infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes bounce {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-4px);
+    }
+}
+
+.animate-bounce {
+    animation: bounce 1s infinite;
+}
+
+/* Add these animation classes to your existing animations.css file */
+
+@keyframes pulse-slow {
+
+    0%,
+    100% {
+        opacity: 0.4;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.6;
+        transform: scale(1.05);
+    }
+}
+
+@keyframes pulse-slower {
+
+    0%,
+    100% {
+        opacity: 0.3;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.5;
+        transform: scale(1.08);
+    }
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-20px);
+    }
+}
+
+.animate-pulse-slow {
+    animation: pulse-slow 8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-pulse-slower {
+    animation: pulse-slower 12s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-float {
+    animation: float 15s ease-in-out infinite;
+}
+
+/* Add these new animations to the existing animations.css file */
+
+@keyframes float-reverse {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(20px);
+    }
+}
+
+@keyframes subtle-pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.03);
+        opacity: 0.9;
+    }
+}
+
+@keyframes fade-in-up {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.animate-float-reverse {
+    animation: float-reverse 18s ease-in-out infinite;
+}
+
+.animate-subtle-pulse {
+    animation: subtle-pulse 3s ease-in-out infinite;
+}
+
+.animate-fade-in-up {
+    animation: fade-in-up 0.8s ease-out forwards;
+}
+
+.animate-fade-in {
+    animation: fade-in 0.5s ease-out forwards;
+}
+
+/* Add these flowing animations to the existing animations.css file */
+
+@keyframes flow-x {
+    0% {
+        transform: translateX(0) scale(1);
+    }
+
+    50% {
+        transform: translateX(20px) scale(1.02);
+    }
+
+    100% {
+        transform: translateX(0) scale(1);
+    }
+}
+
+@keyframes flow-y {
+    0% {
+        transform: translateY(0) scale(1);
+    }
+
+    50% {
+        transform: translateY(15px) scale(1.03);
+    }
+
+    100% {
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes flow-diagonal {
+    0% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    50% {
+        transform: translate(15px, 15px) scale(1.02);
+    }
+
+    100% {
+        transform: translate(0, 0) scale(1);
+    }
+}
+
+@keyframes flow-diagonal-reverse {
+    0% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    50% {
+        transform: translate(-15px, 15px) scale(1.02);
+    }
+
+    100% {
+        transform: translate(0, 0) scale(1);
+    }
+}
+
+.animate-flow-x {
+    animation: flow-x 20s ease-in-out infinite;
+}
+
+.animate-flow-y {
+    animation: flow-y 18s ease-in-out infinite;
+}
+
+.animate-flow-diagonal {
+    animation: flow-diagonal 25s ease-in-out infinite;
+}
+
+.animate-flow-diagonal-reverse {
+    animation: flow-diagonal-reverse 22s ease-in-out infinite;
+}
+
+/* Add a subtle wave effect animation */
+@keyframes wave {
+
+    0%,
+    100% {
+        border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+    }
+
+    25% {
+        border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%;
+    }
+
+    50% {
+        border-radius: 50% 60% 30% 40% / 40% 30% 70% 60%;
+    }
+
+    75% {
+        border-radius: 40% 60% 70% 30% / 60% 40% 30% 60%;
+    }
+}
+
+.animate-wave {
+    animation: wave 20s ease-in-out infinite;
+}
+
+/* SQL Editor Syntax Highlighting Enhancements */
+.sql-editor-container .token.keyword {
+    font-weight: 600;
+}
+
+.sql-editor-container .token.operator {
+    background: transparent;
+}
+
+.sql-editor-container .token.function {
+    font-style: normal;
+}
+
+/* Ensure good contrast in both light and dark modes */
+.light .sql-editor-container .token.comment {
+    color: #5c6370;
+}
+
+.dark .sql-editor-container .token.comment {
+    color: #7f848e;
+}
+
+.light .sql-editor-container .token.string {
+    color: #50a14f;
+}
+
+.dark .sql-editor-container .token.string {
+    color: #98c379;
+}
+
+/* Query Results Table Enhancements */
+.query-results-table th {
+    font-weight: 600;
+    color: var(--foreground);
+}
+
+.query-results-table td {
+    vertical-align: middle;
+}
+
+.query-results-table .tabular-nums {
+    font-feature-settings: "tnum";
+    font-variant-numeric: tabular-nums;
+}
+
+/* Zebra striping for better readability */
+.query-results-table tr:nth-child(even) {
+    background-color: var(--muted);
+}
+
+/* Hover effect for rows */
+.query-results-table tr:hover {
+    background-color: var(--accent);
+}
+
+/* Add a pulse animation for error states */
+@keyframes pulse-once {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2);
+    }
+}
+
+.animate-pulse-once {
+    animation: pulse-once 0.8s ease-out;
+}
+
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    10%,
+    30%,
+    50%,
+    70%,
+    90% {
+        transform: translateX(-2px);
+    }
+
+    20%,
+    40%,
+    60%,
+    80% {
+        transform: translateX(2px);
+    }
+}
+
+.animate-shake {
+    animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
