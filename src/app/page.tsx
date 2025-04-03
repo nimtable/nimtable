@@ -1,7 +1,7 @@
 "use client"
 
 import { useParams } from "next/navigation"
-import { Database, Layers, Zap, Mountain, ExternalLink } from "lucide-react"
+import { Database, BarChart3, ExternalLink, Layers, Gauge } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { SidebarInset } from "@/components/ui/sidebar"
@@ -24,7 +24,13 @@ export default function Page() {
                         <div className="relative mx-auto max-w-5xl p-8">
                             <h1 className="text-3xl font-bold mb-3 tracking-tight flex items-center">
                                 Welcome to
-                                <Image src="/horizontal-light.svg" alt="Nimtable Logo" width={160} height={40} className="h-20 w-auto inline-block -ml-2" />
+                                <Image
+                                    src="/horizontal-light.svg"
+                                    alt="Nimtable Logo"
+                                    width={160}
+                                    height={40}
+                                    className="h-20 w-auto inline-block -ml-2"
+                                />
                             </h1>
                             <p className="text-muted-foreground text-lg max-w-2xl">
                                 <span className="font-medium text-foreground">Managed Iceberg Made Simple</span> — Explore and manage
@@ -119,7 +125,7 @@ export default function Page() {
                                 </Card>
                             </section>
 
-                            {/* Enhanced Features section */}
+                            {/* Updated Features section */}
                             <section className="mb-8">
                                 <div className="flex items-center gap-2.5 mb-5">
                                     <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
@@ -127,48 +133,53 @@ export default function Page() {
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                                    {/* Feature 1: Simplify Iceberg Operations */}
                                     <Card className="bg-background shadow-md border-muted/60 overflow-hidden transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
                                         <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-blue-400 via-blue-500 to-blue-400"></div>
                                         <CardHeader>
                                             <div className="p-2.5 bg-blue-50 dark:bg-blue-950/30 rounded-lg w-fit mb-3">
-                                                <Mountain className="h-5 w-5 text-blue-600" />
+                                                <BarChart3 className="h-5 w-5 text-blue-600" />
                                             </div>
-                                            <CardTitle className="text-base">Iceberg Management</CardTitle>
+                                            <CardTitle className="text-base">Simplify Iceberg Operations</CardTitle>
                                         </CardHeader>
                                         <CardContent>
                                             <p className="text-sm text-muted-foreground leading-relaxed">
-                                                Browse and manage multiple Iceberg catalogs from a single intuitive interface with powerful
-                                                controls
+                                                Streamline Apache Iceberg management with intuitive dashboards and real-time monitoring. Reduce
+                                                complexity and save time.
                                             </p>
                                         </CardContent>
                                     </Card>
 
+                                    {/* Feature 2: Visual Catalog Explorer */}
                                     <Card className="bg-background shadow-md border-muted/60 overflow-hidden transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
                                         <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-blue-400 via-blue-500 to-blue-400"></div>
                                         <CardHeader>
                                             <div className="p-2.5 bg-blue-50 dark:bg-blue-950/30 rounded-lg w-fit mb-3">
                                                 <Layers className="h-5 w-5 text-blue-600" />
                                             </div>
-                                            <CardTitle className="text-base">Hierarchical Navigation</CardTitle>
+                                            <CardTitle className="text-base">Visual Catalog Explorer</CardTitle>
                                         </CardHeader>
                                         <CardContent>
                                             <p className="text-sm text-muted-foreground leading-relaxed">
-                                                Easily navigate through nested namespaces and tables in your Iceberg catalogs with our tree view
+                                                Visually navigate your data lake's metadata and schema. Gain instant insights into your Iceberg
+                                                tables without writing queries.
                                             </p>
                                         </CardContent>
                                     </Card>
 
+                                    {/* Feature 3: Compaction-as-a-Service */}
                                     <Card className="bg-background shadow-md border-muted/60 overflow-hidden transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
                                         <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-blue-400 via-blue-500 to-blue-400"></div>
                                         <CardHeader>
                                             <div className="p-2.5 bg-blue-50 dark:bg-blue-950/30 rounded-lg w-fit mb-3">
-                                                <Zap className="h-5 w-5 text-blue-600" />
+                                                <Gauge className="h-5 w-5 text-blue-600" />
                                             </div>
-                                            <CardTitle className="text-base">Simplified Operations</CardTitle>
+                                            <CardTitle className="text-base">Compaction-as-a-Service</CardTitle>
                                         </CardHeader>
                                         <CardContent>
                                             <p className="text-sm text-muted-foreground leading-relaxed">
-                                                Perform complex Iceberg operations with just a few clicks, no SQL expertise required
+                                                Automatically optimize table performance and reduce storage costs with intelligent file
+                                                compaction and management.
                                             </p>
                                         </CardContent>
                                     </Card>
