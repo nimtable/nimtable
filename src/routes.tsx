@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, ComponentType } from 'react';
 import { RouteObject, Outlet, Navigate } from 'react-router-dom';
 import RootLayout from './pages/layout';
 import CatalogLayout from './layouts/catalog-layout';
@@ -13,7 +13,7 @@ const LoadingFallback = () => (
 );
 
 // create a wrapper component to handle lazy loading
-const withSuspense = (Component: React.LazyExoticComponent<any>) => (
+const withSuspense = (Component: React.LazyExoticComponent<ComponentType>) => (
   <Suspense fallback={<LoadingFallback />}>
     <Component />
   </Suspense>

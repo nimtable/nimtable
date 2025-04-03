@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { errorToString } from "@/lib/utils";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -16,7 +16,6 @@ export default function LoginPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { login } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -37,8 +36,8 @@ export default function LoginPage() {
       } else {
         setErrorMessage(result.message || "Invalid username or password. Please try again.");
       }
-    } catch (error) {
-      setErrorMessage("An error occurred during login. Please try again.");
+    } catch(error) {
+      setErrorMessage(errorToString(error) || "An error occurred during login. Please try again.");
     } finally {
       setIsLoading(false);
     }
