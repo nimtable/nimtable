@@ -55,7 +55,7 @@ export const routes: RouteObject[] = [
   },
   {
     path: '/',
-    element: <Navigate to="/welcome" replace />,
+    element: <RequireAuth><Navigate to="/welcome" replace /></RequireAuth>,
   },
   
   // Protected routes
