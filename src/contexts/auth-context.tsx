@@ -15,13 +15,11 @@
  */
 "use client"
 
-import * as React from "react"
-import { useRouter } from "next/navigation"
-
-interface User {
-  username: string
-  name: string
-  role: "admin" | "user"
+interface AuthContextType {
+  isAuthenticated: boolean;
+  login: (username: string, password: string) => Promise<{ success: boolean; message?: string }>;
+  logout: () => void;
+  isLoading: boolean;
 }
 
 interface AuthContextType {
@@ -31,7 +29,9 @@ interface AuthContextType {
   isLoading: boolean
 }
 
-const AuthContext = React.createContext<AuthContextType | undefined>(undefined)
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = React.useState<User | null>(null)
@@ -54,6 +54,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false)
       }
     }
+    setIsLoading(false);
+  }, []);
 
     checkAuth()
   }, [])
@@ -78,30 +80,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem("user", JSON.stringify(userData))
         return true
       }
-      return false
+      
+      return { 
+        success: false, 
+        message: data.message || "Invalid username or password"
+      };
     } catch (error) {
       console.error("Login error:", error)
       return false
     }
   }
 
-  const logout = React.useCallback(() => {
-    setUser(null)
-    localStorage.removeItem("user")
-    router.push("/login")
-  }, [router])
+  const logout = () => {
+    localStorage.removeItem('auth-token');
+    setIsAuthenticated(false);
+    
+    fetch('/api/logout', { 
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    }).catch(err => console.error('Logout error:', err));
+  };
 
-  const value = React.useMemo(
-    () => ({
-      user,
-      login,
-      logout,
-      isLoading,
-    }),
-    [user, isLoading, logout],
-  )
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider 
+      value={{ 
+        isAuthenticated, 
+        login, 
+        logout,
+        isLoading
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
