@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { TableIcon, FileText, HardDrive, Layers, Search, Info } from "lucide-react"
+import { TableIcon, FileText, HardDrive, Layers, Search, Database, FolderTree, FileType, Table2 } from "lucide-react"
 import { notFound, useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Input } from "@/components/ui/input"
@@ -10,7 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
 import { errorToString, cn } from "@/lib/utils"
 import { SidebarInset } from "@/components/ui/sidebar"
-import { getNamespaceTables, NamespaceTable } from "@/lib/data-loader"
+import { getNamespaceTables } from "@/lib/data-loader"
+import type { NamespaceTable } from "@/types/data"
 import { TopNavbar } from "@/components/shared/top-navbar"
 import { PageLoader } from "@/components/shared/page-loader"
 
@@ -86,7 +87,7 @@ export default function NamespacePage() {
                         <div className="mb-8">
                             <div className="flex items-center gap-4 mb-3">
                                 <div className="h-12 w-12 rounded-lg bg-blue-600/10 border border-blue-600/20 flex items-center justify-center shadow-sm">
-                                    <TableIcon className="h-6 w-6 text-blue-600" />
+                                    <FolderTree className="h-6 w-6 text-blue-600" />
                                 </div>
                                 <div>
                                     <h1 className="text-3xl font-bold tracking-tight">{namespace}</h1>
@@ -100,7 +101,7 @@ export default function NamespacePage() {
                                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                     <div>
                                         <CardTitle className="flex items-center gap-2 text-lg">
-                                            <TableIcon className="h-6 w-6 text-blue-500" />
+                                            <Database className="h-6 w-6 text-blue-500" />
                                             Tables
                                         </CardTitle>
                                     </div>
@@ -147,7 +148,7 @@ export default function NamespacePage() {
                                                         <TableCell className="font-medium">
                                                             <div className="flex items-center gap-2">
                                                                 <div className="p-1.5 rounded-md bg-blue-50 dark:bg-blue-950/30">
-                                                                    <TableIcon className="h-3.5 w-3.5 text-blue-500" />
+                                                                    <Table2 className="h-3.5 w-3.5 text-blue-500" />
                                                                 </div>
                                                                 {table.name}
                                                             </div>
@@ -155,12 +156,13 @@ export default function NamespacePage() {
                                                         <TableCell>
                                                             <span
                                                                 className={cn(
-                                                                    "px-2 py-1 rounded-full text-xs font-medium",
+                                                                    "px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 w-fit",
                                                                     table.formatVersion === "v2"
                                                                         ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
                                                                         : "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
                                                                 )}
                                                             >
+                                                                <FileType className="h-3 w-3" />
                                                                 {table.formatVersion}
                                                             </span>
                                                         </TableCell>
@@ -194,7 +196,7 @@ export default function NamespacePage() {
                                     <div className="flex justify-center items-center py-16">
                                         <div className="text-center max-w-md">
                                             <div className="mx-auto w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center mb-4">
-                                                <Info className="h-8 w-8 text-muted-foreground/70" />
+                                                <Database className="h-8 w-8 text-muted-foreground/70" />
                                             </div>
                                             <h3 className="text-lg font-medium mb-2">No tables found</h3>
                                             <p className="text-muted-foreground text-sm mb-6">
