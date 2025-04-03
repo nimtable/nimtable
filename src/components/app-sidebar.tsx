@@ -243,7 +243,7 @@ function AppSidebarContent() {
 
         <div className="px-3 py-3 flex-1 overflow-auto">
           {namespacesLoading && (
-            <div className="flex justify-end mb-3">
+            <div className="flex justify-center mb-3">
               <div className="text-xs text-muted-foreground flex items-center gap-1.5 bg-muted/30 px-2 py-1 rounded-sm">
                 <div className="h-1.5 w-1.5 rounded-full bg-blue-500/80 animate-pulse" />
                 <span>Loading...</span>
