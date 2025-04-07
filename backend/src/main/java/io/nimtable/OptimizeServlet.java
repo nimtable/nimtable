@@ -31,6 +31,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -93,16 +94,20 @@ public class OptimizeServlet extends HttpServlet {
             var file = task.file();
             rewrite_files_action.deleteFile(file);
 
-            DataFileFormat dataFileFormat;
-            switch (file.format()) {
+            DataFileFormat protoDataFileFormat;
+            FileFormat format = file.format();
+            switch (format) {
                 case AVRO:
-                    dataFileFormat = DataFileFormat.AVRO;
+                    protoDataFileFormat = DataFileFormat.AVRO;
+                    break;
                 case PARQUET:
-                    dataFileFormat = DataFileFormat.PARQUET;
+                    protoDataFileFormat = DataFileFormat.PARQUET;
+                    break;
                 case ORC:
-                    dataFileFormat = DataFileFormat.ORC;
+                    protoDataFileFormat = DataFileFormat.ORC;
+                    break;
                 default:
-                    throw new RuntimeException("Unsupported file format: " + file.format());
+                    throw new RuntimeException("Unsupported file format: " + format);
             }
 
             fileScanTasks.add(
@@ -110,7 +115,7 @@ public class OptimizeServlet extends HttpServlet {
                             .setDataFilePath(file.location())
                             .setRecordCount(file.recordCount())
                             .setDataFileContentValue(file.content().id())
-                            .setDataFileFormat(dataFileFormat)
+                            .setDataFileFormat(protoDataFileFormat)
                             .setStart(0)
                             .setLength(file.fileSizeInBytes())
                             .setSequenceNumber(
@@ -122,8 +127,9 @@ public class OptimizeServlet extends HttpServlet {
                                             ? new ArrayList<>()
                                             : file.equalityFieldIds())
                             .addAllProjectFieldIds(
-                                    task.projectedSchema().columns().stream()
+                                    task.schema().columns().stream()
                                             .map(column -> column.fieldId())
+                                            .map(Integer::longValue)
                                             .collect(Collectors.toList()))
                             .build());
         }
@@ -169,17 +175,35 @@ public class OptimizeServlet extends HttpServlet {
                                 protoFile.getValueCountsMap(),
                                 protoFile.getNullValueCountsMap(),
                                 protoFile.getNanValueCountsMap(),
-                                protoFile.getLowerBoundsMap(),
-                                protoFile.getUpperBoundsMap());
+                                protoFile.getLowerBoundsMap().entrySet().stream()
+                                        .collect(
+                                                Collectors.toMap(
+                                                        Map.Entry::getKey,
+                                                        e ->
+                                                                ByteBuffer.wrap(
+                                                                        e.getValue()
+                                                                                .toByteArray()))),
+                                protoFile.getUpperBoundsMap().entrySet().stream()
+                                        .collect(
+                                                Collectors.toMap(
+                                                        Map.Entry::getKey,
+                                                        e ->
+                                                                ByteBuffer.wrap(
+                                                                        e.getValue()
+                                                                                .toByteArray()))));
 
                 FileFormat dataFileFormat;
-                switch (protoFile.getFileFormat()) {
-                    case DataFileFormat.AVRO:
+                var protoDataFileFormat = protoFile.getFileFormat().toString();
+                switch (protoDataFileFormat) {
+                    case "AVRO":
                         dataFileFormat = FileFormat.AVRO;
-                    case DataFileFormat.PARQUET:
-                        dataFileFormat = FileFormat.PARQUET;
-                    case DataFileFormat.ORC:
+                        break;
+                    case "ORC":
                         dataFileFormat = FileFormat.ORC;
+                        break;
+                    case "PARQUET":
+                        dataFileFormat = FileFormat.PARQUET;
+                        break;
                     default:
                         throw new RuntimeException(
                                 "Unsupported file format: " + protoFile.getFileFormat());
@@ -193,7 +217,9 @@ public class OptimizeServlet extends HttpServlet {
                                     .withRecordCount(protoFile.getRecordCount())
                                     .withFileSizeInBytes(protoFile.getFileSizeInBytes())
                                     .withMetrics(metrics)
-                                    .withEncryptionKeyMetadata(protoFile.getKeyMetadata())
+                                    .withEncryptionKeyMetadata(
+                                            ByteBuffer.wrap(
+                                                    protoFile.getKeyMetadata().toByteArray()))
                                     .withSplitOffsets(protoFile.getSplitOffsetsList())
                                     .withSortOrder(SortOrderUtil.buildSortOrder(table))
                                     .build();
@@ -207,7 +233,9 @@ public class OptimizeServlet extends HttpServlet {
                                     .withRecordCount(protoFile.getRecordCount())
                                     .withFileSizeInBytes(protoFile.getFileSizeInBytes())
                                     .withMetrics(metrics)
-                                    .withEncryptionKeyMetadata(protoFile.getKeyMetadata())
+                                    .withEncryptionKeyMetadata(
+                                            ByteBuffer.wrap(
+                                                    protoFile.getKeyMetadata().toByteArray()))
                                     .withSplitOffsets(protoFile.getSplitOffsetsList())
                                     .withSortOrder(SortOrderUtil.buildSortOrder(table))
                                     .build();
@@ -221,7 +249,9 @@ public class OptimizeServlet extends HttpServlet {
                                     .withRecordCount(protoFile.getRecordCount())
                                     .withFileSizeInBytes(protoFile.getFileSizeInBytes())
                                     .withMetrics(metrics)
-                                    .withEncryptionKeyMetadata(protoFile.getKeyMetadata())
+                                    .withEncryptionKeyMetadata(
+                                            ByteBuffer.wrap(
+                                                    protoFile.getKeyMetadata().toByteArray()))
                                     .withSplitOffsets(protoFile.getSplitOffsetsList())
                                     .withSortOrder(SortOrderUtil.buildSortOrder(table))
                                     .build();
