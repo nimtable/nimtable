@@ -75,7 +75,10 @@ export function TopNavbar({ catalog, namespace, table }: TopNavbarProps) {
                                     "border-0 hover:scale-[1.03] transform",
                                 )}
                             >
-                                <Link href="/sql-editor" className="flex items-center gap-1.5 px-4 py-2">
+                                <Link
+                                    href={catalog ? `/sql-editor?catalog=${catalog}` : "/sql-editor"}
+                                    className="flex items-center gap-1.5 px-4 py-2"
+                                >
                                     {/* Animated glow effect */}
                                     <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-400/0 via-blue-400/30 to-blue-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-[length:200%_100%] animate-gradient-x"></div>
 

@@ -196,7 +196,7 @@ export function InfoTab({ tableData, catalog, namespace, table }: InfoTabProps) 
             {/* Table Details */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card className="border-muted/70 shadow-sm overflow-hidden">
-                    <CardHeader className="pb-2 border-b">
+                    <CardHeader className="pb-2 border-b py-3 mb-2">
                         <CardTitle className="text-base flex items-center gap-2">
                             <Database className="h-4 w-4 text-blue-500" />
                             Table Information
@@ -204,9 +204,9 @@ export function InfoTab({ tableData, catalog, namespace, table }: InfoTabProps) 
                     </CardHeader>
                     <CardContent className="p-0">
                         <div className="divide-y divide-muted/30">
-                            <div className="px-6 py-4">
-                                <div className="flex items-center justify-between mb-1.5">
-                                    <h4 className="text-sm font-medium text-muted-foreground">Table UUID</h4>
+                            <div className="px-6 py-3">
+                                <div className="flex items-center justify-between mb-1">
+                                    <h4 className="text-xs font-medium text-muted-foreground">Table UUID</h4>
                                     <TooltipProvider delayDuration={300}>
                                         <Tooltip>
                                             <TooltipTrigger asChild>
@@ -214,16 +214,12 @@ export function InfoTab({ tableData, catalog, namespace, table }: InfoTabProps) 
                                                     variant="ghost"
                                                     size="icon"
                                                     className={cn(
-                                                        "h-7 w-7 rounded-md transition-all duration-200",
+                                                        "h-6 w-6 rounded-md transition-all duration-200",
                                                         copyingField === "Table UUID" ? "bg-muted text-blue-500" : "text-muted-foreground",
                                                     )}
                                                     onClick={() => copyToClipboard(tableData.metadata["table-uuid"], "Table UUID")}
                                                 >
-                                                    {copyingField === "Table UUID" ? (
-                                                        <Check className="h-3.5 w-3.5" />
-                                                    ) : (
-                                                        <Copy className="h-3.5 w-3.5" />
-                                                    )}
+                                                    {copyingField === "Table UUID" ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                                                 </Button>
                                             </TooltipTrigger>
                                             <TooltipContent side="left">
@@ -232,14 +228,14 @@ export function InfoTab({ tableData, catalog, namespace, table }: InfoTabProps) 
                                         </Tooltip>
                                     </TooltipProvider>
                                 </div>
-                                <div className="border border-muted/30 rounded-md p-2 bg-muted/30 font-mono">
-                                    <p className="text-sm text-foreground/90 break-all">{tableData.metadata["table-uuid"]}</p>
+                                <div className="border border-muted/30 rounded-md p-1.5 bg-muted/30 font-mono">
+                                    <p className="text-xs text-foreground/90 break-all">{tableData.metadata["table-uuid"]}</p>
                                 </div>
                             </div>
 
-                            <div className="px-6 py-4">
-                                <div className="flex items-center justify-between mb-1.5">
-                                    <h4 className="text-sm font-medium text-muted-foreground">Location</h4>
+                            <div className="px-6 py-3">
+                                <div className="flex items-center justify-between mb-1">
+                                    <h4 className="text-xs font-medium text-muted-foreground">Location</h4>
                                     <TooltipProvider delayDuration={300}>
                                         <Tooltip>
                                             <TooltipTrigger asChild>
@@ -247,16 +243,12 @@ export function InfoTab({ tableData, catalog, namespace, table }: InfoTabProps) 
                                                     variant="ghost"
                                                     size="icon"
                                                     className={cn(
-                                                        "h-7 w-7 rounded-md transition-all duration-200",
+                                                        "h-6 w-6 rounded-md transition-all duration-200",
                                                         copyingField === "Location" ? "bg-muted text-blue-500" : "text-muted-foreground",
                                                     )}
                                                     onClick={() => copyToClipboard(tableData.metadata.location || "", "Location")}
                                                 >
-                                                    {copyingField === "Location" ? (
-                                                        <Check className="h-3.5 w-3.5" />
-                                                    ) : (
-                                                        <Copy className="h-3.5 w-3.5" />
-                                                    )}
+                                                    {copyingField === "Location" ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                                                 </Button>
                                             </TooltipTrigger>
                                             <TooltipContent side="left">
@@ -265,14 +257,14 @@ export function InfoTab({ tableData, catalog, namespace, table }: InfoTabProps) 
                                         </Tooltip>
                                     </TooltipProvider>
                                 </div>
-                                <div className="border border-muted/30 rounded-md p-2 bg-muted/30 font-mono">
-                                    <p className="text-sm text-foreground/90 break-all">{tableData.metadata.location}</p>
+                                <div className="border border-muted/30 rounded-md p-1.5 bg-muted/30 font-mono">
+                                    <p className="text-xs text-foreground/90 break-all">{tableData.metadata.location}</p>
                                 </div>
                             </div>
 
-                            <div className="px-6 py-4">
-                                <h4 className="text-sm font-medium text-muted-foreground mb-1.5">Last Updated</h4>
-                                <p className="text-sm pl-1 font-medium">
+                            <div className="px-6 py-3">
+                                <h4 className="text-xs font-medium text-muted-foreground mb-1">Last Updated</h4>
+                                <p className="text-xs pl-1 font-medium">
                                     {tableData.metadata["last-updated-ms"]
                                         ? new Date(tableData.metadata["last-updated-ms"]).toLocaleString()
                                         : "-"}
@@ -283,7 +275,7 @@ export function InfoTab({ tableData, catalog, namespace, table }: InfoTabProps) 
                 </Card>
 
                 <Card className="border-muted/70 shadow-sm overflow-hidden">
-                    <CardHeader className="pb-2 border-b">
+                    <CardHeader className="pb-2 border-b py-3 mb-2">
                         <CardTitle className="text-base flex items-center gap-2">
                             <FileText className="h-4 w-4 text-blue-500" />
                             Properties
@@ -293,16 +285,16 @@ export function InfoTab({ tableData, catalog, namespace, table }: InfoTabProps) 
                         {tableData.metadata.properties && Object.keys(tableData.metadata.properties).length > 0 ? (
                             <div className="divide-y divide-muted/30">
                                 {Object.entries(tableData.metadata.properties).map(([key, value]) => (
-                                    <div key={key} className="px-6 py-4">
-                                        <h4 className="text-sm font-medium text-muted-foreground mb-1.5">{key}</h4>
-                                        <div className="border border-muted/30 rounded-md p-2 bg-muted/30">
-                                            <p className="text-sm text-foreground/90 break-all font-mono">{value}</p>
+                                    <div key={key} className="px-6 py-3">
+                                        <h4 className="text-xs font-medium text-muted-foreground mb-1">{key}</h4>
+                                        <div className="border border-muted/30 rounded-md p-1.5 bg-muted/30">
+                                            <p className="text-xs text-foreground/90 break-all font-mono">{value}</p>
                                         </div>
                                     </div>
                                 ))}
                             </div>
                         ) : (
-                            <div className="px-6 py-8 text-center text-muted-foreground">No properties defined</div>
+                            <div className="px-4 py-6 text-center text-muted-foreground text-xs">No properties defined</div>
                         )}
                     </CardContent>
                 </Card>
