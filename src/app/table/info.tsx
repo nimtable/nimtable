@@ -250,7 +250,7 @@ export function InfoTab({ tableData, catalog, namespace, table }: InfoTabProps) 
                                                         "h-7 w-7 rounded-md transition-all duration-200",
                                                         copyingField === "Location" ? "bg-muted text-blue-500" : "text-muted-foreground",
                                                     )}
-                                                    onClick={() => copyToClipboard(tableData.metadata.location, "Location")}
+                                                    onClick={() => copyToClipboard(tableData.metadata.location || "", "Location")}
                                                 >
                                                     {copyingField === "Location" ? (
                                                         <Check className="h-3.5 w-3.5" />

@@ -35,8 +35,7 @@ import { NamespaceTreeItem } from "@/components/sidebar/tree-items"
 import { useRefresh } from "@/contexts/refresh-context"
 import { useAuth } from "@/contexts/auth-context"
 import { cn } from "@/lib/utils"
-import type { NamespaceTables } from "@/types/data"
-import { loadCatalogNames, loadNamespacesAndTables } from "@/lib/data-loader"
+import { loadCatalogNames, loadNamespacesAndTables, type NamespaceTables } from "@/lib/data-loader"
 import { Suspense } from "react"
 
 function AppSidebarContent() {

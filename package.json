@@ -1,5 +1,5 @@
 {
-  "name": "iceberg-catalog-webui",
+  "name": "nimtable",
   "version": "0.1.0",
   "private": true,
   "scripts": {

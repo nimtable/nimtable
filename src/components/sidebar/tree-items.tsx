@@ -21,7 +21,7 @@ import Link from "next/link"
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar"
-import type { NamespaceTables } from "@/types/data"
+import { type NamespaceTables } from "@/lib/data-loader"
 
 export function TableItem({ catalog, namespace, name }: { catalog: string; namespace: string; name: string }) {
     return (

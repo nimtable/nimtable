@@ -86,7 +86,7 @@ export function QueryTab({ catalog, namespace, table }: QueryTabProps) {
             const endTime = performance.now()
             setExecutionTime(endTime - startTime)
 
-            if ("error" in result) {
+            if (result.error) {
                 setQueryError(result.error)
             } else {
                 setQueryResults(result)

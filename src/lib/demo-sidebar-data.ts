@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import type { NamespaceTables } from "@/types/data"
+import type { NamespaceTables } from "@/lib/data-loader"
 
 // Example data to demonstrate the sidebar without API calls
 // Set to [] to test empty catalogs state
