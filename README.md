@@ -1,27 +1,42 @@
-Nimtable
-===================
+# Nimtable
 
-Nimtable is a simple UI for browsing Apache Iceberg catalogs. It's still under development. 🚧
+<div align="center">
+
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+
+A modern, user-friendly web interface for Apache Iceberg catalogs
 
 ![Screenshot](./docs/screenshot.png)
 
+</div>
+
+## Overview
+
+Nimtable is a powerful web-based UI that simplifies the management and exploration of Apache Iceberg catalogs. It provides an intuitive interface for browsing tables, executing queries, analyzing data distributions, and performing table optimizations.
+
+### Key Features
+
+- 🌟 **Multi-Catalog Support**: Connect to multiple catalog types including Hive Metastore, PostgreSQL (JDBC), REST Catalog, AWS Glue, and S3 Tables
+- 🔍 **Table Exploration**: Browse and inspect table schemas, partitions, and snapshots
+- ⚡ **Interactive Querying**: Execute SQL queries directly through the UI
+- 📊 **File Distribution Analysis**: Visualize and understand data file distribution
+- 🔧 **Table Optimization**: Perform compaction and manage snapshot expiration
+- 🔌 **REST Catalog Compatibility**: Serves as a standard Iceberg REST Catalog, adapting any underlying catalog to RESTful API
+
 ## Architecture
 
-The Nimtable server can be configured to connect to different catalog servers, such as Hive Metastore, PostgreSQL via JDBC catalog, or REST Catalog such as Apache Polaris. On top of that, Nimtable provides a human-friendly UI for browsing, querying and optimizing Iceberg tables.
-
-Besides, Nimtable also serves as a standard Iceberg REST Catalog, which means it can adapt any underlying catalog implementation to the standard RESTful Catalog API.
+Nimtable acts as a bridge between users and various catalog servers, providing both a user interface and a standard REST Catalog API layer:
 
 <img src="docs/nimtable-arch.drawio.png" alt="Architecture" width=491>
 
+## Quick Start
 
-## Get Started
-
-You can use Docker to run Nimtable without installing any dependencies locally:
+The fastest way to get started is using Docker:
 
 ```bash
 cd docker
 
-# Build and start container
+# Start the service
 docker compose up -d
 
 # View logs
@@ -31,19 +46,13 @@ docker compose logs -f
 docker compose down
 ```
 
-This will build and start Nimtable at http://localhost:8182.
-
-You can customize the configuration by editing `docker/config.yaml` and `docker/docker-compose.yml` before starting the container.
-
-For other ways to run or develop Nimtable, please refer to the following sections.
+Access the UI at http://localhost:8182
 
 ## Configuration
 
-Nimtable uses a YAML configuration file (`config.yaml`) to define server settings and catalog connections. The configuration is compatible with Spark's Iceberg catalog configuration format.
+Nimtable uses YAML for configuration, supporting both server settings and catalog connections. The configuration format is compatible with Spark's Iceberg catalog configuration.
 
-You can find the example configuration file at [`docker/config.yaml`](docker/config.yaml).
-
-### Basic Server Configuration
+### Server Configuration
 
 ```yaml
 server:
@@ -54,32 +63,9 @@ auth:
   password: admin
 ```
 
-### Catalog Configuration
+### Catalog Configuration Examples
 
-You can configure multiple catalogs in the `catalogs` section. Here are examples for different catalog types:
-
-#### 1. JDBC Catalog (PostgreSQL, MySQL, etc.)
-
-```yaml
-catalogs:
-  - name: jdbc-catalog
-    type: jdbc
-    jdbc.schema-version: V1
-    uri: jdbc:postgresql://localhost:5432/db
-    warehouse: s3://warehouse/wh/
-    jdbc.user: admin
-    jdbc.password: password
-    # S3 Configuration (when using S3 as warehouse)
-    io-impl: org.apache.iceberg.aws.s3.S3FileIO
-    s3.endpoint: http://localhost:9000  # Optional, for custom S3 endpoints
-    s3.access-key-id: admin
-    s3.secret-access-key: password
-    s3.region: us-east-1
-    s3.path-style-access: true
-    client.region: us-east-1
-```
-
-#### 2. REST Catalog
+#### REST Catalog
 
 ```yaml
 catalogs:
@@ -87,9 +73,8 @@ catalogs:
     type: rest
     uri: http://localhost:8181
     warehouse: s3://warehouse/wh/
-    # S3 Configuration (when using S3 as warehouse)
     io-impl: org.apache.iceberg.aws.s3.S3FileIO
-    s3.endpoint: http://localhost:9000  # Optional, for custom S3 endpoints
+    s3.endpoint: http://localhost:9000
     s3.access-key-id: admin
     s3.secret-access-key: password
     s3.region: us-east-1
@@ -97,9 +82,7 @@ catalogs:
     client.region: us-east-1
 ```
 
-#### 3. S3 Tables Catalog
-
-For AWS S3 Tables, you can configure the catalog as follows. Note that you need to replace `xxxxx` with your AWS account ID and configure the appropriate bucket name. You can also provide AWS credentials through environment variables.
+#### AWS S3 Tables
 
 ```yaml
 catalogs:
@@ -117,15 +100,16 @@ catalogs:
     rest.signing-region: us-east-1
 ```
 
-#### 4. AWS Glue Catalog
+#### AWS Glue Catalog
 
-For Glue catalog, you need to provide AWS credentials through environment variables:
+Required environment variables:
 ```bash
 AWS_REGION=us-east-1
 AWS_ACCESS_KEY_ID=your-access-key
 AWS_SECRET_ACCESS_KEY=your-secret-key
 ```
 
+Configuration:
 ```yaml
 catalogs:
   - name: glue-catalog
@@ -133,57 +117,91 @@ catalogs:
     warehouse: s3://your-bucket/test
 ```
 
+#### JDBC Catalog (e.g. PostgreSQL)
+
+```yaml
+catalogs:
+  - name: jdbc-catalog
+    type: jdbc
+    jdbc.schema-version: V1
+    uri: jdbc:postgresql://localhost:5432/db
+    warehouse: s3://warehouse/wh/
+    jdbc.user: admin
+    jdbc.password: password
+    # S3 Configuration
+    io-impl: org.apache.iceberg.aws.s3.S3FileIO
+    s3.endpoint: http://localhost:9000
+    s3.access-key-id: admin
+    s3.secret-access-key: password
+    s3.region: us-east-1
+    s3.path-style-access: true
+    client.region: us-east-1
+```
+
+
 ## Development
 
-To develop, JDK 17 and Node.js 23 are required.
+### Prerequisites
 
-Start the backend server with:
+- JDK 17 or later
+- Node.js 23 or later
+- Docker (optional, for running test catalogs)
+
+### Backend Development
 
 ```bash
 cd backend
 ./gradlew run
 ```
 
-The UI will be available at http://localhost:8182.
+### Frontend Development
 
-To test the UI, you need to run a catalog server separately. For example, you can use the [Spark + Iceberg Quickstart Image](https://github.com/databricks/docker-spark-iceberg/).
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+```
+
+### Testing with a Catalog
+
+For testing, you can use the [Spark + Iceberg Quickstart Image](https://github.com/databricks/docker-spark-iceberg/):
 
 ```bash
 git clone https://github.com/databricks/docker-spark-iceberg.git
 docker-compose up
 
-docker exec -it spark-iceberg spark-sql # create tables, insert data, etc.
+# Create tables and insert data
+docker exec -it spark-iceberg spark-sql
 ```
 
-### Develop frontend
-
-The frontend can also be developed separately by running the following commands:
+### Code Quality
 
 ```bash
-npm install
-npm run dev
-```
+# Frontend linting
+npm run lint        # Check
+npm run lint --fix  # Fix
 
-### Lints
-
-Fix lint issues:
-```bash
-# Frontend
-# check lint
-npm run lint
-# fix lint
-npm run lint -- --fix
-
-# Backend
-# check lint
-cd backend && ./gradlew spotlessCheck
-# fix lint
-cd backend && ./gradlew spotlessApply
+# Backend linting
+cd backend
+./gradlew spotlessCheck  # Check
+./gradlew spotlessApply  # Fix
 ```
 
 ## Roadmap
 
-- **Pluggable Query Engines**. Connect to different query engines, such as DuckDB (embedded), Spark, Flink, RisingWave, etc.
-- **Table Optimize**. Run table maintenance operations, such as compaction and garbage collection with pluggable backends. (Work in progress)
-- **Query Console**. A user-friendly console for running ad-hoc queries.
-- **Authentication**. Support user management and authentication.
+- 🚀 **Pluggable Query Engines**: Support for DuckDB, Spark, Flink, RisingWave
+- 🔧 **Enhanced Table Optimization**: Advanced maintenance operations
+- 💻 **Advanced Query Console**: Improved ad-hoc query interface
+- 🔐 **Authentication System**: User management and access control
+- 📊 **Enhanced Visualization**: Advanced data and metadata visualization
+- 🔄 **Real-time Updates**: Live table statistics and metadata changes
+
+## Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+## License
+
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
