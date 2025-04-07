@@ -18,7 +18,6 @@ package io.nimtable;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.nimtable.Config.Catalog;
 import io.nimtable.iceberg.IcebergProto.DataContentType;
 import io.nimtable.iceberg.IcebergProto.DataFileFormat;
 import io.nimtable.iceberg.IcebergProto.FileIoBuilder;
@@ -87,10 +86,14 @@ public class OptimizeServlet extends HttpServlet {
                                 new Configuration())
                         .loadTable(TableIdentifier.of(namespace, tableName));
 
+        var rewrite_files_action = table.newRewrite();
+
         List<FileScanTaskDescriptor> fileScanTasks = new ArrayList<>();
         var inputFiles = table.newScan().planFiles();
         for (FileScanTask task : inputFiles) {
             var file = task.file();
+            rewrite_files_action.deleteFile(file);
+
             fileScanTasks.add(
                     FileScanTaskDescriptor.newBuilder()
                             .setDataFilePath(file.location())
@@ -145,8 +148,6 @@ public class OptimizeServlet extends HttpServlet {
             RewriteFilesResponse rewrite_files_stat_response = client.rewriteFiles(request);
             var rewrite_files_stat = rewrite_files_stat_response.getStat();
 
-            List<DataFile> dataFiles = new ArrayList<>();
-            List<DeleteFile> deleteFiles = new ArrayList<>();
             for (var protoFile : rewrite_files_stat_response.getRewrittenFilesList()) {
                 // TODO(li0k): lowerBounds and upperBounds are not supported yet
                 var metrics =
@@ -171,7 +172,7 @@ public class OptimizeServlet extends HttpServlet {
                                     .withSplitOffsets(protoFile.getSplitOffsetsList())
                                     .withSortOrder(SortOrderUtil.buildSortOrder(table))
                                     .build();
-                    dataFiles.add(dataFile);
+                    rewrite_files_action.addFile(dataFile);
                 } else if (protoFile.getContent() == DataContentType.POSITION_DELETES) {
                     var deleteFile =
                             FileMetadata.deleteFileBuilder(table.spec())
@@ -188,7 +189,7 @@ public class OptimizeServlet extends HttpServlet {
                                     .withSplitOffsets(protoFile.getSplitOffsetsList())
                                     .withSortOrder(SortOrderUtil.buildSortOrder(table))
                                     .build();
-                    deleteFiles.add(deleteFile);
+                    rewrite_files_action.addFile(deleteFile);
                 } else if (protoFile.getContent() == DataContentType.EQUALIRY_DELETES) {
                     var deleteFile =
                             FileMetadata.deleteFileBuilder(table.spec())
@@ -205,7 +206,7 @@ public class OptimizeServlet extends HttpServlet {
                                     .withSplitOffsets(protoFile.getSplitOffsetsList())
                                     .withSortOrder(SortOrderUtil.buildSortOrder(table))
                                     .build();
-                    deleteFiles.add(deleteFile);
+                    rewrite_files_action.addFile(deleteFile);
                 } else {
                     throw new RuntimeException(
                             "Unsupported data content type: " + protoFile.getContent());
@@ -213,7 +214,12 @@ public class OptimizeServlet extends HttpServlet {
             }
 
             // commit RewriteFiles Action to iceberg catalog
-            var rewrite_files_action = table.newRewrite();
+            try {
+                rewrite_files_action.commit();
+            } catch (Exception e) {
+                Log.error("Failed to commit rewrite files action: {}", e.getMessage());
+                throw new RuntimeException("Failed to commit rewrite files action", e);
+            }
 
             return new CompactionResult(
                     rewrite_files_stat.getRewrittenFilesCount(),
