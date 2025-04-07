@@ -1,19 +1,61 @@
 server:
   port: 8182
   host: 0.0.0.0
+auth:
+  username: admin
+  password: admin
 catalogs:
   - name: sqlite-catalog-demo
     type: jdbc
     uri: jdbc:sqlite:file:./catalog.db
     jdbc.schema-version: V1
     warehouse: ./data
-  - name: rest-catalog-demo
-    type: rest
-    uri: http://localhost:8181
-    warehouse: s3://warehouse/wh/
-    io-impl: org.apache.iceberg.aws.s3.S3FileIO
-    s3.endpoint: http://localhost:9000
-    s3.access-key-id: admin
-    s3.secret-access-key: password
-    s3.region: us-east-1
-    s3.path-style-access: true
+
+#  - name: rest-catalog-demo
+#    type: rest
+#    uri: http://localhost:8181
+#    warehouse: s3://warehouse/wh/
+#    io-impl: org.apache.iceberg.aws.s3.S3FileIO
+#    s3.endpoint: http://localhost:9000
+#    s3.access-key-id: admin
+#    s3.secret-access-key: password
+#    s3.region: us-east-1
+#    s3.path-style-access: true
+
+#  - name: jdbc-catalog-demo
+#    type: jdbc
+#    jdbc.schema-version: V1
+#    uri: jdbc:postgresql://localhost:5432/db
+#    warehouse: s3://warehouse/wh/
+#    io-impl: org.apache.iceberg.aws.s3.S3FileIO
+#    s3.endpoint: http://localhost:9000
+#    s3.access-key-id: admin
+#    s3.secret-access-key: password
+#    s3.region: us-east-1
+#    s3.path-style-access: true
+#    jdbc.user: admin
+#    jdbc.password: password
+#    client.region: us-east-1
+
+#  For S3Tables catalog you can either use Environment Variables to provide AWS credentials or use the following configuration.
+#  - name: s3-tables-catalog-demo
+#    type: rest
+#    uri: https://s3tables.us-east-1.amazonaws.com/iceberg
+#    warehouse: arn:aws:s3tables:us-east-1:xxxxx:bucket/your-bucket
+#    io-impl: org.apache.iceberg.aws.s3.S3FileIO
+#    s3.access-key-id: admin
+#    s3.secret-access-key: password
+#    s3.region: us-east-1
+#    s3.path-style-access: true
+#    rest.sigv4-enabled: true
+#    rest.signing-name: s3tables
+#    rest.signing-region: us-east-1
+#    rest.access-key-id: admin
+#    rest.secret-access-key: password
+#    client.region: us-east-1
+
+#  For Glue catalog you need to use Environment Variables to provide AWS credentials
+#  For example: AWS_REGION=us-east-1 AWS_ACCESS_KEY_ID=admin AWS_SECRET_ACCESS_KEY=password
+#  - name: glue-catalog-demo
+#    type: glue
+#    warehouse: s3://your-bucket/test
