@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Tabular Technologies Inc.
+ * Copyright 2025 Nimtable
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,15 @@ plugins {
   id 'java'
   id 'application'
   id 'com.github.johnrengelman.shadow' version '8.1.1'
+  id 'com.diffplug.spotless' version '6.25.0'
+}
+
+java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(17)
+  }
+  sourceCompatibility = JavaVersion.VERSION_17
+  targetCompatibility = JavaVersion.VERSION_17
 }
 
 repositories {
@@ -26,12 +35,32 @@ repositories {
 
 application {
   mainClass = 'io.nimtable.Server'
+  applicationDefaultJvmArgs = [
+    // Required by Spark when using Java 17+
+    // See https://github.com/apache/spark/blob/v3.3.0/launcher/src/main/java/org/apache/spark/launcher/JavaModuleOptions.java
+    "--add-opens=java.base/java.lang=ALL-UNNAMED",
+    "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED",
+    "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
+    "--add-opens=java.base/java.io=ALL-UNNAMED",
+    "--add-opens=java.base/java.net=ALL-UNNAMED",
+    "--add-opens=java.base/java.nio=ALL-UNNAMED",
+    "--add-opens=java.base/java.util=ALL-UNNAMED",
+    "--add-opens=java.base/java.util.concurrent=ALL-UNNAMED",
+    "--add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED",
+    "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
+    "--add-opens=java.base/sun.nio.cs=ALL-UNNAMED",
+    "--add-opens=java.base/sun.security.action=ALL-UNNAMED",
+    "--add-opens=java.base/sun.util.calendar=ALL-UNNAMED",
+    "--add-opens=java.security.jgss/sun.security.krb5=ALL-UNNAMED"
+  ]
 }
 
 ext {
   icebergVersion = '1.8.1'
   hadoopVersion = '3.3.6'
   jettyVersion = '11.0.15'
+  sparkVersion = '3.5.1'
+  scalaVersion = '2.12.18'
 }
 
 dependencies {
@@ -55,7 +84,7 @@ dependencies {
   implementation 'com.google.guava:guava:33.3.0-jre'
 
   implementation 'org.xerial:sqlite-jdbc:3.46.1.0'
-  implementation 'org.duckdb:duckdb_jdbc:1.2.1'
+  implementation 'org.postgresql:postgresql:42.7.4'
 
   implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.2'
   implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.18.2'
@@ -68,6 +97,14 @@ dependencies {
   implementation 'org.slf4j:slf4j-api:2.0.12'
   implementation 'org.slf4j:slf4j-log4j12:2.0.12'
   implementation 'log4j:log4j:1.2.17'
+
+  // Spark dependencies
+  implementation "org.apache.spark:spark-core_2.12:${sparkVersion}"
+  implementation "org.apache.spark:spark-sql_2.12:${sparkVersion}"
+  implementation "org.apache.spark:spark-hive_2.12:${sparkVersion}"
+  implementation "org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:${icebergVersion}"
+  implementation 'org.scala-lang.modules:scala-collection-compat_2.12:2.12.0'
+  implementation "org.apache.spark:spark-hadoop-cloud_2.12:${sparkVersion}" // For accessing S3
 }
 
 jar {
