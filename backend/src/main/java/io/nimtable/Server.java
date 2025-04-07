@@ -109,7 +109,8 @@ public class Server {
 
                         // Try to serve the requested file directly
                         Resource resource =
-                                baseResource.addPath(target.startsWith("/") ? target.substring(1) : target);
+                                baseResource.addPath(
+                                        target.startsWith("/") ? target.substring(1) : target);
                         if (resource.exists() && !resource.isDirectory()) {
                             response.setContentType(getContentType(target));
                             try (InputStream in = resource.getInputStream()) {
