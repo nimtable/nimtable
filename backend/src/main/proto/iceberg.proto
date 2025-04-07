@@ -144,8 +144,8 @@ message DataFile {
     map<int32, uint64> value_counts = 8;
     map<int32, uint64> null_value_counts = 9;
     map<int32, uint64> nan_value_counts = 10;
-    map<int32, Datum> lower_bounds = 11;
-    map<int32, Datum> upper_bounds = 12;
+    map<int32, bytes> lower_bounds = 11;
+    map<int32, bytes> upper_bounds = 12;
     optional bytes key_metadata = 13;
     repeated int64 split_offsets = 14;
     repeated int32 equality_ids = 15;

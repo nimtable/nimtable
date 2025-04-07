@@ -31,7 +31,6 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -94,14 +93,25 @@ public class OptimizeServlet extends HttpServlet {
             var file = task.file();
             rewrite_files_action.deleteFile(file);
 
+            DataFileFormat dataFileFormat;
+            switch (file.format()) {
+                case AVRO:
+                    dataFileFormat = DataFileFormat.AVRO;
+                case PARQUET:
+                    dataFileFormat = DataFileFormat.PARQUET;
+                case ORC:
+                    dataFileFormat = DataFileFormat.ORC;
+
+                default:
+                    throw new RuntimeException("Unsupported file format: " + file.format());
+            }
+
             fileScanTasks.add(
                     FileScanTaskDescriptor.newBuilder()
                             .setDataFilePath(file.location())
                             .setRecordCount(file.recordCount())
                             .setDataFileContentValue(file.content().id())
-                            .setDataFileFormat(
-                                    // TODO(li0k): use the correct format of file
-                                    DataFileFormat.PARQUET)
+                            .setDataFileFormat(dataFileFormat)
                             .setStart(0) // 暂时设置为 0
                             .setLength(file.fileSizeInBytes())
                             .setSequenceNumber(
@@ -149,26 +159,38 @@ public class OptimizeServlet extends HttpServlet {
             var rewrite_files_stat = rewrite_files_stat_response.getStat();
 
             for (var protoFile : rewrite_files_stat_response.getRewrittenFilesList()) {
-                // TODO(li0k): lowerBounds and upperBounds are not supported yet
                 var metrics =
                         new Metrics(
                                 protoFile.getRecordCount(),
                                 protoFile.getColumnSizesMap(),
                                 protoFile.getValueCountsMap(),
                                 protoFile.getNullValueCountsMap(),
-                                protoFile.getNanValueCountsMap());
+                                protoFile.getNanValueCountsMap(),
+                                protoFile.getLowerBoundsMap(),
+                                protoFile.getUpperBoundsMap());
+
+                FileFormat dataFileFormat;
+                switch (protoFile.getFileFormat()) {
+                    case DataFileFormat.AVRO:
+                        dataFileFormat = FileFormat.AVRO;
+                    case DataFileFormat.PARQUET:
+                        dataFileFormat = FileFormat.PARQUET;
+                    case DataFileFormat.ORC:
+                        dataFileFormat = FileFormat.ORC;
+                    default:
+                        throw new RuntimeException(
+                                "Unsupported file format: " + protoFile.getFileFormat());
+                }
+
                 if (protoFile.getContent() == DataContentType.DATA) {
                     var dataFile =
                             DataFiles.builder(table.spec())
                                     .withPath(protoFile.getFilePath())
-                                    .withFormat(
-                                            FileFormat.valueOf(protoFile.getFileFormat().name()))
+                                    .withFormat(dataFileFormat)
                                     .withRecordCount(protoFile.getRecordCount())
                                     .withFileSizeInBytes(protoFile.getFileSizeInBytes())
                                     .withMetrics(metrics)
-                                    .withEncryptionKeyMetadata(
-                                            ByteBuffer.wrap(
-                                                    protoFile.getKeyMetadata().toByteArray()))
+                                    .withEncryptionKeyMetadata(protoFile.getKeyMetadata())
                                     .withSplitOffsets(protoFile.getSplitOffsetsList())
                                     .withSortOrder(SortOrderUtil.buildSortOrder(table))
                                     .build();
@@ -178,14 +200,11 @@ public class OptimizeServlet extends HttpServlet {
                             FileMetadata.deleteFileBuilder(table.spec())
                                     .ofPositionDeletes()
                                     .withPath(protoFile.getFilePath())
-                                    .withFormat(
-                                            FileFormat.valueOf(protoFile.getFileFormat().name()))
+                                    .withFormat(dataFileFormat)
                                     .withRecordCount(protoFile.getRecordCount())
                                     .withFileSizeInBytes(protoFile.getFileSizeInBytes())
                                     .withMetrics(metrics)
-                                    .withEncryptionKeyMetadata(
-                                            ByteBuffer.wrap(
-                                                    protoFile.getKeyMetadata().toByteArray()))
+                                    .withEncryptionKeyMetadata(protoFile.getKeyMetadata())
                                     .withSplitOffsets(protoFile.getSplitOffsetsList())
                                     .withSortOrder(SortOrderUtil.buildSortOrder(table))
                                     .build();
@@ -195,14 +214,11 @@ public class OptimizeServlet extends HttpServlet {
                             FileMetadata.deleteFileBuilder(table.spec())
                                     .ofEqualityDeletes()
                                     .withPath(protoFile.getFilePath())
-                                    .withFormat(
-                                            FileFormat.valueOf(protoFile.getFileFormat().name()))
+                                    .withFormat(dataFileFormat)
                                     .withRecordCount(protoFile.getRecordCount())
                                     .withFileSizeInBytes(protoFile.getFileSizeInBytes())
                                     .withMetrics(metrics)
-                                    .withEncryptionKeyMetadata(
-                                            ByteBuffer.wrap(
-                                                    protoFile.getKeyMetadata().toByteArray()))
+                                    .withEncryptionKeyMetadata(protoFile.getKeyMetadata())
                                     .withSplitOffsets(protoFile.getSplitOffsetsList())
                                     .withSortOrder(SortOrderUtil.buildSortOrder(table))
                                     .build();
