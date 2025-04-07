@@ -101,7 +101,6 @@ public class OptimizeServlet extends HttpServlet {
                     dataFileFormat = DataFileFormat.PARQUET;
                 case ORC:
                     dataFileFormat = DataFileFormat.ORC;
-
                 default:
                     throw new RuntimeException("Unsupported file format: " + file.format());
             }
@@ -112,7 +111,7 @@ public class OptimizeServlet extends HttpServlet {
                             .setRecordCount(file.recordCount())
                             .setDataFileContentValue(file.content().id())
                             .setDataFileFormat(dataFileFormat)
-                            .setStart(0) // 暂时设置为 0
+                            .setStart(0)
                             .setLength(file.fileSizeInBytes())
                             .setSequenceNumber(
                                     file.dataSequenceNumber() == null
@@ -122,6 +121,10 @@ public class OptimizeServlet extends HttpServlet {
                                     file.equalityFieldIds() == null
                                             ? new ArrayList<>()
                                             : file.equalityFieldIds())
+                            .addAllProjectFieldIds(
+                                    task.projectedSchema().columns().stream()
+                                            .map(column -> column.fieldId())
+                                            .collect(Collectors.toList()))
                             .build());
         }
         var fileIoBuilder = FileIoBuilder.newBuilder();
