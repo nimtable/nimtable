@@ -60,25 +60,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
-      // Simulate API call with a delay
-      await new Promise((resolve) => setTimeout(resolve, 800))
-
-      // In a real app, you would validate credentials against your backend
-      // This is just a simple demo implementation
-      if (username === "admin" && password === "password") {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      })
+      const data = await response.json()
+      if (response.ok && data.success) {
         const userData: User = {
-          username: "admin",
-          name: "Admin User",
+          username: username,
+          name: username,
           role: "admin",
-        }
-        setUser(userData)
-        localStorage.setItem("user", JSON.stringify(userData))
-        return true
-      } else if (username === "user" && password === "password") {
-        const userData: User = {
-          username: "user",
-          name: "Regular User",
-          role: "user",
         }
         setUser(userData)
         localStorage.setItem("user", JSON.stringify(userData))
