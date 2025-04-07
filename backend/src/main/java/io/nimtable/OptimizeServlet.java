@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.shaded.org.jline.utils.Log;
 import org.apache.iceberg.*;
 import org.apache.iceberg.Metrics;
 import org.apache.iceberg.catalog.TableIdentifier;
@@ -110,10 +111,9 @@ public class OptimizeServlet extends HttpServlet {
                                             : file.equalityFieldIds())
                             .build());
         }
-
         var fileIoBuilder = FileIoBuilder.newBuilder();
         // set properties
-        for (var entry : table.properties().entrySet()) {
+        for (var entry : config.getCatalog(catalogName).properties().entrySet()) {
             fileIoBuilder.putProps(entry.getKey(), entry.getValue());
         }
 
@@ -431,15 +431,6 @@ public class OptimizeServlet extends HttpServlet {
 
                 if (compaction) {
                     properties.put("nimtable.compaction.enabled", "true");
-                    properties.put(
-                            "s3.access-key-id", catalog.properties().get(Catalog.S3_ACCESS_KEY_ID));
-                    properties.put(
-                            "s3.secret-access-key",
-                            catalog.properties().get(Catalog.S3_SECRET_ACCESS_KEY));
-                    properties.put("s3.region", catalog.properties().get(Catalog.S3_REGION));
-                    properties.put(
-                            "s3.path-style-access",
-                            catalog.properties().get(Catalog.S3_PATH_STYLE_ACCESS));
                 } else {
                     properties.put("nimtable.compaction.enabled", "false");
                 }
