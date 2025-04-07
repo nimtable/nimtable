@@ -39,7 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.shaded.org.jline.utils.Log;
 import org.apache.iceberg.*;
 import org.apache.iceberg.Metrics;
 import org.apache.iceberg.catalog.TableIdentifier;
@@ -129,7 +128,6 @@ public class OptimizeServlet extends HttpServlet {
                             .addAllProjectFieldIds(
                                     task.schema().columns().stream()
                                             .map(column -> column.fieldId())
-                                            .map(Integer::longValue)
                                             .collect(Collectors.toList()))
                             .build());
         }
@@ -160,8 +158,6 @@ public class OptimizeServlet extends HttpServlet {
                         .setFileIoBuilder(fileIoBuilder)
                         .setSchema(schema)
                         .build();
-
-        System.out.println("DEBUG request: " + request.toString());
 
         try (IcebergCompactionClient client = new IcebergCompactionClient("127.0.0.1", 7777)) {
             RewriteFilesResponse rewrite_files_stat_response = client.rewriteFiles(request);
@@ -266,7 +262,6 @@ public class OptimizeServlet extends HttpServlet {
             try {
                 rewrite_files_action.commit();
             } catch (Exception e) {
-                Log.error("Failed to commit rewrite files action: {}", e.getMessage());
                 throw new RuntimeException("Failed to commit rewrite files action", e);
             }
 

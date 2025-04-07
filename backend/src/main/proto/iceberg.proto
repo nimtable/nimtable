@@ -77,7 +77,7 @@ message FileScanTaskDescriptor {
     string data_file_path = 4;
     DataContentType data_file_content = 5;
     DataFileFormat data_file_format = 6;
-    repeated int64 project_field_ids = 7;
+    repeated int32 project_field_ids = 7;
     int64 sequence_number = 8;
     repeated int32 equality_ids = 9;
 }
@@ -126,11 +126,6 @@ message Literal{
         StructLiteralDescriptor list = 3;
         MapLiteral map = 4;
     }
-}
-
-message Datum {
-    PrimitiveType type = 1;
-    PrimitiveLiteral literal = 2;
 }
 
 message DataFile {
