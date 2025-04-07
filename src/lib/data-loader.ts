@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { CatalogConfig, LoadTableResult } from "./api"
+import { CatalogConfig, LoadTableResult, PartitionSpec } from "./api"
 import { Api } from "@/lib/api"
 
 // Re-export types from api.ts, ensuring application code don't need to access the api directly.
-export type { CatalogConfig, StructField, LoadTableResult } from "./api";
+export type { CatalogConfig, StructField, LoadTableResult, PartitionSpec } from "./api";
 
 // Types for the sidebar data structure
 export interface NamespaceTables {
@@ -163,7 +163,7 @@ export interface NamespaceTable {
     name: string
     formatVersion: string
     dataSizeBytes: number
-    partitioning: string | null
+    partitionSpecs: PartitionSpec[]
     lastUpdated: number
 }
 
@@ -176,7 +176,7 @@ export async function getNamespaceTables(catalog: string, namespace: string): Pr
             name: table.name,
             formatVersion: tableResponse.metadata['format-version'] || "",
             dataSizeBytes: tableResponse.metadata.statistics?.[0]?.["file-size-in-bytes"] || 0,
-            partitioning: tableResponse.metadata["partition-specs"] || null,
+            partitionSpecs: tableResponse.metadata["partition-specs"] || [],
             lastUpdated: tableResponse.metadata['last-updated-ms'] || 0,
         }
     }) || [])) as NamespaceTable[]

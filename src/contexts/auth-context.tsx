@@ -91,11 +91,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const logout = () => {
+  const logout = React.useCallback(() => {
     setUser(null)
     localStorage.removeItem("user")
     router.push("/login")
-  }
+  }, [router])
 
   const value = React.useMemo(
     () => ({
@@ -104,7 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logout,
       isLoading,
     }),
-    [user, isLoading],
+    [user, isLoading, logout],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

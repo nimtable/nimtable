@@ -83,7 +83,7 @@ function FileDistributionSection({
         if (tableId && catalog && namespace) {
             fetchData()
         }
-    }, [tableId, catalog, namespace])
+    }, [tableId, catalog, namespace, toast])
 
     if (loading) {
         return (
@@ -197,7 +197,7 @@ interface OptimizeSheetProps {
 
 export function OptimizeSheet({ open, onOpenChange, catalog, namespace, table }: OptimizeSheetProps) {
     const { toast } = useToast()
-    const [tableData, setTableData] = useState<LoadTableResult | undefined>(undefined)
+    const [, setTableData] = useState<LoadTableResult | undefined>(undefined)
     const [isLoading, setIsLoading] = useState(false)
     const [showProgressDialog, setShowProgressDialog] = useState(false)
     const [optimizationSteps, setOptimizationSteps] = useState<OptimizationStep[]>([])
@@ -507,7 +507,7 @@ export function OptimizeSheet({ open, onOpenChange, catalog, namespace, table }:
                             <DialogDescription>Running optimization operations. This may take several minutes.</DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4 py-4">
-                            {optimizationSteps.map((step, _index) => (
+                            {optimizationSteps.map((step) => (
                                 <div key={step.name} className="flex items-center gap-4">
                                     <div className="flex-shrink-0">
                                         {step.status === "pending" && <Circle className="h-5 w-5 text-muted-foreground" />}

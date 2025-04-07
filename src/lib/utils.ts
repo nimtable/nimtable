@@ -20,15 +20,32 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function errorToString(error: any) {
+interface IcebergErrorResponse {
+  error: {
+    message: string;
+  };
+}
+
+export function errorToString(error: unknown): string {
+  if (typeof error === 'string') {
+    return error
+  }
   // IcebergErrorResponse
-  if (error.error && error.error.message) {
-    return error.error.message
+  if (
+    error &&
+    typeof error === 'object' &&
+    'error' in error &&
+    error.error &&
+    typeof error.error === 'object' &&
+    'message' in error.error &&
+    typeof error.error.message === 'string'
+  ) {
+    return (error as IcebergErrorResponse).error.message;
   }
   // Error
   if (error instanceof Error) {
-    return error.message
+    return error.message;
   }
   // Fallback
-  return error.message || String(error)
+  return "Unknown error";
 }

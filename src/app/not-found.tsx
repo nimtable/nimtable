@@ -35,7 +35,7 @@ export default function NotFound() {
                     <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 to-blue-600"></div>
                     <div className="relative mx-auto max-w-5xl p-4">
                         <div className="flex items-center justify-center">
-                            <img src="/square-light.svg" alt="Nimtable Logo" className="h-32 w-auto" />
+                            <Image src="/square-light.svg" alt="Nimtable Logo" width={128} height={128} className="h-32 w-auto" />
                         </div>
                     </div>
                 </header>
@@ -52,7 +52,7 @@ export default function NotFound() {
 
                         <h1 className="text-3xl font-bold mb-3 text-center">Page Not Found</h1>
                         <p className="text-muted-foreground text-lg max-w-xl text-center mb-8">
-                            The page you're looking for doesn't exist or has been moved.
+                            The page you&apos;re looking for doesn&apos;t exist or has been moved.
                         </p>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl mb-12">

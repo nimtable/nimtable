@@ -54,10 +54,6 @@ function AppSidebarContent() {
   const [catalogListLoading, setCatalogListLoading] = React.useState(true)
   const [namespacesLoading, setNamespacesLoading] = React.useState(false)
 
-  // Don't render sidebar if user is not authenticated or on login page
-  if (!user || isLoginPage) {
-    return null
-  }
 
   // Load catalogs on mount and when refresh is triggered
   React.useEffect(() => {
@@ -143,13 +139,18 @@ function AppSidebarContent() {
     }
   }, [catalog, refreshTrigger, toast])
 
-  const handleRefresh = React.useCallback(() => {
+  // Don't render sidebar if user is not authenticated or on login page
+  if (!user || isLoginPage) {
+    return null
+  }
+
+  const handleRefresh = () => {
     refresh()
     toast({
       title: "Refreshing data",
       description: "Fetching the latest catalog information",
     })
-  }, [refresh, toast])
+  }
 
   return (
     <Sidebar className="border-r">
@@ -294,7 +295,7 @@ function AppSidebarContent() {
               <ServerCrash className="h-8 w-8 text-muted-foreground" />
               <span className="text-sm font-medium">No namespaces found</span>
               <p className="text-xs text-muted-foreground max-w-[200px]">
-                The catalog <span className="font-medium text-foreground">"{catalog}"</span> doesn't contain any
+                The catalog <span className="font-medium text-foreground">&quot;{catalog}&quot;</span> doesn&apos;t contain any
                 namespaces.
               </p>
             </div>

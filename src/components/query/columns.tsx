@@ -58,7 +58,7 @@ export function createColumns(columnNames: string[]): ColumnDef<any>[] {
         try {
           const date = value instanceof Date ? value : new Date(value)
           return <span className="text-sm tabular-nums">{date.toLocaleString()}</span>
-        } catch (e) {
+        } catch {
           return String(value)
         }
       }
@@ -66,7 +66,7 @@ export function createColumns(columnNames: string[]): ColumnDef<any>[] {
       if (typeof value === "object") {
         try {
           return <span className="font-mono text-xs bg-muted/30 px-1.5 py-0.5 rounded">{JSON.stringify(value)}</span>
-        } catch (e) {
+        } catch {
           return <span className="text-muted-foreground italic text-sm">[Object]</span>
         }
       }

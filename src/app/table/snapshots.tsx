@@ -17,7 +17,6 @@
 "use client"
 import { useState, useMemo } from "react"
 import { GitBranch, Tag, GitCommit, Calendar } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
 
 import { Badge } from "@/components/ui/badge"
 import type { LoadTableResult } from "@/lib/data-loader"
@@ -246,13 +245,13 @@ function TimelineView({
     )
 }
 
-export function SnapshotsTab({ tableData, catalog, namespace, table }: SnapshotsTabProps) {
-    const { toast } = useToast()
-    const [manifestListData, setManifestListData] = useState<{
-        snapshot_id: string
-        manifest_list_location: string
-        manifests: any[]
-    } | null>(null)
+export function SnapshotsTab({ tableData }: SnapshotsTabProps) {
+    // const { toast } = useToast()
+    // const [manifestListData, setManifestListData] = useState<{
+    //     snapshot_id: string
+    //     manifest_list_location: string
+    //     manifests: any[]
+    // } | null>(null)
 
     const [activeView, setActiveView] = useState<string>("branch")
 
@@ -305,7 +304,7 @@ export function SnapshotsTab({ tableData, catalog, namespace, table }: Snapshots
                     <CardContent className="flex flex-col items-center justify-center py-12">
                         <GitCommit className="h-12 w-12 mb-4 text-muted-foreground/20" />
                         <p className="text-sm font-medium">No snapshots found</p>
-                        <p className="text-xs mt-1 text-muted-foreground">This table doesn't have any version history yet</p>
+                        <p className="text-xs mt-1 text-muted-foreground">This table doesn&apos;t have any version history yet</p>
                     </CardContent>
                 </Card>
             ) : (

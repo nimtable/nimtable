@@ -281,7 +281,13 @@ export default function LoginPage() {
                         {/* Enhanced footer text with better styling */}
                         <div className="mt-8 text-center">
                             <div className="flex items-center justify-center">
-                                <img src="/horizontal-dark.svg" alt="Nimtable Logo" className="h-8 w-auto filter brightness-0 invert -mr-2 -mt-[2px]" />
+                                <Image
+                                    src="/horizontal-dark.svg"
+                                    alt="Nimtable Logo"
+                                    width={120}
+                                    height={32}
+                                    className="h-8 w-auto filter brightness-0 invert -mr-2 -mt-[2px]"
+                                />
                                 <p className="text-xs text-blue-200/70">v1.0 — Managed Iceberg Made Simple</p>
                             </div>
                         </div>

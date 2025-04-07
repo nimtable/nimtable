@@ -314,7 +314,7 @@ export function InfoTab({ tableData, catalog, namespace, table }: InfoTabProps) 
                     <DialogHeader>
                         <DialogTitle>Drop Table</DialogTitle>
                         <DialogDescription>
-                            Are you sure you want to drop the table "{table}"? This action cannot be undone.
+                            Are you sure you want to drop the table &quot;{table}&quot;? This action cannot be undone.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
@@ -333,7 +333,7 @@ export function InfoTab({ tableData, catalog, namespace, table }: InfoTabProps) 
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Rename Table</DialogTitle>
-                        <DialogDescription>Enter a new name for the table "{table}".</DialogDescription>
+                        <DialogDescription>Enter a new name for the table &quot;{table}&quot;.</DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <div className="grid gap-2">

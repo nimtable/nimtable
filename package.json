@@ -43,15 +43,15 @@
     "webpack": "^5.98.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.20.0",
+    "@eslint/js": "^8.56.0",
     "@types/node": "^22",
     "@types/prismjs": "^1.26.5",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.4.20",
     "css-loader": "^6.10.0",
-    "eslint": "^9.20.1",
-    "eslint-config-next": "15.0.2",
+    "eslint": "^8.56.0",
+    "eslint-config-next": "14.2.24",
     "postcss": "^8",
     "postcss-loader": "^8.1.1",
     "style-loader": "^3.3.4",
@@ -60,6 +60,6 @@
     "ts-loader": "^9.5.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.24.1"
+    "typescript-eslint": "^7.0.0"
   }
 }

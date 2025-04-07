@@ -176,7 +176,7 @@ export default function Page() {
                                         </CardHeader>
                                         <CardContent>
                                             <p className="text-sm text-muted-foreground leading-relaxed">
-                                                Visually navigate your data lake's metadata and schema. Gain instant insights into your Iceberg
+                                                Visually navigate your data lake&apos;s metadata and schema. Gain instant insights into your Iceberg
                                                 tables without writing queries.
                                             </p>
                                         </CardContent>
@@ -230,7 +230,7 @@ export default function Page() {
                     <footer className="border-t bg-background py-5 px-8">
                         <div className="mx-auto max-w-5xl flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div className="flex items-center gap-3">
-                                <img src="/horizontal-light.svg" alt="Nimtable Logo" className="h-12 w-auto -mr-5 -mt-[2px]" />
+                                <Image src="/horizontal-light.svg" alt="Nimtable Logo" width={120} height={24} className="h-10 w-auto -mr-5 -mt-[2px]" />
                                 <p className="text-sm text-muted-foreground">v1.0 — Managed Iceberg Made Simple</p>
                             </div>
                             <div className="flex items-center gap-4">

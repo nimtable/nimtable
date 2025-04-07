@@ -215,12 +215,6 @@ export default function SQLEditorPage() {
                                             value={query}
                                             onChange={(e) => {
                                                 setQuery(e.target.value)
-                                                // Force a reflow to ensure proper cursor positioning
-                                                if (highlightedCodeRef.current) {
-                                                    highlightedCodeRef.current.style.display = "none"
-                                                    highlightedCodeRef.current.offsetHeight
-                                                    highlightedCodeRef.current.style.display = ""
-                                                }
                                             }}
                                             className="absolute inset-0 w-full h-full p-4 font-mono text-sm bg-transparent resize-none border-0 focus:outline-none caret-foreground text-transparent [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 [&::-webkit-scrollbar-thumb]:rounded-full"
                                             placeholder="Enter your SQL query here..."
@@ -330,7 +324,7 @@ export default function SQLEditorPage() {
                                             </div>
                                             <p className="text-sm font-medium mb-1">No query results to display</p>
                                             <p className="text-xs max-w-md">
-                                                Run a query using the editor above to see results here. You can use the "Run Query" button or
+                                                Run a query using the editor above to see results here. You can use the &quot;Run Query&quot; button or
                                                 press Ctrl+Enter.
                                             </p>
                                         </div>

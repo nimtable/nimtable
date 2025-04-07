@@ -29,9 +29,7 @@ interface TopNavbarProps {
 
 export function TopNavbar({ catalog, namespace, table }: TopNavbarProps) {
     // Determine the current page context
-    const isTablePage = Boolean(catalog && namespace && table)
     const isNamespacePage = Boolean(catalog && namespace && !table)
-    const isCatalogPage = Boolean(catalog && !namespace && !table)
 
     return (
         <div className="border-b">
