@@ -34,9 +34,7 @@ Nimtable acts as a bridge between users and various catalog servers, providing b
 The fastest way to get started is using Docker:
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/nimtable.git
-cd nimtable/docker
+cd docker
 
 # Start the service
 docker compose up -d
