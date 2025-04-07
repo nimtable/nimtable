@@ -35,6 +35,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import Link from "next/link"
 import { loadTableData, type LoadTableResult } from "@/lib/data-loader"
+import {
+    getFileDistribution,
+    runOptimizationOperation,
+    scheduleOptimization,
+    type DistributionData,
+    type OptimizationOperation,
+} from "@/lib/data-loader"
 
 type OptimizationStep = {
     name: string
@@ -42,15 +49,6 @@ type OptimizationStep = {
     error?: string
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     result?: any
-}
-
-interface DistributionItem {
-    count: number
-    percentage: number
-}
-
-interface DistributionData {
-    [range: string]: DistributionItem
 }
 
 // Define the order of size ranges
@@ -61,33 +59,29 @@ function FileDistributionSection({
     catalog,
     namespace,
 }: { tableId: string; catalog: string; namespace: string }) {
+    const { toast } = useToast()
     const [loading, setLoading] = useState(true)
     const [distribution, setDistribution] = useState<DistributionData>({})
 
     useEffect(() => {
-        async function fetchDistribution() {
+        async function fetchData() {
             try {
                 setLoading(true)
-                // Simulate API call with mock data
-                await new Promise((resolve) => setTimeout(resolve, 800))
-
-                // Mock distribution data
-                setDistribution({
-                    "0-8M": { count: 42, percentage: 15 },
-                    "8M-32M": { count: 78, percentage: 28 },
-                    "32M-128M": { count: 103, percentage: 37 },
-                    "128M-512M": { count: 45, percentage: 16 },
-                    "512M+": { count: 12, percentage: 4 },
-                })
+                const data = await getFileDistribution(catalog, namespace, tableId)
+                setDistribution(data)
             } catch (error) {
-                console.error("Failed to fetch distribution data", error)
+                toast({
+                    variant: "destructive",
+                    title: "Failed to fetch distribution data",
+                    description: errorToString(error),
+                })
             } finally {
                 setLoading(false)
             }
         }
 
         if (tableId && catalog && namespace) {
-            fetchDistribution()
+            fetchData()
         }
     }, [tableId, catalog, namespace])
 
@@ -257,22 +251,21 @@ export function OptimizeSheet({ open, onOpenChange, catalog, namespace, table }:
                 return newSteps
             })
 
-            // Simulate API call with a delay
-            await new Promise((resolve) => setTimeout(resolve, 1500))
-
-            // Mock successful response
-            const mockResults = {
-                Compaction: { rewrittenDataFilesCount: 45, addedDataFilesCount: 12 },
-                "Snapshot Expiration": { deletedDataFilesCount: 23, deletedManifestFilesCount: 5 },
-                "Orphan File Cleanup": { orphanFileLocations: Array(8).fill("s3://path/to/orphan/file") },
-            }
+            const result = await runOptimizationOperation(step.name as OptimizationOperation, catalog, namespace, table, {
+                snapshotRetention,
+                retentionPeriod,
+                minSnapshotsToKeep,
+                orphanFileDeletion,
+                orphanFileRetention,
+                compaction,
+            })
 
             setOptimizationSteps((steps) => {
                 const newSteps = [...steps]
                 newSteps[index] = {
                     ...step,
                     status: "done",
-                    result: mockResults[step.name as keyof typeof mockResults],
+                    result,
                 }
                 return newSteps
             })
@@ -315,9 +308,14 @@ export function OptimizeSheet({ open, onOpenChange, catalog, namespace, table }:
             // Handle schedule case (just update properties)
             try {
                 setIsLoading(true)
-
-                // Simulate API call with a delay
-                await new Promise((resolve) => setTimeout(resolve, 1000))
+                await scheduleOptimization(catalog, namespace, table, {
+                    snapshotRetention,
+                    retentionPeriod,
+                    minSnapshotsToKeep,
+                    orphanFileDeletion,
+                    orphanFileRetention,
+                    compaction,
+                })
 
                 toast({
                     title: "Optimization scheduled",

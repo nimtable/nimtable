@@ -32,7 +32,7 @@ import { SidebarInset } from "@/components/ui/sidebar"
 
 export default function SQLEditorPage() {
     const { toast } = useToast()
-    const [query, setQuery] = useState(`SELECT * FROM "catalog"."namespace"."table" LIMIT 100`)
+    const [query, setQuery] = useState(`SELECT * FROM \`catalog\`.\`namespace\`.\`table\` LIMIT 100`)
     const [queryResults, setQueryResults] = useState<{ columns: string[]; rows: any[][] } | null>(null)
     const [isLoading, setIsLoading] = useState(false)
     const [queryError, setQueryError] = useState<string | null>(null)
@@ -99,14 +99,30 @@ export default function SQLEditorPage() {
         }
     }
 
-    const handleCopyQuery = () => {
-        navigator.clipboard.writeText(query)
-        setIsCopying(true)
-        toast({
-            title: "Query copied to clipboard",
-        })
-        setTimeout(() => setIsCopying(false), 2000)
-    }
+    const handleCopyQuery = async () => {
+        if (!navigator.clipboard || !navigator.clipboard.writeText) {
+            toast({
+                variant: "destructive",
+                title: "Clipboard API is not enabled in your browser",
+            });
+            return;
+        }
+
+        try {
+            await navigator.clipboard.writeText(query);
+            setIsCopying(true);
+            toast({
+                title: "Query copied to clipboard",
+            });
+            setTimeout(() => setIsCopying(false), 2000);
+        } catch (error) {
+            toast({
+                variant: "destructive",
+                title: "Failed to copy query",
+                description: errorToString(error),
+            });
+        }
+    };
 
     const handleDownloadResults = () => {
         if (!queryResults) return
@@ -169,22 +185,15 @@ export default function SQLEditorPage() {
                                         </Tooltip>
                                     </TooltipProvider>
 
-                                    <TooltipProvider delayDuration={300}>
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <Button
-                                                    onClick={handleCopyQuery}
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="border-muted-foreground/20"
-                                                >
-                                                    {isCopying ? <Check className="mr-1 h-3.5 w-3.5" /> : <Copy className="mr-1 h-3.5 w-3.5" />}
-                                                    Copy
-                                                </Button>
-                                            </TooltipTrigger>
-                                            <TooltipContent>Copy query to clipboard</TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
+                                    <Button
+                                        onClick={handleCopyQuery}
+                                        variant="outline"
+                                        size="sm"
+                                        className="border-muted-foreground/20"
+                                    >
+                                        {isCopying ? <Check className="mr-1 h-3.5 w-3.5" /> : <Copy className="mr-1 h-3.5 w-3.5" />}
+                                        Copy
+                                    </Button>
                                 </div>
                             </CardHeader>
 

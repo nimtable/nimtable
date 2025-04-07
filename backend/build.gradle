@@ -126,7 +126,7 @@ task buildFrontend(type: Exec) {
 }
 
 task copyFrontend(type: Copy, dependsOn: buildFrontend) {
-  from '../dist'
+  from '../out'
   into 'src/main/resources/static'
   duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }

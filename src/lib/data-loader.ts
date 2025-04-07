@@ -181,3 +181,106 @@ export async function getNamespaceTables(catalog: string, namespace: string): Pr
         }
     }) || [])) as NamespaceTable[]
 }
+
+export interface DistributionItem {
+    count: number
+    percentage: number
+}
+
+export interface DistributionData {
+    [range: string]: DistributionItem
+}
+
+/**
+ * Get file size distribution for a table
+ */
+export async function getFileDistribution(
+    catalog: string,
+    namespace: string,
+    tableId: string,
+): Promise<DistributionData> {
+    const response = await fetch(`/api/distribution/${catalog}/${namespace}/${tableId}`);
+    if (response.ok) {
+        const data = await response.json();
+        return data;
+    }
+    return {}
+}
+
+export type OptimizationOperation = "Compaction" | "Snapshot Expiration" | "Orphan File Cleanup"
+
+export interface OptimizationSettings {
+    snapshotRetention: boolean
+    retentionPeriod: string
+    minSnapshotsToKeep: string
+    orphanFileDeletion: boolean
+    orphanFileRetention: string
+    compaction: boolean
+}
+
+/**
+ * Run an optimization operation on a table
+ */
+export async function runOptimizationOperation(
+    step: OptimizationOperation,
+    catalog: string,
+    namespace: string,
+    table: string,
+    settings: OptimizationSettings,
+): Promise<any> {
+    const operation = step === 'Compaction' ? 'compact' :
+        step === 'Snapshot Expiration' ? 'expire-snapshots' :
+            'clean-orphan-files';
+
+    const response = await fetch(`/api/optimize/${catalog}/${namespace}/${table}/${operation}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            snapshotRetention: settings?.snapshotRetention,
+            retentionPeriod: parseInt(settings.retentionPeriod) * 24 * 60 * 60 * 1000,
+            minSnapshotsToKeep: parseInt(settings.minSnapshotsToKeep),
+            orphanFileDeletion: settings.orphanFileDeletion,
+            orphanFileRetention: parseInt(settings.orphanFileRetention) * 24 * 60 * 60 * 1000,
+            compaction: settings.compaction,
+        }),
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || `Failed to run ${step}`);
+    }
+
+    return await response.json();
+}
+
+/**
+ * Schedule optimization operations for a table
+ */
+export async function scheduleOptimization(
+    catalog: string,
+    namespace: string,
+    table: string,
+    settings: OptimizationSettings,
+): Promise<void> {
+    const response = await fetch(`/api/optimize/${catalog}/${namespace}/${table}/schedule`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            snapshotRetention: settings.snapshotRetention,
+            retentionPeriod: parseInt(settings.retentionPeriod) * 24 * 60 * 60 * 1000,
+            minSnapshotsToKeep: parseInt(settings.minSnapshotsToKeep),
+            orphanFileDeletion: settings.orphanFileDeletion,
+            orphanFileRetention: parseInt(settings.orphanFileRetention) * 24 * 60 * 60 * 1000,
+            compaction: settings.compaction,
+        }),
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to schedule optimization');
+    }
+}
