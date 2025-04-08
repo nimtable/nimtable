@@ -34,8 +34,9 @@ import { useSearchParams } from "next/navigation"
 export default function SQLEditorPage() {
     const { toast } = useToast()
     const searchParams = useSearchParams()
-    const catalogParam = searchParams.get("catalog")
-    const [query, setQuery] = useState(`SELECT * FROM \`${catalogParam || "catalog"}\`.\`namespace\`.\`table\` LIMIT 100`)
+    const initialQuery = searchParams.get("query") || `SELECT * FROM \`catalog\`.\`namespace\`.\`table\` LIMIT 100`
+    const autoRun = searchParams.get("autoRun") === "true"
+    const [query, setQuery] = useState(initialQuery)
     const [queryResults, setQueryResults] = useState<{ columns: string[]; rows: any[][] } | null>(null)
     const [isLoading, setIsLoading] = useState(false)
     const [queryError, setQueryError] = useState<string | null>(null)
@@ -44,6 +45,13 @@ export default function SQLEditorPage() {
     const [highlightedCode, setHighlightedCode] = useState<string>("")
     const editorRef = useRef<HTMLTextAreaElement>(null)
     const highlightedCodeRef = useRef<HTMLDivElement>(null)
+
+    // Auto run query if autoRun parameter is present
+    useEffect(() => {
+        if (autoRun) {
+            handleRunQuery()
+        }
+    }, [autoRun])
 
     // Update highlighted code when query changes
     useEffect(() => {

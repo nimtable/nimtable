@@ -142,6 +142,27 @@ export function InfoTab({ tableData, catalog, namespace, table }: InfoTabProps) 
                     <Button
                         variant="outline"
                         size="sm"
+                        className="gap-2 relative overflow-hidden group bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white hover:text-white shadow-md hover:shadow-lg transition-all duration-300 border-0 hover:scale-[1.03] transform"
+                        onClick={() => router.push(`/sql-editor?query=${encodeURIComponent(`SELECT * FROM \`${catalog}\`.\`${namespace}\`.\`${table}\` LIMIT 100`)}&autoRun=true`)}
+                    >
+                        {/* Animated glow effect */}
+                        <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-400/0 via-blue-400/30 to-blue-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-[length:200%_100%] animate-gradient-x"></div>
+
+                        {/* Button content */}
+                        <div className="relative flex items-center gap-2">
+                            <div className="p-1 bg-white/20 rounded-md flex items-center justify-center group-hover:bg-white/30 transition-colors">
+                                <TableIcon className="h-3.5 w-3.5 text-white" />
+                            </div>
+                            <span className="font-medium">Preview Data</span>
+                        </div>
+
+                        {/* Subtle pulse effect */}
+                        <span className="absolute -inset-3 block rounded-full bg-blue-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></span>
+                    </Button>
+
+                    <Button
+                        variant="outline"
+                        size="sm"
                         className="gap-2 relative overflow-hidden group bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white hover:text-white shadow-md hover:shadow-lg transition-all duration-300 border-0 hover:scale-[1.03] transform"
                         onClick={() => setShowOptimizeDialog(true)}
                     >
