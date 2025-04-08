@@ -326,7 +326,7 @@ function AppSidebarContent() {
           <div className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
               <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                {user.name.charAt(0).toUpperCase()}
+                {user?.name?.charAt(0)?.toUpperCase() ?? 'U'}
               </span>
             </div>
             <div className="flex flex-col">
