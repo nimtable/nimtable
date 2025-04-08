@@ -52,6 +52,8 @@ Access the UI at http://localhost:8182
 
 Nimtable uses YAML for configuration, supporting both server settings and catalog connections. The configuration format is compatible with Spark's Iceberg catalog configuration.
 
+For Docker deployments, you can find a sample configuration file at [docker/config.yaml](./docker/config.yaml).
+
 ### Server Configuration
 
 ```yaml
@@ -100,23 +102,6 @@ catalogs:
     rest.signing-region: us-east-1
 ```
 
-#### AWS Glue Catalog
-
-Required environment variables:
-```bash
-AWS_REGION=us-east-1
-AWS_ACCESS_KEY_ID=your-access-key
-AWS_SECRET_ACCESS_KEY=your-secret-key
-```
-
-Configuration:
-```yaml
-catalogs:
-  - name: glue-catalog
-    type: glue
-    warehouse: s3://your-bucket/test
-```
-
 #### JDBC Catalog (e.g. PostgreSQL)
 
 ```yaml
@@ -136,6 +121,42 @@ catalogs:
     s3.region: us-east-1
     s3.path-style-access: true
     client.region: us-east-1
+```
+
+#### AWS Glue Catalog
+
+You need to provide AWS credentials for Glue Catalog access. You can do this by either mounting the AWS credentials file or using environment variables. See the section below for details.
+
+
+```yaml
+catalogs:
+  - name: glue-catalog
+    type: glue
+    warehouse: s3://your-bucket/test
+```
+
+### AWS Credential Configuration in Docker
+
+There are two ways to configure AWS credentials in Docker:
+
+1. Using Environment Variables:
+```yaml
+# docker-compose.yml
+services:
+  nimtable:
+    environment:
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=your-access-key
+      - AWS_SECRET_ACCESS_KEY=your-secret-key
+```
+
+2. Mounting AWS Credentials File (Read-only):
+```yaml
+# docker-compose.yml
+services:
+  nimtable:
+    volumes:
+      - ~/.aws/credentials:/root/.aws/credentials:ro
 ```
 
 
