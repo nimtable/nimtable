@@ -6,8 +6,6 @@ on:
     - cron: '0 0 * * *'
   # Allow manual trigger
   workflow_dispatch:
-  # REMOVE THIS
-  pull_request:
 
 permissions:
   contents: read
