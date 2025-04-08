@@ -107,11 +107,11 @@ public class Server {
                             return;
                         }
 
-                        // Try to serve the requested file
+                        // Try to serve the requested file directly
                         Resource resource =
                                 baseResource.addPath(
                                         target.startsWith("/") ? target.substring(1) : target);
-                        if (resource.exists()) {
+                        if (resource.exists() && !resource.isDirectory()) {
                             response.setContentType(getContentType(target));
                             try (InputStream in = resource.getInputStream()) {
                                 in.transferTo(response.getOutputStream());
@@ -120,7 +120,33 @@ public class Server {
                             return;
                         }
 
-                        // If file doesn't exist, serve index.html for SPA routing
+                        // If not found, try mapping the route to a static HTML file.
+                        // Remove query parameters if any.
+                        String route = target;
+                        int queryIndex = route.indexOf('?');
+                        if (queryIndex != -1) {
+                            route = route.substring(0, queryIndex);
+                        }
+                        // Remove leading slash
+                        if (route.startsWith("/")) {
+                            route = route.substring(1);
+                        }
+
+                        // Map known routes to corresponding HTML files.
+                        String fileName = route + ".html";
+
+                        // Try serving the mapped file.
+                        Resource mappedResource = baseResource.addPath(fileName);
+                        if (mappedResource.exists() && !mappedResource.isDirectory()) {
+                            response.setContentType(getContentType(fileName));
+                            try (InputStream in = mappedResource.getInputStream()) {
+                                in.transferTo(response.getOutputStream());
+                            }
+                            baseRequest.setHandled(true);
+                            return;
+                        }
+
+                        // Fallback: serve index.html for SPA routing.
                         serveIndexHtml(baseRequest, response);
                     }
 
@@ -139,6 +165,10 @@ public class Server {
                         if (path.endsWith(".css")) return "text/css";
                         if (path.endsWith(".html")) return "text/html";
                         if (path.endsWith(".json")) return "application/json";
+                        if (path.endsWith(".png")) return "image/png";
+                        if (path.endsWith(".jpg") || path.endsWith(".jpeg")) return "image/jpeg";
+                        if (path.endsWith(".gif")) return "image/gif";
+                        if (path.endsWith(".svg")) return "image/svg+xml";
                         return "application/octet-stream";
                     }
                 };

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -21,17 +20,32 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function errorToString(error: any) {
-  console.log(error)
+interface IcebergErrorResponse {
+  error: {
+    message: string;
+  };
+}
+
+export function errorToString(error: unknown): string {
+  if (typeof error === 'string') {
+    return error
+  }
   // IcebergErrorResponse
-  if (error.error && error.error.message) {
-    return error.error.message
+  if (
+    error &&
+    typeof error === 'object' &&
+    'error' in error &&
+    error.error &&
+    typeof error.error === 'object' &&
+    'message' in error.error &&
+    typeof error.error.message === 'string'
+  ) {
+    return (error as IcebergErrorResponse).error.message;
   }
   // Error
   if (error instanceof Error) {
-    return error.message
+    return error.message;
   }
   // Fallback
-  return error.message || String(error)
+  return "Unknown error";
 }
