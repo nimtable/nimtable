@@ -21,7 +21,7 @@ import Link from "next/link"
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar"
-import { type NamespaceTables } from "@/lib/data-loader"
+import type { NamespaceTables } from "@/lib/data-loader"
 
 export function TableItem({ catalog, namespace, name }: { catalog: string; namespace: string; name: string }) {
     return (
@@ -51,7 +51,7 @@ export function NamespaceTreeItem({ catalog, namespace }: { catalog: string; nam
                     )}
                     <Link
                         href={`/namespace?catalog=${catalog}&namespace=${namespace.name}`}
-                        className="flex items-center gap-2 flex-1"
+                        className="flex items-center gap-2 flex-1 hover:text-blue-500 hover:underline transition-colors"
                     >
                         <FolderTree className="h-4 w-4 shrink-0 text-blue-500" />
                         <span>{namespace.shortName}</span>

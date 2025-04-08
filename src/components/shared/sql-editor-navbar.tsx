@@ -16,7 +16,7 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowLeft, FileCode } from "lucide-react"
+import { Home, FileCode } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
@@ -30,13 +30,13 @@ export function SqlEditorNavbar() {
                             <TooltipTrigger asChild>
                                 <Button variant="outline" size="icon" className="h-8 w-8 border-muted-foreground/20" asChild>
                                     <Link href="/">
-                                        <ArrowLeft className="h-4 w-4" />
-                                        <span className="sr-only">Back to dashboard</span>
+                                        <Home className="h-4 w-4" />
+                                        <span className="sr-only">Go to dashboard</span>
                                     </Link>
                                 </Button>
                             </TooltipTrigger>
                             <TooltipContent side="bottom">
-                                <p>Back to dashboard</p>
+                                <p>Go to dashboard</p>
                             </TooltipContent>
                         </Tooltip>
                     </TooltipProvider>
