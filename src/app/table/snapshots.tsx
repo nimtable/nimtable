@@ -295,12 +295,10 @@ export function SnapshotsTab({ tableData }: SnapshotsTabProps) {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
-                    <GitCommit className="h-5 w-5 text-blue-500" />
-                </div>
-                <h2 className="text-xl font-semibold">Version Control</h2>
-            </div>
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
+                Version Control
+            </h3>
 
             {snapshots.length === 0 ? (
                 <Card className="border-muted/70 shadow-sm overflow-hidden">

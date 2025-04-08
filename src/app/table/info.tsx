@@ -47,6 +47,13 @@ interface InfoTabProps {
     table: string
 }
 
+// Function to check if a property key contains sensitive information that should be redacted
+const isSensitiveProperty = (key: string): boolean => {
+    const sensitiveKeys = ["s3.secret-access-key", "s3.access-key-id"]
+
+    return sensitiveKeys.some((sensitiveKey) => key.toLowerCase().includes(sensitiveKey.toLowerCase()))
+}
+
 export function InfoTab({ tableData, catalog, namespace, table }: InfoTabProps) {
     const { toast } = useToast()
     const router = useRouter()
@@ -196,13 +203,13 @@ export function InfoTab({ tableData, catalog, namespace, table }: InfoTabProps) 
             {/* Table Details */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card className="border-muted/70 shadow-sm overflow-hidden">
-                    <CardHeader className="pb-2 border-b py-3 mb-2">
+                    <CardHeader className="pb-2 border-b py-3">
                         <CardTitle className="text-base flex items-center gap-2">
                             <Database className="h-4 w-4 text-blue-500" />
                             Table Information
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="p-0">
+                    <CardContent className="px-0 py-2">
                         <div className="divide-y divide-muted/30">
                             <div className="px-6 py-3">
                                 <div className="flex items-center justify-between mb-1">
@@ -275,23 +282,25 @@ export function InfoTab({ tableData, catalog, namespace, table }: InfoTabProps) 
                 </Card>
 
                 <Card className="border-muted/70 shadow-sm overflow-hidden">
-                    <CardHeader className="pb-2 border-b py-3 mb-2">
+                    <CardHeader className="pb-2 border-b py-3">
                         <CardTitle className="text-base flex items-center gap-2">
                             <FileText className="h-4 w-4 text-blue-500" />
                             Properties
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="p-0">
+                    <CardContent className="px-0 py-2">
                         {tableData.metadata.properties && Object.keys(tableData.metadata.properties).length > 0 ? (
                             <div className="divide-y divide-muted/30">
-                                {Object.entries(tableData.metadata.properties).map(([key, value]) => (
-                                    <div key={key} className="px-6 py-3">
-                                        <h4 className="text-xs font-medium text-muted-foreground mb-1">{key}</h4>
-                                        <div className="border border-muted/30 rounded-md p-1.5 bg-muted/30">
-                                            <p className="text-xs text-foreground/90 break-all font-mono">{value}</p>
+                                {Object.entries(tableData.metadata.properties)
+                                    .filter(([key]) => !isSensitiveProperty(key)) // Filter out sensitive properties
+                                    .map(([key, value]) => (
+                                        <div key={key} className="px-6 py-3">
+                                            <h4 className="text-xs font-medium text-muted-foreground mb-1">{key}</h4>
+                                            <div className="border border-muted/30 rounded-md p-1.5 bg-muted/30">
+                                                <p className="text-xs text-foreground/90 break-all font-mono">{value}</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    ))}
                             </div>
                         ) : (
                             <div className="px-4 py-6 text-center text-muted-foreground text-xs">No properties defined</div>

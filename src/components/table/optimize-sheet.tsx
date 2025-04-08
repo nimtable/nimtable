@@ -82,7 +82,7 @@ function FileDistributionSection({
         if (tableId && catalog && namespace) {
             fetchData()
         }
-    }, [tableId, catalog, namespace])
+    }, [tableId, catalog, namespace, toast])
 
     if (loading) {
         return (
