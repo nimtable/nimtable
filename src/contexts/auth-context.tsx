@@ -60,25 +60,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password }),
-      })
-      const data = await response.json()
-      if (response.ok && data.success) {
-        const userData: User = {
-          username: username,
-          name: username,
-          role: "admin",
-        }
-        setUser(userData)
-        localStorage.setItem("user", JSON.stringify(userData))
-        return true
+      if (username !== "admin" || password !== "admin") {
+        return false
       }
-      return false
+      const userData: User = {
+        username: username,
+        name: username,
+        role: "admin",
+      }
+      setUser(userData)
+      localStorage.setItem("user", JSON.stringify(userData))
+      return true
     } catch (error) {
       console.error("Login error:", error)
       return false
