@@ -62,6 +62,7 @@ function SnapshotItem({
             append: "bg-green-500",
             delete: "bg-red-500",
             overwrite: "bg-amber-500",
+            replace: "bg-blue-500",
             unknown: "bg-gray-500",
         }[operationType] || "bg-gray-500"
 
@@ -294,10 +295,12 @@ export function SnapshotsTab({ tableData }: SnapshotsTabProps) {
 
     return (
         <div className="space-y-6">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
-                Version Control
-            </h3>
+            <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
+                    <GitCommit className="h-5 w-5 text-blue-500" />
+                </div>
+                <h2 className="text-xl font-semibold">Version Control</h2>
+            </div>
 
             {snapshots.length === 0 ? (
                 <Card className="border-muted/70 shadow-sm overflow-hidden">
@@ -333,6 +336,10 @@ export function SnapshotsTab({ tableData }: SnapshotsTabProps) {
                                     <span>Overwrite</span>
                                 </div>
                                 <div className="flex items-center gap-1.5">
+                                    <div className="h-3 w-3 rounded-full bg-blue-500"></div>
+                                    <span>Replace</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
                                     <div className="h-3 w-3 rounded-full bg-red-500"></div>
                                     <span>Delete</span>
                                 </div>
@@ -354,4 +361,3 @@ export function SnapshotsTab({ tableData }: SnapshotsTabProps) {
         </div>
     )
 }
-
