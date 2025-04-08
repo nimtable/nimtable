@@ -16,7 +16,7 @@
 "use client"
 
 import { useState } from "react"
-import { Database, FileText, Copy, Check } from "lucide-react"
+import { Database, FileText, Copy, Check, Info } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
@@ -38,6 +38,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import type { LoadTableResult, StructField } from "@/lib/data-loader"
 import { dropTable, renameTable } from "@/lib/data-loader"
 import { cn } from "@/lib/utils"
+import { getPropertyDescription } from "@/lib/property-descriptions"
 
 interface InfoTabProps {
     tableData: LoadTableResult
@@ -262,7 +263,23 @@ export function InfoTab({ tableData, catalog, namespace, table }: InfoTabProps) 
                                     .filter(([key]) => !isSensitiveProperty(key)) // Filter out sensitive properties
                                     .map(([key, value]) => (
                                         <div key={key} className="px-6 py-3">
-                                            <h4 className="text-xs font-medium text-muted-foreground mb-1">{key}</h4>
+                                            <div className="flex items-center justify-between mb-1">
+                                                <h4 className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                                                    {key}
+                                                    {getPropertyDescription(key) && (
+                                                        <TooltipProvider delayDuration={300}>
+                                                            <Tooltip>
+                                                                <TooltipTrigger asChild>
+                                                                    <Info className="h-3.5 w-3.5 text-muted-foreground/70 cursor-help" />
+                                                                </TooltipTrigger>
+                                                                <TooltipContent side="top" className="max-w-sm">
+                                                                    <p className="text-xs">{getPropertyDescription(key)}</p>
+                                                                </TooltipContent>
+                                                            </Tooltip>
+                                                        </TooltipProvider>
+                                                    )}
+                                                </h4>
+                                            </div>
                                             <div className="border border-muted/30 rounded-md p-1.5 bg-muted/30">
                                                 <p className="text-xs text-foreground/90 break-all font-mono">{value}</p>
                                             </div>
