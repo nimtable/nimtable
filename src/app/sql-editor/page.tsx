@@ -29,10 +29,13 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { highlightSQL } from "@/lib/sql-highlighter"
 import { SqlEditorNavbar } from "@/components/shared/sql-editor-navbar"
 import { SidebarInset } from "@/components/ui/sidebar"
+import { useSearchParams } from "next/navigation"
 
 export default function SQLEditorPage() {
     const { toast } = useToast()
-    const [query, setQuery] = useState(`SELECT * FROM \`catalog\`.\`namespace\`.\`table\` LIMIT 100`)
+    const searchParams = useSearchParams()
+    const catalogParam = searchParams.get("catalog")
+    const [query, setQuery] = useState(`SELECT * FROM \`${catalogParam || "catalog"}\`.\`namespace\`.\`table\` LIMIT 100`)
     const [queryResults, setQueryResults] = useState<{ columns: string[]; rows: any[][] } | null>(null)
     const [isLoading, setIsLoading] = useState(false)
     const [queryError, setQueryError] = useState<string | null>(null)
@@ -185,15 +188,22 @@ export default function SQLEditorPage() {
                                         </Tooltip>
                                     </TooltipProvider>
 
-                                    <Button
-                                        onClick={handleCopyQuery}
-                                        variant="outline"
-                                        size="sm"
-                                        className="border-muted-foreground/20"
-                                    >
-                                        {isCopying ? <Check className="mr-1 h-3.5 w-3.5" /> : <Copy className="mr-1 h-3.5 w-3.5" />}
-                                        Copy
-                                    </Button>
+                                    <TooltipProvider delayDuration={300}>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button
+                                                    onClick={handleCopyQuery}
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="border-muted-foreground/20"
+                                                >
+                                                    {isCopying ? <Check className="mr-1 h-3.5 w-3.5" /> : <Copy className="mr-1 h-3.5 w-3.5" />}
+                                                    Copy
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>Copy query to clipboard</TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
                                 </div>
                             </CardHeader>
 

@@ -38,7 +38,6 @@ import { loadTableData, type LoadTableResult } from "@/lib/data-loader"
 import {
     getFileDistribution,
     runOptimizationOperation,
-    scheduleOptimization,
     type DistributionData,
     type OptimizationOperation,
 } from "@/lib/data-loader"
@@ -83,7 +82,7 @@ function FileDistributionSection({
         if (tableId && catalog && namespace) {
             fetchData()
         }
-    }, [tableId, catalog, namespace, toast])
+    }, [tableId, catalog, namespace])
 
     if (loading) {
         return (
@@ -198,7 +197,7 @@ interface OptimizeSheetProps {
 export function OptimizeSheet({ open, onOpenChange, catalog, namespace, table }: OptimizeSheetProps) {
     const { toast } = useToast()
     const [, setTableData] = useState<LoadTableResult | undefined>(undefined)
-    const [isLoading, setIsLoading] = useState(false)
+    const [isLoading,] = useState(false)
     const [showProgressDialog, setShowProgressDialog] = useState(false)
     const [optimizationSteps, setOptimizationSteps] = useState<OptimizationStep[]>([])
 
@@ -281,56 +280,28 @@ export function OptimizeSheet({ open, onOpenChange, catalog, namespace, table }:
         }
     }
 
-    const handleOptimize = async (action: "schedule" | "run") => {
-        if (action === "run") {
-            setShowProgressDialog(true)
-            setOptimizationSteps((steps) => steps.map((step) => ({ ...step, status: "pending" })))
+    const handleOptimize = async () => {
+        setShowProgressDialog(true)
+        setOptimizationSteps((steps) => steps.map((step) => ({ ...step, status: "pending" })))
 
-            // Run steps sequentially
-            for (let i = 0; i < optimizationSteps.length; i++) {
-                const step = optimizationSteps[i]
-                const success = await runOptimizationStep(step, i)
-                if (!success) {
-                    toast({
-                        variant: "destructive",
-                        title: `Failed to run ${step.name}`,
-                        description: step.error,
-                    })
-                    return
-                }
-            }
-
-            toast({
-                title: "Optimization completed",
-                description: "All optimization steps have been completed successfully.",
-            })
-        } else {
-            // Handle schedule case (just update properties)
-            try {
-                setIsLoading(true)
-                await scheduleOptimization(catalog, namespace, table, {
-                    snapshotRetention,
-                    retentionPeriod,
-                    minSnapshotsToKeep,
-                    orphanFileDeletion,
-                    orphanFileRetention,
-                    compaction,
-                })
-
-                toast({
-                    title: "Optimization scheduled",
-                    description: "Table optimization has been scheduled successfully.",
-                })
-            } catch (error) {
+        // Run steps sequentially
+        for (let i = 0; i < optimizationSteps.length; i++) {
+            const step = optimizationSteps[i]
+            const success = await runOptimizationStep(step, i)
+            if (!success) {
                 toast({
                     variant: "destructive",
-                    title: "Failed to schedule optimization",
-                    description: errorToString(error),
+                    title: `Failed to run ${step.name}`,
+                    description: step.error,
                 })
-            } finally {
-                setIsLoading(false)
+                return
             }
         }
+
+        toast({
+            title: "Optimization completed",
+            description: "All optimization steps have been completed successfully.",
+        })
     }
 
     return (
@@ -481,15 +452,7 @@ export function OptimizeSheet({ open, onOpenChange, catalog, namespace, table }:
                             Cancel
                         </Button>
                         <Button
-                            onClick={() => handleOptimize("schedule")}
-                            disabled={isLoading}
-                            variant="outline"
-                            className="border-blue-500/50 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/30"
-                        >
-                            Schedule
-                        </Button>
-                        <Button
-                            onClick={() => handleOptimize("run")}
+                            onClick={() => handleOptimize()}
                             disabled={isLoading}
                             className="gap-2 bg-blue-600 hover:bg-blue-700"
                         >
