@@ -101,12 +101,12 @@ function AppSidebarContent() {
 
   // Load namespaces when catalog is selected and when refresh is triggered
   React.useEffect(() => {
-    if (!catalog) {
-      setNamespaces([])
-      return
-    }
-
     let isMounted = true
+    let shouldFetchNamespaces = false
+
+    if (catalog) {
+      shouldFetchNamespaces = true
+    }
 
     const fetchNamespaces = async () => {
       try {
@@ -132,24 +132,28 @@ function AppSidebarContent() {
       }
     }
 
-    fetchNamespaces()
+    if (shouldFetchNamespaces) {
+      fetchNamespaces()
+    } else {
+      setNamespaces([])
+    }
 
     return () => {
       isMounted = false
     }
   }, [catalog, refreshTrigger, toast])
 
-  // Don't render sidebar if user is not authenticated or on login page
-  if (!user || isLoginPage) {
-    return null
-  }
-
-  const handleRefresh = () => {
+  const handleRefresh = React.useCallback(() => {
     refresh()
     toast({
       title: "Refreshing data",
       description: "Fetching the latest catalog information",
     })
+  }, [refresh, toast])
+
+  // Don't render sidebar if user is not authenticated or on login page
+  if (!user || isLoginPage) {
+    return null
   }
 
   return (
@@ -179,13 +183,17 @@ function AppSidebarContent() {
                     }
                   }}
                 >
-                  <SelectTrigger className="h-9 bg-background border-muted-foreground/20">
+                  <SelectTrigger className="h-9 bg-background border-muted-foreground/20 hover:border-blue-400 hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors">
                     <Database className="mr-2 h-4 w-4 text-blue-500" />
                     <SelectValue placeholder={catalogListLoading ? "Loading catalogs..." : "Select catalog"} />
                   </SelectTrigger>
                   <SelectContent>
                     {catalogs.map((catalog) => (
-                      <SelectItem key={catalog} value={catalog} className="font-medium">
+                      <SelectItem
+                        key={catalog}
+                        value={catalog}
+                        className="font-medium hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                      >
                         {catalog}
                       </SelectItem>
                     ))}
@@ -318,7 +326,7 @@ function AppSidebarContent() {
           <div className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
               <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                {user?.name?.charAt(0)?.toUpperCase() ?? 'U'}
+                {user.name.charAt(0).toUpperCase()}
               </span>
             </div>
             <div className="flex flex-col">
