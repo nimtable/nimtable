@@ -43,9 +43,6 @@ public class LocalSpark {
                         .config(
                                 "spark.sql.extensions",
                                 "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions")
-                        .config(
-                                "spark.jars.packages",
-                                "org.apache.spark:spark-hadoop-cloud_2.12:3.5.1") // for S3
                         .config("spark.hadoop.fs.s3.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
                         // FIXME: remove these hard-coded parameters
                         .config("spark.hadoop.fs.s3a.endpoint", "http://localhost:9000")

@@ -104,7 +104,6 @@ dependencies {
   implementation "org.apache.spark:spark-hive_2.12:${sparkVersion}"
   implementation "org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:${icebergVersion}"
   implementation 'org.scala-lang.modules:scala-collection-compat_2.12:2.12.0'
-  implementation "org.apache.spark:spark-hadoop-cloud_2.12:${sparkVersion}" // For accessing S3
 }
 
 jar {
@@ -171,5 +170,21 @@ spotless {
     removeUnusedImports()
     trimTrailingWhitespace()
     endWithNewline()
+  }
+}
+
+// Task to analyze JAR sizes to help identify large dependencies
+task analyzeDependencies {
+  description = 'Analyzes the size of all dependencies to help identify large ones'
+  group = 'build setup'
+  
+  doLast {
+    def resolvedDeps = configurations.runtimeClasspath.resolvedConfiguration.resolvedArtifacts
+    def sortedDeps = resolvedDeps.sort { a, b -> b.file.length() <=> a.file.length() }
+    println "Dependencies sorted by size:"
+    sortedDeps.take(20).each { artifact ->
+      def sizeMB = artifact.file.length() / (1024 * 1024)
+      println String.format("%-70s %8.2f MB", "${artifact.moduleVersion.id.group}:${artifact.moduleVersion.id.name}:${artifact.moduleVersion.id.version}", sizeMB)
+    }
   }
 }
