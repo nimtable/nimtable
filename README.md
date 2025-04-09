@@ -212,12 +212,17 @@ cd backend
 
 ## Roadmap
 
-- 🚀 **Pluggable Query Engines**: Support for DuckDB, Spark, Flink, RisingWave
-- 🔧 **Enhanced Table Optimization**: Advanced maintenance operations
-- 💻 **Advanced Query Console**: Improved ad-hoc query interface
-- 🔐 **Authentication System**: User management and access control
-- 📊 **Enhanced Visualization**: Advanced data and metadata visualization
-- 🔄 **Real-time Updates**: Live table statistics and metadata changes
+- 🔧 **Optimized Compaction**: Advanced compaction strategies and scheduling
+- 📊 **Monitoring & Analytics**: Comprehensive dashboard and insights
+- 💾 **Caching**: Database integration and metadata caching
+- ⚡ **Query Engine Integration**: Support for multiple query engines
+- 📋 **Metadata Management**: Enhanced snapshot, schema and partition management
+- 🔐 **Security & Access Control**: RBAC and fine-grained permissions
+- 🔌 **API & Integration**: REST API support and authentication
+- 🔄 **Data Lineage**: Table and column-level lineage tracking
+- 🏢 **Catalog & Warehouse Integration**: Support for various storage backends
+
+For detailed roadmap items and progress tracking, see [Roadmap](https://github.com/nimtable/nimtable/issues/50).
 
 ## Contributing
 
