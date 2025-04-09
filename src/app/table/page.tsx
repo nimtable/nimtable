@@ -16,16 +16,18 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { LayoutList } from "lucide-react"
+import { LayoutList, Database, FileText } from "lucide-react"
 import { notFound, useSearchParams } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 import { errorToString } from "@/lib/utils"
 import { loadTableData } from "@/lib/data-loader"
 import type { LoadTableResult } from "@/lib/data-loader"
 import { InfoTab } from "./info"
+import { DataPreview } from "./data-preview"
 import { SnapshotsTab } from "./snapshots"
 import { TopNavbar } from "@/components/shared/top-navbar"
 import { PageLoader } from "@/components/shared/page-loader"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function TablePage() {
     const searchParams = useSearchParams()
@@ -37,6 +39,7 @@ export default function TablePage() {
     const { toast } = useToast()
     const [tableData, setTableData] = useState<LoadTableResult | undefined>(undefined)
     const [isLoading, setIsLoading] = useState(true)
+    const [activeTab, setActiveTab] = useState("info")
 
     useEffect(() => {
         if (!isValidParams) return
@@ -89,13 +92,34 @@ export default function TablePage() {
 
             <div className="flex-1 overflow-auto h-full">
                 <div className="max-w-6xl mx-auto px-6 py-6">
-                    <div className="space-y-8">
-                        <InfoTab tableData={tableData} catalog={catalog} namespace={namespace} table={table} />
+                    <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+                        <TabsList className="grid grid-cols-3 w-full max-w-md mb-6">
+                            <TabsTrigger value="info" className="flex items-center gap-1.5">
+                                <FileText className="h-4 w-4" />
+                                <span>Info</span>
+                            </TabsTrigger>
+                            <TabsTrigger value="data" className="flex items-center gap-1.5">
+                                <Database className="h-4 w-4" />
+                                <span>Data Preview</span>
+                            </TabsTrigger>
+                            <TabsTrigger value="snapshots" className="flex items-center gap-1.5">
+                                <LayoutList className="h-4 w-4" />
+                                <span>Version Control</span>
+                            </TabsTrigger>
+                        </TabsList>
 
-                        <div>
+                        <TabsContent value="info" className="space-y-8 mt-0">
+                            <InfoTab tableData={tableData} catalog={catalog} namespace={namespace} table={table} />
+                        </TabsContent>
+
+                        <TabsContent value="data" className="space-y-8 mt-0">
+                            <DataPreview catalog={catalog} namespace={namespace} table={table} />
+                        </TabsContent>
+
+                        <TabsContent value="snapshots" className="space-y-8 mt-0">
                             <SnapshotsTab tableData={tableData} catalog={catalog} namespace={namespace} table={table} />
-                        </div>
-                    </div>
+                        </TabsContent>
+                    </Tabs>
                 </div>
             </div>
         </div>

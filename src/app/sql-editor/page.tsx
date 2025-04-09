@@ -35,7 +35,23 @@ export default function SQLEditorPage() {
     const { toast } = useToast()
     const searchParams = useSearchParams()
     const catalogParam = searchParams.get("catalog")
-    const [query, setQuery] = useState(`SELECT * FROM \`${catalogParam || "catalog"}\`.\`namespace\`.\`table\` LIMIT 100`)
+    const namespaceParam = searchParams.get("namespace")
+    const tableParam = searchParams.get("table")
+
+    // Generate initial query based on available parameters
+    const initialQuery = () => {
+        if (catalogParam && namespaceParam && tableParam) {
+            return `SELECT * FROM \`${catalogParam}\`.\`${namespaceParam}\`.\`${tableParam}\` LIMIT 100`
+        } else if (catalogParam && namespaceParam) {
+            return `SELECT * FROM \`${catalogParam}\`.\`${namespaceParam}\`.table_name LIMIT 100`
+        } else if (catalogParam) {
+            return `SELECT * FROM \`${catalogParam}\`.namespace.table_name LIMIT 100`
+        } else {
+            return `SELECT * FROM catalog.namespace.table_name LIMIT 100`
+        }
+    }
+
+    const [query, setQuery] = useState(initialQuery)
     const [queryResults, setQueryResults] = useState<{ columns: string[]; rows: any[][] } | null>(null)
     const [isLoading, setIsLoading] = useState(false)
     const [queryError, setQueryError] = useState<string | null>(null)
@@ -107,25 +123,25 @@ export default function SQLEditorPage() {
             toast({
                 variant: "destructive",
                 title: "Clipboard API is not enabled in your browser",
-            });
-            return;
+            })
+            return
         }
 
         try {
-            await navigator.clipboard.writeText(query);
-            setIsCopying(true);
+            await navigator.clipboard.writeText(query)
+            setIsCopying(true)
             toast({
                 title: "Query copied to clipboard",
-            });
-            setTimeout(() => setIsCopying(false), 2000);
+            })
+            setTimeout(() => setIsCopying(false), 2000)
         } catch (error) {
             toast({
                 variant: "destructive",
                 title: "Failed to copy query",
                 description: errorToString(error),
-            });
+            })
         }
-    };
+    }
 
     const handleDownloadResults = () => {
         if (!queryResults) return
@@ -334,8 +350,8 @@ export default function SQLEditorPage() {
                                             </div>
                                             <p className="text-sm font-medium mb-1">No query results to display</p>
                                             <p className="text-xs max-w-md">
-                                                Run a query using the editor above to see results here. You can use the &quot;Run Query&quot; button or
-                                                press Ctrl+Enter.
+                                                Run a query using the editor above to see results here. You can use the &quot;Run Query&quot;
+                                                button or press Ctrl+Enter.
                                             </p>
                                         </div>
                                     </div>

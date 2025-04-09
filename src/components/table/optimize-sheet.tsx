@@ -16,7 +16,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { ChevronRight, SettingsIcon, CheckCircle2, Circle, Loader2, X } from "lucide-react"
+import { ChevronRight, SettingsIcon, CheckCircle2, Circle, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { errorToString } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
@@ -197,7 +197,7 @@ interface OptimizeSheetProps {
 export function OptimizeSheet({ open, onOpenChange, catalog, namespace, table }: OptimizeSheetProps) {
     const { toast } = useToast()
     const [, setTableData] = useState<LoadTableResult | undefined>(undefined)
-    const [isLoading,] = useState(false)
+    const [isLoading] = useState(false)
     const [showProgressDialog, setShowProgressDialog] = useState(false)
     const [optimizationSteps, setOptimizationSteps] = useState<OptimizationStep[]>([])
 
@@ -311,9 +311,6 @@ export function OptimizeSheet({ open, onOpenChange, catalog, namespace, table }:
                 <div className="border-b bg-background">
                     <div className="flex items-center justify-between px-6 py-4">
                         <div className="flex items-center gap-3">
-                            <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="h-8 w-8 mr-2">
-                                <X className="h-4 w-4" />
-                            </Button>
                             <div className="flex items-center gap-2">
                                 <Link
                                     href={`/table?catalog=${catalog}&namespace=${namespace}&table=${table}`}
@@ -337,7 +334,8 @@ export function OptimizeSheet({ open, onOpenChange, catalog, namespace, table }:
                         <div>
                             <h1 className="text-xl font-semibold">Table Optimization</h1>
                             <p className="text-sm text-muted-foreground mt-1">
-                                Configure and run optimization operations for your table
+                                Configure and run Iceberg optimization operations including compaction, snapshot expiration, and orphan
+                                file cleanup
                             </p>
                         </div>
                     </div>
