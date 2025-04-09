@@ -119,6 +119,10 @@ public class DistributionServlet extends HttpServlet {
         distribution.put("128M-512M", 0);
         distribution.put("512M+", 0);
 
+        if (snapshot == null) {
+            return distribution;
+        }
+
         try (FileIO fileIO = table.io()) {
             List<ManifestFile> manifests = snapshot.allManifests(fileIO);
             for (ManifestFile manifest : manifests) {
