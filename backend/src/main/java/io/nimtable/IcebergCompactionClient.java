@@ -25,10 +25,13 @@ import io.nimtable.iceberg.IcebergProto.EchoResponse;
 import io.nimtable.iceberg.IcebergProto.RewriteFilesRequest;
 import io.nimtable.iceberg.IcebergProto.RewriteFilesResponse;
 import java.util.concurrent.TimeUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class IcebergCompactionClient implements AutoCloseable {
     private final ManagedChannel channel;
     private final CompactorServiceGrpc.CompactorServiceBlockingStub blockingStub;
+    private static final Logger LOG = LoggerFactory.getLogger(IcebergCompactionClient.class);
 
     public IcebergCompactionClient(String host, int port) {
         this(ManagedChannelBuilder.forAddress(host, port).usePlaintext().build());
@@ -48,18 +51,18 @@ public class IcebergCompactionClient implements AutoCloseable {
         EchoResponse response;
         try {
             response = blockingStub.echo(request);
+            LOG.info("Echo response: {}", response.getMessage());
         } catch (StatusRuntimeException e) {
-            System.out.println("RPC failed: " + e.getStatus());
+            LOG.error("RPC failed: {}", e.getStatus());
             throw new RuntimeException("Failed to echo", e);
         }
-        System.out.println("Echo response: " + response.getMessage());
     }
 
     public RewriteFilesResponse rewriteFiles(RewriteFilesRequest request) {
         try {
             return blockingStub.rewriteFiles(request);
         } catch (StatusRuntimeException e) {
-            System.out.println("RPC failed: " + e.getStatus());
+            LOG.error("RPC failed: {}", e.getStatus());
             throw new RuntimeException("Failed to rewrite files", e);
         }
     }
