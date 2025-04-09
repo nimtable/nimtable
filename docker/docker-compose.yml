@@ -1,6 +1,6 @@
 services:
   nimtable:
-    image: ghcr.io/risingwavelabs/nimtable:nightly
+    image: ghcr.io/nimtable/nimtable:nightly
     ports:
       - "8182:8182"
     # Mount configuration files
