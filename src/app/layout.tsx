@@ -26,16 +26,8 @@ import { Toaster } from "@/components/ui/toaster"
 import { Suspense } from "react"
 import { AuthProvider } from "@/contexts/auth-context"
 import { ProtectedRoute } from "@/components/protected-route"
-import type { Metadata } from "next"
 
 const inter = Inter({ subsets: ["latin"] })
-
-export const metadata: Metadata = {
-  title: "Nimtable",
-  description: "The Control Plane for Apache Iceberg™",
-  icons: "/nimtable_icon.png",
-};
-
 
 export default function RootLayout({
   children,

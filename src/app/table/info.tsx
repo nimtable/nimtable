@@ -16,7 +16,7 @@
 "use client"
 
 import { useState } from "react"
-import { Database, FileText, Copy, Check, Info } from "lucide-react"
+import { TableIcon, Database, FileText, Copy, Check, Settings } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
@@ -38,7 +38,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import type { LoadTableResult, StructField } from "@/lib/data-loader"
 import { dropTable, renameTable } from "@/lib/data-loader"
 import { cn } from "@/lib/utils"
-import { getPropertyDescription } from "@/lib/property-descriptions"
+import { OptimizeSheet } from "@/components/table/optimize-sheet"
 
 interface InfoTabProps {
     tableData: LoadTableResult
@@ -60,6 +60,7 @@ export function InfoTab({ tableData, catalog, namespace, table }: InfoTabProps) 
     const { refresh } = useRefresh()
     const [showDropDialog, setShowDropDialog] = useState(false)
     const [showRenameDialog, setShowRenameDialog] = useState(false)
+    const [showOptimizeDialog, setShowOptimizeDialog] = useState(false)
     const [newTableName, setNewTableName] = useState(table)
     const [copyingField, setCopyingField] = useState<string | null>(null)
 
@@ -130,6 +131,37 @@ export function InfoTab({ tableData, catalog, namespace, table }: InfoTabProps) 
 
     return (
         <div className="space-y-8">
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                    <div className="p-2 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
+                        <TableIcon className="h-5 w-5 text-blue-500" />
+                    </div>
+                    <h2 className="text-xl font-semibold">{table}</h2>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2 relative overflow-hidden group bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white hover:text-white shadow-md hover:shadow-lg transition-all duration-300 border-0 hover:scale-[1.03] transform"
+                        onClick={() => setShowOptimizeDialog(true)}
+                    >
+                        {/* Animated glow effect */}
+                        <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-purple-400/0 via-purple-400/30 to-purple-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-[length:200%_100%] animate-gradient-x"></div>
+
+                        {/* Button content */}
+                        <div className="relative flex items-center gap-2">
+                            <div className="p-1 bg-white/20 rounded-md flex items-center justify-center group-hover:bg-white/30 transition-colors">
+                                <Settings className="h-3.5 w-3.5 text-white" />
+                            </div>
+                            <span className="font-medium">Optimize</span>
+                        </div>
+
+                        {/* Subtle pulse effect */}
+                        <span className="absolute -inset-3 block rounded-full bg-purple-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></span>
+                    </Button>
+                </div>
+            </div>
+
             {/* Schema Section */}
             <div>
                 <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
@@ -263,23 +295,7 @@ export function InfoTab({ tableData, catalog, namespace, table }: InfoTabProps) 
                                     .filter(([key]) => !isSensitiveProperty(key)) // Filter out sensitive properties
                                     .map(([key, value]) => (
                                         <div key={key} className="px-6 py-3">
-                                            <div className="flex items-center justify-between mb-1">
-                                                <h4 className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-                                                    {key}
-                                                    {getPropertyDescription(key) && (
-                                                        <TooltipProvider delayDuration={300}>
-                                                            <Tooltip>
-                                                                <TooltipTrigger asChild>
-                                                                    <Info className="h-3.5 w-3.5 text-muted-foreground/70 cursor-help" />
-                                                                </TooltipTrigger>
-                                                                <TooltipContent side="top" className="max-w-sm">
-                                                                    <p className="text-xs">{getPropertyDescription(key)}</p>
-                                                                </TooltipContent>
-                                                            </Tooltip>
-                                                        </TooltipProvider>
-                                                    )}
-                                                </h4>
-                                            </div>
+                                            <h4 className="text-xs font-medium text-muted-foreground mb-1">{key}</h4>
                                             <div className="border border-muted/30 rounded-md p-1.5 bg-muted/30">
                                                 <p className="text-xs text-foreground/90 break-all font-mono">{value}</p>
                                             </div>
@@ -339,6 +355,14 @@ export function InfoTab({ tableData, catalog, namespace, table }: InfoTabProps) 
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <OptimizeSheet
+                open={showOptimizeDialog}
+                onOpenChange={setShowOptimizeDialog}
+                catalog={catalog}
+                namespace={namespace}
+                table={table}
+            />
         </div>
     )
 }

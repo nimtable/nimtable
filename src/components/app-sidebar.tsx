@@ -101,12 +101,12 @@ function AppSidebarContent() {
 
   // Load namespaces when catalog is selected and when refresh is triggered
   React.useEffect(() => {
-    let isMounted = true
-    let shouldFetchNamespaces = false
-
-    if (catalog) {
-      shouldFetchNamespaces = true
+    if (!catalog) {
+      setNamespaces([])
+      return
     }
+
+    let isMounted = true
 
     const fetchNamespaces = async () => {
       try {
@@ -132,28 +132,24 @@ function AppSidebarContent() {
       }
     }
 
-    if (shouldFetchNamespaces) {
-      fetchNamespaces()
-    } else {
-      setNamespaces([])
-    }
+    fetchNamespaces()
 
     return () => {
       isMounted = false
     }
   }, [catalog, refreshTrigger, toast])
 
-  const handleRefresh = React.useCallback(() => {
+  // Don't render sidebar if user is not authenticated or on login page
+  if (!user || isLoginPage) {
+    return null
+  }
+
+  const handleRefresh = () => {
     refresh()
     toast({
       title: "Refreshing data",
       description: "Fetching the latest catalog information",
     })
-  }, [refresh, toast])
-
-  // Don't render sidebar if user is not authenticated or on login page
-  if (!user || isLoginPage) {
-    return null
   }
 
   return (
@@ -183,17 +179,13 @@ function AppSidebarContent() {
                     }
                   }}
                 >
-                  <SelectTrigger className="h-9 bg-background border-muted-foreground/20 hover:border-blue-400 hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors">
+                  <SelectTrigger className="h-9 bg-background border-muted-foreground/20">
                     <Database className="mr-2 h-4 w-4 text-blue-500" />
                     <SelectValue placeholder={catalogListLoading ? "Loading catalogs..." : "Select catalog"} />
                   </SelectTrigger>
                   <SelectContent>
                     {catalogs.map((catalog) => (
-                      <SelectItem
-                        key={catalog}
-                        value={catalog}
-                        className="font-medium hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                      >
+                      <SelectItem key={catalog} value={catalog} className="font-medium">
                         {catalog}
                       </SelectItem>
                     ))}

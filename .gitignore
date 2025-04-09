@@ -45,3 +45,5 @@ dist/
 
 # protobuf
 backend/src/main/generated/
+
+.DS_Store

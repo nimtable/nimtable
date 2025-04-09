@@ -15,11 +15,13 @@
  */
 "use client"
 
-interface AuthContextType {
-  isAuthenticated: boolean;
-  login: (username: string, password: string) => Promise<{ success: boolean; message?: string }>;
-  logout: () => void;
-  isLoading: boolean;
+import * as React from "react"
+import { useRouter } from "next/navigation"
+
+interface User {
+  username: string
+  name: string
+  role: "admin" | "user"
 }
 
 interface AuthContextType {
@@ -29,9 +31,7 @@ interface AuthContextType {
   isLoading: boolean
 }
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+const AuthContext = React.createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = React.useState<User | null>(null)
@@ -54,8 +54,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false)
       }
     }
-    setIsLoading(false);
-  }, []);
 
     checkAuth()
   }, [])
@@ -80,39 +78,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem("user", JSON.stringify(userData))
         return true
       }
-      
-      return { 
-        success: false, 
-        message: data.message || "Invalid username or password"
-      };
+      return false
     } catch (error) {
       console.error("Login error:", error)
       return false
     }
   }
 
-  const logout = () => {
-    localStorage.removeItem('auth-token');
-    setIsAuthenticated(false);
-    
-    fetch('/api/logout', { 
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' }
-    }).catch(err => console.error('Logout error:', err));
-  };
+  const logout = React.useCallback(() => {
+    setUser(null)
+    localStorage.removeItem("user")
+    router.push("/login")
+  }, [router])
 
-  return (
-    <AuthContext.Provider 
-      value={{ 
-        isAuthenticated, 
-        login, 
-        logout,
-        isLoading
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+  const value = React.useMemo(
+    () => ({
+      user,
+      login,
+      logout,
+      isLoading,
+    }),
+    [user, isLoading, logout],
+  )
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {
