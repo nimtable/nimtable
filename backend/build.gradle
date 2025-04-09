@@ -19,6 +19,7 @@ plugins {
   id 'application'
   id 'com.github.johnrengelman.shadow' version '8.1.1'
   id 'com.diffplug.spotless' version '6.25.0'
+  id 'com.google.protobuf' version '0.9.4'
 }
 
 java {
@@ -56,11 +57,49 @@ application {
 }
 
 ext {
-  icebergVersion = '1.8.1'
+  icebergVersion = '1.8.1' 
   hadoopVersion = '3.3.6'
   jettyVersion = '11.0.15'
   sparkVersion = '3.5.1'
   scalaVersion = '2.12.18'
+  protobufVersion = '3.25.1'
+  grpcVersion = '1.57.0'
+}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:{$protobufVersion}"
+    }
+    plugins {
+        grpc {
+            artifact = "io.grpc:protoc-gen-grpc-java:{$grpcVersion}"
+        }
+    }
+
+     generateProtoTasks {
+        all().each { task ->
+            task.builtins {
+                java { 
+                    option "lite"
+                }
+            }
+            
+            task.plugins {
+                grpc {
+                    option "lite"
+                }
+            }
+        }
+    }
+    generatedFilesBaseDir = "src/main/generated"
+}
+
+sourceSets {
+    main {
+        proto {
+            srcDirs 'src/main/proto'
+        }
+    }
 }
 
 dependencies {
@@ -105,6 +144,12 @@ dependencies {
   implementation "org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:${icebergVersion}"
   implementation 'org.scala-lang.modules:scala-collection-compat_2.12:2.12.0'
   implementation "org.apache.spark:spark-hadoop-cloud_2.12:${sparkVersion}" // For accessing S3
+
+  // Proto
+  implementation "io.grpc:grpc-netty-shaded:${grpcVersion}"
+  implementation "io.grpc:grpc-protobuf:${grpcVersion}"
+  implementation "io.grpc:grpc-stub:${grpcVersion}"
+  implementation "com.google.protobuf:protobuf-java:${protobufVersion}"
 }
 
 jar {
@@ -148,6 +193,7 @@ run {
 // Clean up copied frontend files
 clean {
   delete 'src/main/resources/static'
+  delete protobuf.generatedFilesBaseDir
 }
 
 // Task to download all dependencies
@@ -171,5 +217,7 @@ spotless {
     removeUnusedImports()
     trimTrailingWhitespace()
     endWithNewline()
+    target 'src/**/*.java'
+    excludeJava 'src/main/generated/**'
   }
 }
