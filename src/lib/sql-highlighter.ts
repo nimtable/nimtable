@@ -15,7 +15,8 @@
  */
 import Prism from 'prismjs'
 import 'prismjs/components/prism-sql'
-import 'prismjs/themes/prism-tomorrow.css'
+import "@/styles/sql-editor.css"
+
 
 /**
  * Highlights SQL code using Prism.js
