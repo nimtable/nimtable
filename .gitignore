@@ -42,3 +42,8 @@ dist/
 
 .vscode/settings.json
 .DS_Store
+
+# protobuf
+backend/src/main/generated/
+
+.DS_Store

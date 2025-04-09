@@ -29,10 +29,12 @@ import java.util.Map;
 import org.apache.iceberg.CatalogProperties;
 import org.apache.iceberg.CatalogUtil;
 
-public record Config(Server server, Auth auth, List<Catalog> catalogs) {
+public record Config(Server server, Auth auth, List<Catalog> catalogs, Compactor compactor) {
     public record Server(int port, String host) {}
 
     public record Auth(String username, String password) {}
+
+    public record Compactor(String ip, int port) {}
 
     @JsonDeserialize(using = CatalogDeserializer.class)
     public record Catalog(String name, Map<String, String> properties) {
@@ -42,6 +44,10 @@ public record Config(Server server, Auth auth, List<Catalog> catalogs) {
         public static final String CATALOG_IMPL = CatalogProperties.CATALOG_IMPL;
         public static final String FILE_IO_IMPL = CatalogProperties.FILE_IO_IMPL;
         public static final String WAREHOUSE_LOCATION = CatalogProperties.WAREHOUSE_LOCATION;
+        public static final String S3_ACCESS_KEY_ID = "s3.access-key-id";
+        public static final String S3_SECRET_ACCESS_KEY = "s3.secret-access-key";
+        public static final String S3_REGION = "s3.region";
+        public static final String S3_PATH_STYLE_ACCESS = "s3.path-style-access";
     }
 
     public static class CatalogDeserializer extends JsonDeserializer<Catalog> {
