@@ -175,15 +175,20 @@ cd backend
 ./gradlew run
 ```
 
+It will serve at http://localhost:8182.
+
 ### Frontend Development
 
-```bash
+First start the backend server as mentioned above.
+
 # Install dependencies
 npm install
 
 # Start development server
 npm run dev
 ```
+
+It will serve a separate UI at http://localhost:3000, which can be dynamically updated as you make changes to the frontend code.
 
 ### Testing with a Catalog
 
@@ -212,12 +217,17 @@ cd backend
 
 ## Roadmap
 
-- 🚀 **Pluggable Query Engines**: Support for DuckDB, Spark, Flink, RisingWave
-- 🔧 **Enhanced Table Optimization**: Advanced maintenance operations
-- 💻 **Advanced Query Console**: Improved ad-hoc query interface
-- 🔐 **Authentication System**: User management and access control
-- 📊 **Enhanced Visualization**: Advanced data and metadata visualization
-- 🔄 **Real-time Updates**: Live table statistics and metadata changes
+- 🔧 **Optimized Compaction**: Advanced compaction strategies and scheduling
+- 📊 **Monitoring & Analytics**: Comprehensive dashboard and insights
+- 💾 **Caching**: Database integration and metadata caching
+- ⚡ **Query Engine Integration**: Support for multiple query engines
+- 📋 **Metadata Management**: Enhanced snapshot, schema and partition management
+- 🔐 **Security & Access Control**: RBAC and fine-grained permissions
+- 🔌 **API & Integration**: REST API support and authentication
+- 🔄 **Data Lineage**: Table and column-level lineage tracking
+- 🏢 **Catalog & Warehouse Integration**: Support for various storage backends
+
+For detailed roadmap items and progress tracking, see [Roadmap](https://github.com/nimtable/nimtable/issues/50).
 
 ## Contributing
 
