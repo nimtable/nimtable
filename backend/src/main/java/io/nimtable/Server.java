@@ -47,8 +47,9 @@ public class Server {
 
     public Server(Config config) throws IOException {
         this.config = config;
-        this.server = new org.eclipse.jetty.server.Server(
-                new InetSocketAddress(config.server().host(), config.server().port()));
+        this.server =
+                new org.eclipse.jetty.server.Server(
+                        new InetSocketAddress(config.server().host(), config.server().port()));
 
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
         context.setContextPath("/");
@@ -64,13 +65,14 @@ public class Server {
         // Register API servlets
         context.addServlet(new ServletHolder(new OptimizeServlet(config)), "/api/optimize/*");
         ServletHolder distributionHolder = new ServletHolder(new DistributionServlet(config));
-        distributionHolder.setInitOrder(1);  // Ensure DistributionServlet is initialized first
+        distributionHolder.setInitOrder(1); // Ensure DistributionServlet is initialized first
         context.addServlet(distributionHolder, "/api/distribution/*");
 
         context.addServlet(
                 new ServletHolder("catalogs", new CatalogsServlet(config)), "/api/catalogs");
         context.addServlet(
-                new ServletHolder("catalog-config", new CatalogConfigServlet(config)), "/api/config/*");
+                new ServletHolder("catalog-config", new CatalogConfigServlet(config)),
+                "/api/config/*");
         context.addServlet(
                 new ServletHolder("spark-query", new SparkQueryServlet(config)), "/api/query");
         context.addServlet(
@@ -98,82 +100,85 @@ public class Server {
     }
 
     private void setupStaticFileHandler(ServletContextHandler context) throws IOException {
-        Resource baseResource = Resource.newResource(
-                Server.class.getClassLoader().getResource("static").toExternalForm());
-        
-        AbstractHandler staticHandler = new AbstractHandler() {
-            @Override
-            public void handle(
-                    String target,
-                    Request baseRequest,
-                    HttpServletRequest request,
-                    HttpServletResponse response)
-                    throws IOException, ServletException {
-                if (request.getRequestURI().startsWith("/api/")) {
-                    return;
-                }
+        Resource baseResource =
+                Resource.newResource(
+                        Server.class.getClassLoader().getResource("static").toExternalForm());
 
-                if (target == null || target.isEmpty() || "/".equals(target)) {
-                    serveIndexHtml(baseRequest, response);
-                    return;
-                }
+        AbstractHandler staticHandler =
+                new AbstractHandler() {
+                    @Override
+                    public void handle(
+                            String target,
+                            Request baseRequest,
+                            HttpServletRequest request,
+                            HttpServletResponse response)
+                            throws IOException, ServletException {
+                        if (request.getRequestURI().startsWith("/api/")) {
+                            return;
+                        }
 
-                Resource resource = baseResource.addPath(
-                        target.startsWith("/") ? target.substring(1) : target);
-                if (resource.exists() && !resource.isDirectory()) {
-                    response.setContentType(getContentType(target));
-                    try (InputStream in = resource.getInputStream()) {
-                        in.transferTo(response.getOutputStream());
+                        if (target == null || target.isEmpty() || "/".equals(target)) {
+                            serveIndexHtml(baseRequest, response);
+                            return;
+                        }
+
+                        Resource resource =
+                                baseResource.addPath(
+                                        target.startsWith("/") ? target.substring(1) : target);
+                        if (resource.exists() && !resource.isDirectory()) {
+                            response.setContentType(getContentType(target));
+                            try (InputStream in = resource.getInputStream()) {
+                                in.transferTo(response.getOutputStream());
+                            }
+                            baseRequest.setHandled(true);
+                            return;
+                        }
+
+                        String route = target;
+                        int queryIndex = route.indexOf('?');
+                        if (queryIndex != -1) {
+                            route = route.substring(0, queryIndex);
+                        }
+                        if (route.startsWith("/")) {
+                            route = route.substring(1);
+                        }
+
+                        String fileName = route + ".html";
+                        Resource mappedResource = baseResource.addPath(fileName);
+                        if (mappedResource.exists() && !mappedResource.isDirectory()) {
+                            response.setContentType(getContentType(fileName));
+                            try (InputStream in = mappedResource.getInputStream()) {
+                                in.transferTo(response.getOutputStream());
+                            }
+                            baseRequest.setHandled(true);
+                            return;
+                        }
+
+                        serveIndexHtml(baseRequest, response);
                     }
-                    baseRequest.setHandled(true);
-                    return;
-                }
 
-                String route = target;
-                int queryIndex = route.indexOf('?');
-                if (queryIndex != -1) {
-                    route = route.substring(0, queryIndex);
-                }
-                if (route.startsWith("/")) {
-                    route = route.substring(1);
-                }
-
-                String fileName = route + ".html";
-                Resource mappedResource = baseResource.addPath(fileName);
-                if (mappedResource.exists() && !mappedResource.isDirectory()) {
-                    response.setContentType(getContentType(fileName));
-                    try (InputStream in = mappedResource.getInputStream()) {
-                        in.transferTo(response.getOutputStream());
+                    private void serveIndexHtml(Request baseRequest, HttpServletResponse response)
+                            throws IOException {
+                        Resource indexHtml = baseResource.addPath("index.html");
+                        response.setContentType("text/html");
+                        try (InputStream in = indexHtml.getInputStream()) {
+                            in.transferTo(response.getOutputStream());
+                        }
+                        baseRequest.setHandled(true);
                     }
-                    baseRequest.setHandled(true);
-                    return;
-                }
 
-                serveIndexHtml(baseRequest, response);
-            }
-
-            private void serveIndexHtml(Request baseRequest, HttpServletResponse response)
-                    throws IOException {
-                Resource indexHtml = baseResource.addPath("index.html");
-                response.setContentType("text/html");
-                try (InputStream in = indexHtml.getInputStream()) {
-                    in.transferTo(response.getOutputStream());
-                }
-                baseRequest.setHandled(true);
-            }
-
-            private String getContentType(String path) {
-                if (path.endsWith(".js")) return "application/javascript";
-                if (path.endsWith(".css")) return "text/css";
-                if (path.endsWith(".html")) return "text/html";
-                if (path.endsWith(".json")) return "application/json";
-                if (path.endsWith(".png")) return "image/png";
-                if (path.endsWith(".jpg") || path.endsWith(".jpeg")) return "image/jpeg";
-                if (path.endsWith(".gif")) return "image/gif";
-                if (path.endsWith(".svg")) return "image/svg+xml";
-                return "application/octet-stream";
-            }
-        };
+                    private String getContentType(String path) {
+                        if (path.endsWith(".js")) return "application/javascript";
+                        if (path.endsWith(".css")) return "text/css";
+                        if (path.endsWith(".html")) return "text/html";
+                        if (path.endsWith(".json")) return "application/json";
+                        if (path.endsWith(".png")) return "image/png";
+                        if (path.endsWith(".jpg") || path.endsWith(".jpeg")) return "image/jpeg";
+                        if (path.endsWith(".gif")) return "image/gif";
+                        if (path.endsWith(".svg")) return "image/svg+xml";
+                        return "application/octet-stream";
+                    }
+                };
 
         GzipHandler gzipHandler = new GzipHandler();
         gzipHandler.setHandler(staticHandler);

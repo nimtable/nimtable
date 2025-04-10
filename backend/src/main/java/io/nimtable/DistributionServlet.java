@@ -54,9 +54,11 @@ public class DistributionServlet extends HttpServlet {
     public void init() throws ServletException {
         super.init();
         getServletContext().setAttribute(SERVLET_KEY, this);
-        this.cache = Caffeine.newBuilder()
-            .expireAfterWrite(config.cache().distributionExpireSeconds(), TimeUnit.SECONDS)
-            .build(this::loadDistribution);
+        this.cache =
+                Caffeine.newBuilder()
+                        .expireAfterWrite(
+                                config.cache().distributionExpireSeconds(), TimeUnit.SECONDS)
+                        .build(this::loadDistribution);
         getServletContext().setAttribute(CACHE_KEY, cache);
     }
 
