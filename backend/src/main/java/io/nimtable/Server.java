@@ -42,52 +42,68 @@ import org.slf4j.LoggerFactory;
 
 public class Server {
     private static final Logger LOG = LoggerFactory.getLogger(Server.class);
+    private final Config config;
+    private final org.eclipse.jetty.server.Server server;
 
-    private Server() {}
+    public Server(Config config) throws IOException {
+        this.config = config;
+        this.server =
+                new org.eclipse.jetty.server.Server(
+                        new InetSocketAddress(config.server().host(), config.server().port()));
 
-    public static void main(String[] args) throws Exception {
-        // Read and parse the config.yaml file
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-        Config config = mapper.readValue(new File("config.yaml"), Config.class);
+        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
+        context.setContextPath("/");
+        server.setHandler(context);
 
-        // Add CatalogsServlet to handle `/api/catalogs` endpoint
-        ServletContextHandler apiContext =
-                new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
-        apiContext.setContextPath("/api");
-        apiContext.addServlet(
-                new ServletHolder("catalogs", new CatalogsServlet(config)), "/catalogs");
-        apiContext.addServlet(
-                new ServletHolder("catalog-config", new CatalogConfigServlet(config)), "/config/*");
-        apiContext.addServlet(
-                new ServletHolder("spark-query", new SparkQueryServlet(config)), "/query");
-        apiContext.addServlet(
-                new ServletHolder("manifest", new ManifestServlet(config)), "/manifest/*");
-        apiContext.addServlet(
-                new ServletHolder("optimize", new OptimizeServlet(config)), "/optimize/*");
-        apiContext.addServlet(
-                new ServletHolder("distribution", new DistributionServlet(config)),
-                "/distribution/*");
-        apiContext.addServlet(new ServletHolder(new LoginServlet(config)), "/login");
-        apiContext.addServlet(new ServletHolder(new LogoutServlet()), "/logout");
+        // Register servlets
+        registerServlets(context);
+        registerCatalogs(context);
+        setupStaticFileHandler(context);
+    }
 
-        // Add route for each `/api/catalog/<catalog-name>/*` endpoints
+    private void registerServlets(ServletContextHandler context) {
+        // Register API servlets
+        context.addServlet(new ServletHolder(new OptimizeServlet(config)), "/api/optimize/*");
+        ServletHolder distributionHolder = new ServletHolder(new DistributionServlet(config));
+        distributionHolder.setInitOrder(1); // Ensure DistributionServlet is initialized first
+        context.addServlet(distributionHolder, "/api/distribution/*");
+
+        context.addServlet(
+                new ServletHolder("catalogs", new CatalogsServlet(config)), "/api/catalogs");
+        context.addServlet(
+                new ServletHolder("catalog-config", new CatalogConfigServlet(config)),
+                "/api/config/*");
+        context.addServlet(
+                new ServletHolder("spark-query", new SparkQueryServlet(config)), "/api/query");
+        context.addServlet(
+                new ServletHolder("manifest", new ManifestServlet(config)), "/api/manifest/*");
+        context.addServlet(new ServletHolder(new LoginServlet(config)), "/api/login");
+        context.addServlet(new ServletHolder(new LogoutServlet()), "/api/logout");
+    }
+
+    private void registerCatalogs(ServletContextHandler context) throws IOException {
         for (Config.Catalog catalog : config.catalogs()) {
             LOG.info("Creating catalog with properties: {}", catalog.properties());
             Catalog icebergCatalog =
                     CatalogUtil.buildIcebergCatalog(
                             catalog.name(), catalog.properties(), new Configuration());
 
-            try (RESTCatalogAdapter adapter = new RESTCatalogAdapter(icebergCatalog)) {
+            RESTCatalogAdapter adapter = new RESTCatalogAdapter(icebergCatalog);
+            try {
                 RESTCatalogServlet servlet = new RESTCatalogServlet(adapter);
                 ServletHolder servletHolder = new ServletHolder(servlet);
-                apiContext.addServlet(servletHolder, "/catalog/" + catalog.name() + "/*");
+                context.addServlet(servletHolder, "/api/catalog/" + catalog.name() + "/*");
+            } finally {
+                adapter.close();
             }
         }
+    }
 
-        // Create a handler for serving static files and SPA routing
+    private void setupStaticFileHandler(ServletContextHandler context) throws IOException {
         Resource baseResource =
                 Resource.newResource(
                         Server.class.getClassLoader().getResource("static").toExternalForm());
+
         AbstractHandler staticHandler =
                 new AbstractHandler() {
                     @Override
@@ -98,16 +114,14 @@ public class Server {
                             HttpServletResponse response)
                             throws IOException, ServletException {
                         if (request.getRequestURI().startsWith("/api/")) {
-                            return; // Let API handler handle this
+                            return;
                         }
 
-                        // For root path or empty target, serve index.html directly
                         if (target == null || target.isEmpty() || "/".equals(target)) {
                             serveIndexHtml(baseRequest, response);
                             return;
                         }
 
-                        // Try to serve the requested file directly
                         Resource resource =
                                 baseResource.addPath(
                                         target.startsWith("/") ? target.substring(1) : target);
@@ -120,22 +134,16 @@ public class Server {
                             return;
                         }
 
-                        // If not found, try mapping the route to a static HTML file.
-                        // Remove query parameters if any.
                         String route = target;
                         int queryIndex = route.indexOf('?');
                         if (queryIndex != -1) {
                             route = route.substring(0, queryIndex);
                         }
-                        // Remove leading slash
                         if (route.startsWith("/")) {
                             route = route.substring(1);
                         }
 
-                        // Map known routes to corresponding HTML files.
                         String fileName = route + ".html";
-
-                        // Try serving the mapped file.
                         Resource mappedResource = baseResource.addPath(fileName);
                         if (mappedResource.exists() && !mappedResource.isDirectory()) {
                             response.setContentType(getContentType(fileName));
@@ -146,7 +154,6 @@ public class Server {
                             return;
                         }
 
-                        // Fallback: serve index.html for SPA routing.
                         serveIndexHtml(baseRequest, response);
                     }
 
@@ -173,18 +180,24 @@ public class Server {
                     }
                 };
 
-        // Add gzip compression
         GzipHandler gzipHandler = new GzipHandler();
         gzipHandler.setHandler(staticHandler);
 
         HandlerList handlers = new HandlerList();
         handlers.addHandler(gzipHandler);
-        handlers.addHandler(apiContext);
-        org.eclipse.jetty.server.Server httpServer =
-                new org.eclipse.jetty.server.Server(
-                        new InetSocketAddress(config.server().host(), config.server().port()));
-        httpServer.setHandler(handlers);
-        httpServer.start();
-        httpServer.join();
+        handlers.addHandler(context);
+        server.setHandler(handlers);
+    }
+
+    public void start() throws Exception {
+        server.start();
+        server.join();
+    }
+
+    public static void main(String[] args) throws Exception {
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        Config config = mapper.readValue(new File("config.yaml"), Config.class);
+        Server server = new Server(config);
+        server.start();
     }
 }
