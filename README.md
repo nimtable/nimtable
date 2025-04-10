@@ -181,6 +181,7 @@ It will serve at http://localhost:8182.
 
 First start the backend server as mentioned above.
 
+```bash
 # Install dependencies
 npm install
 
