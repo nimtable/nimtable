@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 // Please refer to https://iceberg.apache.org/docs/latest/spark-procedures/ for future work.
 public class OptimizeServlet extends HttpServlet {
     private static final Logger logger = LoggerFactory.getLogger(OptimizeServlet.class);
+    private static final String SERVLET_KEY = "distributionServlet";
     private final Config config;
     private final ObjectMapper objectMapper;
 
@@ -65,6 +66,15 @@ public class OptimizeServlet extends HttpServlet {
         this.objectMapper = new ObjectMapper();
     }
 
+    private void invalidateDistributionCache(
+            String catalogName, String namespace, String tableName) {
+        DistributionServlet distributionServlet =
+                (DistributionServlet) getServletContext().getAttribute(SERVLET_KEY);
+        if (distributionServlet != null) {
+            distributionServlet.invalidateCache(catalogName, namespace, tableName);
+        }
+    }
+
     private CompactionResult compactTable(
             SparkSession spark, String catalogName, String namespace, String tableName) {
         String sql =
@@ -72,6 +82,7 @@ public class OptimizeServlet extends HttpServlet {
                         "CALL `%s`.system.rewrite_data_files(table => '%s.%s', options => map('rewrite-all', 'true'))",
                         catalogName, namespace, tableName);
         Row result = spark.sql(sql).collectAsList().get(0);
+
         return new CompactionResult(
                 result.getAs("rewritten_data_files_count"),
                 result.getAs("added_data_files_count"),
@@ -307,6 +318,9 @@ public class OptimizeServlet extends HttpServlet {
                         HttpServletResponse.SC_BAD_REQUEST, "Invalid operation: " + operation);
                 return;
         }
+
+        // Invalidate distribution cache after compaction
+        invalidateDistributionCache(catalogName, namespace, tableName);
 
         // Return success response with operation results
         response.setContentType("application/json");

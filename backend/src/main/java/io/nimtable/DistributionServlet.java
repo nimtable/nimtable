@@ -18,6 +18,9 @@ package io.nimtable;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -25,6 +28,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import org.apache.iceberg.*;
 import org.apache.iceberg.catalog.Catalog;
 import org.apache.iceberg.catalog.TableIdentifier;
@@ -34,13 +38,103 @@ import org.slf4j.LoggerFactory;
 
 public class DistributionServlet extends HttpServlet {
     private static final Logger LOG = LoggerFactory.getLogger(DistributionServlet.class);
+    private static final String CACHE_KEY = "distributionCache";
+    private static final String SERVLET_KEY = "distributionServlet";
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private final Config config;
     private final ObjectMapper objectMapper;
+    private LoadingCache<String, ObjectNode> cache;
 
     public DistributionServlet(Config config) {
         this.config = config;
         this.objectMapper = new ObjectMapper();
+    }
+
+    @Override
+    public void init() throws ServletException {
+        super.init();
+        getServletContext().setAttribute(SERVLET_KEY, this);
+        this.cache = Caffeine.newBuilder()
+            .expireAfterWrite(config.cache().distributionExpireSeconds(), TimeUnit.SECONDS)
+            .build(this::loadDistribution);
+        getServletContext().setAttribute(CACHE_KEY, cache);
+    }
+
+    private LoadingCache<String, ObjectNode> getCache() {
+        return cache;
+    }
+
+    private ObjectNode getDistribution(String cacheKey) {
+        try {
+            var entry = getCache().get(cacheKey);
+            if (entry != null) {
+                LOG.info("Cache hit for key: {}", cacheKey);
+            }
+
+            return entry;
+        } catch (Exception e) {
+            LOG.error("Error getting distribution from cache for key: {}", cacheKey, e);
+            // If cache loading fails, invalidate the cache and try to load directly
+            getCache().invalidate(cacheKey);
+            ObjectNode distribution = loadDistribution(cacheKey);
+            // Update cache with the new distribution
+            LOG.info("Updating cache for key: {}", cacheKey);
+            getCache().put(cacheKey, distribution);
+            return distribution;
+        }
+    }
+
+    private ObjectNode loadDistribution(String key) {
+        String[] parts = key.split("/");
+        String catalogName = parts[0];
+        String namespace = parts[1];
+        String tableName = parts[2];
+
+        try {
+            Config.Catalog catalogConfig =
+                    config.catalogs().stream()
+                            .filter(c -> c.name().equals(catalogName))
+                            .findFirst()
+                            .orElseThrow(
+                                    () ->
+                                            new IllegalArgumentException(
+                                                    "Catalog not found: " + catalogName));
+
+            Catalog catalog =
+                    CatalogUtil.buildIcebergCatalog(
+                            catalogConfig.name(),
+                            catalogConfig.properties(),
+                            new org.apache.hadoop.conf.Configuration());
+
+            Table table = catalog.loadTable(TableIdentifier.of(namespace, tableName));
+            Map<String, Integer> distribution = calculateDistributionStats(table);
+            int totalFiles = 0;
+            for (Map.Entry<String, Integer> entry : distribution.entrySet()) {
+                totalFiles += entry.getValue();
+            }
+
+            ObjectNode rootNode = MAPPER.createObjectNode();
+            for (Map.Entry<String, Integer> entry : distribution.entrySet()) {
+                String range = entry.getKey();
+                int count = entry.getValue();
+                double percentage = totalFiles > 0 ? Math.round((count * 100.0) / totalFiles) : 0;
+
+                ObjectNode rangeData = objectMapper.createObjectNode();
+                rangeData.put("count", count);
+                rangeData.put("percentage", percentage);
+
+                rootNode.set(range, rangeData);
+            }
+            return rootNode;
+        } catch (Exception e) {
+            LOG.error(
+                    "Error loading distribution for {}/{}/{}",
+                    catalogName,
+                    namespace,
+                    tableName,
+                    e);
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -65,49 +159,21 @@ public class DistributionServlet extends HttpServlet {
         String tableName = parts[3];
 
         try {
-            Config.Catalog catalogConfig =
-                    config.catalogs().stream()
-                            .filter(c -> c.name().equals(catalogName))
-                            .findFirst()
-                            .orElseThrow(
-                                    () ->
-                                            new IllegalArgumentException(
-                                                    "Catalog not found: " + catalogName));
-
-            Catalog catalog =
-                    CatalogUtil.buildIcebergCatalog(
-                            catalogConfig.name(),
-                            catalogConfig.properties(),
-                            new org.apache.hadoop.conf.Configuration());
-
-            Table table = catalog.loadTable(TableIdentifier.of(namespace, tableName));
-
-            Map<String, Integer> distribution = calculateDistributionStats(table);
-            int totalFiles = 0;
-            for (Map.Entry<String, Integer> entry : distribution.entrySet()) {
-                totalFiles += entry.getValue();
-            }
-
-            ObjectNode rootNode = MAPPER.createObjectNode();
-            for (Map.Entry<String, Integer> entry : distribution.entrySet()) {
-                String range = entry.getKey();
-                int count = entry.getValue();
-                double percentage = totalFiles > 0 ? Math.round((count * 100.0) / totalFiles) : 0;
-
-                ObjectNode rangeData = objectMapper.createObjectNode();
-                rangeData.put("count", count);
-                rangeData.put("percentage", percentage);
-
-                rootNode.set(range, rangeData);
-            }
+            String cacheKey = String.format("%s/%s/%s", catalogName, namespace, tableName);
+            ObjectNode distribution = getDistribution(cacheKey);
 
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
-            objectMapper.writeValue(response.getWriter(), rootNode);
+            objectMapper.writeValue(response.getWriter(), distribution);
         } catch (Exception e) {
             LOG.error("Error processing distribution request", e);
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
+    }
+
+    public void invalidateCache(String catalogName, String namespace, String tableName) {
+        String cacheKey = String.format("%s/%s/%s", catalogName, namespace, tableName);
+        getCache().invalidate(cacheKey);
     }
 
     private Map<String, Integer> calculateDistributionStats(Table table) {

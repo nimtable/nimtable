@@ -4,6 +4,8 @@ server:
 auth:
   username: admin
   password: admin
+cache:
+  distributionExpireSeconds: 300 
 catalogs:
   - name: sqlite-catalog-demo
     type: jdbc
