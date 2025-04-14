@@ -175,7 +175,11 @@ cd backend
 ./gradlew run
 ```
 
+It will serve at http://localhost:8182.
+
 ### Frontend Development
+
+First start the backend server as mentioned above.
 
 ```bash
 # Install dependencies
@@ -184,6 +188,8 @@ npm install
 # Start development server
 npm run dev
 ```
+
+It will serve a separate UI at http://localhost:3000, which can be dynamically updated as you make changes to the frontend code.
 
 ### Testing with a Catalog
 

@@ -221,3 +221,19 @@ spotless {
     targetExclude 'src/main/generated/**'
   }
 }
+
+// Task to analyze JAR sizes to help identify large dependencies
+task analyzeDependencies {
+  description = 'Analyzes the size of all dependencies to help identify large ones'
+  group = 'build setup'
+  
+  doLast {
+    def resolvedDeps = configurations.runtimeClasspath.resolvedConfiguration.resolvedArtifacts
+    def sortedDeps = resolvedDeps.sort { a, b -> b.file.length() <=> a.file.length() }
+    println "Dependencies sorted by size:"
+    sortedDeps.take(20).each { artifact ->
+      def sizeMB = artifact.file.length() / (1024 * 1024)
+      println String.format("%-70s %8.2f MB", "${artifact.moduleVersion.id.group}:${artifact.moduleVersion.id.name}:${artifact.moduleVersion.id.version}", sizeMB)
+    }
+  }
+}
