@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.iceberg.*;
@@ -94,21 +95,39 @@ public class OptimizeServlet extends HttpServlet {
 
             List<FileScanTaskDescriptor> fileScanTasks = new ArrayList<>();
             var inputFiles = table.newScan().planFiles();
+            Optional<Schema> firstEqDeleteSchema = Optional.empty();
             for (FileScanTask task : inputFiles) {
                 var file = task.file();
+
+                // check if the equality delete files have the same schema
+                if (file.content() == FileContent.EQUALITY_DELETES) {
+                    if (firstEqDeleteSchema.isEmpty()) {
+                        firstEqDeleteSchema = Optional.of(task.schema());
+                    } else if (!task.schema().sameSchema(firstEqDeleteSchema.get())) {
+                        logger.warn(
+                                "Detected eq delete files with different schemas, falling back to Spark Compaction");
+                        String sql =
+                                String.format(
+                                        "CALL `%s`.system.rewrite_data_files(table => '%s.%s', options => map('rewrite-all', 'true'))",
+                                        catalogName, namespace, tableName);
+                        Row result = spark.sql(sql).collectAsList().get(0);
+                        return new CompactionResult(
+                                result.getAs("rewritten_data_files_count"),
+                                result.getAs("added_data_files_count"),
+                                result.getAs("rewritten_bytes_count"),
+                                result.getAs("failed_data_files_count"));
+                    }
+                }
+
                 rewriteFilesAction.deleteFile(file);
 
                 DataFileFormat protoDataFileFormat;
                 FileFormat format = file.format();
+
+                // now only support parquet format
                 switch (format) {
-                    case AVRO:
-                        protoDataFileFormat = DataFileFormat.AVRO;
-                        break;
                     case PARQUET:
                         protoDataFileFormat = DataFileFormat.PARQUET;
-                        break;
-                    case ORC:
-                        protoDataFileFormat = DataFileFormat.ORC;
                         break;
                     default:
                         throw new RuntimeException("Unsupported file format: " + format);
@@ -196,13 +215,8 @@ public class OptimizeServlet extends HttpServlet {
 
                     FileFormat dataFileFormat;
                     var protoDataFileFormat = protoFile.getFileFormat().toString();
+                    // now only support parquet format
                     switch (protoDataFileFormat) {
-                        case "AVRO":
-                            dataFileFormat = FileFormat.AVRO;
-                            break;
-                        case "ORC":
-                            dataFileFormat = FileFormat.ORC;
-                            break;
                         case "PARQUET":
                             dataFileFormat = FileFormat.PARQUET;
                             break;

@@ -63,6 +63,9 @@ catalogs:
 #    type: glue
 #    warehouse: s3://your-bucket/test
 
+
+# For the dedicated compactor service. 
+# When enabled, nimtable will trigger the remote compaction via host:port.
 # compactor:
 #   ip: 0.0.0.0
 #   port: 7777
