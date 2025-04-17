@@ -188,7 +188,15 @@ export interface DistributionItem {
 }
 
 export interface DistributionData {
-    [range: string]: DistributionItem
+    ranges: {
+        [range: string]: DistributionItem
+    }
+    dataFileCount: number
+    positionDeleteFileCount: number
+    eqDeleteFileCount: number
+    dataFileSizeInBytes: number
+    positionDeleteFileSizeInBytes: number
+    eqDeleteFileSizeInBytes: number
 }
 
 /**
@@ -204,7 +212,21 @@ export async function getFileDistribution(
         const data = await response.json();
         return data;
     }
-    return {}
+    return {
+        ranges: {
+            "0-8M": { count: 0, percentage: 0 },
+            "8M-32M": { count: 0, percentage: 0 },
+            "32M-128M": { count: 0, percentage: 0 },
+            "128M-512M": { count: 0, percentage: 0 },
+            "512M+": { count: 0, percentage: 0 }
+        },
+        dataFileCount: 0,
+        positionDeleteFileCount: 0,
+        eqDeleteFileCount: 0,
+        dataFileSizeInBytes: 0,
+        positionDeleteFileSizeInBytes: 0,
+        eqDeleteFileSizeInBytes: 0
+    };
 }
 
 export type OptimizationOperation = "Compaction" | "Snapshot Expiration" | "Orphan File Cleanup"

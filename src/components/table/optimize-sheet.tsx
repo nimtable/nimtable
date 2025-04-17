@@ -16,7 +16,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { ChevronRight, SettingsIcon, CheckCircle2, Circle, Loader2 } from "lucide-react"
+import { ChevronRight, SettingsIcon, CheckCircle2, Circle, Loader2, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { errorToString } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
@@ -60,25 +60,33 @@ function FileDistributionSection({
 }: { tableId: string; catalog: string; namespace: string }) {
     const { toast } = useToast()
     const [loading, setLoading] = useState(true)
-    const [distribution, setDistribution] = useState<DistributionData>({})
+    const [distribution, setDistribution] = useState<DistributionData>({
+        ranges: {},
+        dataFileCount: 0,
+        positionDeleteFileCount: 0,
+        eqDeleteFileCount: 0,
+        dataFileSizeInBytes: 0,
+        positionDeleteFileSizeInBytes: 0,
+        eqDeleteFileSizeInBytes: 0
+    })
+
+    const fetchData = async () => {
+        try {
+            setLoading(true)
+            const data = await getFileDistribution(catalog, namespace, tableId)
+            setDistribution(data)
+        } catch (error) {
+            toast({
+                variant: "destructive",
+                title: "Failed to fetch distribution data",
+                description: errorToString(error),
+            })
+        } finally {
+            setLoading(false)
+        }
+    }
 
     useEffect(() => {
-        async function fetchData() {
-            try {
-                setLoading(true)
-                const data = await getFileDistribution(catalog, namespace, tableId)
-                setDistribution(data)
-            } catch (error) {
-                toast({
-                    variant: "destructive",
-                    title: "Failed to fetch distribution data",
-                    description: errorToString(error),
-                })
-            } finally {
-                setLoading(false)
-            }
-        }
-
         if (tableId && catalog && namespace) {
             fetchData()
         }
@@ -110,14 +118,14 @@ function FileDistributionSection({
     }
 
     // Sort the distribution data according to our predefined size order
-    const sortedDistributionEntries = Object.entries(distribution).sort((a, b) => {
+    const sortedDistributionEntries = Object.entries(distribution.ranges).sort((a, b) => {
         const indexA = rangeOrder.indexOf(a[0])
         const indexB = rangeOrder.indexOf(b[0])
         return indexA - indexB
     })
 
     // Calculate total files
-    const totalFiles = Object.values(distribution).reduce((sum, item) => sum + item.count, 0)
+    const totalFiles = Object.values(distribution.ranges).reduce((sum, item) => sum + item.count, 0)
 
     return (
         <Card className="border-muted/70 shadow-sm h-full">
@@ -127,7 +135,18 @@ function FileDistributionSection({
             </CardHeader>
             <CardContent className="pt-4">
                 <div className="flex justify-between items-center mb-4 text-sm">
-                    <span className="font-medium">Total Files: {totalFiles}</span>
+                    <div className="flex items-center gap-2">
+                        <span className="font-medium">Total Files: {totalFiles}</span>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={fetchData}
+                            disabled={loading}
+                        >
+                            <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
+                        </Button>
+                    </div>
                     <span className="text-muted-foreground">Optimizing improves file size distribution</span>
                 </div>
 
@@ -175,9 +194,27 @@ function FileDistributionSection({
 
                 <div className="mt-6 pt-4 border-t border-muted/50">
                     <div className="text-sm">
+                        <p className="mb-2 font-medium text-foreground">File Statistics:</p>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <p className="text-muted-foreground">Data Files: {distribution.dataFileCount}</p>
+                                <p className="text-muted-foreground">Position Delete Files: {distribution.positionDeleteFileCount}</p>
+                                <p className="text-muted-foreground">Equality Delete Files: {distribution.eqDeleteFileCount}</p>
+                            </div>
+                            <div>
+                                <p className="text-muted-foreground">Data Size: {(distribution.dataFileSizeInBytes / (1024 * 1024)).toFixed(2)} MB</p>
+                                <p className="text-muted-foreground">Position Delete Size: {(distribution.positionDeleteFileSizeInBytes / (1024 * 1024)).toFixed(2)} MB</p>
+                                <p className="text-muted-foreground">Equality Delete Size: {(distribution.eqDeleteFileSizeInBytes / (1024 * 1024)).toFixed(2)} MB</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-muted/50">
+                    <div className="text-sm">
                         <p className="mb-2 font-medium text-foreground">Optimization Recommendation:</p>
                         <p className="text-muted-foreground">
-                            This table has {distribution["0-8M"]?.count || 0} small files that could benefit from compaction.
+                            This table has {distribution.ranges["0-8M"]?.count || 0} small files that could benefit from compaction.
                         </p>
                     </div>
                 </div>
