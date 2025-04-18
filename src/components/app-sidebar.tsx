@@ -16,7 +16,7 @@
 "use client"
 
 import * as React from "react"
-import { Database, RefreshCw, ServerCrash, FolderSearch, AlertCircle, LogOut } from "lucide-react"
+import { Database, RefreshCw, ServerCrash, FolderSearch, AlertCircle, LogOut, Plus } from "lucide-react"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
@@ -207,6 +207,25 @@ function AppSidebarContent() {
                     <Button
                       variant="outline"
                       size="icon"
+                      className="h-9 w-9 flex-shrink-0 border-muted-foreground/20 hover:border-blue-400 hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors"
+                      onClick={() => router.push("/catalog/new")}
+                    >
+                      <Plus className="h-4 w-4 text-blue-500" />
+                      <span className="sr-only">New Catalog</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p>Create new catalog</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              <TooltipProvider delayDuration={300}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
                       className={cn(
                         "h-9 w-9 flex-shrink-0 border-muted-foreground/20 transition-all duration-200",
                         isRefreshing && "border-blue-500/50 bg-blue-500/10",
@@ -216,33 +235,40 @@ function AppSidebarContent() {
                     >
                       <RefreshCw
                         className={cn(
-                          "h-4 w-4 transition-all",
-                          isRefreshing ? "animate-spin text-blue-500" : "text-muted-foreground",
+                          "h-4 w-4",
+                          isRefreshing ? "animate-spin text-blue-500" : "text-muted-foreground/50",
                         )}
                       />
                       <span className="sr-only">Refresh</span>
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom">
-                    <p>{isRefreshing ? "Refreshing..." : "Refresh catalog data"}</p>
+                    <p>Refresh catalog data</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             </div>
           ) : (
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 px-3 py-2 text-muted-foreground border border-muted-foreground/20 rounded-md h-9 flex-1 bg-background">
-                <Database className="h-4 w-4" />
-                <span className="text-sm">{catalogListLoading ? "Loading catalogs..." : "No catalogs"}</span>
-              </div>
-
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 h-9 border-muted-foreground/20 hover:border-blue-400 hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors"
+                onClick={() => router.push("/catalog/new")}
+              >
+                <Plus className="mr-2 h-4 w-4 text-blue-500" />
+                New Catalog
+              </Button>
               <TooltipProvider delayDuration={300}>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="outline"
                       size="icon"
-                      className="h-9 w-9 ml-2 flex-shrink-0 border-muted-foreground/20"
+                      className={cn(
+                        "h-9 w-9 flex-shrink-0 border-muted-foreground/20 transition-all duration-200",
+                        isRefreshing && "border-blue-500/50 bg-blue-500/10",
+                      )}
                       onClick={handleRefresh}
                       disabled={isRefreshing || catalogListLoading}
                     >

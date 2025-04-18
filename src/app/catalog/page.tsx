@@ -16,17 +16,30 @@
 
 "use client"
 
-import { Database, FileText, Layers, HardDrive, Settings } from "lucide-react"
+import { Database, FileText, Layers, HardDrive, Settings, Trash2 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useToast } from "@/hooks/use-toast"
 import { errorToString } from "@/lib/utils"
-import { notFound, useSearchParams } from "next/navigation"
-import { CatalogConfig, getCatalogConfig } from "@/lib/data-loader"
+import { notFound, useSearchParams, useRouter } from "next/navigation"
+import { CatalogConfig, getCatalogConfig, deleteCatalog } from "@/lib/data-loader"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { TopNavbar } from "@/components/shared/top-navbar"
 import { PageLoader } from "@/components/shared/page-loader"
+import { Button } from "@/components/ui/button"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 export default function CatalogPage() {
+    const router = useRouter()
     const searchParams = useSearchParams()
     const catalogParam = searchParams.get("catalog")
     const [config, setConfig] = useState<CatalogConfig | undefined>(undefined)
@@ -68,6 +81,25 @@ export default function CatalogPage() {
         }
     }, [catalogParam, toast])
 
+    const handleDelete = async () => {
+        if (!catalogParam) return
+
+        try {
+            await deleteCatalog(catalogParam)
+            toast({
+                title: "Catalog deleted successfully",
+                description: "The catalog has been removed from the database.",
+            })
+            router.push("/")
+        } catch (error) {
+            toast({
+                variant: "destructive",
+                title: "Failed to delete catalog",
+                description: errorToString(error),
+            })
+        }
+    }
+
     // Ensure we have a catalog parameter
     if (!catalogParam) {
         return notFound()
@@ -89,13 +121,36 @@ export default function CatalogPage() {
             <div className="flex-1 flex justify-center">
                 <div className="w-full max-w-5xl px-6 py-8">
                     {/* Header */}
-                    <div className="flex items-center gap-3 mb-8">
-                        <div className="h-12 w-12 rounded-lg bg-blue-600/10 border border-blue-600/20 flex items-center justify-center">
-                            <Database className="h-6 w-6 text-blue-600" />
+                    <div className="flex items-center justify-between gap-3 mb-8">
+                        <div className="flex items-center gap-3">
+                            <div className="h-12 w-12 rounded-lg bg-blue-600/10 border border-blue-600/20 flex items-center justify-center">
+                                <Database className="h-6 w-6 text-blue-600" />
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <h1 className="text-3xl font-bold">{catalogParam}</h1>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <h1 className="text-3xl font-bold">{catalogParam}</h1>
-                        </div>
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="destructive" size="sm">
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete Catalog
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        This action cannot be undone. This will permanently delete the catalog
+                                        and remove it from the database.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
                     </div>
 
                     {/* Key Metrics */}

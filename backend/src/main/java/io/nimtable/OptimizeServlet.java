@@ -18,6 +18,7 @@ package io.nimtable;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.nimtable.db.repository.CatalogRepository;
 import io.nimtable.spark.LocalSpark;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
@@ -43,6 +44,7 @@ public class OptimizeServlet extends HttpServlet {
     private static final Logger logger = LoggerFactory.getLogger(OptimizeServlet.class);
     private final Config config;
     private final ObjectMapper objectMapper;
+    private final CatalogRepository catalogRepository;
 
     record CompactionResult(
             int rewrittenDataFilesCount,
@@ -63,6 +65,7 @@ public class OptimizeServlet extends HttpServlet {
     public OptimizeServlet(Config config) {
         this.config = config;
         this.objectMapper = new ObjectMapper();
+        this.catalogRepository = new CatalogRepository();
     }
 
     private CompactionResult compactTable(
@@ -139,18 +142,29 @@ public class OptimizeServlet extends HttpServlet {
 
         // Get catalog
         Config.Catalog catalog = config.getCatalog(catalogName);
-        if (catalog == null) {
-            response.sendError(
-                    HttpServletResponse.SC_NOT_FOUND, "Catalog not found: " + catalogName);
-            return;
+        Map<String, String> properties;
+
+        if (catalog != null) {
+            properties = catalog.properties();
+        } else {
+            // Check database
+            io.nimtable.db.entity.Catalog dbCatalog = catalogRepository.findByName(catalogName);
+            if (dbCatalog == null) {
+                response.sendError(
+                        HttpServletResponse.SC_NOT_FOUND, "Catalog not found: " + catalogName);
+                return;
+            }
+            properties = new HashMap<>(dbCatalog.getProperties());
+            properties.put("type", dbCatalog.getType());
+            properties.put("warehouse", dbCatalog.getWarehouse());
+            properties.put("uri", dbCatalog.getUri());
         }
 
         // Load table
         Table table;
         try {
             table =
-                    CatalogUtil.buildIcebergCatalog(
-                                    catalog.name(), catalog.properties(), new Configuration())
+                    CatalogUtil.buildIcebergCatalog(catalogName, properties, new Configuration())
                             .loadTable(TableIdentifier.of(namespace, tableName));
         } catch (Exception e) {
             logger.error("Failed to load table: {}.{}", namespace, tableName, e);
@@ -261,36 +275,36 @@ public class OptimizeServlet extends HttpServlet {
                 break;
 
             case "schedule":
-                Map<String, String> properties = new HashMap<>();
+                Map<String, String> tableProperties = new HashMap<>();
                 if (snapshotRetention) {
-                    properties.put("nimtable.retention.enabled", "true");
-                    properties.put(
+                    tableProperties.put("nimtable.retention.enabled", "true");
+                    tableProperties.put(
                             "history.expire.max-snapshot-age-ms", String.valueOf(retentionPeriod));
-                    properties.put(
+                    tableProperties.put(
                             "history.expire.min-snapshots-to-keep",
                             String.valueOf(minSnapshotsToKeep));
                 } else {
-                    properties.put("nimtable.retention.enabled", "false");
+                    tableProperties.put("nimtable.retention.enabled", "false");
                 }
 
                 if (orphanFileDeletion) {
-                    properties.put("nimtable.orphan-file-deletion.enabled", "true");
-                    properties.put(
+                    tableProperties.put("nimtable.orphan-file-deletion.enabled", "true");
+                    tableProperties.put(
                             "nimtable.orphan-file-deletion.retention-ms",
                             String.valueOf(orphanFileRetention));
                 } else {
-                    properties.put("nimtable.orphan-file-deletion.enabled", "false");
+                    tableProperties.put("nimtable.orphan-file-deletion.enabled", "false");
                 }
 
                 if (compaction) {
-                    properties.put("nimtable.compaction.enabled", "true");
+                    tableProperties.put("nimtable.compaction.enabled", "true");
                 } else {
-                    properties.put("nimtable.compaction.enabled", "false");
+                    tableProperties.put("nimtable.compaction.enabled", "false");
                 }
                 // Update table properties
                 try {
                     UpdateProperties updates = table.updateProperties();
-                    for (Map.Entry<String, String> entry : properties.entrySet()) {
+                    for (Map.Entry<String, String> entry : tableProperties.entrySet()) {
                         updates.set(entry.getKey(), entry.getValue());
                     }
                     updates.commit();

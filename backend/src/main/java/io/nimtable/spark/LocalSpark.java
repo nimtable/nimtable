@@ -17,14 +17,20 @@
 package io.nimtable.spark;
 
 import io.nimtable.Config;
+import io.nimtable.db.entity.Catalog;
+import io.nimtable.db.repository.CatalogRepository;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.apache.spark.sql.SparkSession;
 
 public class LocalSpark {
     private static LocalSpark instance;
     private final SparkSession spark;
+    private final Config config;
 
     private LocalSpark(Config config) {
+        this.config = config;
         this.spark = initializeSpark(config);
     }
 
@@ -33,6 +39,13 @@ public class LocalSpark {
             instance = new LocalSpark(config);
         }
         return instance;
+    }
+
+    public static synchronized void updateInstance(Config config) {
+        if (instance != null) {
+            instance.stop();
+        }
+        instance = new LocalSpark(config);
     }
 
     private SparkSession initializeSpark(Config config) {
@@ -50,13 +63,51 @@ public class LocalSpark {
                         .config("spark.hadoop.fs.s3a.secret.key", "password")
                         .config("spark.hadoop.fs.s3a.path.style.access", "true");
 
+        // Load catalogs from config
+        if (config.catalogs() != null) {
+            for (Config.Catalog catalog : config.catalogs()) {
+                String catalogName = catalog.name();
+                builder.config(
+                        String.format("spark.sql.catalog.%s", catalogName),
+                        "org.apache.iceberg.spark.SparkCatalog");
+
+                // Add all properties to Spark config
+                for (Map.Entry<String, String> property : catalog.properties().entrySet()) {
+                    builder.config(
+                            String.format(
+                                    "spark.sql.catalog.%s.%s", catalogName, property.getKey()),
+                            property.getValue());
+                }
+            }
+        }
+
+        // Load catalogs from database
+        CatalogRepository catalogRepository = new CatalogRepository();
+        List<Catalog> catalogs = catalogRepository.findAll();
+
         // Pass all catalog properties to Spark
-        for (Config.Catalog catalog : config.catalogs()) {
-            String catalogName = catalog.name();
+        for (Catalog catalog : catalogs) {
+            String catalogName = catalog.getName();
             builder.config(
                     String.format("spark.sql.catalog.%s", catalogName),
                     "org.apache.iceberg.spark.SparkCatalog");
-            for (Map.Entry<String, String> property : catalog.properties().entrySet()) {
+
+            // Add type to properties
+            Map<String, String> properties = new HashMap<>(catalog.getProperties());
+            properties.put("type", catalog.getType());
+
+            // Add warehouse if specified
+            if (catalog.getWarehouse() != null) {
+                properties.put("warehouse", catalog.getWarehouse());
+            }
+
+            // Add URI if specified
+            if (catalog.getUri() != null) {
+                properties.put("uri", catalog.getUri());
+            }
+
+            // Add all properties to Spark config
+            for (Map.Entry<String, String> property : properties.entrySet()) {
                 builder.config(
                         String.format("spark.sql.catalog.%s.%s", catalogName, property.getKey()),
                         property.getValue());
@@ -75,7 +126,6 @@ public class LocalSpark {
     public void stop() {
         if (spark != null) {
             spark.stop();
-            instance = null; // Reset the instance when stopped
         }
     }
 }

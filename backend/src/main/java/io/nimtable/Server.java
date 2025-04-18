@@ -19,8 +19,10 @@ package io.nimtable;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.nimtable.db.PersistenceManager;
+import io.nimtable.db.entity.Catalog;
 import io.nimtable.db.repository.CatalogRepository;
 import io.nimtable.db.repository.UserRepository;
+import io.nimtable.spark.LocalSpark;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -28,6 +30,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.iceberg.CatalogUtil;
 import org.apache.iceberg.rest.RESTCatalogAdapter;
@@ -48,8 +53,43 @@ import org.slf4j.LoggerFactory;
 
 public class Server {
     private static final Logger LOG = LoggerFactory.getLogger(Server.class);
+    private static ServletContextHandler apiContext;
 
     private Server() {}
+
+    public static void registerCatalog(String name, Map<String, String> properties) {
+        LOG.info("Dynamically registering catalog: {} with properties: {}", name, properties);
+        try {
+            org.apache.iceberg.catalog.Catalog icebergCatalog =
+                    CatalogUtil.buildIcebergCatalog(name, properties, new Configuration());
+
+            RESTCatalogAdapter adapter = new RESTCatalogAdapter(icebergCatalog);
+            RESTCatalogServlet servlet = new RESTCatalogServlet(adapter);
+            ServletHolder servletHolder = new ServletHolder(servlet);
+            apiContext.addServlet(servletHolder, "/catalog/" + name + "/*");
+
+            // Add a listener to clean up the adapter when the servlet is destroyed
+            servletHolder.addEventListener(
+                    new AbstractLifeCycle.AbstractLifeCycleListener() {
+                        @Override
+                        public void lifeCycleStopping(LifeCycle event) {
+                            try {
+                                adapter.close();
+                            } catch (Exception e) {
+                                LOG.error(
+                                        "Error closing RESTCatalogAdapter for catalog: {}",
+                                        name,
+                                        e);
+                            }
+                        }
+                    });
+
+            LOG.info("Successfully registered catalog: {}", name);
+        } catch (Exception e) {
+            LOG.error("Failed to register catalog: {}", name, e);
+            throw new RuntimeException("Failed to register catalog: " + name, e);
+        }
+    }
 
     public static void main(String[] args) throws Exception {
         // Read and parse the config.yaml file
@@ -100,12 +140,14 @@ public class Server {
         UserRepository userRepository = new UserRepository(); // Instantiate UserRepository
         CatalogRepository catalogRepository = new CatalogRepository(); // Simple instantiation
 
+        // init spark
+        LocalSpark.getInstance(config);
+
         // Add Servlets to handle API endpoints
-        ServletContextHandler apiContext =
-                new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
+        apiContext = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
         apiContext.setContextPath("/api");
         apiContext.addServlet(
-                new ServletHolder("catalogs", new CatalogsServlet(config)), "/catalogs");
+                new ServletHolder("catalogs", new CatalogsServlet(config)), "/catalogs/*");
         apiContext.addServlet(
                 new ServletHolder("catalog-config", new CatalogConfigServlet(config)), "/config/*");
         apiContext.addServlet(
@@ -123,20 +165,40 @@ public class Server {
                 new ServletHolder("users", new UserServlet(userRepository)), "/users/*");
 
         // Add route for each `/api/catalog/<catalog-name>/*` endpoints
-        for (Config.Catalog catalog : config.catalogs()) {
-            LOG.info("Creating catalog with properties: {}", catalog.properties());
+        if (config.catalogs() != null) {
+            for (Config.Catalog catalog : config.catalogs()) {
+                LOG.info("Creating catalog with properties: {}", catalog.properties());
+                org.apache.iceberg.catalog.Catalog icebergCatalog =
+                        CatalogUtil.buildIcebergCatalog(
+                                catalog.name(), catalog.properties(), new Configuration());
+
+                try (RESTCatalogAdapter adapter = new RESTCatalogAdapter(icebergCatalog)) {
+                    RESTCatalogServlet servlet = new RESTCatalogServlet(adapter);
+                    ServletHolder servletHolder = new ServletHolder(servlet);
+                    apiContext.addServlet(servletHolder, "/catalog/" + catalog.name() + "/*");
+                }
+            }
+        }
+
+        // Add catalogs from database
+        List<Catalog> dbCatalogs = catalogRepository.findAll();
+        for (Catalog catalogEntity : dbCatalogs) {
+            LOG.info("Creating catalog from database: {}", catalogEntity.getName());
+            Map<String, String> properties = new HashMap<>(catalogEntity.getProperties());
+            properties.put("type", catalogEntity.getType());
+            properties.put("warehouse", catalogEntity.getWarehouse());
+            properties.put("uri", catalogEntity.getUri());
+
             org.apache.iceberg.catalog.Catalog icebergCatalog =
                     CatalogUtil.buildIcebergCatalog(
-                            catalog.name(), catalog.properties(), new Configuration());
+                            catalogEntity.getName(), properties, new Configuration());
 
             try (RESTCatalogAdapter adapter = new RESTCatalogAdapter(icebergCatalog)) {
                 RESTCatalogServlet servlet = new RESTCatalogServlet(adapter);
                 ServletHolder servletHolder = new ServletHolder(servlet);
-                apiContext.addServlet(servletHolder, "/catalog/" + catalog.name() + "/*");
+                apiContext.addServlet(servletHolder, "/catalog/" + catalogEntity.getName() + "/*");
             }
         }
-
-        // TODO: catalog from DB
 
         // Create a handler for serving static files and SPA routing
         Resource baseResource =

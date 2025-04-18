@@ -5,8 +5,8 @@ CREATE TABLE users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
-    created_at TEXT NOT NULL, -- Store as ISO8601 string
-    updated_at TEXT NOT NULL  -- Store as ISO8601 string
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create the catalogs table
@@ -17,8 +17,8 @@ CREATE TABLE catalogs (
     uri TEXT,
     warehouse TEXT,
     properties TEXT, -- Store JSON as TEXT
-    created_at TEXT NOT NULL, -- Store as ISO8601 string
-    updated_at TEXT NOT NULL  -- Store as ISO8601 string
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Indexes (Standard SQL, compatible with SQLite)

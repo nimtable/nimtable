@@ -17,12 +17,16 @@ package io.nimtable;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.nimtable.db.entity.Catalog;
+import io.nimtable.db.repository.CatalogRepository;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.iceberg.CatalogUtil;
 import org.apache.iceberg.DataFile;
@@ -43,10 +47,12 @@ public class ManifestServlet extends HttpServlet {
 
     private final Config config;
     private final ObjectMapper objectMapper;
+    private final CatalogRepository catalogRepository;
 
     public ManifestServlet(Config config) {
         this.config = config;
         this.objectMapper = new ObjectMapper();
+        this.catalogRepository = new CatalogRepository();
     }
 
     @Override
@@ -70,18 +76,29 @@ public class ManifestServlet extends HttpServlet {
 
         // Get catalog
         Config.Catalog catalog = config.getCatalog(catalogName);
-        if (catalog == null) {
-            response.sendError(
-                    HttpServletResponse.SC_NOT_FOUND, "Catalog not found: " + catalogName);
-            return;
+        Map<String, String> properties;
+
+        if (catalog != null) {
+            properties = catalog.properties();
+        } else {
+            // Check database
+            Catalog dbCatalog = catalogRepository.findByName(catalogName);
+            if (dbCatalog == null) {
+                response.sendError(
+                        HttpServletResponse.SC_NOT_FOUND, "Catalog not found: " + catalogName);
+                return;
+            }
+            properties = new HashMap<>(dbCatalog.getProperties());
+            properties.put("type", dbCatalog.getType());
+            properties.put("warehouse", dbCatalog.getWarehouse());
+            properties.put("uri", dbCatalog.getUri());
         }
 
         // Load table
         Table table;
         try {
             table =
-                    CatalogUtil.buildIcebergCatalog(
-                                    catalog.name(), catalog.properties(), new Configuration())
+                    CatalogUtil.buildIcebergCatalog(catalogName, properties, new Configuration())
                             .loadTable(TableIdentifier.of(namespace, tableName));
         } catch (Exception e) {
             logger.error("Failed to load table: {}.{}", namespace, tableName, e);
