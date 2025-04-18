@@ -107,7 +107,9 @@ public class DistributionServlet extends HttpServlet {
             rootNode.put("positionDeleteFileCount", dataDistribution.positionDeleteFileCount);
             rootNode.put("eqDeleteFileCount", dataDistribution.eqDeleteFileCount);
             rootNode.put("dataFileSizeInBytes", dataDistribution.dataFileSizeInBytes);
-            rootNode.put("positionDeleteFileSizeInBytes", dataDistribution.positionDeleteFileSizeInBytes);
+            rootNode.put(
+                    "positionDeleteFileSizeInBytes",
+                    dataDistribution.positionDeleteFileSizeInBytes);
             rootNode.put("eqDeleteFileSizeInBytes", dataDistribution.eqDeleteFileSizeInBytes);
 
             response.setContentType("application/json");
