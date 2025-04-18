@@ -23,4 +23,4 @@ CREATE TABLE catalogs (
 
 -- Indexes (Standard SQL, compatible with SQLite)
 CREATE INDEX idx_users_username ON users(username);
-CREATE INDEX idx_catalogs_name ON catalogs(name); 
+CREATE INDEX idx_catalogs_name ON catalogs(name);

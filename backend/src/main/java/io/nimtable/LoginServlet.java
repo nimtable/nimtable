@@ -71,7 +71,7 @@ public class LoginServlet extends HttpServlet {
 
         boolean loggedIn = false;
 
-        Optional<User> userOptional = userRepository.findByUsername(username);
+        Optional<User> userOptional = userRepository.findUserByUsername(username);
         if (userOptional.isPresent()) {
             User user = userOptional.get();
             if (BCrypt.checkpw(password, user.getPasswordHash())) {

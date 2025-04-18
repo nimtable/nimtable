@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.nimtable.db.PersistenceManager;
 import io.nimtable.db.repository.CatalogRepository;
+import io.nimtable.db.repository.UserRepository;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -97,7 +98,11 @@ public class Server {
         // Initialize Persistence Manager
         PersistenceManager.initialize(dbConfig);
 
-        // Add CatalogsServlet to handle `/api/catalogs` endpoint
+        // --- Instantiate Repositories ---
+        UserRepository userRepository = new UserRepository(); // Instantiate UserRepository
+        CatalogRepository catalogRepository = new CatalogRepository(); // Simple instantiation
+
+        // Add Servlets to handle API endpoints
         ServletContextHandler apiContext =
                 new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
         apiContext.setContextPath("/api");
@@ -116,9 +121,9 @@ public class Server {
                 "/distribution/*");
         apiContext.addServlet(new ServletHolder("login", new LoginServlet(config)), "/login");
         apiContext.addServlet(new ServletHolder(new LogoutServlet()), "/logout");
+        apiContext.addServlet(new ServletHolder("users", new UserServlet(userRepository)), "/users/*");
 
         // Load catalogs from the database and add routes
-        CatalogRepository catalogRepository = new CatalogRepository(); // Simple instantiation
         List<io.nimtable.db.entity.Catalog> dbCatalogs = catalogRepository.findAll();
         LOG.info("Found {} catalogs in the database.", dbCatalogs.size());
 
