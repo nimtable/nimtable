@@ -82,14 +82,15 @@ public class DistributionServlet extends HttpServlet {
 
             Table table = catalog.loadTable(TableIdentifier.of(namespace, tableName));
 
-            Map<String, Integer> distribution = calculateDistributionStats(table);
+            DataDistribution dataDistribution = calculateDistributionStats(table);
             int totalFiles = 0;
-            for (Map.Entry<String, Integer> entry : distribution.entrySet()) {
+            for (Map.Entry<String, Integer> entry : dataDistribution.ranges.entrySet()) {
                 totalFiles += entry.getValue();
             }
 
             ObjectNode rootNode = MAPPER.createObjectNode();
-            for (Map.Entry<String, Integer> entry : distribution.entrySet()) {
+            ObjectNode rangeNode = MAPPER.createObjectNode();
+            for (Map.Entry<String, Integer> entry : dataDistribution.ranges.entrySet()) {
                 String range = entry.getKey();
                 int count = entry.getValue();
                 double percentage = totalFiles > 0 ? Math.round((count * 100.0) / totalFiles) : 0;
@@ -98,8 +99,18 @@ public class DistributionServlet extends HttpServlet {
                 rangeData.put("count", count);
                 rangeData.put("percentage", percentage);
 
-                rootNode.set(range, rangeData);
+                rangeNode.set(range, rangeData);
             }
+
+            rootNode.set("ranges", rangeNode);
+            rootNode.put("dataFileCount", dataDistribution.dataFileCount);
+            rootNode.put("positionDeleteFileCount", dataDistribution.positionDeleteFileCount);
+            rootNode.put("eqDeleteFileCount", dataDistribution.eqDeleteFileCount);
+            rootNode.put("dataFileSizeInBytes", dataDistribution.dataFileSizeInBytes);
+            rootNode.put(
+                    "positionDeleteFileSizeInBytes",
+                    dataDistribution.positionDeleteFileSizeInBytes);
+            rootNode.put("eqDeleteFileSizeInBytes", dataDistribution.eqDeleteFileSizeInBytes);
 
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
@@ -110,17 +121,29 @@ public class DistributionServlet extends HttpServlet {
         }
     }
 
-    private Map<String, Integer> calculateDistributionStats(Table table) {
+    class DataDistribution {
+        int dataFileCount;
+        int positionDeleteFileCount;
+        int eqDeleteFileCount;
+        int dataFileSizeInBytes;
+        int positionDeleteFileSizeInBytes;
+        int eqDeleteFileSizeInBytes;
+        Map<String, Integer> ranges;
+    }
+
+    private DataDistribution calculateDistributionStats(Table table) {
         var snapshot = table.currentSnapshot();
+        DataDistribution dataDistribution = new DataDistribution();
         Map<String, Integer> distribution = new HashMap<>();
         distribution.put("0-8M", 0);
         distribution.put("8M-32M", 0);
         distribution.put("32M-128M", 0);
         distribution.put("128M-512M", 0);
         distribution.put("512M+", 0);
+        dataDistribution.ranges = distribution;
 
         if (snapshot == null) {
-            return distribution;
+            return dataDistribution;
         }
 
         try (FileIO fileIO = table.io()) {
@@ -130,12 +153,22 @@ public class DistributionServlet extends HttpServlet {
                     case DATA:
                         for (DataFile file : ManifestFiles.read(manifest, fileIO, table.specs())) {
                             processFileSize(distribution, file.fileSizeInBytes());
+                            dataDistribution.dataFileCount += 1;
+                            dataDistribution.dataFileSizeInBytes += file.fileSizeInBytes();
                         }
                         break;
                     case DELETES:
                         for (DeleteFile file :
                                 ManifestFiles.readDeleteManifest(manifest, fileIO, table.specs())) {
                             processFileSize(distribution, file.fileSizeInBytes());
+                            if (file.content() == FileContent.EQUALITY_DELETES) {
+                                dataDistribution.eqDeleteFileCount += 1;
+                                dataDistribution.eqDeleteFileSizeInBytes += file.fileSizeInBytes();
+                            } else if (file.content() == FileContent.POSITION_DELETES) {
+                                dataDistribution.positionDeleteFileCount += 1;
+                                dataDistribution.positionDeleteFileSizeInBytes +=
+                                        file.fileSizeInBytes();
+                            }
                         }
                         break;
                     default:
@@ -144,7 +177,7 @@ public class DistributionServlet extends HttpServlet {
             }
         }
 
-        return distribution;
+        return dataDistribution;
     }
 
     private void processFileSize(Map<String, Integer> distribution, long fileSize) {
