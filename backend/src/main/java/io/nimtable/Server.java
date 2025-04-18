@@ -28,8 +28,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
-import java.util.List;
-import java.util.Map;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.iceberg.CatalogUtil;
 import org.apache.iceberg.rest.RESTCatalogAdapter;
@@ -124,64 +122,21 @@ public class Server {
         apiContext.addServlet(
                 new ServletHolder("users", new UserServlet(userRepository)), "/users/*");
 
-        // Load catalogs from the database and add routes
-        List<io.nimtable.db.entity.Catalog> dbCatalogs = catalogRepository.findAll();
-        LOG.info("Found {} catalogs in the database.", dbCatalogs.size());
+        // Add route for each `/api/catalog/<catalog-name>/*` endpoints
+        for (Config.Catalog catalog : config.catalogs()) {
+            LOG.info("Creating catalog with properties: {}", catalog.properties());
+            org.apache.iceberg.catalog.Catalog icebergCatalog =
+                    CatalogUtil.buildIcebergCatalog(
+                            catalog.name(), catalog.properties(), new Configuration());
 
-        for (io.nimtable.db.entity.Catalog dbCatalog : dbCatalogs) {
-            LOG.info(
-                    "Creating catalog endpoint for: {} with properties: {}",
-                    dbCatalog.getName(),
-                    dbCatalog.getProperties());
-
-            // Prepare properties map for Iceberg CatalogUtil
-            Map<String, String> catalogProperties = dbCatalog.getProperties();
-            if (catalogProperties == null) {
-                catalogProperties = new java.util.HashMap<>(); // Ensure not null
-            }
-            // Add essential properties if not already present in JSONB
-            catalogProperties.putIfAbsent(Config.Catalog.TYPE, dbCatalog.getType());
-            if (dbCatalog.getUri() != null) {
-                catalogProperties.putIfAbsent(
-                        CatalogUtil.ICEBERG_CATALOG_TYPE_REST + ".uri",
-                        dbCatalog.getUri()); // Adjust
-                // property
-                // key
-                // based
-                // on
-                // type
-                // if
-                // needed
-                catalogProperties.putIfAbsent(
-                        CatalogUtil.ICEBERG_CATALOG_TYPE_JDBC + ".uri", dbCatalog.getUri());
-            }
-            if (dbCatalog.getWarehouse() != null) {
-                catalogProperties.putIfAbsent(
-                        Config.Catalog.WAREHOUSE_LOCATION, dbCatalog.getWarehouse());
-            }
-
-            // Build Iceberg Catalog
-            try {
-                org.apache.iceberg.catalog.Catalog icebergCatalog =
-                        CatalogUtil.buildIcebergCatalog(
-                                dbCatalog.getName(), catalogProperties, new Configuration());
-
-                // Create and add the REST servlet for this catalog
-                try (RESTCatalogAdapter adapter = new RESTCatalogAdapter(icebergCatalog)) {
-                    RESTCatalogServlet servlet = new RESTCatalogServlet(adapter);
-                    ServletHolder servletHolder =
-                            new ServletHolder(dbCatalog.getName() + "-rest", servlet);
-                    apiContext.addServlet(servletHolder, "/catalog/" + dbCatalog.getName() + "/*");
-                    LOG.info("Added REST endpoint for catalog: {}", dbCatalog.getName());
-                }
-            } catch (Exception e) {
-                LOG.error(
-                        "Failed to initialize Iceberg catalog or REST endpoint for: {}",
-                        dbCatalog.getName(),
-                        e);
-                // Decide how to handle catalog initialization failure (e.g., skip, log, exit)
+            try (RESTCatalogAdapter adapter = new RESTCatalogAdapter(icebergCatalog)) {
+                RESTCatalogServlet servlet = new RESTCatalogServlet(adapter);
+                ServletHolder servletHolder = new ServletHolder(servlet);
+                apiContext.addServlet(servletHolder, "/catalog/" + catalog.name() + "/*");
             }
         }
+
+        // TODO: catalog from DB
 
         // Create a handler for serving static files and SPA routing
         Resource baseResource =
