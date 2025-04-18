@@ -1,3 +1,19 @@
+/*
+ * Copyright 2025 Nimtable
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package io.nimtable;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,7 +34,17 @@ import org.mindrot.jbcrypt.BCrypt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// Maps to /api/users/*
+/**
+ * Servlet for handling User CRUD operations via RESTful API endpoints.
+ * Base Path: `/api/users`
+ * 
+ * Endpoints:
+ * - GET /api/users: Retrieve a list of all users.
+ * - POST /api/users: Create a new user.
+ * - GET /api/users/{id}: Retrieve a specific user by their ID.
+ * - PUT /api/users/{id}: Update a specific user by their ID.
+ * - DELETE /api/users/{id}: Delete a specific user by their ID.
+ */
 public class UserServlet extends HttpServlet {
 
     private static final Logger LOG = LoggerFactory.getLogger(UserServlet.class);
@@ -39,6 +65,19 @@ public class UserServlet extends HttpServlet {
         // FAIL_ON_UNKNOWN_PROPERTIES)
     }
 
+    /**
+     * Handles GET requests for user resources.
+     * 
+     * Routes:
+     * - `/api/users`: Calls {@link #handleGetAllUsers(HttpServletResponse)}.
+     * - `/api/users/{id}`: Calls
+     * {@link #handleGetUserById(long, HttpServletResponse)}.
+     *
+     * @param req  HttpServletRequest object.
+     * @param resp HttpServletResponse object for sending the response.
+     * @throws ServletException If a servlet-specific error occurs.
+     * @throws IOException      If an input or output error occurs.
+     */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -77,6 +116,16 @@ public class UserServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Retrieves a specific user by ID and writes it to the response as JSON.
+     * Responds with 200 OK and user data if found, 404 Not Found otherwise.
+     * Password hash is always masked in the response.
+     *
+     * @param userId The ID of the user to retrieve.
+     * @param resp   The HttpServletResponse object.
+     * @throws SQLException If a database error occurs.
+     * @throws IOException  If an I/O error occurs writing the response.
+     */
     private void handleGetUserById(long userId, HttpServletResponse resp)
             throws SQLException, IOException {
         Optional<User> userOptional = userRepository.findUserById(userId);
@@ -92,6 +141,15 @@ public class UserServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Retrieves all users and writes the list to the response as JSON.
+     * Responds with 200 OK and a JSON array of users.
+     * Password hashes are always masked in the response.
+     *
+     * @param resp The HttpServletResponse object.
+     * @throws SQLException If a database error occurs.
+     * @throws IOException  If an I/O error occurs writing the response.
+     */
     private void handleGetAllUsers(HttpServletResponse resp) throws SQLException, IOException {
         List<User> users = userRepository.getAllUsers();
         // Mask password hash for all users in the list
@@ -100,6 +158,26 @@ public class UserServlet extends HttpServlet {
         objectMapper.writeValue(resp.getWriter(), users);
     }
 
+    /**
+     * Handles POST requests to create a new user.
+     * Path: `/api/users`
+     * 
+     * Expects a JSON request body representing the new user, requiring `username`
+     * and `password` fields.
+     * 
+     * Responses:
+     * - 201 Created: User created successfully. Response body contains the created
+     * user (with password hash masked).
+     * - 400 Bad Request: Invalid JSON format or missing required fields (username,
+     * password).
+     * - 409 Conflict: Username already exists.
+     * - 500 Internal Server Error: Database error or other unexpected error.
+     *
+     * @param req  HttpServletRequest object containing the user data in the body.
+     * @param resp HttpServletResponse object for sending the response.
+     * @throws ServletException If a servlet-specific error occurs.
+     * @throws IOException      If an input or output error occurs.
+     */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -124,14 +202,11 @@ public class UserServlet extends HttpServlet {
             String hashedPassword = BCrypt.hashpw(newUser.getPassword(), BCrypt.gensalt());
             newUser.setPasswordHash(hashedPassword);
             newUser.setPassword(null); // Clear plaintext password
-            // ------------------------
 
             // --- Input Validation ---
             if (newUser.getUsername() == null || newUser.getUsername().trim().isEmpty()) {
                 throw new IllegalArgumentException("Username is required.");
             }
-            // Removed email validation
-            // ----------------------
 
             User createdUser = userRepository.createUser(newUser);
 
@@ -171,6 +246,29 @@ public class UserServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Handles PUT requests to update an existing user.
+     * Path: `/api/users/{id}`
+     * 
+     * Expects a JSON request body representing the user updates.
+     * - `username` is required.
+     * - If `password` field is provided, the user's password will be updated.
+     * - Other fields in the User object can be updated.
+     * 
+     * Responses:
+     * - 200 OK: User updated successfully. Response body contains the updated user
+     * (with password hash masked).
+     * - 400 Bad Request: Invalid JSON format or missing required fields (username).
+     * - 404 Not Found: User with the specified ID does not exist.
+     * - 409 Conflict: Username already exists (if changed to an existing one).
+     * - 500 Internal Server Error: Database error or other unexpected error.
+     *
+     * @param req  HttpServletRequest object containing the user ID in the path and
+     *             updates in the body.
+     * @param resp HttpServletResponse object for sending the response.
+     * @throws ServletException If a servlet-specific error occurs.
+     * @throws IOException      If an input or output error occurs.
+     */
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -202,8 +300,7 @@ public class UserServlet extends HttpServlet {
 
             // --- Handle Password Update ---
             if (userUpdates.getPassword() != null && !userUpdates.getPassword().trim().isEmpty()) {
-                String newHashedPassword =
-                        BCrypt.hashpw(userUpdates.getPassword(), BCrypt.gensalt());
+                String newHashedPassword = BCrypt.hashpw(userUpdates.getPassword(), BCrypt.gensalt());
                 userUpdates.setPasswordHash(newHashedPassword);
                 LOG.debug("Updating password hash for user ID: {}", userId);
             } else {
@@ -275,6 +372,21 @@ public class UserServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Handles DELETE requests to remove an existing user.
+     * Path: `/api/users/{id}`
+     * 
+     * Responses:
+     * - 204 No Content: User deleted successfully.
+     * - 400 Bad Request: Invalid user ID format in the path.
+     * - 404 Not Found: User with the specified ID does not exist.
+     * - 500 Internal Server Error: Database error or other unexpected error.
+     *
+     * @param req  HttpServletRequest object containing the user ID in the path.
+     * @param resp HttpServletResponse object for sending the response.
+     * @throws ServletException If a servlet-specific error occurs.
+     * @throws IOException      If an input or output error occurs.
+     */
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
