@@ -18,6 +18,9 @@ package io.nimtable;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import io.nimtable.db.PersistenceManager;
+import io.nimtable.db.repository.CatalogRepository;
+import io.nimtable.db.repository.UserRepository;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -27,7 +30,6 @@ import java.io.InputStream;
 import java.net.InetSocketAddress;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.iceberg.CatalogUtil;
-import org.apache.iceberg.catalog.Catalog;
 import org.apache.iceberg.rest.RESTCatalogAdapter;
 import org.apache.iceberg.rest.RESTCatalogServlet;
 import org.eclipse.jetty.server.Request;
@@ -36,7 +38,11 @@ import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.util.component.AbstractLifeCycle;
+import org.eclipse.jetty.util.component.LifeCycle;
 import org.eclipse.jetty.util.resource.Resource;
+import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.FlywayException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,8 +55,52 @@ public class Server {
         // Read and parse the config.yaml file
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         Config config = mapper.readValue(new File("config.yaml"), Config.class);
+        Config.Database dbConfig = config.database(); // Get DB config early
 
-        // Add CatalogsServlet to handle `/api/catalogs` endpoint
+        // Initialize and run Flyway migrations
+        try {
+            if (dbConfig == null || dbConfig.url() == null || dbConfig.url().isEmpty()) {
+                LOG.error("Database URL configuration is missing in config.yaml");
+                System.exit(1);
+            }
+
+            String dbUrl = dbConfig.url();
+            String dbType;
+            if (dbUrl.startsWith("jdbc:sqlite:")) {
+                dbType = "sqlite";
+            } else {
+                LOG.error("Unsupported database type for URL: {}", dbUrl);
+                System.exit(1);
+                return; // Should not be reached due to System.exit(1)
+            }
+
+            String migrationLocation = "classpath:db/migration/" + dbType;
+            LOG.info(
+                    "Using database type '{}' and migration location '{}'",
+                    dbType,
+                    migrationLocation);
+
+            Flyway flyway =
+                    Flyway.configure()
+                            .dataSource(dbUrl, dbConfig.username(), dbConfig.password())
+                            .locations(migrationLocation)
+                            .load();
+            flyway.migrate();
+            LOG.info("Database migration completed successfully.");
+
+        } catch (FlywayException e) {
+            LOG.error("Database migration failed: {}", e.getMessage(), e);
+            System.exit(1); // Exit if migration fails
+        }
+
+        // Initialize Persistence Manager
+        PersistenceManager.initialize(dbConfig);
+
+        // --- Instantiate Repositories ---
+        UserRepository userRepository = new UserRepository(); // Instantiate UserRepository
+        CatalogRepository catalogRepository = new CatalogRepository(); // Simple instantiation
+
+        // Add Servlets to handle API endpoints
         ServletContextHandler apiContext =
                 new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
         apiContext.setContextPath("/api");
@@ -67,13 +117,15 @@ public class Server {
         apiContext.addServlet(
                 new ServletHolder("distribution", new DistributionServlet(config)),
                 "/distribution/*");
-        apiContext.addServlet(new ServletHolder(new LoginServlet(config)), "/login");
+        apiContext.addServlet(new ServletHolder("login", new LoginServlet(config)), "/login");
         apiContext.addServlet(new ServletHolder(new LogoutServlet()), "/logout");
+        apiContext.addServlet(
+                new ServletHolder("users", new UserServlet(userRepository)), "/users/*");
 
         // Add route for each `/api/catalog/<catalog-name>/*` endpoints
         for (Config.Catalog catalog : config.catalogs()) {
             LOG.info("Creating catalog with properties: {}", catalog.properties());
-            Catalog icebergCatalog =
+            org.apache.iceberg.catalog.Catalog icebergCatalog =
                     CatalogUtil.buildIcebergCatalog(
                             catalog.name(), catalog.properties(), new Configuration());
 
@@ -83,6 +135,8 @@ public class Server {
                 apiContext.addServlet(servletHolder, "/catalog/" + catalog.name() + "/*");
             }
         }
+
+        // TODO: catalog from DB
 
         // Create a handler for serving static files and SPA routing
         Resource baseResource =
@@ -184,7 +238,19 @@ public class Server {
                 new org.eclipse.jetty.server.Server(
                         new InetSocketAddress(config.server().host(), config.server().port()));
         httpServer.setHandler(handlers);
+
+        // Add listener bean to close PersistenceManager on shutdown
+        httpServer.addBean(
+                new AbstractLifeCycle.AbstractLifeCycleListener() {
+                    @Override
+                    public void lifeCycleStopping(LifeCycle event) {
+                        LOG.info("Shutting down server, closing PersistenceManager.");
+                        PersistenceManager.close();
+                    }
+                });
+
         httpServer.start();
+        LOG.info("Server started on {}:{}", config.server().host(), config.server().port());
         httpServer.join();
     }
 }

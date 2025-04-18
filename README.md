@@ -60,7 +60,7 @@ For Docker deployments, you can find a sample configuration file at [docker/conf
 server:
   port: 8182
   host: 0.0.0.0
-auth:
+admin:
   username: admin
   password: admin
 ```

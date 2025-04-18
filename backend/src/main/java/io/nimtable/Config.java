@@ -29,10 +29,19 @@ import java.util.Map;
 import org.apache.iceberg.CatalogProperties;
 import org.apache.iceberg.CatalogUtil;
 
-public record Config(Server server, Auth auth, List<Catalog> catalogs) {
+public record Config(
+        Server server,
+        Admin admin,
+        Database database,
+        List<Catalog> catalogs,
+        Compactor compactor) {
     public record Server(int port, String host) {}
 
-    public record Auth(String username, String password) {}
+    public record Admin(String username, String password) {}
+
+    public record Database(String url, String username, String password) {}
+
+    public record Compactor(String ip, int port) {}
 
     @JsonDeserialize(using = CatalogDeserializer.class)
     public record Catalog(String name, Map<String, String> properties) {

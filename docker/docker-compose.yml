@@ -6,6 +6,7 @@ services:
     # Mount configuration files
     volumes:
       - ./config.yaml:/nimtable/config.yaml
+      - nimtable-data:/nimtable/data
     environment:
       JAVA_OPTS: -Xmx2g -Xms512m
     networks:
@@ -14,3 +15,6 @@ services:
 networks:
   nimtable-network:
     driver: bridge
+
+volumes:
+  nimtable-data:
