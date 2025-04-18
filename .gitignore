@@ -42,3 +42,5 @@ dist/
 
 .vscode/settings.json
 .DS_Store
+
+nimtable-all.jar

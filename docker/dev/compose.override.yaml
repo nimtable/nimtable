@@ -1,0 +1,5 @@
+services:
+  nimtable:
+    build:
+      context: .
+      dockerfile: Dockerfile

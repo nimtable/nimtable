@@ -7,6 +7,10 @@ server:
 admin:
   username: admin
   password: admin
+database:
+  # Note: Use a volume (/nimtable/data) for the DB, so it's not lost when the container is deleted
+  url: jdbc:sqlite:file:/nimtable/data/nimtable_data.db
+
 catalogs:
   - name: sqlite-catalog-demo
     type: jdbc
