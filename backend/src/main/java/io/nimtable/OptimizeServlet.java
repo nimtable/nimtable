@@ -18,20 +18,32 @@ package io.nimtable;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.nimtable.iceberg.IcebergProto.DataContentType;
+import io.nimtable.iceberg.IcebergProto.DataFileFormat;
+import io.nimtable.iceberg.IcebergProto.FileIoBuilder;
+import io.nimtable.iceberg.IcebergProto.FileScanTaskDescriptor;
+import io.nimtable.iceberg.IcebergProto.RewriteFilesRequest;
+import io.nimtable.iceberg.IcebergProto.RewriteFilesResponse;
+import io.nimtable.iceberg.IcebergProto.SchemaDescriptor;
 import io.nimtable.spark.LocalSpark;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.iceberg.*;
+import org.apache.iceberg.Metrics;
 import org.apache.iceberg.catalog.TableIdentifier;
+import org.apache.iceberg.util.SortOrderUtil;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.slf4j.Logger;
@@ -67,16 +79,234 @@ public class OptimizeServlet extends HttpServlet {
 
     private CompactionResult compactTable(
             SparkSession spark, String catalogName, String namespace, String tableName) {
-        String sql =
-                String.format(
-                        "CALL `%s`.system.rewrite_data_files(table => '%s.%s', options => map('rewrite-all', 'true'))",
-                        catalogName, namespace, tableName);
-        Row result = spark.sql(sql).collectAsList().get(0);
-        return new CompactionResult(
-                result.getAs("rewritten_data_files_count"),
-                result.getAs("added_data_files_count"),
-                result.getAs("rewritten_bytes_count"),
-                result.getAs("failed_data_files_count"));
+        Table table =
+                CatalogUtil.buildIcebergCatalog(
+                                catalogName,
+                                config.getCatalog(catalogName).properties(),
+                                new Configuration())
+                        .loadTable(TableIdentifier.of(namespace, tableName));
+
+        var compactorConfig = config.compactor();
+
+        if (compactorConfig != null) {
+            var compactorIp = compactorConfig.ip();
+            var compactorPort = compactorConfig.port();
+            var rewriteFilesAction = table.newRewrite();
+
+            List<FileScanTaskDescriptor> fileScanTasks = new ArrayList<>();
+            var inputFiles = table.newScan().planFiles();
+            Optional<Schema> firstEqDeleteSchema = Optional.empty();
+            for (FileScanTask task : inputFiles) {
+                var file = task.file();
+
+                // check if the equality delete files have the same schema
+                if (file.content() == FileContent.EQUALITY_DELETES) {
+                    if (firstEqDeleteSchema.isEmpty()) {
+                        firstEqDeleteSchema = Optional.of(task.schema());
+                    } else if (!task.schema().sameSchema(firstEqDeleteSchema.get())) {
+                        logger.warn(
+                                "Detected eq delete files with different schemas, falling back to Spark Compaction");
+                        String sql =
+                                String.format(
+                                        "CALL `%s`.system.rewrite_data_files(table => '%s.%s', options => map('rewrite-all', 'true'))",
+                                        catalogName, namespace, tableName);
+                        Row result = spark.sql(sql).collectAsList().get(0);
+                        return new CompactionResult(
+                                result.getAs("rewritten_data_files_count"),
+                                result.getAs("added_data_files_count"),
+                                result.getAs("rewritten_bytes_count"),
+                                result.getAs("failed_data_files_count"));
+                    }
+                }
+
+                rewriteFilesAction.deleteFile(file);
+
+                DataFileFormat protoDataFileFormat;
+                FileFormat format = file.format();
+
+                // now only support parquet format
+                switch (format) {
+                    case PARQUET:
+                        protoDataFileFormat = DataFileFormat.PARQUET;
+                        break;
+                    default:
+                        throw new RuntimeException("Unsupported file format: " + format);
+                }
+
+                fileScanTasks.add(
+                        FileScanTaskDescriptor.newBuilder()
+                                .setDataFilePath(file.location())
+                                .setRecordCount(file.recordCount())
+                                .setDataFileContentValue(file.content().id())
+                                .setDataFileFormat(protoDataFileFormat)
+                                .setStart(0)
+                                .setLength(file.fileSizeInBytes())
+                                .setSequenceNumber(
+                                        file.dataSequenceNumber() == null
+                                                ? 0
+                                                : file.dataSequenceNumber())
+                                .addAllEqualityIds(
+                                        file.equalityFieldIds() == null
+                                                ? new ArrayList<>()
+                                                : file.equalityFieldIds())
+                                .addAllProjectFieldIds(
+                                        task.schema().columns().stream()
+                                                .map(column -> column.fieldId())
+                                                .collect(Collectors.toList()))
+                                .build());
+            }
+            var fileIoBuilder = FileIoBuilder.newBuilder();
+            // set properties
+            for (var entry : config.getCatalog(catalogName).properties().entrySet()) {
+                fileIoBuilder.putProps(entry.getKey(), entry.getValue());
+            }
+
+            // set scheme
+            fileIoBuilder.setSchemeStr(table.location());
+
+            // build schema
+            var schema =
+                    SchemaDescriptor.newBuilder()
+                            .setSchemaId(table.schema().schemaId())
+                            .addAllFields(
+                                    table.schema().columns().stream()
+                                            .map(column -> TypeConverter.convert(column))
+                                            .collect(Collectors.toList()))
+                            .build();
+
+            // build request
+            RewriteFilesRequest request =
+                    RewriteFilesRequest.newBuilder()
+                            .addAllFileScanTaskDescriptor(fileScanTasks)
+                            .setDirPath(table.location())
+                            .setFileIoBuilder(fileIoBuilder)
+                            .setSchema(schema)
+                            .build();
+
+            try (IcebergCompactionClient client =
+                    new IcebergCompactionClient(compactorIp, compactorPort)) {
+                RewriteFilesResponse rewrite_files_stat_response = client.rewriteFiles(request);
+                var rewrite_files_stat = rewrite_files_stat_response.getStat();
+
+                for (var protoFile : rewrite_files_stat_response.getRewrittenFilesList()) {
+                    var metrics =
+                            new Metrics(
+                                    protoFile.getRecordCount(),
+                                    protoFile.getColumnSizesMap(),
+                                    protoFile.getValueCountsMap(),
+                                    protoFile.getNullValueCountsMap(),
+                                    protoFile.getNanValueCountsMap(),
+                                    protoFile.getLowerBoundsMap().entrySet().stream()
+                                            .collect(
+                                                    Collectors.toMap(
+                                                            Map.Entry::getKey,
+                                                            e ->
+                                                                    ByteBuffer.wrap(
+                                                                            e.getValue()
+                                                                                    .toByteArray()))),
+                                    protoFile.getUpperBoundsMap().entrySet().stream()
+                                            .collect(
+                                                    Collectors.toMap(
+                                                            Map.Entry::getKey,
+                                                            e ->
+                                                                    ByteBuffer.wrap(
+                                                                            e.getValue()
+                                                                                    .toByteArray()))));
+
+                    FileFormat dataFileFormat;
+                    var protoDataFileFormat = protoFile.getFileFormat().toString();
+                    // now only support parquet format
+                    switch (protoDataFileFormat) {
+                        case "PARQUET":
+                            dataFileFormat = FileFormat.PARQUET;
+                            break;
+                        default:
+                            throw new RuntimeException(
+                                    "Unsupported file format: " + protoFile.getFileFormat());
+                    }
+
+                    if (protoFile.getContent() == DataContentType.DATA) {
+                        var dataFile =
+                                DataFiles.builder(table.spec())
+                                        .withPath(protoFile.getFilePath())
+                                        .withFormat(dataFileFormat)
+                                        .withRecordCount(protoFile.getRecordCount())
+                                        .withFileSizeInBytes(protoFile.getFileSizeInBytes())
+                                        .withMetrics(metrics)
+                                        .withEncryptionKeyMetadata(
+                                                ByteBuffer.wrap(
+                                                        protoFile.getKeyMetadata().toByteArray()))
+                                        .withSplitOffsets(protoFile.getSplitOffsetsList())
+                                        .withSortOrder(SortOrderUtil.buildSortOrder(table))
+                                        .build();
+                        rewriteFilesAction.addFile(dataFile);
+                    } else if (protoFile.getContent() == DataContentType.POSITION_DELETES) {
+                        var deleteFile =
+                                FileMetadata.deleteFileBuilder(table.spec())
+                                        .ofPositionDeletes()
+                                        .withPath(protoFile.getFilePath())
+                                        .withFormat(dataFileFormat)
+                                        .withRecordCount(protoFile.getRecordCount())
+                                        .withFileSizeInBytes(protoFile.getFileSizeInBytes())
+                                        .withMetrics(metrics)
+                                        .withEncryptionKeyMetadata(
+                                                ByteBuffer.wrap(
+                                                        protoFile.getKeyMetadata().toByteArray()))
+                                        .withSplitOffsets(protoFile.getSplitOffsetsList())
+                                        .withSortOrder(SortOrderUtil.buildSortOrder(table))
+                                        .build();
+                        rewriteFilesAction.addFile(deleteFile);
+                    } else if (protoFile.getContent() == DataContentType.EQUALIRY_DELETES) {
+                        var deleteFile =
+                                FileMetadata.deleteFileBuilder(table.spec())
+                                        .ofEqualityDeletes()
+                                        .withPath(protoFile.getFilePath())
+                                        .withFormat(dataFileFormat)
+                                        .withRecordCount(protoFile.getRecordCount())
+                                        .withFileSizeInBytes(protoFile.getFileSizeInBytes())
+                                        .withMetrics(metrics)
+                                        .withEncryptionKeyMetadata(
+                                                ByteBuffer.wrap(
+                                                        protoFile.getKeyMetadata().toByteArray()))
+                                        .withSplitOffsets(protoFile.getSplitOffsetsList())
+                                        .withSortOrder(SortOrderUtil.buildSortOrder(table))
+                                        .build();
+                        rewriteFilesAction.addFile(deleteFile);
+                    } else {
+                        throw new RuntimeException(
+                                "Unsupported data content type: " + protoFile.getContent());
+                    }
+                }
+
+                // commit RewriteFiles Action to iceberg catalog
+                try {
+                    rewriteFilesAction.commit();
+                } catch (Exception e) {
+                    throw new RuntimeException("Failed to commit rewrite files action", e);
+                }
+
+                return new CompactionResult(
+                        rewrite_files_stat.getRewrittenFilesCount(),
+                        rewrite_files_stat.getAddedFilesCount(),
+                        rewrite_files_stat.getRewrittenBytes(),
+                        rewrite_files_stat.getFailedDataFilesCount());
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("Failed to connect to compaction service", e);
+            }
+        } else {
+            // use spark to compact table
+            String sql =
+                    String.format(
+                            "CALL `%s`.system.rewrite_data_files(table => '%s.%s', options => map('rewrite-all', 'true'))",
+                            catalogName, namespace, tableName);
+            Row result = spark.sql(sql).collectAsList().get(0);
+            return new CompactionResult(
+                    result.getAs("rewritten_data_files_count"),
+                    result.getAs("added_data_files_count"),
+                    result.getAs("rewritten_bytes_count"),
+                    result.getAs("failed_data_files_count"));
+        }
     }
 
     private ExpireSnapshotResult expireSnapshots(
