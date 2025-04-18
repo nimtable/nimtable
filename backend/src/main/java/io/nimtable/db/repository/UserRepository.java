@@ -14,18 +14,22 @@ public class UserRepository {
     private static final Logger LOG = LoggerFactory.getLogger(UserRepository.class);
 
     // SQL Statements (Removed email)
-    private static final String INSERT_USER_SQL = "INSERT INTO users (username, password_hash, created_at, updated_at) VALUES (?, ?, ?, ?)";
-    private static final String SELECT_USER_BY_ID_SQL = "SELECT id, username, password_hash, created_at, updated_at FROM users WHERE id = ?";
-    private static final String SELECT_USER_BY_USERNAME_SQL = "SELECT id, username, password_hash, created_at, updated_at FROM users WHERE username = ?";
-    private static final String SELECT_ALL_USERS_SQL = "SELECT id, username, password_hash, created_at, updated_at FROM users ORDER BY username";
-    private static final String UPDATE_USER_SQL = "UPDATE users SET username = ?, password_hash = ?, updated_at = ? WHERE id = ?";
+    private static final String INSERT_USER_SQL =
+            "INSERT INTO users (username, password_hash, created_at, updated_at) VALUES (?, ?, ?, ?)";
+    private static final String SELECT_USER_BY_ID_SQL =
+            "SELECT id, username, password_hash, created_at, updated_at FROM users WHERE id = ?";
+    private static final String SELECT_USER_BY_USERNAME_SQL =
+            "SELECT id, username, password_hash, created_at, updated_at FROM users WHERE username = ?";
+    private static final String SELECT_ALL_USERS_SQL =
+            "SELECT id, username, password_hash, created_at, updated_at FROM users ORDER BY username";
+    private static final String UPDATE_USER_SQL =
+            "UPDATE users SET username = ?, password_hash = ?, updated_at = ? WHERE id = ?";
     private static final String DELETE_USER_SQL = "DELETE FROM users WHERE id = ?";
 
     /**
      * Creates a new user in the database.
      *
-     * @param user The user object to create (id should typically be null or
-     *             ignored).
+     * @param user The user object to create (id should typically be null or ignored).
      * @return The created user with the generated ID and timestamps.
      * @throws SQLException if a database access error occurs.
      */
@@ -36,7 +40,8 @@ public class UserRepository {
         user.setUpdatedAt(now);
 
         try (Connection conn = PersistenceManager.getConnection();
-                PreparedStatement pstmt = conn.prepareStatement(INSERT_USER_SQL, Statement.RETURN_GENERATED_KEYS)) {
+                PreparedStatement pstmt =
+                        conn.prepareStatement(INSERT_USER_SQL, Statement.RETURN_GENERATED_KEYS)) {
 
             pstmt.setString(1, user.getUsername());
             pstmt.setString(2, user.getPasswordHash());
@@ -144,7 +149,9 @@ public class UserRepository {
                 LOG.info("User ID {} updated successfully.", user.getId());
                 return true;
             } else {
-                LOG.warn("Update user ID {} failed, user not found or no changes made.", user.getId());
+                LOG.warn(
+                        "Update user ID {} failed, user not found or no changes made.",
+                        user.getId());
                 return false;
             }
         } catch (SQLException e) {
@@ -187,5 +194,4 @@ public class UserRepository {
                 Instant.parse(rs.getString("created_at")), // Parse ISO-8601 string back to Instant
                 Instant.parse(rs.getString("updated_at")));
     }
-
 }

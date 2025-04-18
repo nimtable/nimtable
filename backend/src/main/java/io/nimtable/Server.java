@@ -121,7 +121,8 @@ public class Server {
                 "/distribution/*");
         apiContext.addServlet(new ServletHolder("login", new LoginServlet(config)), "/login");
         apiContext.addServlet(new ServletHolder(new LogoutServlet()), "/logout");
-        apiContext.addServlet(new ServletHolder("users", new UserServlet(userRepository)), "/users/*");
+        apiContext.addServlet(
+                new ServletHolder("users", new UserServlet(userRepository)), "/users/*");
 
         // Load catalogs from the database and add routes
         List<io.nimtable.db.entity.Catalog> dbCatalogs = catalogRepository.findAll();

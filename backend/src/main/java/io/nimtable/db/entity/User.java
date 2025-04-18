@@ -17,10 +17,10 @@ public class User {
     private Instant updatedAt;
 
     // Constructors
-    public User() {
-    }
+    public User() {}
 
-    public User(long id, String username, String passwordHash, Instant createdAt, Instant updatedAt) {
+    public User(
+            long id, String username, String passwordHash, Instant createdAt, Instant updatedAt) {
         this.id = id;
         this.username = username;
         this.passwordHash = passwordHash;

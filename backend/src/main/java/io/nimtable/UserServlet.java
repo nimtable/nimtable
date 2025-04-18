@@ -40,7 +40,8 @@ public class UserServlet extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
         String pathInfo = req.getPathInfo();
         resp.setContentType("application/json");
         resp.setCharacterEncoding("UTF-8");
@@ -53,7 +54,8 @@ public class UserServlet extends HttpServlet {
                 handleGetUserById(userId, resp);
             }
             // Check if path matches /api/users or /api/users/
-            else if (req.getRequestURI().equals(USERS_BASE_PATH) || req.getRequestURI().equals(USERS_BASE_PATH + "/")) {
+            else if (req.getRequestURI().equals(USERS_BASE_PATH)
+                    || req.getRequestURI().equals(USERS_BASE_PATH + "/")) {
                 handleGetAllUsers(resp);
             } else {
                 resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -70,11 +72,13 @@ public class UserServlet extends HttpServlet {
         } catch (Exception e) {
             LOG.error("Unexpected error during GET request: {}", e.getMessage(), e);
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            objectMapper.writeValue(resp.getWriter(), new ErrorResponse("An unexpected error occurred."));
+            objectMapper.writeValue(
+                    resp.getWriter(), new ErrorResponse("An unexpected error occurred."));
         }
     }
 
-    private void handleGetUserById(long userId, HttpServletResponse resp) throws SQLException, IOException {
+    private void handleGetUserById(long userId, HttpServletResponse resp)
+            throws SQLException, IOException {
         Optional<User> userOptional = userRepository.findUserById(userId);
         if (userOptional.isPresent()) {
             resp.setStatus(HttpServletResponse.SC_OK);
@@ -97,11 +101,13 @@ public class UserServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
         // Expect path to be /api/users
         if (!req.getRequestURI().equals(USERS_BASE_PATH)) {
             resp.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
-            objectMapper.writeValue(resp.getWriter(), new ErrorResponse("POST only allowed at /api/users"));
+            objectMapper.writeValue(
+                    resp.getWriter(), new ErrorResponse("POST only allowed at /api/users"));
             return;
         }
 
@@ -136,38 +142,46 @@ public class UserServlet extends HttpServlet {
         } catch (com.fasterxml.jackson.core.JsonProcessingException | IllegalArgumentException e) {
             LOG.warn("Invalid request data received for POST: {}", e.getMessage());
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            objectMapper.writeValue(resp.getWriter(), new ErrorResponse("Invalid request data: " + e.getMessage()));
+            objectMapper.writeValue(
+                    resp.getWriter(), new ErrorResponse("Invalid request data: " + e.getMessage()));
         } catch (SQLException e) {
             LOG.error("Database error during POST request: {}", e.getMessage(), e);
             if (e.getErrorCode() == 19 /* SQLITE_CONSTRAINT */) {
                 if (e.getMessage().contains("users.username")) {
                     resp.setStatus(HttpServletResponse.SC_CONFLICT);
-                    objectMapper.writeValue(resp.getWriter(), new ErrorResponse("Username already exists."));
+                    objectMapper.writeValue(
+                            resp.getWriter(), new ErrorResponse("Username already exists."));
                 } else {
-                    resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR); // Other constraint error
-                    objectMapper.writeValue(resp.getWriter(), new ErrorResponse("Database constraint violation."));
+                    resp.setStatus(
+                            HttpServletResponse.SC_INTERNAL_SERVER_ERROR); // Other constraint error
+                    objectMapper.writeValue(
+                            resp.getWriter(), new ErrorResponse("Database constraint violation."));
                 }
             } else {
                 resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                objectMapper.writeValue(resp.getWriter(),
+                objectMapper.writeValue(
+                        resp.getWriter(),
                         new ErrorResponse("Database error occurred during user creation."));
             }
         } catch (Exception e) {
             LOG.error("Unexpected error during POST request: {}", e.getMessage(), e);
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            objectMapper.writeValue(resp.getWriter(), new ErrorResponse("An unexpected error occurred."));
+            objectMapper.writeValue(
+                    resp.getWriter(), new ErrorResponse("An unexpected error occurred."));
         }
     }
 
     @Override
-    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
         resp.setContentType("application/json");
         resp.setCharacterEncoding("UTF-8");
 
         Matcher matcher = USER_ID_PATTERN.matcher(req.getRequestURI());
         if (!matcher.matches()) {
             resp.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
-            objectMapper.writeValue(resp.getWriter(), new ErrorResponse("PUT expects /api/users/{id}"));
+            objectMapper.writeValue(
+                    resp.getWriter(), new ErrorResponse("PUT expects /api/users/{id}"));
             return;
         }
 
@@ -180,14 +194,16 @@ public class UserServlet extends HttpServlet {
             Optional<User> existingUserOpt = userRepository.findUserById(userId);
             if (!existingUserOpt.isPresent()) {
                 resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                objectMapper.writeValue(resp.getWriter(), new ErrorResponse("User not found for update."));
+                objectMapper.writeValue(
+                        resp.getWriter(), new ErrorResponse("User not found for update."));
                 return;
             }
             User existingUser = existingUserOpt.get();
 
             // --- Handle Password Update ---
             if (userUpdates.getPassword() != null && !userUpdates.getPassword().trim().isEmpty()) {
-                String newHashedPassword = BCrypt.hashpw(userUpdates.getPassword(), BCrypt.gensalt());
+                String newHashedPassword =
+                        BCrypt.hashpw(userUpdates.getPassword(), BCrypt.gensalt());
                 userUpdates.setPasswordHash(newHashedPassword);
                 LOG.debug("Updating password hash for user ID: {}", userId);
             } else {
@@ -211,7 +227,8 @@ public class UserServlet extends HttpServlet {
                 objectMapper.writeValue(resp.getWriter(), userUpdates);
             } else {
                 resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                objectMapper.writeValue(resp.getWriter(),
+                objectMapper.writeValue(
+                        resp.getWriter(),
                         new ErrorResponse("User not found or update failed unexpectedly."));
             }
 
@@ -222,31 +239,45 @@ public class UserServlet extends HttpServlet {
         } catch (com.fasterxml.jackson.core.JsonProcessingException | IllegalArgumentException e) {
             LOG.warn("Invalid request data received for PUT: {}", e.getMessage());
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            objectMapper.writeValue(resp.getWriter(), new ErrorResponse("Invalid request data: " + e.getMessage()));
+            objectMapper.writeValue(
+                    resp.getWriter(), new ErrorResponse("Invalid request data: " + e.getMessage()));
         } catch (SQLException e) {
-            LOG.error("Database error during PUT request for user ID {}: {}", matcher.group(1), e.getMessage(), e);
+            LOG.error(
+                    "Database error during PUT request for user ID {}: {}",
+                    matcher.group(1),
+                    e.getMessage(),
+                    e);
             if (e.getErrorCode() == 19 /* SQLITE_CONSTRAINT */) {
                 if (e.getMessage().contains("users.username")) {
                     resp.setStatus(HttpServletResponse.SC_CONFLICT);
-                    objectMapper.writeValue(resp.getWriter(), new ErrorResponse("Username already exists."));
+                    objectMapper.writeValue(
+                            resp.getWriter(), new ErrorResponse("Username already exists."));
                 } else {
                     resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                    objectMapper.writeValue(resp.getWriter(), new ErrorResponse("Database constraint violation."));
+                    objectMapper.writeValue(
+                            resp.getWriter(), new ErrorResponse("Database constraint violation."));
                 }
             } else {
                 resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                objectMapper.writeValue(resp.getWriter(),
+                objectMapper.writeValue(
+                        resp.getWriter(),
                         new ErrorResponse("Database error occurred during user update."));
             }
         } catch (Exception e) {
-            LOG.error("Unexpected error during PUT request for user ID {}: {}", matcher.group(1), e.getMessage(), e);
+            LOG.error(
+                    "Unexpected error during PUT request for user ID {}: {}",
+                    matcher.group(1),
+                    e.getMessage(),
+                    e);
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            objectMapper.writeValue(resp.getWriter(), new ErrorResponse("An unexpected error occurred."));
+            objectMapper.writeValue(
+                    resp.getWriter(), new ErrorResponse("An unexpected error occurred."));
         }
     }
 
     @Override
-    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
         handleNotImplemented(resp, "DELETE");
     }
 
@@ -254,7 +285,8 @@ public class UserServlet extends HttpServlet {
         resp.setStatus(HttpServletResponse.SC_NOT_IMPLEMENTED);
         resp.setContentType("application/json");
         resp.setCharacterEncoding("UTF-8");
-        objectMapper.writeValue(resp.getWriter(), new ErrorResponse(method + " method not implemented yet."));
+        objectMapper.writeValue(
+                resp.getWriter(), new ErrorResponse(method + " method not implemented yet."));
     }
 
     // Simple inner class for error responses
