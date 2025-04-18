@@ -4,6 +4,12 @@ server:
 auth:
   username: admin
   password: admin
+
+# Database is used for users, catalogs, etc.
+# Currently only SQLite is supported. Postgres will be supported later.
+database:
+  url: jdbc:sqlite:file:./nimtable_data.db # SQLite file path
+
 catalogs:
   - name: sqlite-catalog-demo
     type: jdbc
@@ -59,3 +65,7 @@ catalogs:
 #  - name: glue-catalog-demo
 #    type: glue
 #    warehouse: s3://your-bucket/test
+
+# compactor:
+#   ip: 0.0.0.0
+#   port: 7777

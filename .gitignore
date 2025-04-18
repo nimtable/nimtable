@@ -26,8 +26,8 @@ next-env.d.ts
 # python
 /venv/
 
-# test sqlite catalog
-catalog.db
+# sqlite db
+*.db
 
 # next
 .next/

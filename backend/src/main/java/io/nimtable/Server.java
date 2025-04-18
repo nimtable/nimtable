@@ -18,6 +18,8 @@ package io.nimtable;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import io.nimtable.db.PersistenceManager;
+import io.nimtable.db.repository.CatalogRepository;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -25,9 +27,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
+import java.util.List;
+import java.util.Map;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.iceberg.CatalogUtil;
-import org.apache.iceberg.catalog.Catalog;
 import org.apache.iceberg.rest.RESTCatalogAdapter;
 import org.apache.iceberg.rest.RESTCatalogServlet;
 import org.eclipse.jetty.server.Request;
@@ -36,7 +39,11 @@ import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.util.component.AbstractLifeCycle;
+import org.eclipse.jetty.util.component.LifeCycle;
 import org.eclipse.jetty.util.resource.Resource;
+import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.FlywayException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,6 +56,46 @@ public class Server {
         // Read and parse the config.yaml file
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         Config config = mapper.readValue(new File("config.yaml"), Config.class);
+        Config.Database dbConfig = config.database(); // Get DB config early
+
+        // Initialize and run Flyway migrations
+        try {
+            if (dbConfig == null || dbConfig.url() == null || dbConfig.url().isEmpty()) {
+                LOG.error("Database URL configuration is missing in config.yaml");
+                System.exit(1);
+            }
+
+            String dbUrl = dbConfig.url();
+            String dbType;
+            if (dbUrl.startsWith("jdbc:sqlite:")) {
+                dbType = "sqlite";
+            } else {
+                LOG.error("Unsupported database type for URL: {}", dbUrl);
+                System.exit(1);
+                return; // Should not be reached due to System.exit(1)
+            }
+
+            String migrationLocation = "classpath:db/migration/" + dbType;
+            LOG.info(
+                    "Using database type '{}' and migration location '{}'",
+                    dbType,
+                    migrationLocation);
+
+            Flyway flyway =
+                    Flyway.configure()
+                            .dataSource(dbUrl, dbConfig.username(), dbConfig.password())
+                            .locations(migrationLocation)
+                            .load();
+            flyway.migrate();
+            LOG.info("Database migration completed successfully.");
+
+        } catch (FlywayException e) {
+            LOG.error("Database migration failed: {}", e.getMessage(), e);
+            System.exit(1); // Exit if migration fails
+        }
+
+        // Initialize Persistence Manager
+        PersistenceManager.initialize(dbConfig);
 
         // Add CatalogsServlet to handle `/api/catalogs` endpoint
         ServletContextHandler apiContext =
@@ -67,20 +114,66 @@ public class Server {
         apiContext.addServlet(
                 new ServletHolder("distribution", new DistributionServlet(config)),
                 "/distribution/*");
-        apiContext.addServlet(new ServletHolder(new LoginServlet(config)), "/login");
+        apiContext.addServlet(new ServletHolder("login", new LoginServlet(config)), "/login");
         apiContext.addServlet(new ServletHolder(new LogoutServlet()), "/logout");
 
-        // Add route for each `/api/catalog/<catalog-name>/*` endpoints
-        for (Config.Catalog catalog : config.catalogs()) {
-            LOG.info("Creating catalog with properties: {}", catalog.properties());
-            Catalog icebergCatalog =
-                    CatalogUtil.buildIcebergCatalog(
-                            catalog.name(), catalog.properties(), new Configuration());
+        // Load catalogs from the database and add routes
+        CatalogRepository catalogRepository = new CatalogRepository(); // Simple instantiation
+        List<io.nimtable.db.entity.Catalog> dbCatalogs = catalogRepository.findAll();
+        LOG.info("Found {} catalogs in the database.", dbCatalogs.size());
 
-            try (RESTCatalogAdapter adapter = new RESTCatalogAdapter(icebergCatalog)) {
-                RESTCatalogServlet servlet = new RESTCatalogServlet(adapter);
-                ServletHolder servletHolder = new ServletHolder(servlet);
-                apiContext.addServlet(servletHolder, "/catalog/" + catalog.name() + "/*");
+        for (io.nimtable.db.entity.Catalog dbCatalog : dbCatalogs) {
+            LOG.info(
+                    "Creating catalog endpoint for: {} with properties: {}",
+                    dbCatalog.getName(),
+                    dbCatalog.getProperties());
+
+            // Prepare properties map for Iceberg CatalogUtil
+            Map<String, String> catalogProperties = dbCatalog.getProperties();
+            if (catalogProperties == null) {
+                catalogProperties = new java.util.HashMap<>(); // Ensure not null
+            }
+            // Add essential properties if not already present in JSONB
+            catalogProperties.putIfAbsent(Config.Catalog.TYPE, dbCatalog.getType());
+            if (dbCatalog.getUri() != null) {
+                catalogProperties.putIfAbsent(
+                        CatalogUtil.ICEBERG_CATALOG_TYPE_REST + ".uri",
+                        dbCatalog.getUri()); // Adjust
+                // property
+                // key
+                // based
+                // on
+                // type
+                // if
+                // needed
+                catalogProperties.putIfAbsent(
+                        CatalogUtil.ICEBERG_CATALOG_TYPE_JDBC + ".uri", dbCatalog.getUri());
+            }
+            if (dbCatalog.getWarehouse() != null) {
+                catalogProperties.putIfAbsent(
+                        Config.Catalog.WAREHOUSE_LOCATION, dbCatalog.getWarehouse());
+            }
+
+            // Build Iceberg Catalog
+            try {
+                org.apache.iceberg.catalog.Catalog icebergCatalog =
+                        CatalogUtil.buildIcebergCatalog(
+                                dbCatalog.getName(), catalogProperties, new Configuration());
+
+                // Create and add the REST servlet for this catalog
+                try (RESTCatalogAdapter adapter = new RESTCatalogAdapter(icebergCatalog)) {
+                    RESTCatalogServlet servlet = new RESTCatalogServlet(adapter);
+                    ServletHolder servletHolder =
+                            new ServletHolder(dbCatalog.getName() + "-rest", servlet);
+                    apiContext.addServlet(servletHolder, "/catalog/" + dbCatalog.getName() + "/*");
+                    LOG.info("Added REST endpoint for catalog: {}", dbCatalog.getName());
+                }
+            } catch (Exception e) {
+                LOG.error(
+                        "Failed to initialize Iceberg catalog or REST endpoint for: {}",
+                        dbCatalog.getName(),
+                        e);
+                // Decide how to handle catalog initialization failure (e.g., skip, log, exit)
             }
         }
 
@@ -184,7 +277,19 @@ public class Server {
                 new org.eclipse.jetty.server.Server(
                         new InetSocketAddress(config.server().host(), config.server().port()));
         httpServer.setHandler(handlers);
+
+        // Add listener bean to close PersistenceManager on shutdown
+        httpServer.addBean(
+                new AbstractLifeCycle.AbstractLifeCycleListener() {
+                    @Override
+                    public void lifeCycleStopping(LifeCycle event) {
+                        LOG.info("Shutting down server, closing PersistenceManager.");
+                        PersistenceManager.close();
+                    }
+                });
+
         httpServer.start();
+        LOG.info("Server started on {}:{}", config.server().host(), config.server().port());
         httpServer.join();
     }
 }

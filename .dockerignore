@@ -19,7 +19,7 @@ backend/bin
 
 # Data files
 data/
-backend/catalog.db 
+*.db 
 
 Dockerfile
 docker-compose.yml
