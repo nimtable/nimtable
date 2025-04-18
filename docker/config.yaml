@@ -4,7 +4,7 @@
 server:
   port: 8182
   host: 0.0.0.0
-auth:
+admin:
   username: admin
   password: admin
 catalogs:

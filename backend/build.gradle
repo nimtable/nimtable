@@ -112,7 +112,6 @@ dependencies {
   implementation "org.apache.spark:spark-hive_2.12:${sparkVersion}"
   implementation "org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:${icebergVersion}"
   implementation 'org.scala-lang.modules:scala-collection-compat_2.12:2.12.0'
-
 }
 
 jar {
@@ -196,12 +195,4 @@ task analyzeDependencies {
       println String.format("%-70s %8.2f MB", "${artifact.moduleVersion.id.group}:${artifact.moduleVersion.id.name}:${artifact.moduleVersion.id.version}", sizeMB)
     }
   }
-}
-
-// Add JUnit Platform to the test task (Re-added)
-tasks.withType(Test) {
-    useJUnitPlatform()
-    testLogging {
-        events "passed", "skipped", "failed" // Show test results
-    }
 }

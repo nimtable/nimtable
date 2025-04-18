@@ -83,7 +83,7 @@ public class LoginServlet extends HttpServlet {
         }
 
         if (!loggedIn) {
-            Config.Auth configAuth = config.auth();
+            Config.Admin configAuth = config.admin();
             if (configAuth != null
                     && username.equals(configAuth.username())
                     && password.equals(configAuth.password())) {
