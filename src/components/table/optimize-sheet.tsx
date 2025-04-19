@@ -15,7 +15,7 @@
  */
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { ChevronRight, SettingsIcon, CheckCircle2, Circle, Loader2, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { errorToString } from "@/lib/utils"
@@ -70,7 +70,7 @@ function FileDistributionSection({
         eqDeleteFileSizeInBytes: 0
     })
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
             setLoading(true)
             const data = await getFileDistribution(catalog, namespace, tableId)
@@ -84,13 +84,13 @@ function FileDistributionSection({
         } finally {
             setLoading(false)
         }
-    }
+    }, [catalog, namespace, tableId, toast])
 
     useEffect(() => {
         if (tableId && catalog && namespace) {
             fetchData()
         }
-    }, [tableId, catalog, namespace, toast])
+    }, [tableId, catalog, namespace, toast, fetchData])
 
     if (loading) {
         return (

@@ -23,10 +23,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { TopNavbar } from "@/components/shared/top-navbar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 
 interface CatalogTemplate {
     name: string;
@@ -124,23 +123,23 @@ export default function NewCatalogPage() {
         ]
     })
 
-    // Apply the default template on mount
-    useEffect(() => {
-        applyTemplate("rest-s3")
-    }, [])
-
-    const applyTemplate = (templateKey: string) => {
+    const applyTemplate = useCallback((templateKey: string) => {
         const template = CATALOG_TEMPLATES[templateKey as keyof typeof CATALOG_TEMPLATES]
         if (template) {
-            setFormData({
-                ...formData,
+            setFormData(prevData => ({
+                ...prevData,
                 type: template.type,
                 uri: template.uri,
                 warehouse: template.warehouse,
                 properties: template.properties
-            })
+            }))
         }
-    }
+    }, [])
+
+    // Apply the default template on mount
+    useEffect(() => {
+        applyTemplate("rest-s3")
+    }, [applyTemplate])
 
     const handleTemplateChange = (value: string) => {
         setSelectedTemplate(value)
