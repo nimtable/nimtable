@@ -12,12 +12,6 @@ database:
   url: jdbc:sqlite:file:/nimtable/data/nimtable_data.db
 
 catalogs:
-  - name: sqlite-catalog-demo
-    type: jdbc
-    uri: jdbc:sqlite:file:./catalog.db
-    jdbc.schema-version: V1
-    warehouse: ./data
-
 #  - name: rest-catalog-demo
 #    type: rest
 #    uri: http://localhost:8181
