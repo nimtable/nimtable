@@ -26,7 +26,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.time.Instant;
+import java.sql.Timestamp;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -70,20 +70,17 @@ public class CatalogRepository {
 
     private Catalog insert(Catalog catalog) {
         String sql =
-                "INSERT INTO catalogs (name, type, uri, warehouse, properties, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)";
+                "INSERT INTO catalogs (name, type, uri, warehouse, properties, created_at, updated_at) VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))";
         try (Connection conn = PersistenceManager.getConnection();
                 PreparedStatement pstmt =
                         conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-            Instant now = Instant.now();
-            String nowStr = now.toString();
+            Timestamp now = new Timestamp(System.currentTimeMillis());
             pstmt.setString(1, catalog.getName());
             pstmt.setString(2, catalog.getType());
             pstmt.setString(3, catalog.getUri());
             pstmt.setString(4, catalog.getWarehouse());
-            pstmt.setString(5, toJsonString(catalog.getProperties())); // Handle JSON as TEXT
-            pstmt.setString(6, nowStr); // Store timestamp as TEXT
-            pstmt.setString(7, nowStr); // Store timestamp as TEXT
+            pstmt.setString(5, toJsonString(catalog.getProperties()));
 
             int affectedRows = pstmt.executeUpdate();
 
@@ -109,19 +106,17 @@ public class CatalogRepository {
 
     private Catalog update(Catalog catalog) {
         String sql =
-                "UPDATE catalogs SET name = ?, type = ?, uri = ?, warehouse = ?, properties = ?, updated_at = ? WHERE id = ?";
+                "UPDATE catalogs SET name = ?, type = ?, uri = ?, warehouse = ?, properties = ?, updated_at = datetime('now') WHERE id = ?";
         try (Connection conn = PersistenceManager.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            Instant now = Instant.now();
-            String nowStr = now.toString();
+            Timestamp now = new Timestamp(System.currentTimeMillis());
             pstmt.setString(1, catalog.getName());
             pstmt.setString(2, catalog.getType());
             pstmt.setString(3, catalog.getUri());
             pstmt.setString(4, catalog.getWarehouse());
-            pstmt.setString(5, toJsonString(catalog.getProperties())); // Handle JSON as TEXT
-            pstmt.setString(6, nowStr); // Update updated_at as TEXT
-            pstmt.setLong(7, catalog.getId());
+            pstmt.setString(5, toJsonString(catalog.getProperties()));
+            pstmt.setLong(6, catalog.getId());
 
             int affectedRows = pstmt.executeUpdate();
 
@@ -131,7 +126,7 @@ public class CatalogRepository {
                         catalog.getId());
                 return null;
             }
-            catalog.setUpdatedAt(now); // Update object state
+            catalog.setUpdatedAt(now);
             return catalog;
         } catch (SQLException | JsonProcessingException e) {
             LOG.error("Error updating catalog: {}", catalog.getName(), e);
@@ -139,18 +134,16 @@ public class CatalogRepository {
         }
     }
 
-    private Catalog mapRowToCatalog(ResultSet rs)
-            throws SQLException, JsonProcessingException, DateTimeParseException {
+    private Catalog mapRowToCatalog(ResultSet rs) throws SQLException, JsonProcessingException {
         Catalog catalog = new Catalog();
         catalog.setId(rs.getLong("id"));
         catalog.setName(rs.getString("name"));
         catalog.setType(rs.getString("type"));
         catalog.setUri(rs.getString("uri"));
         catalog.setWarehouse(rs.getString("warehouse"));
-        catalog.setProperties(fromJsonString(rs.getString("properties"))); // Handle JSON TEXT
-        // Parse timestamp from TEXT
-        catalog.setCreatedAt(Instant.parse(rs.getString("created_at")));
-        catalog.setUpdatedAt(Instant.parse(rs.getString("updated_at")));
+        catalog.setProperties(fromJsonString(rs.getString("properties")));
+        catalog.setCreatedAt(rs.getTimestamp("created_at"));
+        catalog.setUpdatedAt(rs.getTimestamp("updated_at"));
         return catalog;
     }
 
@@ -171,5 +164,39 @@ public class CatalogRepository {
         return jsonMapper.readValue(jsonString, typeRef);
     }
 
-    // Add other methods like findByName, findById, delete etc. if needed
+    public Catalog findByName(String name) {
+        String sql =
+                "SELECT id, name, type, uri, warehouse, properties, created_at, updated_at FROM catalogs WHERE name = ?";
+        try (Connection conn = PersistenceManager.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, name);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapRowToCatalog(rs);
+                }
+            }
+        } catch (SQLException | JsonProcessingException | DateTimeParseException e) {
+            LOG.error("Error finding catalog by name: {}", name, e);
+        }
+        return null;
+    }
+
+    public void delete(Catalog catalog) {
+        String sql = "DELETE FROM catalogs WHERE id = ?";
+        try (Connection conn = PersistenceManager.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, catalog.getId());
+            int affectedRows = pstmt.executeUpdate();
+            if (affectedRows == 0) {
+                LOG.warn(
+                        "Deleting catalog failed, no rows affected for catalog ID: {}",
+                        catalog.getId());
+            }
+        } catch (SQLException e) {
+            LOG.error("Error deleting catalog: {}", catalog.getName(), e);
+            throw new RuntimeException("Failed to delete catalog", e);
+        }
+    }
+
+    // Add other methods like findById, delete etc. if needed
 }

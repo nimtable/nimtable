@@ -50,7 +50,10 @@ Access the UI at http://localhost:8182
 
 ## Configuration
 
-Nimtable uses YAML for configuration, supporting both server settings and catalog connections. The configuration format is compatible with Spark's Iceberg catalog configuration.
+Nimtable uses YAML for configuration, supporting both server settings and catalog connections. The configuration format is compatible with Spark's Iceberg catalog configuration. You can configure catalogs in two ways:
+
+1. **Configuration File**: Configure catalogs via YAML configuration (recommended for experts)
+2. **Web Interface**: Configure catalogs through the Nimtable UI (recommended for new users)
 
 For Docker deployments, you can find a sample configuration file at [docker/config.yaml](./docker/config.yaml).
 

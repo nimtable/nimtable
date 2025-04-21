@@ -79,6 +79,8 @@ public record Config(
     }
 
     public Catalog getCatalog(String name) {
-        return catalogs.stream().filter(c -> c.name().equals(name)).findFirst().orElse(null);
+        return catalogs != null
+                ? catalogs.stream().filter(c -> c.name().equals(name)).findFirst().orElse(null)
+                : null;
     }
 }

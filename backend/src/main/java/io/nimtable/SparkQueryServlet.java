@@ -33,14 +33,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SparkQueryServlet extends HttpServlet {
+    private final Config config;
     private final ObjectMapper mapper;
     private final Logger logger = LoggerFactory.getLogger(SparkQueryServlet.class);
-    private final LocalSpark localSpark;
 
     public SparkQueryServlet(Config config) {
+        this.config = config;
         this.mapper = new ObjectMapper();
         this.mapper.findAndRegisterModules();
-        this.localSpark = LocalSpark.getInstance(config);
     }
 
     @Override
@@ -54,7 +54,7 @@ public class SparkQueryServlet extends HttpServlet {
 
         try {
             // Execute the query using Spark SQL
-            Dataset<Row> result = localSpark.getSpark().sql(query);
+            Dataset<Row> result = LocalSpark.getInstance(config).getSpark().sql(query);
             String[] columns = result.columns();
 
             List<List<Object>> rows = new ArrayList<>();

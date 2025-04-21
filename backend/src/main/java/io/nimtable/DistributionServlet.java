@@ -18,6 +18,7 @@ package io.nimtable;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.nimtable.db.repository.CatalogRepository;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -37,10 +38,12 @@ public class DistributionServlet extends HttpServlet {
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private final Config config;
     private final ObjectMapper objectMapper;
+    private final CatalogRepository catalogRepository;
 
     public DistributionServlet(Config config) {
         this.config = config;
         this.objectMapper = new ObjectMapper();
+        this.catalogRepository = new CatalogRepository();
     }
 
     @Override
@@ -65,20 +68,27 @@ public class DistributionServlet extends HttpServlet {
         String tableName = parts[3];
 
         try {
-            Config.Catalog catalogConfig =
-                    config.catalogs().stream()
-                            .filter(c -> c.name().equals(catalogName))
-                            .findFirst()
-                            .orElseThrow(
-                                    () ->
-                                            new IllegalArgumentException(
-                                                    "Catalog not found: " + catalogName));
+            Map<String, String> properties;
+
+            // First check config
+            Config.Catalog catalogConfig = config.getCatalog(catalogName);
+            if (catalogConfig != null) {
+                properties = catalogConfig.properties();
+            } else {
+                // Check database
+                io.nimtable.db.entity.Catalog dbCatalog = catalogRepository.findByName(catalogName);
+                if (dbCatalog == null) {
+                    throw new IllegalArgumentException("Catalog not found: " + catalogName);
+                }
+                properties = new HashMap<>(dbCatalog.getProperties());
+                properties.put("type", dbCatalog.getType());
+                properties.put("warehouse", dbCatalog.getWarehouse());
+                properties.put("uri", dbCatalog.getUri());
+            }
 
             Catalog catalog =
                     CatalogUtil.buildIcebergCatalog(
-                            catalogConfig.name(),
-                            catalogConfig.properties(),
-                            new org.apache.hadoop.conf.Configuration());
+                            catalogName, properties, new org.apache.hadoop.conf.Configuration());
 
             Table table = catalog.loadTable(TableIdentifier.of(namespace, tableName));
 
