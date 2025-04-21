@@ -1,33 +1,47 @@
-# Nimtable
-
 <div align="center">
 
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
-
-A modern, user-friendly web interface for Apache Iceberg catalogs
-
-![Screenshot](./docs/screenshot.png)
+# Nimtable: The Control Plane for Apache Iceberg™
 
 </div>
 
+<div align="center">
+
+<b> A lightweight, easy-to-use platform to monitor, optimize, and govern your Iceberg-based lakehouse. </b>
+
+</div>
+
+<div align="center">
+  <a
+    href="https://go.nimtable.com/slack"
+    target="_blank"
+  >
+    <img alt="Slack" src="https://badgen.net/badge/Slack/Join%20Nimtable/0abd59?icon=slack" />
+  </a>
+</div>
+
+
+![Screenshot](./docs/screenshot.png)
+
+
 ## Overview
 
-Nimtable is a powerful web-based UI that simplifies the management and exploration of Apache Iceberg catalogs. It provides an intuitive interface for browsing tables, executing queries, analyzing data distributions, and performing table optimizations.
+Nimtable helps you easily manage and explore Apache Iceberg catalogs. With a web-based platform designed for clarity and simplicity, Nimtable makes it easy to browse tables, run queries, analyze file distributions, and optimize storage layouts.
+
 
 ### Key Features
 
-- 🌟 **Multi-Catalog Support**: Connect to multiple catalog types including Hive Metastore, PostgreSQL (JDBC), REST Catalog, AWS Glue, and S3 Tables
-- 🔍 **Table Exploration**: Browse and inspect table schemas, partitions, and snapshots
-- ⚡ **Interactive Querying**: Execute SQL queries directly through the UI
-- 📊 **File Distribution Analysis**: Visualize and understand data file distribution
-- 🔧 **Table Optimization**: Perform compaction and manage snapshot expiration
-- 🔌 **REST Catalog Compatibility**: Serves as a standard Iceberg REST Catalog, adapting any underlying catalog to RESTful API
+- 🌟 **Multi-Catalog Support**: Connect to Hive Metastore, PostgreSQL (via JDBC), REST Catalog, AWS Glue, and S3 Tables.
+- 🔍 **Table Exploration**: Inspect table schemas, partitions, and snapshots.
+- ⚡ **Interactive Querying**: Execute SQL queries directly from the platform.
+- 📊 **File Distribution Analysis**: Visualize how data files are distributed across partitions and snapshots.
+- 🔧 **Table Optimization**: Run file compaction and manage snapshot expiration.
+- 🔌 **REST Catalog Compatibility**: Serve as a standard Iceberg REST Catalog, adapting any underlying catalog to a RESTful API.
 
 ## Architecture
 
-Nimtable acts as a bridge between users and various catalog servers, providing both a user interface and a standard REST Catalog API layer:
+Nimtable acts as a bridge between users and catalog servers, providing both an interactive web interface and a standard REST Catalog API layer.
 
-<img src="docs/nimtable-arch.drawio.png" alt="Architecture" width=491>
+<img src="docs/nimtable-arch.drawio1.png" alt="Architecture" width=491>
 
 ## Quick Start
 
