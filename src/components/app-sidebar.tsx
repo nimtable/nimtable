@@ -167,6 +167,11 @@ function AppSidebarContent() {
                   disabled={catalogListLoading || isRefreshing}
                   value={catalog as string}
                   onValueChange={(value) => {
+                    if (value === "new") {
+                      router.push("/catalog/new")
+                      return
+                    }
+                    
                     // Update the URL with the catalog parameter without navigation
                     const url = new URL(window.location.href)
                     url.searchParams.set("catalog", value)
@@ -197,28 +202,18 @@ function AppSidebarContent() {
                         {catalog}
                       </SelectItem>
                     ))}
+                    <SelectItem
+                      value="new"
+                      className="font-medium hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                    >
+                      <div className="flex items-center">
+                        <Plus className="mr-2 h-4 w-4 text-blue-500" />
+                        New Catalog
+                      </div>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-
-              <TooltipProvider delayDuration={300}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-9 w-9 flex-shrink-0 border-muted-foreground/20 hover:border-blue-400 hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors"
-                      onClick={() => router.push("/catalog/new")}
-                    >
-                      <Plus className="h-4 w-4 text-blue-500" />
-                      <span className="sr-only">New Catalog</span>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    <p>Create new catalog</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
 
               <TooltipProvider delayDuration={300}>
                 <Tooltip>
