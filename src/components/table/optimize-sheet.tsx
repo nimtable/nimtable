@@ -42,6 +42,7 @@ import {
     type OptimizationOperation,
 } from "@/lib/data-loader"
 import { FileStatistics } from "@/components/table/file-statistics"
+import { FileDistributionLoading } from "@/components/table/file-distribution-loading"
 
 type OptimizationStep = {
     name: string
@@ -97,28 +98,7 @@ function FileDistributionSection({
     }, [tableId, catalog, namespace, toast, fetchData])
 
     if (loading) {
-        return (
-            <Card className="border-muted/70 shadow-sm h-full">
-                <CardHeader className="pb-2">
-                    <CardTitle className="text-base">File Size Distribution</CardTitle>
-                    <CardDescription>Loading distribution data...</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-5 pt-4">
-                    {/* Skeleton UI for loading state */}
-                    {["0-8M", "8M-32M", "32M-128M", "128M-512M", "512M+"].map((range) => (
-                        <div key={range} className="space-y-1.5">
-                            <div className="flex justify-between items-center">
-                                <span className="text-sm font-medium">{range}</span>
-                                <div className="h-4 w-24 bg-muted/50 rounded animate-pulse"></div>
-                            </div>
-                            <div className="h-2.5 bg-muted/50 rounded-full w-full overflow-hidden">
-                                <div className="h-full bg-muted/70 rounded-full w-1/6 animate-pulse"></div>
-                            </div>
-                        </div>
-                    ))}
-                </CardContent>
-            </Card>
-        )
+        return <FileDistributionLoading />
     }
 
     // Sort the distribution data according to our predefined size order
