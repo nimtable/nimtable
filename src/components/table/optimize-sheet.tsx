@@ -147,7 +147,6 @@ function FileDistributionSection({
                             <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
                         </Button>
                     </div>
-                    <span className="text-muted-foreground">Optimizing improves file size distribution</span>
                 </div>
 
                 <div className="space-y-5">
