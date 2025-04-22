@@ -197,6 +197,9 @@ export interface DistributionData {
     dataFileSizeInBytes: number
     positionDeleteFileSizeInBytes: number
     eqDeleteFileSizeInBytes: number
+    dataFileRecordCount: number
+    positionDeleteFileRecordCount: number
+    eqDeleteFileRecordCount: number
 }
 
 /**
@@ -225,7 +228,10 @@ export async function getFileDistribution(
         eqDeleteFileCount: 0,
         dataFileSizeInBytes: 0,
         positionDeleteFileSizeInBytes: 0,
-        eqDeleteFileSizeInBytes: 0
+        eqDeleteFileSizeInBytes: 0,
+        dataFileRecordCount: 0,
+        positionDeleteFileRecordCount: 0,
+        eqDeleteFileRecordCount: 0
     };
 }
 

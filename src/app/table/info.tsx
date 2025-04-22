@@ -39,6 +39,7 @@ import type { LoadTableResult, StructField } from "@/lib/data-loader"
 import { dropTable, renameTable, getFileDistribution, type DistributionData } from "@/lib/data-loader"
 import { cn } from "@/lib/utils"
 import { getPropertyDescription } from "@/lib/property-descriptions"
+import { FileStatistics } from "@/components/table/file-statistics"
 
 interface InfoTabProps {
     tableData: LoadTableResult
@@ -68,7 +69,10 @@ function FileDistributionSection({
         eqDeleteFileCount: 0,
         dataFileSizeInBytes: 0,
         positionDeleteFileSizeInBytes: 0,
-        eqDeleteFileSizeInBytes: 0
+        eqDeleteFileSizeInBytes: 0,
+        dataFileRecordCount: 0,
+        positionDeleteFileRecordCount: 0,
+        eqDeleteFileRecordCount: 0
     })
 
     const fetchData = useCallback(async () => {
@@ -193,21 +197,7 @@ function FileDistributionSection({
                 </div>
 
                 <div className="mt-6 pt-4 border-t border-muted/50">
-                    <div className="text-sm">
-                        <p className="mb-2 font-medium text-foreground">File Statistics:</p>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <p className="text-muted-foreground">Data Files: {distribution.dataFileCount}</p>
-                                <p className="text-muted-foreground">Position Delete Files: {distribution.positionDeleteFileCount}</p>
-                                <p className="text-muted-foreground">Equality Delete Files: {distribution.eqDeleteFileCount}</p>
-                            </div>
-                            <div>
-                                <p className="text-muted-foreground">Data Size: {(distribution.dataFileSizeInBytes / (1024 * 1024)).toFixed(2)} MB</p>
-                                <p className="text-muted-foreground">Position Delete Size: {(distribution.positionDeleteFileSizeInBytes / (1024 * 1024)).toFixed(2)} MB</p>
-                                <p className="text-muted-foreground">Equality Delete Size: {(distribution.eqDeleteFileSizeInBytes / (1024 * 1024)).toFixed(2)} MB</p>
-                            </div>
-                        </div>
-                    </div>
+                    <FileStatistics distribution={distribution} />
                 </div>
 
                 <div className="mt-6 pt-4 border-t border-muted/50">
