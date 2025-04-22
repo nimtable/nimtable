@@ -122,7 +122,9 @@ public class DistributionServlet extends HttpServlet {
                     dataDistribution.positionDeleteFileSizeInBytes);
             rootNode.put("eqDeleteFileSizeInBytes", dataDistribution.eqDeleteFileSizeInBytes);
             rootNode.put("dataFileRecordCount", dataDistribution.dataFileRecordCount);
-            rootNode.put("positionDeleteFileRecordCount", dataDistribution.positionDeleteFileRecordCount);
+            rootNode.put(
+                    "positionDeleteFileRecordCount",
+                    dataDistribution.positionDeleteFileRecordCount);
             rootNode.put("eqDeleteFileRecordCount", dataDistribution.eqDeleteFileRecordCount);
 
             response.setContentType("application/json");
@@ -186,7 +188,8 @@ public class DistributionServlet extends HttpServlet {
                                 dataDistribution.positionDeleteFileCount += 1;
                                 dataDistribution.positionDeleteFileSizeInBytes +=
                                         file.fileSizeInBytes();
-                                dataDistribution.positionDeleteFileRecordCount += file.recordCount();
+                                dataDistribution.positionDeleteFileRecordCount +=
+                                        file.recordCount();
                             }
                         }
                         break;
