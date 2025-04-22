@@ -41,6 +41,8 @@ import {
     type DistributionData,
     type OptimizationOperation,
 } from "@/lib/data-loader"
+import { FileStatistics } from "@/components/table/file-statistics"
+import { FileDistributionLoading } from "@/components/table/file-distribution-loading"
 
 type OptimizationStep = {
     name: string
@@ -67,7 +69,10 @@ function FileDistributionSection({
         eqDeleteFileCount: 0,
         dataFileSizeInBytes: 0,
         positionDeleteFileSizeInBytes: 0,
-        eqDeleteFileSizeInBytes: 0
+        eqDeleteFileSizeInBytes: 0,
+        dataFileRecordCount: 0,
+        positionDeleteFileRecordCount: 0,
+        eqDeleteFileRecordCount: 0
     })
 
     const fetchData = useCallback(async () => {
@@ -93,28 +98,7 @@ function FileDistributionSection({
     }, [tableId, catalog, namespace, toast, fetchData])
 
     if (loading) {
-        return (
-            <Card className="border-muted/70 shadow-sm h-full">
-                <CardHeader className="pb-2">
-                    <CardTitle className="text-base">File Size Distribution</CardTitle>
-                    <CardDescription>Loading distribution data...</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-5 pt-4">
-                    {/* Skeleton UI for loading state */}
-                    {["0-8M", "8M-32M", "32M-128M", "128M-512M", "512M+"].map((range) => (
-                        <div key={range} className="space-y-1.5">
-                            <div className="flex justify-between items-center">
-                                <span className="text-sm font-medium">{range}</span>
-                                <div className="h-4 w-24 bg-muted/50 rounded animate-pulse"></div>
-                            </div>
-                            <div className="h-2.5 bg-muted/50 rounded-full w-full overflow-hidden">
-                                <div className="h-full bg-muted/70 rounded-full w-1/6 animate-pulse"></div>
-                            </div>
-                        </div>
-                    ))}
-                </CardContent>
-            </Card>
-        )
+        return <FileDistributionLoading />
     }
 
     // Sort the distribution data according to our predefined size order
@@ -147,7 +131,6 @@ function FileDistributionSection({
                             <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
                         </Button>
                     </div>
-                    <span className="text-muted-foreground">Optimizing improves file size distribution</span>
                 </div>
 
                 <div className="space-y-5">
@@ -193,21 +176,7 @@ function FileDistributionSection({
                 </div>
 
                 <div className="mt-6 pt-4 border-t border-muted/50">
-                    <div className="text-sm">
-                        <p className="mb-2 font-medium text-foreground">File Statistics:</p>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <p className="text-muted-foreground">Data Files: {distribution.dataFileCount}</p>
-                                <p className="text-muted-foreground">Position Delete Files: {distribution.positionDeleteFileCount}</p>
-                                <p className="text-muted-foreground">Equality Delete Files: {distribution.eqDeleteFileCount}</p>
-                            </div>
-                            <div>
-                                <p className="text-muted-foreground">Data Size: {(distribution.dataFileSizeInBytes / (1024 * 1024)).toFixed(2)} MB</p>
-                                <p className="text-muted-foreground">Position Delete Size: {(distribution.positionDeleteFileSizeInBytes / (1024 * 1024)).toFixed(2)} MB</p>
-                                <p className="text-muted-foreground">Equality Delete Size: {(distribution.eqDeleteFileSizeInBytes / (1024 * 1024)).toFixed(2)} MB</p>
-                            </div>
-                        </div>
-                    </div>
+                    <FileStatistics distribution={distribution} />
                 </div>
 
                 <div className="mt-6 pt-4 border-t border-muted/50">

@@ -121,6 +121,11 @@ public class DistributionServlet extends HttpServlet {
                     "positionDeleteFileSizeInBytes",
                     dataDistribution.positionDeleteFileSizeInBytes);
             rootNode.put("eqDeleteFileSizeInBytes", dataDistribution.eqDeleteFileSizeInBytes);
+            rootNode.put("dataFileRecordCount", dataDistribution.dataFileRecordCount);
+            rootNode.put(
+                    "positionDeleteFileRecordCount",
+                    dataDistribution.positionDeleteFileRecordCount);
+            rootNode.put("eqDeleteFileRecordCount", dataDistribution.eqDeleteFileRecordCount);
 
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
@@ -138,6 +143,9 @@ public class DistributionServlet extends HttpServlet {
         int dataFileSizeInBytes;
         int positionDeleteFileSizeInBytes;
         int eqDeleteFileSizeInBytes;
+        int dataFileRecordCount;
+        int positionDeleteFileRecordCount;
+        int eqDeleteFileRecordCount;
         Map<String, Integer> ranges;
     }
 
@@ -165,6 +173,7 @@ public class DistributionServlet extends HttpServlet {
                             processFileSize(distribution, file.fileSizeInBytes());
                             dataDistribution.dataFileCount += 1;
                             dataDistribution.dataFileSizeInBytes += file.fileSizeInBytes();
+                            dataDistribution.dataFileRecordCount += file.recordCount();
                         }
                         break;
                     case DELETES:
@@ -174,10 +183,13 @@ public class DistributionServlet extends HttpServlet {
                             if (file.content() == FileContent.EQUALITY_DELETES) {
                                 dataDistribution.eqDeleteFileCount += 1;
                                 dataDistribution.eqDeleteFileSizeInBytes += file.fileSizeInBytes();
+                                dataDistribution.eqDeleteFileRecordCount += file.recordCount();
                             } else if (file.content() == FileContent.POSITION_DELETES) {
                                 dataDistribution.positionDeleteFileCount += 1;
                                 dataDistribution.positionDeleteFileSizeInBytes +=
                                         file.fileSizeInBytes();
+                                dataDistribution.positionDeleteFileRecordCount +=
+                                        file.recordCount();
                             }
                         }
                         break;
