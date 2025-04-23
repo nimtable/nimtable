@@ -334,24 +334,12 @@ function ManifestItem({
                                 <div className="space-y-2">
                                     <div className="text-sm font-medium">Statistics</div>
                                     <div className="text-xs text-muted-foreground space-y-1">
-                                        {manifest.added_files_count !== undefined && (
-                                            <div>Added Files: {manifest.added_files_count}</div>
-                                        )}
-                                        {manifest.existing_files_count !== undefined && (
-                                            <div>Existing Files: {manifest.existing_files_count}</div>
-                                        )}
-                                        {manifest.deleted_files_count !== undefined && (
-                                            <div>Deleted Files: {manifest.deleted_files_count}</div>
-                                        )}
-                                        {manifest.added_rows_count !== undefined && (
-                                            <div>Added Rows: {manifest.added_rows_count}</div>
-                                        )}
-                                        {manifest.existing_rows_count !== undefined && (
-                                            <div>Existing Rows: {manifest.existing_rows_count}</div>
-                                        )}
-                                        {manifest.deleted_rows_count !== undefined && (
-                                            <div>Deleted Rows: {manifest.deleted_rows_count}</div>
-                                        )}
+                                        {!!manifest.added_files_count && <div>Added Files: {manifest.added_files_count}</div>}
+                                        {!!manifest.existing_files_count && <div>Existing Files: {manifest.existing_files_count}</div>}
+                                        {!!manifest.deleted_files_count && <div>Deleted Files: {manifest.deleted_files_count}</div>}
+                                        {!!manifest.added_rows_count && <div>Added Rows: {manifest.added_rows_count}</div>}
+                                        {!!manifest.existing_rows_count && <div>Existing Rows: {manifest.existing_rows_count}</div>}
+                                        {!!manifest.deleted_rows_count && <div>Deleted Rows: {manifest.deleted_rows_count}</div>}
                                     </div>
                                 </div>
 
