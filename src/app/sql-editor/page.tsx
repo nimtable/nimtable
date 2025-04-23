@@ -37,9 +37,13 @@ export default function SQLEditorPage() {
     const catalogParam = searchParams.get("catalog")
     const namespaceParam = searchParams.get("namespace")
     const tableParam = searchParams.get("table")
+    const initialQueryParam = searchParams.get("initialQuery")
 
     // Generate initial query based on available parameters
     const initialQuery = () => {
+        if (initialQueryParam) {
+            return decodeURIComponent(initialQueryParam)
+        }
         if (catalogParam && namespaceParam && tableParam) {
             return `SELECT * FROM \`${catalogParam}\`.\`${namespaceParam}\`.\`${tableParam}\` LIMIT 100`
         } else if (catalogParam && namespaceParam) {

@@ -16,7 +16,8 @@
 
 "use client"
 import { useState, useMemo } from "react"
-import { GitBranch, Tag, GitCommit, Calendar, ChevronDown, ChevronRight, FileText, Info } from "lucide-react"
+import { GitBranch, Tag, GitCommit, Calendar, ChevronDown, ChevronRight, FileText, Info, Clock } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 import { Badge } from "@/components/ui/badge"
 import type { LoadTableResult } from "@/lib/data-loader"
@@ -32,6 +33,13 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { Button } from "@/components/ui/button"
 
 interface SnapshotsTabProps {
     tableData: LoadTableResult
@@ -75,6 +83,7 @@ function SnapshotItem({
         manifests: any[]
     } | null>(null)
     const [loadingManifest, setLoadingManifest] = useState(false)
+    const router = useRouter()
 
     // Get operation type
     const getOperationType = (summary?: Record<string, string>): string => {
@@ -129,6 +138,13 @@ function SnapshotItem({
         setIsExpanded(true)
     }
 
+    const handleTimeTravel = () => {
+        const query = `-- time travel to snapshot with id ${snapshot.id}\nSELECT * FROM \`${catalog}\`.\`${namespace}\`.\`${table}\` VERSION AS OF ${snapshot.id} LIMIT 100;`
+        // Encode the query for URL
+        const encodedQuery = encodeURIComponent(query)
+        router.push(`/sql-editor?initialQuery=${encodedQuery}`)
+    }
+
     return (
         <div className="flex flex-col">
             <div className="flex items-center py-2 px-3 border-b last:border-b-0 hover:bg-muted/20 transition-colors">
@@ -147,8 +163,25 @@ function SnapshotItem({
                 </div>
 
                 {/* Snapshot ID - full */}
-                <div className="font-mono text-xs text-muted-foreground w-[300px] flex-shrink-0 pl-4">
-                    {String(snapshot.id)}
+                <div className="font-mono text-xs text-muted-foreground w-[300px] flex-shrink-0 pl-4 flex items-center gap-2">
+                    <span className="flex-1">{String(snapshot.id)}</span>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6 p-0"
+                                    onClick={handleTimeTravel}
+                                >
+                                    <Clock className="h-3.5 w-3.5 text-muted-foreground hover:text-primary" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>Time travel to this snapshot</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
                 </div>
 
                 {/* Date */}
@@ -296,99 +329,101 @@ function ManifestItem({
                         <ChevronRight className="h-3 w-3" />
                     )}
                 </button>
-                <FileText className="h-3 w-3 text-muted-foreground" />
-                <span className="font-mono">{manifest.path}</span>
-                <div className="flex items-center gap-2">
-                    <Badge className={`${getContentBadgeColor(manifest.content)} text-[10px] px-1.5 py-0`}>
-                        {manifest.content}
-                    </Badge>
-                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                        <span className="text-green-600 dark:text-green-400">+{manifest.added_files_count}</span>
-                        <span className="text-gray-500">•</span>
-                        <span className="text-gray-500">{manifest.existing_files_count}</span>
-                        <span className="text-gray-500">•</span>
-                        <span className="text-red-600 dark:text-red-400">-{manifest.deleted_files_count}</span>
-                    </div>
-                    <Dialog>
-                        <DialogTrigger asChild>
-                            <button className="ml-2 p-1 rounded hover:bg-muted/40">
-                                <Info className="h-3 w-3 text-muted-foreground" />
-                            </button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-3xl">
-                            <DialogHeader>
-                                <DialogTitle>Manifest Details</DialogTitle>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <div className="text-sm font-medium">Basic Information</div>
-                                    <div className="text-xs text-muted-foreground space-y-1">
-                                        <div>Path: {manifest.path}</div>
-                                        <div>Content: {manifest.content}</div>
-                                        <div>Sequence Number: {manifest.sequence_number}</div>
-                                        <div>Partition Spec ID: {manifest.partition_spec_id}</div>
-                                        <div>Length: {formatFileSize(manifest.length)}</div>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <div className="text-sm font-medium">Statistics</div>
-                                    <div className="text-xs text-muted-foreground space-y-1">
-                                        {manifest.added_files_count !== undefined && (
-                                            <div>Added Files: {manifest.added_files_count}</div>
-                                        )}
-                                        {manifest.existing_files_count !== undefined && (
-                                            <div>Existing Files: {manifest.existing_files_count}</div>
-                                        )}
-                                        {manifest.deleted_files_count !== undefined && (
-                                            <div>Deleted Files: {manifest.deleted_files_count}</div>
-                                        )}
-                                        {manifest.added_rows_count !== undefined && (
-                                            <div>Added Rows: {manifest.added_rows_count}</div>
-                                        )}
-                                        {manifest.existing_rows_count !== undefined && (
-                                            <div>Existing Rows: {manifest.existing_rows_count}</div>
-                                        )}
-                                        {manifest.deleted_rows_count !== undefined && (
-                                            <div>Deleted Rows: {manifest.deleted_rows_count}</div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {manifestDetails && (
+                <div className="flex items-center gap-2 flex-1">
+                    <FileText className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                    <span className="font-mono flex-1">{manifest.path}</span>
+                    <div className="flex items-center gap-2">
+                        <Badge className={`${getContentBadgeColor(manifest.content)} text-[10px] px-1.5 py-0`}>
+                            {manifest.content}
+                        </Badge>
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                            <span className="text-green-600 dark:text-green-400">+{manifest.added_files_count}</span>
+                            <span className="text-gray-500">•</span>
+                            <span className="text-gray-500">{manifest.existing_files_count}</span>
+                            <span className="text-gray-500">•</span>
+                            <span className="text-red-600 dark:text-red-400">-{manifest.deleted_files_count}</span>
+                        </div>
+                        <Dialog>
+                            <DialogTrigger asChild>
+                                <button className="p-1 rounded hover:bg-muted/40">
+                                    <Info className="h-3 w-3 text-muted-foreground" />
+                                </button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-3xl">
+                                <DialogHeader>
+                                    <DialogTitle>Manifest Details</DialogTitle>
+                                </DialogHeader>
+                                <div className="space-y-4">
                                     <div className="space-y-2">
-                                        <div className="text-sm font-medium">Files</div>
-                                        {manifestDetails.files.length > 0 ? (
-                                            <div className="space-y-3 max-h-[300px] overflow-y-auto">
-                                                {manifestDetails.files.map((file, fileIndex) => (
-                                                    <div key={fileIndex} className="text-xs font-mono pl-2 space-y-1 border-l-2 border-muted">
-                                                        <div className="text-muted-foreground">Path: {file.file_path}</div>
-                                                        <div className="text-muted-foreground">
-                                                            Size: {formatFileSize(file.file_size_in_bytes)}, Records: {file.record_count}
-                                                        </div>
-                                                        {file.content && (
-                                                            <div className="text-muted-foreground">
-                                                                Content: {file.content}, Format: {file.file_format}
-                                                            </div>
-                                                        )}
-                                                        {file.equality_ids && file.equality_ids.length > 0 && (
-                                                            <div className="text-muted-foreground">
-                                                                Equality Fields: {file.equality_ids.join(', ')}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <div className="text-xs text-muted-foreground pl-2">
-                                                No files in this manifest
-                                            </div>
-                                        )}
+                                        <div className="text-sm font-medium">Basic Information</div>
+                                        <div className="text-xs text-muted-foreground space-y-1">
+                                            <div>Path: {manifest.path}</div>
+                                            <div>Content: {manifest.content}</div>
+                                            <div>Sequence Number: {manifest.sequence_number}</div>
+                                            <div>Partition Spec ID: {manifest.partition_spec_id}</div>
+                                            <div>Length: {formatFileSize(manifest.length)}</div>
+                                        </div>
                                     </div>
-                                )}
-                            </div>
-                        </DialogContent>
-                    </Dialog>
+
+                                    <div className="space-y-2">
+                                        <div className="text-sm font-medium">Statistics</div>
+                                        <div className="text-xs text-muted-foreground space-y-1">
+                                            {manifest.added_files_count !== undefined && (
+                                                <div>Added Files: {manifest.added_files_count}</div>
+                                            )}
+                                            {manifest.existing_files_count !== undefined && (
+                                                <div>Existing Files: {manifest.existing_files_count}</div>
+                                            )}
+                                            {manifest.deleted_files_count !== undefined && (
+                                                <div>Deleted Files: {manifest.deleted_files_count}</div>
+                                            )}
+                                            {manifest.added_rows_count !== undefined && (
+                                                <div>Added Rows: {manifest.added_rows_count}</div>
+                                            )}
+                                            {manifest.existing_rows_count !== undefined && (
+                                                <div>Existing Rows: {manifest.existing_rows_count}</div>
+                                            )}
+                                            {manifest.deleted_rows_count !== undefined && (
+                                                <div>Deleted Rows: {manifest.deleted_rows_count}</div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {manifestDetails && (
+                                        <div className="space-y-2">
+                                            <div className="text-sm font-medium">Files</div>
+                                            {manifestDetails.files.length > 0 ? (
+                                                <div className="space-y-3 max-h-[300px] overflow-y-auto">
+                                                    {manifestDetails.files.map((file, fileIndex) => (
+                                                        <div key={fileIndex} className="text-xs font-mono pl-2 space-y-1 border-l-2 border-muted">
+                                                            <div className="text-muted-foreground">Path: {file.file_path}</div>
+                                                            <div className="text-muted-foreground">
+                                                                Size: {formatFileSize(file.file_size_in_bytes)}, Records: {file.record_count}
+                                                            </div>
+                                                            {file.content && (
+                                                                <div className="text-muted-foreground">
+                                                                    Content: {file.content}, Format: {file.file_format}
+                                                                </div>
+                                                            )}
+                                                            {file.equality_ids && file.equality_ids.length > 0 && (
+                                                                <div className="text-muted-foreground">
+                                                                    Equality Fields: {file.equality_ids.join(', ')}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div className="text-xs text-muted-foreground pl-2">
+                                                    No files in this manifest
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            </DialogContent>
+                        </Dialog>
+                    </div>
                 </div>
             </div>
 
