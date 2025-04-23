@@ -16,12 +16,22 @@
 
 "use client"
 import { useState, useMemo } from "react"
-import { GitBranch, Tag, GitCommit, Calendar } from "lucide-react"
+import { GitBranch, Tag, GitCommit, Calendar, ChevronDown, ChevronRight, FileText, Info } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import type { LoadTableResult } from "@/lib/data-loader"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent } from "@/components/ui/card"
+import { getManifestList, getManifestDetails } from "@/lib/data-loader"
+import { useToast } from "@/hooks/use-toast"
+import { errorToString } from "@/lib/utils"
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog"
 
 interface SnapshotsTabProps {
     tableData: LoadTableResult
@@ -39,15 +49,33 @@ interface Snapshot {
     summary?: Record<string, string>
 }
 
-// Find the SnapshotItem component and replace it with this more minimalistic version:
+interface ManifestDetails {
+    manifest_path: string
+    files: any[]
+}
 
 function SnapshotItem({
     snapshot,
     isLatest,
+    catalog,
+    namespace,
+    table,
 }: {
     snapshot: Snapshot
     isLatest?: boolean
+    catalog: string
+    namespace: string
+    table: string
 }) {
+    const { toast } = useToast()
+    const [isExpanded, setIsExpanded] = useState(false)
+    const [manifestList, setManifestList] = useState<{
+        snapshot_id: string
+        manifest_list_location: string
+        manifests: any[]
+    } | null>(null)
+    const [loadingManifest, setLoadingManifest] = useState(false)
+
     // Get operation type
     const getOperationType = (summary?: Record<string, string>): string => {
         if (!summary) return "unknown"
@@ -77,61 +105,355 @@ function SnapshotItem({
         }).format(date)
     }
 
+    const handleExpand = async () => {
+        if (isExpanded) {
+            setIsExpanded(false)
+            return
+        }
+
+        if (!manifestList) {
+            setLoadingManifest(true)
+            try {
+                const data = await getManifestList(catalog, namespace, table, snapshot.id)
+                setManifestList(data)
+            } catch (error) {
+                toast({
+                    variant: "destructive",
+                    title: "Failed to load manifest list",
+                    description: errorToString(error),
+                })
+            } finally {
+                setLoadingManifest(false)
+            }
+        }
+        setIsExpanded(true)
+    }
+
     return (
-        <div className="flex items-center gap-2 py-2 px-3 border-b last:border-b-0 hover:bg-muted/20 transition-colors">
-            {/* Snapshot indicator with operation color */}
-            <div className={`h-2 w-2 rounded-full ${operationColor} flex-shrink-0`} />
+        <div className="flex flex-col">
+            <div className="flex items-center py-2 px-3 border-b last:border-b-0 hover:bg-muted/20 transition-colors">
+                <div className="w-8 flex-shrink-0 flex items-center">
+                    <button
+                        onClick={handleExpand}
+                        className="flex items-center justify-center w-4 h-4 rounded hover:bg-muted/40"
+                    >
+                        {isExpanded ? (
+                            <ChevronDown className="h-3 w-3" />
+                        ) : (
+                            <ChevronRight className="h-3 w-3" />
+                        )}
+                    </button>
+                    <div className={`h-2 w-2 rounded-full ${operationColor} ml-2`} />
+                </div>
 
-            {/* Snapshot ID - truncated */}
-            <div className="font-mono text-xs text-muted-foreground w-16 flex-shrink-0">
-                {String(snapshot.id).substring(0, 7)}
+                {/* Snapshot ID - full */}
+                <div className="font-mono text-xs text-muted-foreground w-[300px] flex-shrink-0 pl-4">
+                    {String(snapshot.id)}
+                </div>
+
+                {/* Date */}
+                <div className="text-xs text-muted-foreground w-[140px] flex-shrink-0">
+                    {formatDate(snapshot.timestamp)}
+                </div>
+
+                {/* Operation type */}
+                <div className="text-xs font-medium w-[100px] flex-shrink-0">
+                    {operationType}
+                </div>
+
+                {/* Badges - only show if present */}
+                <div className="flex items-center gap-1 flex-1 min-w-0 overflow-hidden">
+                    {isLatest && (
+                        <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 text-[10px] px-1.5 py-0 hover:bg-blue-100 dark:hover:bg-blue-900/30">
+                            latest
+                        </Badge>
+                    )}
+
+                    {snapshot.branches.length > 0 &&
+                        snapshot.branches.map((branch) => (
+                            <Badge
+                                key={branch}
+                                className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 text-[10px] px-1.5 py-0 flex items-center gap-0.5 hover:bg-green-100 dark:hover:bg-green-900/30"
+                            >
+                                <GitBranch className="h-2 w-2" />
+                                {branch}
+                            </Badge>
+                        ))}
+
+                    {snapshot.tags.length > 0 &&
+                        snapshot.tags.map((tag) => (
+                            <Badge
+                                key={tag}
+                                className="bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 text-[10px] px-1.5 py-0 flex items-center gap-0.5 hover:bg-amber-100 dark:hover:bg-amber-900/30"
+                            >
+                                <Tag className="h-2 w-2" />
+                                {tag}
+                            </Badge>
+                        ))}
+                </div>
             </div>
 
-            {/* Date */}
-            <div className="text-xs text-muted-foreground flex-shrink-0 w-24">{formatDate(snapshot.timestamp)}</div>
-
-            {/* Operation type */}
-            <div className="text-xs font-medium w-20 flex-shrink-0">{operationType}</div>
-
-            {/* Badges - only show if present */}
-            <div className="flex items-center gap-1 flex-1 min-w-0 overflow-hidden">
-                {isLatest && (
-                    <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 text-[10px] px-1.5 py-0 hover:bg-blue-100 dark:hover:bg-blue-900/30">
-                        latest
-                    </Badge>
-                )}
-
-                {snapshot.branches.length > 0 &&
-                    snapshot.branches.map((branch) => (
-                        <Badge
-                            key={branch}
-                            className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 text-[10px] px-1.5 py-0 flex items-center gap-0.5 hover:bg-green-100 dark:hover:bg-green-900/30"
-                        >
-                            <GitBranch className="h-2 w-2" />
-                            {branch}
-                        </Badge>
-                    ))}
-
-                {snapshot.tags.length > 0 &&
-                    snapshot.tags.map((tag) => (
-                        <Badge
-                            key={tag}
-                            className="bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 text-[10px] px-1.5 py-0 flex items-center gap-0.5 hover:bg-amber-100 dark:hover:bg-amber-900/30"
-                        >
-                            <Tag className="h-2 w-2" />
-                            {tag}
-                        </Badge>
-                    ))}
-            </div>
+            {/* Manifest list expansion */}
+            {isExpanded && (
+                <div className="bg-muted/5 border-b last:border-b-0">
+                    {loadingManifest ? (
+                        <div className="p-4 text-sm text-muted-foreground">Loading manifest list...</div>
+                    ) : manifestList ? (
+                        <div className="p-4 space-y-4">
+                            <div className="text-sm font-medium">Manifest List</div>
+                            <div className="text-xs text-muted-foreground">
+                                Location: {manifestList.manifest_list_location}
+                            </div>
+                            <div className="space-y-2">
+                                {manifestList.manifests.map((manifest, index) => (
+                                    <ManifestItem
+                                        key={index}
+                                        manifest={manifest}
+                                        index={index}
+                                        catalog={catalog}
+                                        namespace={namespace}
+                                        table={table}
+                                        snapshotId={snapshot.id}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="p-4 text-sm text-muted-foreground">Failed to load manifest list</div>
+                    )}
+                </div>
+            )}
         </div>
     )
+}
+
+function ManifestItem({
+    manifest,
+    index,
+    catalog,
+    namespace,
+    table,
+    snapshotId,
+}: {
+    manifest: any
+    index: number
+    catalog: string
+    namespace: string
+    table: string
+    snapshotId: string | number
+}) {
+    const { toast } = useToast()
+    const [isExpanded, setIsExpanded] = useState(false)
+    const [manifestDetails, setManifestDetails] = useState<ManifestDetails | null>(null)
+    const [loadingDetails, setLoadingDetails] = useState(false)
+
+    const handleExpand = async () => {
+        if (isExpanded) {
+            setIsExpanded(false)
+            return
+        }
+
+        if (!manifestDetails) {
+            setLoadingDetails(true)
+            try {
+                const data = await getManifestDetails(catalog, namespace, table, snapshotId, index)
+                setManifestDetails(data)
+            } catch (error) {
+                toast({
+                    variant: "destructive",
+                    title: "Failed to load manifest details",
+                    description: errorToString(error),
+                })
+            } finally {
+                setLoadingDetails(false)
+            }
+        }
+        setIsExpanded(true)
+    }
+
+    // Helper function to get content badge color
+    const getContentBadgeColor = (content: string) => {
+        switch (content) {
+            case 'DATA':
+                return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
+            case 'DELETES':
+                return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+            default:
+                return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
+        }
+    }
+
+    return (
+        <div className="flex flex-col">
+            <div className="flex items-center gap-2 text-xs">
+                <button
+                    onClick={handleExpand}
+                    className="flex items-center justify-center w-4 h-4 rounded hover:bg-muted/40"
+                >
+                    {isExpanded ? (
+                        <ChevronDown className="h-3 w-3" />
+                    ) : (
+                        <ChevronRight className="h-3 w-3" />
+                    )}
+                </button>
+                <FileText className="h-3 w-3 text-muted-foreground" />
+                <span className="font-mono">{manifest.path}</span>
+                <div className="flex items-center gap-2">
+                    <Badge className={`${getContentBadgeColor(manifest.content)} text-[10px] px-1.5 py-0`}>
+                        {manifest.content}
+                    </Badge>
+                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                        <span className="text-green-600 dark:text-green-400">+{manifest.added_files_count}</span>
+                        <span className="text-gray-500">•</span>
+                        <span className="text-gray-500">{manifest.existing_files_count}</span>
+                        <span className="text-gray-500">•</span>
+                        <span className="text-red-600 dark:text-red-400">-{manifest.deleted_files_count}</span>
+                    </div>
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <button className="ml-2 p-1 rounded hover:bg-muted/40">
+                                <Info className="h-3 w-3 text-muted-foreground" />
+                            </button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-3xl">
+                            <DialogHeader>
+                                <DialogTitle>Manifest Details</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <div className="text-sm font-medium">Basic Information</div>
+                                    <div className="text-xs text-muted-foreground space-y-1">
+                                        <div>Path: {manifest.path}</div>
+                                        <div>Content: {manifest.content}</div>
+                                        <div>Sequence Number: {manifest.sequence_number}</div>
+                                        <div>Partition Spec ID: {manifest.partition_spec_id}</div>
+                                        <div>Length: {formatFileSize(manifest.length)}</div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <div className="text-sm font-medium">Statistics</div>
+                                    <div className="text-xs text-muted-foreground space-y-1">
+                                        {manifest.added_files_count !== undefined && (
+                                            <div>Added Files: {manifest.added_files_count}</div>
+                                        )}
+                                        {manifest.existing_files_count !== undefined && (
+                                            <div>Existing Files: {manifest.existing_files_count}</div>
+                                        )}
+                                        {manifest.deleted_files_count !== undefined && (
+                                            <div>Deleted Files: {manifest.deleted_files_count}</div>
+                                        )}
+                                        {manifest.added_rows_count !== undefined && (
+                                            <div>Added Rows: {manifest.added_rows_count}</div>
+                                        )}
+                                        {manifest.existing_rows_count !== undefined && (
+                                            <div>Existing Rows: {manifest.existing_rows_count}</div>
+                                        )}
+                                        {manifest.deleted_rows_count !== undefined && (
+                                            <div>Deleted Rows: {manifest.deleted_rows_count}</div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {manifestDetails && (
+                                    <div className="space-y-2">
+                                        <div className="text-sm font-medium">Files</div>
+                                        {manifestDetails.files.length > 0 ? (
+                                            <div className="space-y-3 max-h-[300px] overflow-y-auto">
+                                                {manifestDetails.files.map((file, fileIndex) => (
+                                                    <div key={fileIndex} className="text-xs font-mono pl-2 space-y-1 border-l-2 border-muted">
+                                                        <div className="text-muted-foreground">Path: {file.file_path}</div>
+                                                        <div className="text-muted-foreground">
+                                                            Size: {formatFileSize(file.file_size_in_bytes)}, Records: {file.record_count}
+                                                        </div>
+                                                        {file.content && (
+                                                            <div className="text-muted-foreground">
+                                                                Content: {file.content}, Format: {file.file_format}
+                                                            </div>
+                                                        )}
+                                                        {file.equality_ids && file.equality_ids.length > 0 && (
+                                                            <div className="text-muted-foreground">
+                                                                Equality Fields: {file.equality_ids.join(', ')}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="text-xs text-muted-foreground pl-2">
+                                                No files in this manifest
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </DialogContent>
+                    </Dialog>
+                </div>
+            </div>
+
+            {/* Manifest details expansion */}
+            {isExpanded && (
+                <div className="ml-6 mt-2 bg-muted/5 rounded p-4">
+                    {loadingDetails ? (
+                        <div className="text-xs text-muted-foreground">Loading manifest details...</div>
+                    ) : manifestDetails ? (
+                        <div className="space-y-4">
+                            <div className="text-sm font-medium">Files</div>
+                            {manifestDetails.files.length > 0 ? (
+                                <div className="space-y-3">
+                                    {manifestDetails.files.map((file, fileIndex) => (
+                                        <div key={fileIndex} className="text-xs font-mono pl-2 space-y-1">
+                                            <div className="text-muted-foreground">Path: {file.file_path}</div>
+                                            <div className="text-muted-foreground">
+                                                Size: {formatFileSize(file.file_size_in_bytes)}, Records: {file.record_count}
+                                            </div>
+                                            {file.content && (
+                                                <div className="text-muted-foreground">
+                                                    Content: {file.content}, Format: {file.file_format}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-xs text-muted-foreground pl-2">
+                                    No files in this manifest
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="text-xs text-muted-foreground">Failed to load manifest details</div>
+                    )}
+                </div>
+            )}
+        </div>
+    )
+}
+
+// Helper function to format file size
+function formatFileSize(bytes: number): string {
+    const units = ['B', 'KB', 'MB', 'GB', 'TB']
+    let size = bytes
+    let unitIndex = 0
+    while (size >= 1024 && unitIndex < units.length - 1) {
+        size /= 1024
+        unitIndex++
+    }
+    return `${size.toFixed(1)} ${units[unitIndex]}`
 }
 
 // Branch view component
 function BranchView({
     snapshots,
+    catalog,
+    namespace,
+    table,
 }: {
     snapshots: Snapshot[]
+    catalog: string
+    namespace: string
+    table: string
 }) {
     // Get all branch names
     const branches = useMemo(() => {
@@ -191,18 +513,20 @@ function BranchView({
                     {/* Branch snapshots */}
                     <div className="border rounded-md overflow-hidden bg-background ml-4 shadow-sm">
                         {/* Header row */}
-                        <div className="flex items-center gap-2 py-2 px-3 border-b bg-muted/30 text-xs font-medium text-muted-foreground">
-                            <div className="w-2"></div>
-                            <div className="w-16">ID</div>
-                            <div className="w-24">Date</div>
-                            <div className="w-20">Operation</div>
+                        <div className="flex items-center py-2 px-3 border-b bg-muted/30 text-xs font-medium text-muted-foreground">
+                            <div className="w-8 flex-shrink-0">
+                                {/* Expand button column */}
+                            </div>
+                            <div className="w-[300px] flex-shrink-0 pl-4">Snapshot ID</div>
+                            <div className="w-[140px] flex-shrink-0">Date</div>
+                            <div className="w-[100px] flex-shrink-0">Operation</div>
                             <div className="flex-1">References</div>
                         </div>
 
                         {/* Snapshot items */}
-                        <div className="max-h-[300px] overflow-y-auto">
+                        <div className="max-h-[calc(100vh-400px)] overflow-y-auto">
                             {snapshotsByBranch[branch].map((snapshot, index) => (
-                                <SnapshotItem key={snapshot.id} snapshot={snapshot} isLatest={index === 0} />
+                                <SnapshotItem key={snapshot.id} snapshot={snapshot} isLatest={index === 0} catalog={catalog} namespace={namespace} table={table} />
                             ))}
                         </div>
                     </div>
@@ -215,8 +539,14 @@ function BranchView({
 // Timeline view component
 function TimelineView({
     snapshots,
+    catalog,
+    namespace,
+    table,
 }: {
     snapshots: Snapshot[]
+    catalog: string
+    namespace: string
+    table: string
 }) {
     // Sort snapshots by timestamp (newest first)
     const sortedSnapshots = useMemo(() => {
@@ -227,18 +557,20 @@ function TimelineView({
         <div className="p-4">
             <div className="border rounded-md overflow-hidden bg-background shadow-sm">
                 {/* Header row */}
-                <div className="flex items-center gap-2 py-2 px-3 border-b bg-muted/30 text-xs font-medium text-muted-foreground">
-                    <div className="w-2"></div>
-                    <div className="w-16">ID</div>
-                    <div className="w-24">Date</div>
-                    <div className="w-20">Operation</div>
+                <div className="flex items-center py-2 px-3 border-b bg-muted/30 text-xs font-medium text-muted-foreground">
+                    <div className="w-8 flex-shrink-0">
+                        {/* Expand button column */}
+                    </div>
+                    <div className="w-[300px] flex-shrink-0 pl-4">Snapshot ID</div>
+                    <div className="w-[140px] flex-shrink-0">Date</div>
+                    <div className="w-[100px] flex-shrink-0">Operation</div>
                     <div className="flex-1">References</div>
                 </div>
 
                 {/* Snapshot items */}
-                <div className="max-h-[400px] overflow-y-auto">
+                <div className="max-h-[calc(100vh-400px)] overflow-y-auto">
                     {sortedSnapshots.map((snapshot, index) => (
-                        <SnapshotItem key={snapshot.id} snapshot={snapshot} isLatest={index === 0} />
+                        <SnapshotItem key={snapshot.id} snapshot={snapshot} isLatest={index === 0} catalog={catalog} namespace={namespace} table={table} />
                     ))}
                 </div>
             </div>
@@ -246,7 +578,7 @@ function TimelineView({
     )
 }
 
-export function SnapshotsTab({ tableData }: SnapshotsTabProps) {
+export function SnapshotsTab({ tableData, catalog, namespace, table }: SnapshotsTabProps) {
     // const { toast } = useToast()
     // const [manifestListData, setManifestListData] = useState<{
     //     snapshot_id: string
@@ -254,7 +586,7 @@ export function SnapshotsTab({ tableData }: SnapshotsTabProps) {
     //     manifests: any[]
     // } | null>(null)
 
-    const [activeView, setActiveView] = useState<string>("branch")
+    const [activeView, setActiveView] = useState<string>("timeline")
 
     // Process snapshots, branches and tags into a unified data structure
     const snapshots = useMemo(() => {
@@ -310,16 +642,16 @@ export function SnapshotsTab({ tableData }: SnapshotsTabProps) {
                 </Card>
             ) : (
                 <Card className="border-muted/70 shadow-sm overflow-hidden">
-                    <Tabs defaultValue="branch" value={activeView} onValueChange={setActiveView}>
+                    <Tabs defaultValue="timeline" value={activeView} onValueChange={setActiveView}>
                         <div className="flex justify-between items-center p-4 border-b">
                             <TabsList>
+                                <TabsTrigger value="timeline" className="flex items-center gap-1.5">
+                                    <Calendar className="h-4 w-4" />
+                                    Snapshots
+                                </TabsTrigger>
                                 <TabsTrigger value="branch" className="flex items-center gap-1.5">
                                     <GitBranch className="h-4 w-4" />
                                     Branch View
-                                </TabsTrigger>
-                                <TabsTrigger value="timeline" className="flex items-center gap-1.5">
-                                    <Calendar className="h-4 w-4" />
-                                    Timeline View
                                 </TabsTrigger>
                             </TabsList>
 
@@ -344,13 +676,13 @@ export function SnapshotsTab({ tableData }: SnapshotsTabProps) {
                             </div>
                         </div>
 
-                        <div className="h-[500px] overflow-auto">
-                            <TabsContent value="branch" className="mt-0 h-full">
-                                <BranchView snapshots={snapshots} />
+                        <div className="h-[calc(100vh-300px)] overflow-auto">
+                            <TabsContent value="timeline" className="mt-0 h-full">
+                                <TimelineView snapshots={snapshots} catalog={catalog} namespace={namespace} table={table} />
                             </TabsContent>
 
-                            <TabsContent value="timeline" className="mt-0 h-full">
-                                <TimelineView snapshots={snapshots} />
+                            <TabsContent value="branch" className="mt-0 h-full">
+                                <BranchView snapshots={snapshots} catalog={catalog} namespace={namespace} table={table} />
                             </TabsContent>
                         </div>
                     </Tabs>

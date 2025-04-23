@@ -149,10 +149,9 @@ public class ManifestServlet extends HttpServlet {
                 rootNode.put("content", manifest.content().name());
                 var filesNode = objectMapper.createArrayNode();
 
-                var reader = ManifestFiles.read(manifest, fileIO, table.specs());
                 switch (manifest.content()) {
                     case DATA:
-                        for (DataFile file : reader) {
+                        for (DataFile file : ManifestFiles.read(manifest, fileIO, table.specs())) {
                             filesNode.add(dataFileToJson(file));
                         }
                         break;
