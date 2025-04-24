@@ -17,11 +17,9 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { RefreshCw } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { errorToString } from "@/lib/utils"
-import { getFileDistribution, type DistributionData } from "@/lib/data-loader"
+import { getFileDistribution } from "@/lib/data-loader"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 
 interface SnapshotTrendProps {
