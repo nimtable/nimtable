@@ -40,6 +40,7 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { Button } from "@/components/ui/button"
+import { SnapshotTrend } from "@/components/table/snapshot-trend"
 
 interface SnapshotsTabProps {
     tableData: LoadTableResult
@@ -676,52 +677,60 @@ export function SnapshotsTab({ tableData, catalog, namespace, table }: Snapshots
                     </CardContent>
                 </Card>
             ) : (
-                <Card className="border-muted/70 shadow-sm overflow-hidden">
-                    <Tabs defaultValue="timeline" value={activeView} onValueChange={setActiveView}>
-                        <div className="flex justify-between items-center p-4 border-b">
-                            <TabsList>
-                                <TabsTrigger value="timeline" className="flex items-center gap-1.5">
-                                    <Calendar className="h-4 w-4" />
-                                    Snapshots
-                                </TabsTrigger>
-                                <TabsTrigger value="branch" className="flex items-center gap-1.5">
-                                    <GitBranch className="h-4 w-4" />
-                                    Branch View
-                                </TabsTrigger>
-                            </TabsList>
+                <>
+                    <SnapshotTrend
+                        catalog={catalog}
+                        namespace={namespace}
+                        table={table}
+                        snapshots={snapshots}
+                    />
+                    <Card className="border-muted/70 shadow-sm overflow-hidden">
+                        <Tabs defaultValue="timeline" value={activeView} onValueChange={setActiveView}>
+                            <div className="flex justify-between items-center p-4 border-b">
+                                <TabsList>
+                                    <TabsTrigger value="timeline" className="flex items-center gap-1.5">
+                                        <Calendar className="h-4 w-4" />
+                                        Snapshots
+                                    </TabsTrigger>
+                                    <TabsTrigger value="branch" className="flex items-center gap-1.5">
+                                        <GitBranch className="h-4 w-4" />
+                                        Branch View
+                                    </TabsTrigger>
+                                </TabsList>
 
-                            {/* Legend */}
-                            <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                                <div className="flex items-center gap-1.5">
-                                    <div className="h-3 w-3 rounded-full bg-green-500"></div>
-                                    <span>Append</span>
-                                </div>
-                                <div className="flex items-center gap-1.5">
-                                    <div className="h-3 w-3 rounded-full bg-amber-500"></div>
-                                    <span>Overwrite</span>
-                                </div>
-                                <div className="flex items-center gap-1.5">
-                                    <div className="h-3 w-3 rounded-full bg-blue-500"></div>
-                                    <span>Replace</span>
-                                </div>
-                                <div className="flex items-center gap-1.5">
-                                    <div className="h-3 w-3 rounded-full bg-red-500"></div>
-                                    <span>Delete</span>
+                                {/* Legend */}
+                                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                                    <div className="flex items-center gap-1.5">
+                                        <div className="h-3 w-3 rounded-full bg-green-500"></div>
+                                        <span>Append</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        <div className="h-3 w-3 rounded-full bg-amber-500"></div>
+                                        <span>Overwrite</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        <div className="h-3 w-3 rounded-full bg-blue-500"></div>
+                                        <span>Replace</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        <div className="h-3 w-3 rounded-full bg-red-500"></div>
+                                        <span>Delete</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div className="h-[calc(100vh-300px)] overflow-auto">
-                            <TabsContent value="timeline" className="mt-0 h-full">
-                                <TimelineView snapshots={snapshots} catalog={catalog} namespace={namespace} table={table} />
-                            </TabsContent>
+                            <div className="h-[calc(100vh-300px)] overflow-auto">
+                                <TabsContent value="timeline" className="mt-0 h-full">
+                                    <TimelineView snapshots={snapshots} catalog={catalog} namespace={namespace} table={table} />
+                                </TabsContent>
 
-                            <TabsContent value="branch" className="mt-0 h-full">
-                                <BranchView snapshots={snapshots} catalog={catalog} namespace={namespace} table={table} />
-                            </TabsContent>
-                        </div>
-                    </Tabs>
-                </Card>
+                                <TabsContent value="branch" className="mt-0 h-full">
+                                    <BranchView snapshots={snapshots} catalog={catalog} namespace={namespace} table={table} />
+                                </TabsContent>
+                            </div>
+                        </Tabs>
+                    </Card>
+                </>
             )}
         </div>
     )

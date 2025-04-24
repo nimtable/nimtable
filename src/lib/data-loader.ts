@@ -203,17 +203,21 @@ export interface DistributionData {
 }
 
 /**
- * Get file size distribution for a table
+ * Get file size distribution for a table, optionally at a specific snapshot
  */
 export async function getFileDistribution(
     catalog: string,
     namespace: string,
     tableId: string,
+    snapshotId?: string,
 ): Promise<DistributionData> {
-    const response = await fetch(`/api/distribution/${catalog}/${namespace}/${tableId}`);
+    const url = snapshotId 
+        ? `/api/distribution/${catalog}/${namespace}/${tableId}/${snapshotId}`
+        : `/api/distribution/${catalog}/${namespace}/${tableId}`;
+    
+    const response = await fetch(url);
     if (response.ok) {
-        const data = await response.json();
-        return data;
+        return await response.json();
     }
     return {
         ranges: {
