@@ -13,6 +13,7 @@ import {
     Table2,
     Hash,
     Calendar,
+    Info,
 } from "lucide-react"
 import { notFound, useSearchParams } from "next/navigation"
 import Link from "next/link"
@@ -20,6 +21,7 @@ import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useToast } from "@/hooks/use-toast"
 import { errorToString, cn } from "@/lib/utils"
 import { SidebarInset } from "@/components/ui/sidebar"
@@ -140,8 +142,9 @@ export default function NamespacePage(): JSX.Element {
     const filteredTables = tables.filter((table) => table.name.toLowerCase().includes(searchQuery.toLowerCase()))
 
     // Format file size for display
-    const formatFileSize = (bytes: number): string => {
+    const formatFileSize = (bytes: number | null): string => {
         if (bytes === 0) return "0 Bytes"
+        if (!bytes) return "Unknown"
         const k = 1024
         const sizes = ["Bytes", "KB", "MB", "GB", "TB"]
         const i = Math.floor(Math.log(bytes) / Math.log(k))
@@ -206,66 +209,99 @@ export default function NamespacePage(): JSX.Element {
                             <CardContent className="p-0">
                                 {filteredTables.length > 0 ? (
                                     <div className="overflow-hidden">
-                                        <Table>
-                                            <TableHeader>
-                                                <TableRow className="bg-muted/30">
-                                                    <TableHead className="font-medium">Table Name</TableHead>
-                                                    <TableHead className="font-medium">Format Version</TableHead>
-                                                    <TableHead className="font-medium">Total Data Size</TableHead>
-                                                    <TableHead className="font-medium">Partitioning Strategy</TableHead>
-                                                    <TableHead className="w-[100px] font-medium">Actions</TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {filteredTables.map((table, index) => (
-                                                    <TableRow
-                                                        key={table.name}
-                                                        className={cn(
-                                                            "hover:bg-muted/30 transition-colors",
-                                                            index < filteredTables.length - 1 ? "border-b border-muted/30" : "",
-                                                        )}
-                                                    >
-                                                        <TableCell className="font-medium">
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="p-1.5 rounded-md bg-blue-50 dark:bg-blue-950/30">
-                                                                    <Table2 className="h-3.5 w-3.5 text-blue-500" />
-                                                                </div>
-                                                                {table.name}
-                                                            </div>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <span
+                                        <TooltipProvider>
+                                            <Table>
+                                                <TableHeader>
+                                                    <TableRow className="bg-muted/30">
+                                                        <TableHead className="font-medium">Table Name</TableHead>
+                                                        <TableHead className="font-medium">Format Version</TableHead>
+                                                        <TableHead className="font-medium">
+                                                            <Tooltip delayDuration={100}>
+                                                                <TooltipTrigger asChild>
+                                                                    <div className="flex items-center gap-1 cursor-help">
+                                                                        Total Data Size
+                                                                        <Info className="h-3 w-3 text-muted-foreground" />
+                                                                    </div>
+                                                                </TooltipTrigger>
+                                                                <TooltipContent>
+                                                                    <p>Based on statistics in table metadata</p>
+                                                                </TooltipContent>
+                                                            </Tooltip>
+                                                        </TableHead>
+                                                        <TableHead className="font-medium">Partitioning Strategy</TableHead>
+                                                        <TableHead className="w-[100px] font-medium">Actions</TableHead>
+                                                    </TableRow>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {filteredTables.map((table, index) => {
+                                                        const formattedSize = formatFileSize(table.dataSizeBytes)
+                                                        const isSizeUnknown = formattedSize === "Unknown"
+
+                                                        return (
+                                                            <TableRow
+                                                                key={table.name}
                                                                 className={cn(
-                                                                    "px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 w-fit",
-                                                                    table.formatVersion === "v2"
-                                                                        ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                                                                        : "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+                                                                    "hover:bg-muted/30 transition-colors",
+                                                                    index < filteredTables.length - 1 ? "border-b border-muted/30" : "",
                                                                 )}
                                                             >
-                                                                <FileType className="h-3 w-3" />
-                                                                {table.formatVersion}
-                                                            </span>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <div className="flex items-center gap-2">
-                                                                <HardDrive className="h-3.5 w-3.5 text-muted-foreground" />
-                                                                {formatFileSize(table.dataSizeBytes)}
-                                                            </div>
-                                                        </TableCell>
-                                                        <TableCell>{renderPartitionSpecs(table.partitionSpecs)}</TableCell>
-                                                        <TableCell>
-                                                            <Link
-                                                                href={`/table?catalog=${catalog}&namespace=${namespace}&table=${table.name}`}
-                                                                className="inline-flex items-center h-8 px-3 text-sm font-medium text-blue-600 rounded-md hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-colors"
-                                                            >
-                                                                <FileText className="mr-1.5 h-3.5 w-3.5" />
-                                                                View
-                                                            </Link>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
+                                                                <TableCell className="font-medium">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <div className="p-1.5 rounded-md bg-blue-50 dark:bg-blue-950/30">
+                                                                            <Table2 className="h-3.5 w-3.5 text-blue-500" />
+                                                                        </div>
+                                                                        {table.name}
+                                                                    </div>
+                                                                </TableCell>
+                                                                <TableCell>
+                                                                    <span
+                                                                        className={cn(
+                                                                            "px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 w-fit",
+                                                                            table.formatVersion === "v2"
+                                                                                ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                                                                                : "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+                                                                        )}
+                                                                    >
+                                                                        <FileType className="h-3 w-3" />
+                                                                        {table.formatVersion}
+                                                                    </span>
+                                                                </TableCell>
+                                                                <TableCell>
+                                                                    {isSizeUnknown ? (
+                                                                        <Tooltip delayDuration={100}>
+                                                                            <TooltipTrigger asChild>
+                                                                                <div className="flex items-center gap-2 cursor-help">
+                                                                                    <HardDrive className="h-3.5 w-3.5 text-muted-foreground" />
+                                                                                    {formattedSize}
+                                                                                </div>
+                                                                            </TooltipTrigger>
+                                                                            <TooltipContent>
+                                                                                <p>Table statistics not found</p>
+                                                                            </TooltipContent>
+                                                                        </Tooltip>
+                                                                    ) : (
+                                                                            <div className="flex items-center gap-2">
+                                                                                <HardDrive className="h-3.5 w-3.5 text-muted-foreground" />
+                                                                                {formattedSize}
+                                                                            </div>
+                                                                    )}
+                                                                </TableCell>
+                                                                <TableCell>{renderPartitionSpecs(table.partitionSpecs)}</TableCell>
+                                                                <TableCell>
+                                                                    <Link
+                                                                        href={`/table?catalog=${catalog}&namespace=${namespace}&table=${table.name}`}
+                                                                        className="inline-flex items-center h-8 px-3 text-sm font-medium text-blue-600 rounded-md hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-colors"
+                                                                    >
+                                                                        <FileText className="mr-1.5 h-3.5 w-3.5" />
+                                                                        View
+                                                                    </Link>
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        )
+                                                    })}
+                                                </TableBody>
+                                            </Table>
+                                        </TooltipProvider>
                                     </div>
                                 ) : (
                                     <div className="flex justify-center items-center py-16">

@@ -162,7 +162,7 @@ export async function getManifestDetails(
 export interface NamespaceTable {
     name: string
     formatVersion: string
-    dataSizeBytes: number
+    dataSizeBytes: number | null
     partitionSpecs: PartitionSpec[]
     lastUpdated: number
 }
@@ -175,7 +175,7 @@ export async function getNamespaceTables(catalog: string, namespace: string): Pr
         return {
             name: table.name,
             formatVersion: tableResponse.metadata['format-version'] || "",
-            dataSizeBytes: tableResponse.metadata.statistics?.[0]?.["file-size-in-bytes"] || 0,
+            dataSizeBytes: tableResponse.metadata.statistics?.[0]?.["file-size-in-bytes"] || null,
             partitionSpecs: tableResponse.metadata["partition-specs"] || [],
             lastUpdated: tableResponse.metadata['last-updated-ms'] || 0,
         }
