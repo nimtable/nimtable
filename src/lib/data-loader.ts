@@ -235,6 +235,40 @@ export async function getFileDistribution(
     };
 }
 
+/**
+ * Get file size distribution for a table at a specific snapshot
+ */
+export async function getSnapshotDistribution(
+    catalog: string,
+    namespace: string,
+    tableId: string,
+    snapshotId: string,
+): Promise<DistributionData> {
+    const response = await fetch(`/api/distribution/${catalog}/${namespace}/${tableId}/${snapshotId}`);
+    if (response.ok) {
+        const data = await response.json();
+        return data;
+    }
+    return {
+        ranges: {
+            "0-8M": { count: 0, percentage: 0 },
+            "8M-32M": { count: 0, percentage: 0 },
+            "32M-128M": { count: 0, percentage: 0 },
+            "128M-512M": { count: 0, percentage: 0 },
+            "512M+": { count: 0, percentage: 0 }
+        },
+        dataFileCount: 0,
+        positionDeleteFileCount: 0,
+        eqDeleteFileCount: 0,
+        dataFileSizeInBytes: 0,
+        positionDeleteFileSizeInBytes: 0,
+        eqDeleteFileSizeInBytes: 0,
+        dataFileRecordCount: 0,
+        positionDeleteFileRecordCount: 0,
+        eqDeleteFileRecordCount: 0
+    };
+}
+
 export type OptimizationOperation = "Compaction" | "Snapshot Expiration" | "Orphan File Cleanup"
 
 export interface OptimizationSettings {
