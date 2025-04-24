@@ -203,51 +203,21 @@ export interface DistributionData {
 }
 
 /**
- * Get file size distribution for a table
+ * Get file size distribution for a table, optionally at a specific snapshot
  */
 export async function getFileDistribution(
     catalog: string,
     namespace: string,
     tableId: string,
+    snapshotId?: string,
 ): Promise<DistributionData> {
-    const response = await fetch(`/api/distribution/${catalog}/${namespace}/${tableId}`);
+    const url = snapshotId 
+        ? `/api/distribution/${catalog}/${namespace}/${tableId}/${snapshotId}`
+        : `/api/distribution/${catalog}/${namespace}/${tableId}`;
+    
+    const response = await fetch(url);
     if (response.ok) {
-        const data = await response.json();
-        return data;
-    }
-    return {
-        ranges: {
-            "0-8M": { count: 0, percentage: 0 },
-            "8M-32M": { count: 0, percentage: 0 },
-            "32M-128M": { count: 0, percentage: 0 },
-            "128M-512M": { count: 0, percentage: 0 },
-            "512M+": { count: 0, percentage: 0 }
-        },
-        dataFileCount: 0,
-        positionDeleteFileCount: 0,
-        eqDeleteFileCount: 0,
-        dataFileSizeInBytes: 0,
-        positionDeleteFileSizeInBytes: 0,
-        eqDeleteFileSizeInBytes: 0,
-        dataFileRecordCount: 0,
-        positionDeleteFileRecordCount: 0,
-        eqDeleteFileRecordCount: 0
-    };
-}
-
-/**
- * Get file size distribution for a table at a specific snapshot
- */
-export async function getSnapshotDistribution(
-    catalog: string,
-    namespace: string,
-    tableId: string,
-    snapshotId: string,
-): Promise<DistributionData> {
-    const response = await fetch(`/api/distribution/${catalog}/${namespace}/${tableId}/${snapshotId}`);
-    if (response.ok) {
-        const data = await response.json();
-        return data;
+        return await response.json();
     }
     return {
         ranges: {

@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button"
 import { RefreshCw } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { errorToString } from "@/lib/utils"
-import { getSnapshotDistribution, type DistributionData } from "@/lib/data-loader"
+import { getFileDistribution, type DistributionData } from "@/lib/data-loader"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 
 interface SnapshotTrendProps {
@@ -47,7 +47,7 @@ export function SnapshotTrend({ catalog, namespace, table, snapshots }: Snapshot
             setLoading(true)
             const results = await Promise.all(
                 snapshots.map(async (snapshot) => {
-                    const distribution = await getSnapshotDistribution(
+                    const distribution = await getFileDistribution(
                         catalog,
                         namespace,
                         table,
