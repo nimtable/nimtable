@@ -20,7 +20,7 @@
 </div>
 
 
-![Screenshot](./docs/screenshot.png)
+![Screenshot](./docs/screenshot1.png)
 
 
 ## Overview
