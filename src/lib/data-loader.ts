@@ -358,3 +358,11 @@ export async function fetchSampleData(
     };
 }
 
+export async function deleteCatalog(catalog: string): Promise<void> {
+    const response = await fetch(`/api/catalogs/${encodeURIComponent(catalog)}`, {
+        method: 'DELETE'
+    })
+    if (!response.ok) {
+        throw new Error(`Failed to delete catalog: ${response.statusText}`)
+    }
+}
