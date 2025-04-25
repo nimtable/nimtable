@@ -16,11 +16,12 @@
 "use client"
 
 import * as React from "react"
-import { Database, RefreshCw, ServerCrash, FolderSearch, AlertCircle, LogOut, Plus } from "lucide-react"
+import { Database, RefreshCw, ServerCrash, FolderSearch, AlertCircle, LogOut, Plus, Search } from "lucide-react"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Input } from "@/components/ui/input"
 import {
   Sidebar,
   SidebarContent,
@@ -53,7 +54,7 @@ function AppSidebarContent() {
   const [namespaces, setNamespaces] = React.useState<NamespaceTables[]>([])
   const [catalogListLoading, setCatalogListLoading] = React.useState(true)
   const [namespacesLoading, setNamespacesLoading] = React.useState(false)
-
+  const [searchQuery, setSearchQuery] = React.useState("")
 
   // Load catalogs on mount and when refresh is triggered
   React.useEffect(() => {
@@ -151,6 +152,55 @@ function AppSidebarContent() {
     })
   }, [refresh, toast])
 
+  // Filter namespaces and tables based on search query
+  const filteredNamespaces = React.useMemo(() => {
+    if (!searchQuery) return namespaces
+
+    const searchLower = searchQuery.toLowerCase()
+    
+    // Helper function to check if search string is a subsequence of the target
+    const isSubsequence = (search: string, target: string) => {
+      const cleanTarget = target.replace(/[_-]/g, '').toLowerCase()
+      let searchIndex = 0
+      let targetIndex = 0
+      
+      while (searchIndex < search.length && targetIndex < cleanTarget.length) {
+        if (search[searchIndex] === cleanTarget[targetIndex]) {
+          searchIndex++
+        }
+        targetIndex++
+      }
+      
+      return searchIndex === search.length
+    }
+
+    return namespaces.map(namespace => {
+      const filteredTables = namespace.tables.filter(table => 
+        table.toLowerCase().includes(searchLower) || // Exact match
+        isSubsequence(searchLower, table) // Subsequence match
+      )
+      const filteredChildren = namespace.children.map(child => {
+        const childFilteredTables = child.tables.filter(table => 
+          table.toLowerCase().includes(searchLower) || // Exact match
+          isSubsequence(searchLower, table) // Subsequence match
+        )
+        return {
+          ...child,
+          tables: childFilteredTables
+        }
+      }).filter(child => child.tables.length > 0)
+
+      return {
+        ...namespace,
+        tables: filteredTables,
+        children: filteredChildren
+      }
+    }).filter(namespace => 
+      namespace.tables.length > 0 || 
+      namespace.children.some(child => child.tables.length > 0)
+    )
+  }, [namespaces, searchQuery])
+
   // Don't render sidebar if user is not authenticated or on login page
   if (!user || isLoginPage) {
     return null
@@ -161,92 +211,97 @@ function AppSidebarContent() {
       <SidebarContent>
         <SidebarHeader className="border-b p-3 bg-muted/30">
           {catalogs.length > 0 ? (
-            <div className="flex items-center gap-2">
-              <div className="flex-1">
-                <Select
-                  disabled={catalogListLoading || isRefreshing}
-                  value={catalog as string}
-                  onValueChange={(value) => {
-                    // Update the URL with the catalog parameter without navigation
-                    const url = new URL(window.location.href)
-                    url.searchParams.set("catalog", value)
-                    window.history.replaceState({}, "", url.toString())
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <div className="flex-1">
+                  <Select
+                    disabled={catalogListLoading || isRefreshing}
+                    value={catalog as string}
+                    onValueChange={(value) => {
+                      if (value === "new") {
+                        router.push("/catalog/new")
+                        return
+                      }
+                      
+                      // Update the URL with the catalog parameter without navigation
+                      const url = new URL(window.location.href)
+                      url.searchParams.set("catalog", value)
+                      window.history.replaceState({}, "", url.toString())
 
-                    // Only navigate to catalog page if we're already on a catalog-related page
-                    const pathname = window.location.pathname
-                    if (
-                      pathname.startsWith("/catalog") ||
-                      pathname.startsWith("/namespace") ||
-                      pathname.startsWith("/table")
-                    ) {
-                      router.push(`/catalog?catalog=${value}`)
-                    }
-                  }}
-                >
-                  <SelectTrigger className="h-9 bg-background border-muted-foreground/20 hover:border-blue-400 hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors">
-                    <Database className="mr-2 h-4 w-4 text-blue-500" />
-                    <SelectValue placeholder={catalogListLoading ? "Loading catalogs..." : "Select catalog"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {catalogs.map((catalog) => (
+                      // Only navigate to catalog page if we're already on a catalog-related page
+                      const pathname = window.location.pathname
+                      if (
+                        pathname.startsWith("/catalog") ||
+                        pathname.startsWith("/namespace") ||
+                        pathname.startsWith("/table")
+                      ) {
+                        router.push(`/catalog?catalog=${value}`)
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="h-9 bg-background border-muted-foreground/20 hover:border-blue-400 hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors">
+                      <Database className="mr-2 h-4 w-4 text-blue-500" />
+                      <SelectValue placeholder={catalogListLoading ? "Loading catalogs..." : "Select catalog"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {catalogs.map((catalog) => (
+                        <SelectItem
+                          key={catalog}
+                          value={catalog}
+                          className="font-medium hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                        >
+                          {catalog}
+                        </SelectItem>
+                      ))}
                       <SelectItem
-                        key={catalog}
-                        value={catalog}
+                        value="new"
                         className="font-medium hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                       >
-                        {catalog}
+                        <div className="flex items-center gap-2">
+                          <Plus className="h-4 w-4" />
+                          <span>New Catalog</span>
+                        </div>
                       </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <TooltipProvider delayDuration={300}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-9 w-9 flex-shrink-0 border-muted-foreground/20 hover:border-blue-400 hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors"
-                      onClick={() => router.push("/catalog/new")}
-                    >
-                      <Plus className="h-4 w-4 text-blue-500" />
-                      <span className="sr-only">New Catalog</span>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    <p>Create new catalog</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-
-              <TooltipProvider delayDuration={300}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className={cn(
-                        "h-9 w-9 flex-shrink-0 border-muted-foreground/20 transition-all duration-200",
-                        isRefreshing && "border-blue-500/50 bg-blue-500/10",
-                      )}
-                      onClick={handleRefresh}
-                      disabled={isRefreshing || catalogListLoading}
-                    >
-                      <RefreshCw
+                    </SelectContent>
+                  </Select>
+                </div>
+                <TooltipProvider delayDuration={300}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
                         className={cn(
-                          "h-4 w-4",
-                          isRefreshing ? "animate-spin text-blue-500" : "text-muted-foreground/50",
+                          "h-9 w-9 flex-shrink-0 border-muted-foreground/20 transition-all duration-200",
+                          isRefreshing && "border-blue-500/50 bg-blue-500/10",
                         )}
-                      />
-                      <span className="sr-only">Refresh</span>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    <p>Refresh catalog data</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+                        onClick={handleRefresh}
+                        disabled={isRefreshing || catalogListLoading}
+                      >
+                        <RefreshCw
+                          className={cn(
+                            "h-4 w-4",
+                            isRefreshing ? "animate-spin text-blue-500" : "text-muted-foreground/50",
+                          )}
+                        />
+                        <span className="sr-only">Refresh</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      <p>Refresh catalog data</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <div className="relative">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search tables..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8 h-9 bg-background border-muted-foreground/20 hover:border-blue-400 hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors"
+                />
+              </div>
             </div>
           ) : (
             <div className="flex items-center gap-2">
@@ -324,19 +379,22 @@ function AppSidebarContent() {
               <div className="h-8 bg-muted/30 rounded-md animate-pulse opacity-40 w-3/4" />
               <div className="h-8 bg-muted/30 rounded-md animate-pulse opacity-20 w-1/2" />
             </div>
-          ) : namespaces.length === 0 && catalog ? (
+          ) : filteredNamespaces.length === 0 && catalog ? (
             <div className="flex flex-col items-center justify-center gap-3 py-10 px-4 text-center mt-4">
               <ServerCrash className="h-8 w-8 text-muted-foreground" />
-              <span className="text-sm font-medium">No namespaces found</span>
+              <span className="text-sm font-medium">No tables found</span>
               <p className="text-xs text-muted-foreground max-w-[200px]">
-                The catalog <span className="font-medium text-foreground">&quot;{catalog}&quot;</span> doesn&apos;t contain any
-                namespaces.
+                {searchQuery ? (
+                  <>No tables matching &quot;{searchQuery}&quot; were found.</>
+                ) : (
+                  <>The catalog <span className="font-medium text-foreground">&quot;{catalog}&quot;</span> doesn&apos;t contain any tables.</>
+                )}
               </p>
             </div>
           ) : (
             <div className="mt-1">
               <SidebarMenu>
-                {namespaces.map((namespace) => (
+                {filteredNamespaces.map((namespace) => (
                   <SidebarMenuItem key={namespace.name} className="mb-1">
                     <NamespaceTreeItem catalog={catalog as string} namespace={namespace} />
                   </SidebarMenuItem>

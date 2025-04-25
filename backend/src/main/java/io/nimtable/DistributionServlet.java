@@ -54,18 +54,19 @@ public class DistributionServlet extends HttpServlet {
             return;
         }
 
-        // Parse path: /catalogName/namespace/table
+        // Parse path: /catalogName/namespace/table[/snapshot-id]
         String[] parts = pathInfo.split("/");
-        if (parts.length != 4) {
+        if (parts.length < 4 || parts.length > 5) {
             response.sendError(
                     HttpServletResponse.SC_BAD_REQUEST,
-                    "Invalid path format. Expected: /catalogName/namespace/table");
+                    "Invalid path format. Expected: /catalogName/namespace/table[/snapshot-id]");
             return;
         }
 
         String catalogName = parts[1];
         String namespace = parts[2];
         String tableName = parts[3];
+        String snapshotId = parts.length > 4 ? parts[4] : null;
 
         try {
             Map<String, String> properties;
@@ -92,7 +93,7 @@ public class DistributionServlet extends HttpServlet {
 
             Table table = catalog.loadTable(TableIdentifier.of(namespace, tableName));
 
-            DataDistribution dataDistribution = calculateDistributionStats(table);
+            DataDistribution dataDistribution = calculateDistributionStats(table, snapshotId);
             int totalFiles = 0;
             for (Map.Entry<String, Integer> entry : dataDistribution.ranges.entrySet()) {
                 totalFiles += entry.getValue();
@@ -121,6 +122,11 @@ public class DistributionServlet extends HttpServlet {
                     "positionDeleteFileSizeInBytes",
                     dataDistribution.positionDeleteFileSizeInBytes);
             rootNode.put("eqDeleteFileSizeInBytes", dataDistribution.eqDeleteFileSizeInBytes);
+            rootNode.put("dataFileRecordCount", dataDistribution.dataFileRecordCount);
+            rootNode.put(
+                    "positionDeleteFileRecordCount",
+                    dataDistribution.positionDeleteFileRecordCount);
+            rootNode.put("eqDeleteFileRecordCount", dataDistribution.eqDeleteFileRecordCount);
 
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
@@ -138,11 +144,23 @@ public class DistributionServlet extends HttpServlet {
         int dataFileSizeInBytes;
         int positionDeleteFileSizeInBytes;
         int eqDeleteFileSizeInBytes;
+        int dataFileRecordCount;
+        int positionDeleteFileRecordCount;
+        int eqDeleteFileRecordCount;
         Map<String, Integer> ranges;
     }
 
-    private DataDistribution calculateDistributionStats(Table table) {
-        var snapshot = table.currentSnapshot();
+    private DataDistribution calculateDistributionStats(Table table, String snapshotId) {
+        Snapshot snapshot;
+        if (snapshotId != null) {
+            snapshot = table.snapshot(Long.parseLong(snapshotId));
+            if (snapshot == null) {
+                throw new IllegalArgumentException("Snapshot not found: " + snapshotId);
+            }
+        } else {
+            snapshot = table.currentSnapshot();
+        }
+
         DataDistribution dataDistribution = new DataDistribution();
         Map<String, Integer> distribution = new HashMap<>();
         distribution.put("0-8M", 0);
@@ -165,6 +183,7 @@ public class DistributionServlet extends HttpServlet {
                             processFileSize(distribution, file.fileSizeInBytes());
                             dataDistribution.dataFileCount += 1;
                             dataDistribution.dataFileSizeInBytes += file.fileSizeInBytes();
+                            dataDistribution.dataFileRecordCount += file.recordCount();
                         }
                         break;
                     case DELETES:
@@ -174,10 +193,13 @@ public class DistributionServlet extends HttpServlet {
                             if (file.content() == FileContent.EQUALITY_DELETES) {
                                 dataDistribution.eqDeleteFileCount += 1;
                                 dataDistribution.eqDeleteFileSizeInBytes += file.fileSizeInBytes();
+                                dataDistribution.eqDeleteFileRecordCount += file.recordCount();
                             } else if (file.content() == FileContent.POSITION_DELETES) {
                                 dataDistribution.positionDeleteFileCount += 1;
                                 dataDistribution.positionDeleteFileSizeInBytes +=
                                         file.fileSizeInBytes();
+                                dataDistribution.positionDeleteFileRecordCount +=
+                                        file.recordCount();
                             }
                         }
                         break;

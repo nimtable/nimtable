@@ -162,7 +162,7 @@ export async function getManifestDetails(
 export interface NamespaceTable {
     name: string
     formatVersion: string
-    dataSizeBytes: number
+    dataSizeBytes: number | null
     partitionSpecs: PartitionSpec[]
     lastUpdated: number
 }
@@ -175,7 +175,7 @@ export async function getNamespaceTables(catalog: string, namespace: string): Pr
         return {
             name: table.name,
             formatVersion: tableResponse.metadata['format-version'] || "",
-            dataSizeBytes: tableResponse.metadata.statistics?.[0]?.["file-size-in-bytes"] || 0,
+            dataSizeBytes: tableResponse.metadata.statistics?.[0]?.["file-size-in-bytes"] || null,
             partitionSpecs: tableResponse.metadata["partition-specs"] || [],
             lastUpdated: tableResponse.metadata['last-updated-ms'] || 0,
         }
@@ -197,20 +197,27 @@ export interface DistributionData {
     dataFileSizeInBytes: number
     positionDeleteFileSizeInBytes: number
     eqDeleteFileSizeInBytes: number
+    dataFileRecordCount: number
+    positionDeleteFileRecordCount: number
+    eqDeleteFileRecordCount: number
 }
 
 /**
- * Get file size distribution for a table
+ * Get file size distribution for a table, optionally at a specific snapshot
  */
 export async function getFileDistribution(
     catalog: string,
     namespace: string,
     tableId: string,
+    snapshotId?: string,
 ): Promise<DistributionData> {
-    const response = await fetch(`/api/distribution/${catalog}/${namespace}/${tableId}`);
+    const url = snapshotId 
+        ? `/api/distribution/${catalog}/${namespace}/${tableId}/${snapshotId}`
+        : `/api/distribution/${catalog}/${namespace}/${tableId}`;
+    
+    const response = await fetch(url);
     if (response.ok) {
-        const data = await response.json();
-        return data;
+        return await response.json();
     }
     return {
         ranges: {
@@ -225,7 +232,10 @@ export async function getFileDistribution(
         eqDeleteFileCount: 0,
         dataFileSizeInBytes: 0,
         positionDeleteFileSizeInBytes: 0,
-        eqDeleteFileSizeInBytes: 0
+        eqDeleteFileSizeInBytes: 0,
+        dataFileRecordCount: 0,
+        positionDeleteFileRecordCount: 0,
+        eqDeleteFileRecordCount: 0
     };
 }
 

@@ -15,8 +15,8 @@
  */
 "use client"
 
-import { useState } from "react"
-import { Database, FileText, Copy, Check, Info } from "lucide-react"
+import { useState, useEffect, useCallback } from "react"
+import { Database, FileText, Copy, Check, Info, RefreshCw } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
@@ -33,12 +33,14 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import type { LoadTableResult, StructField } from "@/lib/data-loader"
-import { dropTable, renameTable } from "@/lib/data-loader"
+import { dropTable, renameTable, getFileDistribution, type DistributionData } from "@/lib/data-loader"
 import { cn } from "@/lib/utils"
 import { getPropertyDescription } from "@/lib/property-descriptions"
+import { FileStatistics } from "@/components/table/file-statistics"
+import { FileDistributionLoading } from "@/components/table/file-distribution-loading"
 
 interface InfoTabProps {
     tableData: LoadTableResult
@@ -53,6 +55,146 @@ const isSensitiveProperty = (key: string): boolean => {
 
     return sensitiveKeys.some((sensitiveKey) => key.toLowerCase().includes(sensitiveKey.toLowerCase()))
 }
+
+function FileDistributionSection({
+    tableId,
+    catalog,
+    namespace,
+}: { tableId: string; catalog: string; namespace: string }) {
+    const { toast } = useToast()
+    const [loading, setLoading] = useState(true)
+    const [distribution, setDistribution] = useState<DistributionData>({
+        ranges: {},
+        dataFileCount: 0,
+        positionDeleteFileCount: 0,
+        eqDeleteFileCount: 0,
+        dataFileSizeInBytes: 0,
+        positionDeleteFileSizeInBytes: 0,
+        eqDeleteFileSizeInBytes: 0,
+        dataFileRecordCount: 0,
+        positionDeleteFileRecordCount: 0,
+        eqDeleteFileRecordCount: 0
+    })
+
+    const fetchData = useCallback(async () => {
+        try {
+            setLoading(true)
+            const data = await getFileDistribution(catalog, namespace, tableId)
+            setDistribution(data)
+        } catch (error) {
+            toast({
+                variant: "destructive",
+                title: "Failed to fetch distribution data",
+                description: errorToString(error),
+            })
+        } finally {
+            setLoading(false)
+        }
+    }, [catalog, namespace, tableId, toast])
+
+    useEffect(() => {
+        if (tableId && catalog && namespace) {
+            fetchData()
+        }
+    }, [tableId, catalog, namespace, toast, fetchData])
+
+    if (loading) {
+        return <FileDistributionLoading />
+    }
+
+    // Sort the distribution data according to our predefined size order
+    const sortedDistributionEntries = Object.entries(distribution.ranges).sort((a, b) => {
+        const indexA = rangeOrder.indexOf(a[0])
+        const indexB = rangeOrder.indexOf(b[0])
+        return indexA - indexB
+    })
+
+    // Calculate total files
+    const totalFiles = Object.values(distribution.ranges).reduce((sum, item) => sum + item.count, 0)
+
+    return (
+        <Card className="border-muted/70 shadow-sm h-full">
+            <CardHeader className="pb-2">
+                <CardTitle className="text-base">File Size Distribution</CardTitle>
+                <CardDescription>Current distribution of file sizes in the table</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-4">
+                <div className="flex justify-between items-center mb-4 text-sm">
+                    <div className="flex items-center gap-2">
+                        <span className="font-medium">Total Files: {totalFiles}</span>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={fetchData}
+                            disabled={loading}
+                        >
+                            <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
+                        </Button>
+                    </div>
+                </div>
+
+                <div className="space-y-5">
+                    {sortedDistributionEntries.map(([range, data]) => (
+                        <div key={range} className="space-y-1.5">
+                            <div className="flex justify-between items-center">
+                                <div className="flex items-center gap-2">
+                                    <div
+                                        className={`h-3 w-3 rounded-full ${range === "0-8M"
+                                            ? "bg-blue-300 dark:bg-blue-400/80"
+                                            : range === "8M-32M"
+                                                ? "bg-blue-400 dark:bg-blue-500/80"
+                                                : range === "32M-128M"
+                                                    ? "bg-blue-500"
+                                                    : range === "128M-512M"
+                                                        ? "bg-blue-600"
+                                                        : "bg-blue-700"
+                                            }`}
+                                    />
+                                    <span className="text-sm font-medium">{range}</span>
+                                </div>
+                                <span className="text-sm text-muted-foreground">
+                                    {data.count} files ({data.percentage}%)
+                                </span>
+                            </div>
+                            <div className="h-2.5 bg-muted/50 rounded-full w-full overflow-hidden">
+                                <div
+                                    className={`h-full rounded-full ${range === "0-8M"
+                                        ? "bg-blue-300 dark:bg-blue-400/80"
+                                        : range === "8M-32M"
+                                            ? "bg-blue-400 dark:bg-blue-500/80"
+                                            : range === "32M-128M"
+                                                ? "bg-blue-500"
+                                                : range === "128M-512M"
+                                                    ? "bg-blue-600"
+                                                    : "bg-blue-700"
+                                        }`}
+                                    style={{ width: `${data.percentage}%` }}
+                                />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-muted/50">
+                    <FileStatistics distribution={distribution} />
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-muted/50">
+                    <div className="text-sm">
+                        <p className="mb-2 font-medium text-foreground">Optimization Recommendation:</p>
+                        <p className="text-muted-foreground">
+                            This table has {distribution.ranges["0-8M"]?.count || 0} small files that could benefit from compaction.
+                        </p>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+    )
+}
+
+// Define the order of size ranges
+const rangeOrder = ["0-8M", "8M-32M", "32M-128M", "128M-512M", "512M+"]
 
 export function InfoTab({ tableData, catalog, namespace, table }: InfoTabProps) {
     const { toast } = useToast()
@@ -249,49 +391,52 @@ export function InfoTab({ tableData, catalog, namespace, table }: InfoTabProps) 
                     </CardContent>
                 </Card>
 
-                <Card className="border-muted/70 shadow-sm overflow-hidden">
-                    <CardHeader className="pb-2 border-b py-3">
-                        <CardTitle className="text-base flex items-center gap-2">
-                            <FileText className="h-4 w-4 text-blue-500" />
-                            Properties
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="px-0 py-2">
-                        {tableData.metadata.properties && Object.keys(tableData.metadata.properties).length > 0 ? (
-                            <div className="divide-y divide-muted/30">
-                                {Object.entries(tableData.metadata.properties)
-                                    .filter(([key]) => !isSensitiveProperty(key)) // Filter out sensitive properties
-                                    .map(([key, value]) => (
-                                        <div key={key} className="px-6 py-3">
-                                            <div className="flex items-center justify-between mb-1">
-                                                <h4 className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-                                                    {key}
-                                                    {getPropertyDescription(key) && (
-                                                        <TooltipProvider delayDuration={300}>
-                                                            <Tooltip>
-                                                                <TooltipTrigger asChild>
-                                                                    <Info className="h-3.5 w-3.5 text-muted-foreground/70 cursor-help" />
-                                                                </TooltipTrigger>
-                                                                <TooltipContent side="top" className="max-w-sm">
-                                                                    <p className="text-xs">{getPropertyDescription(key)}</p>
-                                                                </TooltipContent>
-                                                            </Tooltip>
-                                                        </TooltipProvider>
-                                                    )}
-                                                </h4>
-                                            </div>
-                                            <div className="border border-muted/30 rounded-md p-1.5 bg-muted/30">
-                                                <p className="text-xs text-foreground/90 break-all font-mono">{value}</p>
-                                            </div>
-                                        </div>
-                                    ))}
-                            </div>
-                        ) : (
-                            <div className="px-4 py-6 text-center text-muted-foreground text-xs">No properties defined</div>
-                        )}
-                    </CardContent>
-                </Card>
+                <FileDistributionSection tableId={table} catalog={catalog} namespace={namespace} />
             </div>
+
+            {/* Properties Section */}
+            <Card className="border-muted/70 shadow-sm overflow-hidden">
+                <CardHeader className="pb-2 border-b py-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-blue-500" />
+                        Properties
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="px-0 py-2">
+                    {tableData.metadata.properties && Object.keys(tableData.metadata.properties).length > 0 ? (
+                        <div className="divide-y divide-muted/30">
+                            {Object.entries(tableData.metadata.properties)
+                                .filter(([key]) => !isSensitiveProperty(key)) // Filter out sensitive properties
+                                .map(([key, value]) => (
+                                    <div key={key} className="px-6 py-3">
+                                        <div className="flex items-center justify-between mb-1">
+                                            <h4 className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                                                {key}
+                                                {getPropertyDescription(key) && (
+                                                    <TooltipProvider delayDuration={300}>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Info className="h-3.5 w-3.5 text-muted-foreground/70 cursor-help" />
+                                                            </TooltipTrigger>
+                                                            <TooltipContent side="top" className="max-w-sm">
+                                                                <p className="text-xs">{getPropertyDescription(key)}</p>
+                                                            </TooltipContent>
+                                                        </Tooltip>
+                                                    </TooltipProvider>
+                                                )}
+                                            </h4>
+                                        </div>
+                                        <div className="border border-muted/30 rounded-md p-1.5 bg-muted/30">
+                                            <p className="text-xs text-foreground/90 break-all font-mono">{value}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                        </div>
+                    ) : (
+                        <div className="px-4 py-6 text-center text-muted-foreground text-xs">No properties defined</div>
+                    )}
+                </CardContent>
+            </Card>
 
             {/* Drop Dialog */}
             <Dialog open={showDropDialog} onOpenChange={setShowDropDialog}>
