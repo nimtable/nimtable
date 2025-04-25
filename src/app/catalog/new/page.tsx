@@ -28,6 +28,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { TopNavbar } from "@/components/shared/top-navbar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useState, useEffect, useCallback } from "react"
+import { createCatalog } from '@/lib/client/sdk.gen';
 
 interface CatalogTemplate {
     name: string;
@@ -427,18 +428,9 @@ export default function NewCatalogPage() {
                 throw new Error("Catalog name is required.");
             }
 
-            const response = await fetch("/api/catalogs", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(catalogData),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || errorData.error || "Failed to create catalog");
-            }
+           await createCatalog({
+                body: catalogData,
+            })
 
             toast({
                 title: "Catalog created successfully",

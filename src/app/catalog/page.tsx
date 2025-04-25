@@ -21,7 +21,7 @@ import { useEffect, useState } from "react"
 import { useToast } from "@/hooks/use-toast"
 import { errorToString } from "@/lib/utils"
 import { notFound, useSearchParams, useRouter } from "next/navigation"
-import { CatalogConfig, getCatalogConfig, deleteCatalog } from "@/lib/data-loader"
+import { CatalogConfig, getCatalogConfig } from "@/lib/data-loader"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { TopNavbar } from "@/components/shared/top-navbar"
 import { PageLoader } from "@/components/shared/page-loader"
@@ -37,6 +37,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { deleteCatalog } from "@/lib/client/sdk.gen"
 
 export default function CatalogPage() {
     const router = useRouter()
@@ -85,7 +86,11 @@ export default function CatalogPage() {
         if (!catalogParam) return
 
         try {
-            await deleteCatalog(catalogParam)
+            await deleteCatalog({
+                path: {
+                    catalogName: catalogParam
+                }
+            })
             toast({
                 title: "Catalog deleted successfully",
                 description: "The catalog has been removed from the database.",

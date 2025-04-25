@@ -9,9 +9,30 @@ export type LoginResponse = {
     success: boolean;
 };
 
+export type CatalogCreate = {
+    name: string;
+    type: string;
+    uri?: string;
+    warehouse?: string;
+    properties?: {
+        [key: string]: string;
+    };
+};
+
+export type Catalog = {
+    name: string;
+    type: string;
+    uri?: string;
+    warehouse?: string;
+    properties?: {
+        [key: string]: string;
+    };
+};
+
 export type _Error = {
     code: string;
     message: string;
+    details?: string;
 };
 
 export type LoginData = {
@@ -42,6 +63,95 @@ export type LoginResponses = {
 };
 
 export type LoginResponse2 = LoginResponses[keyof LoginResponses];
+
+export type DeleteCatalogData = {
+    body?: never;
+    path: {
+        catalogName: string;
+    };
+    query?: never;
+    url: '/api/catalogs';
+};
+
+export type DeleteCatalogErrors = {
+    /**
+     * Invalid request parameters
+     */
+    400: _Error;
+    /**
+     * Catalog not found
+     */
+    404: _Error;
+    /**
+     * Internal server error
+     */
+    500: _Error;
+};
+
+export type DeleteCatalogError = DeleteCatalogErrors[keyof DeleteCatalogErrors];
+
+export type DeleteCatalogResponses = {
+    /**
+     * Catalog deleted successfully
+     */
+    204: void;
+};
+
+export type DeleteCatalogResponse = DeleteCatalogResponses[keyof DeleteCatalogResponses];
+
+export type GetCatalogsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/catalogs';
+};
+
+export type GetCatalogsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: _Error;
+};
+
+export type GetCatalogsError = GetCatalogsErrors[keyof GetCatalogsErrors];
+
+export type GetCatalogsResponses = {
+    /**
+     * Successfully retrieved catalog list
+     */
+    200: Array<string>;
+};
+
+export type GetCatalogsResponse = GetCatalogsResponses[keyof GetCatalogsResponses];
+
+export type CreateCatalogData = {
+    body: CatalogCreate;
+    path?: never;
+    query?: never;
+    url: '/api/catalogs';
+};
+
+export type CreateCatalogErrors = {
+    /**
+     * Invalid request parameters
+     */
+    400: _Error;
+    /**
+     * Internal server error
+     */
+    500: _Error;
+};
+
+export type CreateCatalogError = CreateCatalogErrors[keyof CreateCatalogErrors];
+
+export type CreateCatalogResponses = {
+    /**
+     * Catalog created successfully
+     */
+    201: Catalog;
+};
+
+export type CreateCatalogResponse = CreateCatalogResponses[keyof CreateCatalogResponses];
 
 export type ClientOptions = {
     baseUrl: `${string}://src` | (string & {});
