@@ -17,6 +17,7 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
+import { login as loginApi } from "@/lib/client/sdk.gen"
 
 interface User {
   username: string
@@ -60,15 +61,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+
+     const response = await loginApi({
+        body: {
+          username,
+          password,
         },
-        body: JSON.stringify({ username, password }),
       })
-      const data = await response.json()
-      if (response.ok && data.success) {
+
+      if (response.data?.success) {
         const userData: User = {
           username: username,
           name: username,

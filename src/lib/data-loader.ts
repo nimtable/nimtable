@@ -15,6 +15,7 @@
  */
 import { CatalogConfig, LoadTableResult, PartitionSpec } from "./api"
 import { Api } from "@/lib/api"
+import { getCatalogs } from "./client/sdk.gen";
 
 // Re-export types from api.ts, ensuring application code don't need to access the api directly.
 export type { CatalogConfig, StructField, LoadTableResult, PartitionSpec } from "./api";
@@ -28,11 +29,10 @@ export interface NamespaceTables {
 }
 
 export async function loadCatalogNames(): Promise<string[]> {
-    const response = await fetch('/api/catalogs')
-    if (!response.ok) {
-        throw new Error(`Failed to fetch catalogs: ${response.statusText}`)
-    }
-    return await response.json()
+
+    const response = await getCatalogs()
+
+    return response.data || []
 }
 
 export async function loadNamespacesAndTables(catalog: string): Promise<NamespaceTables[]> {
@@ -358,11 +358,3 @@ export async function fetchSampleData(
     };
 }
 
-export async function deleteCatalog(catalog: string): Promise<void> {
-    const response = await fetch(`/api/catalogs/${encodeURIComponent(catalog)}`, {
-        method: 'DELETE'
-    })
-    if (!response.ok) {
-        throw new Error(`Failed to delete catalog: ${response.statusText}`)
-    }
-}

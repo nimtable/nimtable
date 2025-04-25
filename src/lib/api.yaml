@@ -1,0 +1,213 @@
+openapi: 3.0.0
+info:
+  title: NimTable API
+  description: API documentation for NimTable application
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@nimtable.com
+
+paths:
+  /api/login:
+    post:
+      summary: User login
+      description: Authenticate user with username and password
+      operationId: login
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/catalogs:
+    get:
+      summary: Get all catalogs
+      description: Returns a list of all catalogs
+      operationId: getCatalogs
+      tags:
+        - Catalog
+      responses:
+        '200':
+          description: Successfully retrieved catalog list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      summary: Create new catalog
+      description: Creates a new catalog
+      operationId: createCatalog
+      tags:
+        - Catalog
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CatalogCreate'
+      responses:
+        '201':
+          description: Catalog created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Catalog'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/catalogs/{catalogName}:
+    delete:
+      summary: Delete catalog
+      description: Deletes a specific catalog
+      operationId: deleteCatalog
+      tags:
+        - Catalog
+      parameters:
+        - name: catalogName
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Catalog deleted successfully
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Catalog not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    LoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+          format: password
+      required:
+        - username
+        - password
+
+    LoginResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+      required:
+        - success
+
+    CatalogCreate:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+        uri:
+          type: string
+        warehouse:
+          type: string
+        properties:
+          type: object
+          additionalProperties:
+            type: string
+      required:
+        - name
+        - type
+
+    Catalog:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+        uri:
+          type: string
+        warehouse:
+          type: string
+        properties:
+          type: object
+          additionalProperties:
+            type: string
+      required:
+        - name
+        - type
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: string
+      required:
+        - code
+        - message
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - BearerAuth: []

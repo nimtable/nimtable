@@ -27,6 +27,7 @@ import { Suspense } from "react"
 import { AuthProvider } from "@/contexts/auth-context"
 import { ProtectedRoute } from "@/components/protected-route"
 import type { Metadata } from "next"
+import { ReactQueryProvider } from "@/components/Providers/ReactQuery"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -35,6 +36,7 @@ export const metadata: Metadata = {
   description: "The Control Plane for Apache Iceberg™",
   icons: "/nimtable_icon.png",
 };
+
 
 
 export default function RootLayout({
@@ -46,9 +48,10 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <AuthProvider>
-            <RefreshProvider>
-              <SidebarProvider>
+          <ReactQueryProvider >
+            <AuthProvider>
+              <RefreshProvider>
+                <SidebarProvider>
                 <ProtectedRoute>
                   {/* The AppSidebar should only be rendered when the user is authenticated */}
                   <AppSidebar />
@@ -56,8 +59,9 @@ export default function RootLayout({
                 </ProtectedRoute>
                 <Toaster />
               </SidebarProvider>
-            </RefreshProvider>
-          </AuthProvider>
+              </RefreshProvider>
+            </AuthProvider>
+          </ReactQueryProvider>
         </ThemeProvider>
       </body>
     </html>
