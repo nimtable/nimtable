@@ -214,7 +214,7 @@ The frontend API interfaces and types can be automatically generated from the Op
 
 ```bash
 # Generate TypeScript interfaces and API client
-npm run openapi-ts
+npm run gen-client-api
 ```
 
 This will generate the API client and types in `sdk.gen.ts` based on the OpenAPI specification in `api.yaml`. After modifying the `api.yaml` file, you should run this command to update the generated code.

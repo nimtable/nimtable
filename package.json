@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit",
     "format:write": "prettier --write \"**/*.{ts,tsx,mdx}\" --cache",
     "format:check": "prettier --check \"**/*.{ts,tsx,mdx}\" --cache",
-    "openapi-ts": "openapi-ts"
+    "gen-client-api": "./scripts/generate-client.sh"
   },
   "dependencies": {
     "@hey-api/client-fetch": "^0.10.0",

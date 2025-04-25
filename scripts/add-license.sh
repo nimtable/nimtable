@@ -1,4 +1,7 @@
-/*
+#!/bin/bash
+
+# license header
+LICENSE_HEADER='/*
  * Copyright 2025 Nimtable
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,27 +17,19 @@
  * limitations under the License.
  */
 
-import { client } from './client/client.gen'
-import { toast } from '@/hooks/use-toast'
+'
 
-client.setConfig({
-  baseUrl: '',
-  credentials: 'include',
-  throwOnError: true,
-})
+add_license() {
+    local file="$1"
+    if ! grep -q "Copyright 2025 Nimtable" "$file"; then
+        echo "Adding license header to $file"
+        echo "$LICENSE_HEADER" | cat - "$file" > temp && mv temp "$file"
+    fi
+}
 
+# process all TypeScript files
+find src/lib/client -name "*.ts" | while read -r file; do
+    add_license "$file"
+done
 
-client.interceptors.response.use(
- async (response) => {
-    const ContentType = response.headers.get('Content-Type')
-    if (ContentType?.startsWith('text/plain') && !response.ok) {
-      const message = await response.clone().text()
-      toast({
-        title: 'Error',
-        description: message,
-      })
-    }
-    return response
-  }
-)
-export const service = client
+echo "License headers added successfully!" 
