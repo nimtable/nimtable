@@ -94,6 +94,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+
+  /api/catalogs/{catalogName}:
     delete:
       summary: Delete catalog
       description: Deletes a specific catalog

@@ -81,41 +81,6 @@ export type LoginResponses = {
 
 export type LoginResponse2 = LoginResponses[keyof LoginResponses];
 
-export type DeleteCatalogData = {
-    body?: never;
-    path: {
-        catalogName: string;
-    };
-    query?: never;
-    url: '/api/catalogs';
-};
-
-export type DeleteCatalogErrors = {
-    /**
-     * Invalid request parameters
-     */
-    400: _Error;
-    /**
-     * Catalog not found
-     */
-    404: _Error;
-    /**
-     * Internal server error
-     */
-    500: _Error;
-};
-
-export type DeleteCatalogError = DeleteCatalogErrors[keyof DeleteCatalogErrors];
-
-export type DeleteCatalogResponses = {
-    /**
-     * Catalog deleted successfully
-     */
-    204: void;
-};
-
-export type DeleteCatalogResponse = DeleteCatalogResponses[keyof DeleteCatalogResponses];
-
 export type GetCatalogsData = {
     body?: never;
     path?: never;
@@ -169,6 +134,41 @@ export type CreateCatalogResponses = {
 };
 
 export type CreateCatalogResponse = CreateCatalogResponses[keyof CreateCatalogResponses];
+
+export type DeleteCatalogData = {
+    body?: never;
+    path: {
+        catalogName: string;
+    };
+    query?: never;
+    url: '/api/catalogs/{catalogName}';
+};
+
+export type DeleteCatalogErrors = {
+    /**
+     * Invalid request parameters
+     */
+    400: _Error;
+    /**
+     * Catalog not found
+     */
+    404: _Error;
+    /**
+     * Internal server error
+     */
+    500: _Error;
+};
+
+export type DeleteCatalogError = DeleteCatalogErrors[keyof DeleteCatalogErrors];
+
+export type DeleteCatalogResponses = {
+    /**
+     * Catalog deleted successfully
+     */
+    204: void;
+};
+
+export type DeleteCatalogResponse = DeleteCatalogResponses[keyof DeleteCatalogResponses];
 
 export type ClientOptions = {
     baseUrl: `${string}://src` | (string & {});
