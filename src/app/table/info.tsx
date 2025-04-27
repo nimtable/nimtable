@@ -119,73 +119,81 @@ function FileDistributionSection({
                 <CardDescription>Current distribution of file sizes in the table</CardDescription>
             </CardHeader>
             <CardContent className="pt-4">
-                <div className="flex justify-between items-center mb-4 text-sm">
-                    <div className="flex items-center gap-2">
-                        <span className="font-medium">Total Files: {totalFiles}</span>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6"
-                            onClick={fetchData}
-                            disabled={loading}
-                        >
-                            <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
-                        </Button>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Left section - File Statistics */}
+                    <div className="space-y-6">
+                        <div className="pt-4">
+                            <FileStatistics distribution={distribution} />
+                        </div>
                     </div>
-                </div>
 
-                <div className="space-y-5">
-                    {sortedDistributionEntries.map(([range, data]) => (
-                        <div key={range} className="space-y-1.5">
-                            <div className="flex justify-between items-center">
-                                <div className="flex items-center gap-2">
-                                    <div
-                                        className={`h-3 w-3 rounded-full ${range === "0-8M"
-                                            ? "bg-blue-300 dark:bg-blue-400/80"
-                                            : range === "8M-32M"
-                                                ? "bg-blue-400 dark:bg-blue-500/80"
-                                                : range === "32M-128M"
-                                                    ? "bg-blue-500"
-                                                    : range === "128M-512M"
-                                                        ? "bg-blue-600"
-                                                        : "bg-blue-700"
-                                            }`}
-                                    />
-                                    <span className="text-sm font-medium">{range}</span>
-                                </div>
-                                <span className="text-sm text-muted-foreground">
-                                    {data.count} files ({data.percentage}%)
-                                </span>
-                            </div>
-                            <div className="h-2.5 bg-muted/50 rounded-full w-full overflow-hidden">
-                                <div
-                                    className={`h-full rounded-full ${range === "0-8M"
-                                        ? "bg-blue-300 dark:bg-blue-400/80"
-                                        : range === "8M-32M"
-                                            ? "bg-blue-400 dark:bg-blue-500/80"
-                                            : range === "32M-128M"
-                                                ? "bg-blue-500"
-                                                : range === "128M-512M"
-                                                    ? "bg-blue-600"
-                                                    : "bg-blue-700"
-                                        }`}
-                                    style={{ width: `${data.percentage}%` }}
-                                />
+                    {/* Right section - Distribution Chart, Total Files and Recommendation */}
+                    <div className="space-y-6">
+                        <div className="flex justify-between items-center text-sm">
+                            <div className="flex items-center gap-2">
+                                <span className="font-medium">Total Files: {totalFiles}</span>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6"
+                                    onClick={fetchData}
+                                    disabled={loading}
+                                >
+                                    <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
+                                </Button>
                             </div>
                         </div>
-                    ))}
-                </div>
 
-                <div className="mt-6 pt-4 border-t border-muted/50">
-                    <FileStatistics distribution={distribution} />
-                </div>
+                        <div className="space-y-5">
+                            {sortedDistributionEntries.map(([range, data]) => (
+                                <div key={range} className="space-y-1.5">
+                                    <div className="flex justify-between items-center">
+                                        <div className="flex items-center gap-2">
+                                            <div
+                                                className={`h-3 w-3 rounded-full ${range === "0-8M"
+                                                    ? "bg-blue-300 dark:bg-blue-400/80"
+                                                    : range === "8M-32M"
+                                                        ? "bg-blue-400 dark:bg-blue-500/80"
+                                                        : range === "32M-128M"
+                                                            ? "bg-blue-500"
+                                                            : range === "128M-512M"
+                                                                ? "bg-blue-600"
+                                                                : "bg-blue-700"
+                                                    }`}
+                                            />
+                                            <span className="text-sm font-medium">{range}</span>
+                                        </div>
+                                        <span className="text-sm text-muted-foreground">
+                                            {data.count} files ({data.percentage}%)
+                                        </span>
+                                    </div>
+                                    <div className="h-2.5 bg-muted/50 rounded-full w-full overflow-hidden">
+                                        <div
+                                            className={`h-full rounded-full ${range === "0-8M"
+                                                ? "bg-blue-300 dark:bg-blue-400/80"
+                                                : range === "8M-32M"
+                                                    ? "bg-blue-400 dark:bg-blue-500/80"
+                                                    : range === "32M-128M"
+                                                        ? "bg-blue-500"
+                                                        : range === "128M-512M"
+                                                            ? "bg-blue-600"
+                                                            : "bg-blue-700"
+                                                }`}
+                                            style={{ width: `${data.percentage}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
 
-                <div className="mt-6 pt-4 border-t border-muted/50">
-                    <div className="text-sm">
-                        <p className="mb-2 font-medium text-foreground">Optimization Recommendation:</p>
-                        <p className="text-muted-foreground">
-                            This table has {distribution.ranges["0-8M"]?.count || 0} small files that could benefit from compaction.
-                        </p>
+                        <div className="pt-4 border-t border-muted/50">
+                            <div className="text-sm">
+                                <p className="mb-2 font-medium text-foreground">Optimization Recommendation:</p>
+                                <p className="text-muted-foreground">
+                                    This table has {distribution.ranges["0-8M"]?.count || 0} small files that could benefit from compaction.
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </CardContent>
@@ -272,46 +280,10 @@ export function InfoTab({ tableData, catalog, namespace, table }: InfoTabProps) 
 
     return (
         <div className="space-y-8">
-            {/* Schema Section */}
-            <div>
-                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
-                    Schema
-                </h3>
-                <Card className="border-muted/70 shadow-sm overflow-hidden">
-                    <CardHeader className="pb-2 border-b">
-                        <CardTitle className="text-base flex items-center gap-2">
-                            <FileText className="h-4 w-4 text-blue-500" />
-                            Table Schema
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                        <Table>
-                            <TableHeader>
-                                <TableRow className="hover:bg-transparent">
-                                    <TableHead>ID</TableHead>
-                                    <TableHead>Name</TableHead>
-                                    <TableHead>Type</TableHead>
-                                    <TableHead>Required</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {schema?.fields.map((field: StructField) => (
-                                    <TableRow key={field.id}>
-                                        <TableCell>{field.id}</TableCell>
-                                        <TableCell>{field.name}</TableCell>
-                                        <TableCell>{typeof field.type === "string" ? field.type : field.type.type}</TableCell>
-                                        <TableCell>{field.required ? "Yes" : "No"}</TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </CardContent>
-                </Card>
-            </div>
-
             {/* Table Details */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-6">
+                <FileDistributionSection tableId={table} catalog={catalog} namespace={namespace} />
+
                 <Card className="border-muted/70 shadow-sm overflow-hidden">
                     <CardHeader className="pb-2 border-b py-3">
                         <CardTitle className="text-base flex items-center gap-2">
@@ -391,16 +363,40 @@ export function InfoTab({ tableData, catalog, namespace, table }: InfoTabProps) 
                     </CardContent>
                 </Card>
 
-                <FileDistributionSection tableId={table} catalog={catalog} namespace={namespace} />
-            </div>
+                {/* Schema Section */}
+                <Card className="border-muted/70 shadow-sm overflow-hidden">
+                    <CardHeader className="pb-2 border-b">
+                        <CardTitle className="text-base flex items-center gap-2">
+                            <FileText className="h-4 w-4 text-blue-500" />
+                            Table Schema
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        <Table>
+                            <TableHeader>
+                                <TableRow className="hover:bg-transparent">
+                                    <TableHead>ID</TableHead>
+                                    <TableHead>Name</TableHead>
+                                    <TableHead>Type</TableHead>
+                                    <TableHead>Required</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {schema?.fields.map((field: StructField) => (
+                                    <TableRow key={field.id}>
+                                        <TableCell>{field.id}</TableCell>
+                                        <TableCell>{field.name}</TableCell>
+                                        <TableCell>{typeof field.type === "string" ? field.type : field.type.type}</TableCell>
+                                        <TableCell>{field.required ? "Yes" : "No"}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
 
-            {/* Partition Information */}
-            {tableData.metadata["partition-specs"] && tableData.metadata["partition-specs"].length > 0 && (
-                <div>
-                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                        <span className="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
-                        Partition Information
-                    </h3>
+                {/* Partition Information */}
+                {tableData.metadata["partition-specs"] && tableData.metadata["partition-specs"].length > 0 && (
                     <Card className="border-muted/70 shadow-sm overflow-hidden">
                         <CardHeader className="pb-2 border-b">
                             <CardTitle className="text-base flex items-center gap-2">
@@ -475,8 +471,8 @@ export function InfoTab({ tableData, catalog, namespace, table }: InfoTabProps) 
                             </Table>
                         </CardContent>
                     </Card>
-                </div>
-            )}
+                )}
+            </div>
 
             {/* Properties Section */}
             <Card className="border-muted/70 shadow-sm overflow-hidden">
