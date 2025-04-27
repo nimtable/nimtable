@@ -51,11 +51,17 @@ export async function loadNamespacesAndTables(catalog: string): Promise<Namespac
             childNamespaces.map(child => fetchNamespaceAndChildren(child))
         )
 
+        // Sort children by shortName
+        const sortedChildren = children.sort((a, b) => a.shortName.localeCompare(b.shortName))
+
+        // Sort tables alphabetically
+        const sortedTables = (tablesResponse.identifiers?.map((table) => table.name) || []).sort()
+
         return {
             name: namespaceName,
             shortName: namespace[namespace.length - 1],
-            tables: tablesResponse.identifiers?.map((table) => table.name) || [],
-            children
+            tables: sortedTables,
+            children: sortedChildren
         }
     }
 
@@ -64,9 +70,12 @@ export async function loadNamespacesAndTables(catalog: string): Promise<Namespac
     const rootNamespaces = response.namespaces || []
 
     // Fetch all namespaces and their children
-    return await Promise.all(
+    const result = await Promise.all(
         rootNamespaces.map(namespace => fetchNamespaceAndChildren(namespace))
     )
+
+    // Sort root namespaces by shortName
+    return result.sort((a, b) => a.shortName.localeCompare(b.shortName))
 }
 
 export async function listNamespaces(catalog: string): Promise<string[]> {
