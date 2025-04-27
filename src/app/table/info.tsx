@@ -16,7 +16,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { Database, FileText, Copy, Check, Info, RefreshCw } from "lucide-react"
+import { Database, FileText, Copy, Check, Info, RefreshCw, Layers, Hash, Calendar } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
@@ -393,6 +393,90 @@ export function InfoTab({ tableData, catalog, namespace, table }: InfoTabProps) 
 
                 <FileDistributionSection tableId={table} catalog={catalog} namespace={namespace} />
             </div>
+
+            {/* Partition Information */}
+            {tableData.metadata["partition-specs"] && tableData.metadata["partition-specs"].length > 0 && (
+                <div>
+                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <span className="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
+                        Partition Information
+                    </h3>
+                    <Card className="border-muted/70 shadow-sm overflow-hidden">
+                        <CardHeader className="pb-2 border-b">
+                            <CardTitle className="text-base flex items-center gap-2">
+                                <FileText className="h-4 w-4 text-blue-500" />
+                                Partition Specs
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow className="hover:bg-transparent">
+                                        <TableHead>Spec ID</TableHead>
+                                        <TableHead>Fields</TableHead>
+                                        <TableHead>Default</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {tableData.metadata["partition-specs"].map((spec) => (
+                                        <TableRow key={spec["spec-id"]}>
+                                            <TableCell>{spec["spec-id"]}</TableCell>
+                                            <TableCell>
+                                                <div className="flex flex-col gap-1">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <Layers className="h-3.5 w-3.5 text-muted-foreground" />
+                                                        <span className="text-xs text-muted-foreground">Partitioned by:</span>
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-1.5">
+                                                        {spec.fields.map((field) => {
+                                                            // Determine icon based on transform
+                                                            let icon = <Layers className="h-3 w-3" />
+                                                            let bgColor = "bg-blue-100 dark:bg-blue-900/30"
+                                                            let textColor = "text-blue-800 dark:text-blue-400"
+
+                                                            if (field.transform.includes("bucket")) {
+                                                                icon = <Hash className="h-3 w-3" />
+                                                                bgColor = "bg-purple-100 dark:bg-purple-900/30"
+                                                                textColor = "text-purple-800 dark:text-purple-400"
+                                                            } else if (
+                                                                field.transform.includes("year") ||
+                                                                field.transform.includes("month") ||
+                                                                field.transform.includes("day")
+                                                            ) {
+                                                                icon = <Calendar className="h-3 w-3" />
+                                                                bgColor = "bg-green-100 dark:bg-green-900/30"
+                                                                textColor = "text-green-800 dark:text-green-400"
+                                                            }
+
+                                                            return (
+                                                                <div
+                                                                    key={field["source-id"]}
+                                                                    className={`${bgColor} ${textColor} px-2 py-1 rounded-md text-xs flex items-center gap-1`}
+                                                                >
+                                                                    {icon}
+                                                                    <span>{field.name}</span>
+                                                                    <span className="opacity-70">({field.transform})</span>
+                                                                </div>
+                                                            )
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                {spec["spec-id"] === tableData.metadata["default-spec-id"] ? (
+                                                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                                                        Default
+                                                    </span>
+                                                ) : null}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
 
             {/* Properties Section */}
             <Card className="border-muted/70 shadow-sm overflow-hidden">
