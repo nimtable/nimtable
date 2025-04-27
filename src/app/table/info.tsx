@@ -396,67 +396,74 @@ export function InfoTab({ tableData, catalog, namespace, table }: InfoTabProps) 
                 </Card>
 
                 {/* Partition Information */}
-                {tableData.metadata["partition-specs"] && tableData.metadata["partition-specs"].length > 0 && (
-                    <Card className="border-muted/70 shadow-sm overflow-hidden">
-                        <CardHeader className="pb-2 border-b">
-                            <CardTitle className="text-base flex items-center gap-2">
-                                <FileText className="h-4 w-4 text-blue-500" />
-                                Partition Specs
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-0">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow className="hover:bg-transparent">
-                                        <TableHead>Spec ID</TableHead>
-                                        <TableHead>Fields</TableHead>
-                                        <TableHead>Default</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {tableData.metadata["partition-specs"].map((spec) => (
+                <Card className="border-muted/70 shadow-sm overflow-hidden">
+                    <CardHeader className="pb-2 border-b">
+                        <CardTitle className="text-base flex items-center gap-2">
+                            <FileText className="h-4 w-4 text-blue-500" />
+                            Partition Specs
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        <Table>
+                            <TableHeader>
+                                <TableRow className="hover:bg-transparent">
+                                    <TableHead>Spec ID</TableHead>
+                                    <TableHead>Fields</TableHead>
+                                    <TableHead>Default</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {tableData.metadata["partition-specs"] && tableData.metadata["partition-specs"].length > 0 ? (
+                                    tableData.metadata["partition-specs"].map((spec) => (
                                         <TableRow key={spec["spec-id"]}>
                                             <TableCell>{spec["spec-id"]}</TableCell>
                                             <TableCell>
-                                                <div className="flex flex-col gap-1">
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <Layers className="h-3.5 w-3.5 text-muted-foreground" />
-                                                        <span className="text-xs text-muted-foreground">Partitioned by:</span>
+                                                {!spec.fields || spec.fields.length === 0 ? (
+                                                    <div className="flex items-center gap-2 text-muted-foreground">
+                                                        <Layers className="h-3.5 w-3.5" />
+                                                        <span>Unpartitioned</span>
                                                     </div>
-                                                    <div className="flex flex-wrap gap-1.5">
-                                                        {spec.fields.map((field) => {
-                                                            // Determine icon based on transform
-                                                            let icon = <Layers className="h-3 w-3" />
-                                                            let bgColor = "bg-blue-100 dark:bg-blue-900/30"
-                                                            let textColor = "text-blue-800 dark:text-blue-400"
+                                                ) : (
+                                                    <div className="flex flex-col gap-1">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <Layers className="h-3.5 w-3.5 text-muted-foreground" />
+                                                            <span className="text-xs text-muted-foreground">Partitioned by:</span>
+                                                        </div>
+                                                        <div className="flex flex-wrap gap-1.5">
+                                                            {spec.fields.map((field) => {
+                                                                // Determine icon based on transform
+                                                                let icon = <Layers className="h-3 w-3" />
+                                                                let bgColor = "bg-blue-100 dark:bg-blue-900/30"
+                                                                let textColor = "text-blue-800 dark:text-blue-400"
 
-                                                            if (field.transform.includes("bucket")) {
-                                                                icon = <Hash className="h-3 w-3" />
-                                                                bgColor = "bg-purple-100 dark:bg-purple-900/30"
-                                                                textColor = "text-purple-800 dark:text-purple-400"
-                                                            } else if (
-                                                                field.transform.includes("year") ||
-                                                                field.transform.includes("month") ||
-                                                                field.transform.includes("day")
-                                                            ) {
-                                                                icon = <Calendar className="h-3 w-3" />
-                                                                bgColor = "bg-green-100 dark:bg-green-900/30"
-                                                                textColor = "text-green-800 dark:text-green-400"
-                                                            }
+                                                                if (field.transform.includes("bucket")) {
+                                                                    icon = <Hash className="h-3 w-3" />
+                                                                    bgColor = "bg-purple-100 dark:bg-purple-900/30"
+                                                                    textColor = "text-purple-800 dark:text-purple-400"
+                                                                } else if (
+                                                                    field.transform.includes("year") ||
+                                                                    field.transform.includes("month") ||
+                                                                    field.transform.includes("day")
+                                                                ) {
+                                                                    icon = <Calendar className="h-3 w-3" />
+                                                                    bgColor = "bg-green-100 dark:bg-green-900/30"
+                                                                    textColor = "text-green-800 dark:text-green-400"
+                                                                }
 
-                                                            return (
-                                                                <div
-                                                                    key={field["source-id"]}
-                                                                    className={`${bgColor} ${textColor} px-2 py-1 rounded-md text-xs flex items-center gap-1`}
-                                                                >
-                                                                    {icon}
-                                                                    <span>{field.name}</span>
-                                                                    <span className="opacity-70">({field.transform})</span>
-                                                                </div>
-                                                            )
-                                                        })}
+                                                                return (
+                                                                    <div
+                                                                        key={field["source-id"]}
+                                                                        className={`${bgColor} ${textColor} px-2 py-1 rounded-md text-xs flex items-center gap-1`}
+                                                                    >
+                                                                        {icon}
+                                                                        <span>{field.name}</span>
+                                                                        <span className="opacity-70">({field.transform})</span>
+                                                                    </div>
+                                                                )
+                                                            })}
+                                                        </div>
                                                     </div>
-                                                </div>
+                                                )}
                                             </TableCell>
                                             <TableCell>
                                                 {spec["spec-id"] === tableData.metadata["default-spec-id"] ? (
@@ -466,12 +473,21 @@ export function InfoTab({ tableData, catalog, namespace, table }: InfoTabProps) 
                                                 ) : null}
                                             </TableCell>
                                         </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </CardContent>
-                    </Card>
-                )}
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={3}>
+                                            <div className="flex items-center gap-2 text-muted-foreground">
+                                                <Layers className="h-3.5 w-3.5" />
+                                                <span>Unpartitioned</span>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
             </div>
 
             {/* Properties Section */}
