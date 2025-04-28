@@ -21,6 +21,7 @@ import { useToast } from "@/hooks/use-toast"
 import { errorToString } from "@/lib/utils"
 import { getFileDistribution } from "@/lib/data-loader"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 
 interface SnapshotTrendProps {
     catalog: string
@@ -32,12 +33,16 @@ interface SnapshotTrendProps {
     }>
 }
 
+type TrendType = "size" | "records"
+
 export function SnapshotTrend({ catalog, namespace, table, snapshots }: SnapshotTrendProps) {
     const { toast } = useToast()
     const [loading, setLoading] = useState(true)
+    const [trendType, setTrendType] = useState<TrendType>("size")
     const [data, setData] = useState<Array<{
         timestamp: number
         dataSize: number
+        recordCount: number
     }>>([])
 
     const fetchData = useCallback(async () => {
@@ -53,7 +58,8 @@ export function SnapshotTrend({ catalog, namespace, table, snapshots }: Snapshot
                     )
                     return {
                         timestamp: snapshot.timestamp,
-                        dataSize: distribution.dataFileSizeInBytes
+                        dataSize: distribution.dataFileSizeInBytes,
+                        recordCount: distribution.dataFileRecordCount
                     }
                 })
             )
@@ -101,11 +107,20 @@ export function SnapshotTrend({ catalog, namespace, table, snapshots }: Snapshot
         return `${size.toFixed(1)} ${units[unitIndex]}`
     }
 
+    const formatRecordCount = (count: number) => {
+        if (count >= 1000000) {
+            return `${(count / 1000000).toFixed(1)}M`
+        } else if (count >= 1000) {
+            return `${(count / 1000).toFixed(1)}K`
+        }
+        return count.toString()
+    }
+
     if (loading) {
         return (
             <Card className="border-muted/70 shadow-sm">
                 <CardHeader className="pb-2">
-                    <CardTitle className="text-base">Snapshot Data Size Trend</CardTitle>
+                    <CardTitle className="text-base">Snapshot Trend</CardTitle>
                     <CardDescription>Loading snapshot data...</CardDescription>
                 </CardHeader>
                 <CardContent className="h-[300px] flex items-center justify-center">
@@ -121,9 +136,26 @@ export function SnapshotTrend({ catalog, namespace, table, snapshots }: Snapshot
     return (
         <Card className="border-muted/70 shadow-sm">
             <CardHeader className="pb-2">
-                <div>
-                    <CardTitle className="text-base">Snapshot Data Size Trend</CardTitle>
-                    <CardDescription>Historical data size changes over time</CardDescription>
+                <div className="flex justify-between items-center">
+                    <div>
+                        <CardTitle className="text-base">Snapshot Trend</CardTitle>
+                        <CardDescription>
+                            {trendType === "size" ? "Historical data size changes over time" : "Historical record count changes over time"}
+                        </CardDescription>
+                    </div>
+                    <ToggleGroup
+                        type="single"
+                        value={trendType}
+                        onValueChange={(value: TrendType) => setTrendType(value)}
+                        className="ml-4"
+                    >
+                        <ToggleGroupItem value="size" aria-label="Show size trend">
+                            Size
+                        </ToggleGroupItem>
+                        <ToggleGroupItem value="records" aria-label="Show record trend">
+                            Records
+                        </ToggleGroupItem>
+                    </ToggleGroup>
                 </div>
             </CardHeader>
             <CardContent className="h-[300px]">
@@ -137,18 +169,18 @@ export function SnapshotTrend({ catalog, namespace, table, snapshots }: Snapshot
                             padding={{ left: 20, right: 20 }}
                         />
                         <YAxis
-                            tickFormatter={formatSize}
+                            tickFormatter={trendType === "size" ? formatSize : formatRecordCount}
                             tick={{ fontSize: 12 }}
                             width={100}
                             padding={{ top: 20, bottom: 20 }}
                         />
                         <Tooltip
-                            formatter={(value: number) => formatSize(value)}
+                            formatter={(value: number) => trendType === "size" ? formatSize(value) : formatRecordCount(value)}
                             labelFormatter={(label: number) => formatDate(label)}
                         />
                         <Line
                             type="monotone"
-                            dataKey="dataSize"
+                            dataKey={trendType === "size" ? "dataSize" : "recordCount"}
                             stroke="#3b82f6"
                             strokeWidth={2}
                             dot={false}
