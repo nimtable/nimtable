@@ -33,7 +33,7 @@ interface SnapshotTrendProps {
     }>
 }
 
-type TrendType = "size" | "records"
+type TrendType = "size" | "records" | "files"
 
 export function SnapshotTrend({ catalog, namespace, table, snapshots }: SnapshotTrendProps) {
     const { toast } = useToast()
@@ -43,6 +43,7 @@ export function SnapshotTrend({ catalog, namespace, table, snapshots }: Snapshot
         timestamp: number
         dataSize: number
         recordCount: number
+        fileCount: number
     }>>([])
 
     const fetchData = useCallback(async () => {
@@ -59,7 +60,8 @@ export function SnapshotTrend({ catalog, namespace, table, snapshots }: Snapshot
                     return {
                         timestamp: snapshot.timestamp,
                         dataSize: distribution.dataFileSizeInBytes,
-                        recordCount: distribution.dataFileRecordCount
+                        recordCount: distribution.dataFileRecordCount,
+                        fileCount: distribution.dataFileCount
                     }
                 })
             )
@@ -116,6 +118,10 @@ export function SnapshotTrend({ catalog, namespace, table, snapshots }: Snapshot
         return count.toString()
     }
 
+    const formatFileCount = (count: number) => {
+        return count.toString()
+    }
+
     if (loading) {
         return (
             <Card className="border-muted/70 shadow-sm">
@@ -133,15 +139,46 @@ export function SnapshotTrend({ catalog, namespace, table, snapshots }: Snapshot
         )
     }
 
+    const getDescription = () => {
+        switch (trendType) {
+            case "size":
+                return "Historical data size changes over time"
+            case "records":
+                return "Historical record count changes over time"
+            case "files":
+                return "Historical file count changes over time"
+        }
+    }
+
+    const getDataKey = () => {
+        switch (trendType) {
+            case "size":
+                return "dataSize"
+            case "records":
+                return "recordCount"
+            case "files":
+                return "fileCount"
+        }
+    }
+
+    const getFormatter = () => {
+        switch (trendType) {
+            case "size":
+                return formatSize
+            case "records":
+                return formatRecordCount
+            case "files":
+                return formatFileCount
+        }
+    }
+
     return (
         <Card className="border-muted/70 shadow-sm">
             <CardHeader className="pb-2">
                 <div className="flex justify-between items-center">
                     <div>
                         <CardTitle className="text-base">Snapshot Trend</CardTitle>
-                        <CardDescription>
-                            {trendType === "size" ? "Historical data size changes over time" : "Historical record count changes over time"}
-                        </CardDescription>
+                        <CardDescription>{getDescription()}</CardDescription>
                     </div>
                     <ToggleGroup
                         type="single"
@@ -154,6 +191,9 @@ export function SnapshotTrend({ catalog, namespace, table, snapshots }: Snapshot
                         </ToggleGroupItem>
                         <ToggleGroupItem value="records" aria-label="Show record trend">
                             Records
+                        </ToggleGroupItem>
+                        <ToggleGroupItem value="files" aria-label="Show file trend">
+                            Files
                         </ToggleGroupItem>
                     </ToggleGroup>
                 </div>
@@ -169,18 +209,18 @@ export function SnapshotTrend({ catalog, namespace, table, snapshots }: Snapshot
                             padding={{ left: 20, right: 20 }}
                         />
                         <YAxis
-                            tickFormatter={trendType === "size" ? formatSize : formatRecordCount}
+                            tickFormatter={getFormatter()}
                             tick={{ fontSize: 12 }}
                             width={100}
                             padding={{ top: 20, bottom: 20 }}
                         />
                         <Tooltip
-                            formatter={(value: number) => trendType === "size" ? formatSize(value) : formatRecordCount(value)}
+                            formatter={(value: number) => getFormatter()(value)}
                             labelFormatter={(label: number) => formatDate(label)}
                         />
                         <Line
                             type="monotone"
-                            dataKey={trendType === "size" ? "dataSize" : "recordCount"}
+                            dataKey={getDataKey()}
                             stroke="#3b82f6"
                             strokeWidth={2}
                             dot={false}
