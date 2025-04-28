@@ -118,31 +118,25 @@ export function SnapshotTrend({ catalog, namespace, table, snapshots }: Snapshot
         data.forEach(item => {
             const date = new Date(item.timestamp)
             let key: string
-            let timestamp: number
 
             switch (granularity) {
                 case "day":
                     key = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`
-                    timestamp = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()
                     break
                 case "week":
                     const weekStart = new Date(date)
                     weekStart.setDate(date.getDate() - date.getDay())
                     key = `${weekStart.getFullYear()}-${weekStart.getMonth() + 1}-${weekStart.getDate()}`
-                    timestamp = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate()).getTime()
                     break
                 case "month":
                     key = `${date.getFullYear()}-${date.getMonth() + 1}`
-                    timestamp = new Date(date.getFullYear(), date.getMonth(), 1).getTime()
                     break
                 case "quarter":
                     const quarter = Math.floor(date.getMonth() / 3)
                     key = `${date.getFullYear()}-Q${quarter + 1}`
-                    timestamp = new Date(date.getFullYear(), quarter * 3, 1).getTime()
                     break
                 case "year":
                     key = `${date.getFullYear()}`
-                    timestamp = new Date(date.getFullYear(), 0, 1).getTime()
                     break
             }
 
