@@ -16,28 +16,54 @@
 "use client"
 
 import * as React from "react"
-import { Database, RefreshCw, ServerCrash, FolderSearch, AlertCircle, LogOut, Plus, Search } from "lucide-react"
-import { useRouter, useSearchParams, usePathname } from "next/navigation"
+import { Suspense } from "react"
+import Link from "next/link"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { useAuth } from "@/contexts/auth-context"
+import { useRefresh } from "@/contexts/refresh-context"
+import {
+  AlertCircle,
+  Database,
+  FolderSearch,
+  LogOut,
+  Plus,
+  RefreshCw,
+  Search,
+  ServerCrash,
+  Users,
+} from "lucide-react"
 
+import {
+  loadCatalogNames,
+  loadNamespacesAndTables,
+  type NamespaceTables,
+} from "@/lib/data-loader"
+import { cn } from "@/lib/utils"
+import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuItem,
-  SidebarFooter,
 } from "@/components/ui/sidebar"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { useToast } from "@/hooks/use-toast"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { NamespaceTreeItem } from "@/components/sidebar/tree-items"
-import { useRefresh } from "@/contexts/refresh-context"
-import { useAuth } from "@/contexts/auth-context"
-import { cn } from "@/lib/utils"
-import { loadCatalogNames, loadNamespacesAndTables, type NamespaceTables } from "@/lib/data-loader"
-import { Suspense } from "react"
 
 function AppSidebarContent() {
   const searchParams = useSearchParams()
@@ -80,7 +106,8 @@ function AppSidebarContent() {
         console.error("Failed to load catalogs:", err)
         toast({
           title: "Failed to load catalogs",
-          description: "There was an error loading the catalog list. Please try again.",
+          description:
+            "There was an error loading the catalog list. Please try again.",
           variant: "destructive",
         })
         if (isMounted) {
@@ -157,48 +184,55 @@ function AppSidebarContent() {
     if (!searchQuery) return namespaces
 
     const searchLower = searchQuery.toLowerCase()
-    
+
     // Helper function to check if search string is a subsequence of the target
     const isSubsequence = (search: string, target: string) => {
-      const cleanTarget = target.replace(/[_-]/g, '').toLowerCase()
+      const cleanTarget = target.replace(/[_-]/g, "").toLowerCase()
       let searchIndex = 0
       let targetIndex = 0
-      
+
       while (searchIndex < search.length && targetIndex < cleanTarget.length) {
         if (search[searchIndex] === cleanTarget[targetIndex]) {
           searchIndex++
         }
         targetIndex++
       }
-      
+
       return searchIndex === search.length
     }
 
-    return namespaces.map(namespace => {
-      const filteredTables = namespace.tables.filter(table => 
-        table.toLowerCase().includes(searchLower) || // Exact match
-        isSubsequence(searchLower, table) // Subsequence match
-      )
-      const filteredChildren = namespace.children.map(child => {
-        const childFilteredTables = child.tables.filter(table => 
-          table.toLowerCase().includes(searchLower) || // Exact match
-          isSubsequence(searchLower, table) // Subsequence match
+    return namespaces
+      .map((namespace) => {
+        const filteredTables = namespace.tables.filter(
+          (table) =>
+            table.toLowerCase().includes(searchLower) || // Exact match
+            isSubsequence(searchLower, table) // Subsequence match
         )
-        return {
-          ...child,
-          tables: childFilteredTables
-        }
-      }).filter(child => child.tables.length > 0)
+        const filteredChildren = namespace.children
+          .map((child) => {
+            const childFilteredTables = child.tables.filter(
+              (table) =>
+                table.toLowerCase().includes(searchLower) || // Exact match
+                isSubsequence(searchLower, table) // Subsequence match
+            )
+            return {
+              ...child,
+              tables: childFilteredTables,
+            }
+          })
+          .filter((child) => child.tables.length > 0)
 
-      return {
-        ...namespace,
-        tables: filteredTables,
-        children: filteredChildren
-      }
-    }).filter(namespace => 
-      namespace.tables.length > 0 || 
-      namespace.children.some(child => child.tables.length > 0)
-    )
+        return {
+          ...namespace,
+          tables: filteredTables,
+          children: filteredChildren,
+        }
+      })
+      .filter(
+        (namespace) =>
+          namespace.tables.length > 0 ||
+          namespace.children.some((child) => child.tables.length > 0)
+      )
   }, [namespaces, searchQuery])
 
   // Don't render sidebar if user is not authenticated or on login page
@@ -222,7 +256,7 @@ function AppSidebarContent() {
                         router.push("/catalog/new")
                         return
                       }
-                      
+
                       // Update the URL with the catalog parameter without navigation
                       const url = new URL(window.location.href)
                       url.searchParams.set("catalog", value)
@@ -241,7 +275,13 @@ function AppSidebarContent() {
                   >
                     <SelectTrigger className="h-9 bg-background border-muted-foreground/20 hover:border-blue-400 hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors">
                       <Database className="mr-2 h-4 w-4 text-blue-500" />
-                      <SelectValue placeholder={catalogListLoading ? "Loading catalogs..." : "Select catalog"} />
+                      <SelectValue
+                        placeholder={
+                          catalogListLoading
+                            ? "Loading catalogs..."
+                            : "Select catalog"
+                        }
+                      />
                     </SelectTrigger>
                     <SelectContent>
                       {catalogs.map((catalog) => (
@@ -273,7 +313,7 @@ function AppSidebarContent() {
                         size="icon"
                         className={cn(
                           "h-9 w-9 flex-shrink-0 border-muted-foreground/20 transition-all duration-200",
-                          isRefreshing && "border-blue-500/50 bg-blue-500/10",
+                          isRefreshing && "border-blue-500/50 bg-blue-500/10"
                         )}
                         onClick={handleRefresh}
                         disabled={isRefreshing || catalogListLoading}
@@ -281,7 +321,9 @@ function AppSidebarContent() {
                         <RefreshCw
                           className={cn(
                             "h-4 w-4",
-                            isRefreshing ? "animate-spin text-blue-500" : "text-muted-foreground/50",
+                            isRefreshing
+                              ? "animate-spin text-blue-500"
+                              : "text-muted-foreground/50"
                           )}
                         />
                         <span className="sr-only">Refresh</span>
@@ -322,7 +364,7 @@ function AppSidebarContent() {
                       size="icon"
                       className={cn(
                         "h-9 w-9 flex-shrink-0 border-muted-foreground/20 transition-all duration-200",
-                        isRefreshing && "border-blue-500/50 bg-blue-500/10",
+                        isRefreshing && "border-blue-500/50 bg-blue-500/10"
                       )}
                       onClick={handleRefresh}
                       disabled={isRefreshing || catalogListLoading}
@@ -330,7 +372,9 @@ function AppSidebarContent() {
                       <RefreshCw
                         className={cn(
                           "h-4 w-4",
-                          isRefreshing ? "animate-spin text-blue-500" : "text-muted-foreground/50",
+                          isRefreshing
+                            ? "animate-spin text-blue-500"
+                            : "text-muted-foreground/50"
                         )}
                       />
                       <span className="sr-only">Refresh</span>
@@ -360,7 +404,8 @@ function AppSidebarContent() {
               <AlertCircle className="h-8 w-8 text-amber-500" />
               <span className="text-sm font-medium">No catalogs found</span>
               <p className="text-xs text-muted-foreground max-w-[200px]">
-                Please connect a database or check your permissions to access catalogs.
+                Please connect a database or check your permissions to access
+                catalogs.
               </p>
             </div>
           ) : !catalog ? (
@@ -374,7 +419,10 @@ function AppSidebarContent() {
           ) : namespacesLoading ? (
             <div className="space-y-2 mt-3">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="h-8 bg-muted/30 rounded-md animate-pulse opacity-60" />
+                <div
+                  key={i}
+                  className="h-8 bg-muted/30 rounded-md animate-pulse opacity-60"
+                />
               ))}
               <div className="h-8 bg-muted/30 rounded-md animate-pulse opacity-40 w-3/4" />
               <div className="h-8 bg-muted/30 rounded-md animate-pulse opacity-20 w-1/2" />
@@ -387,7 +435,13 @@ function AppSidebarContent() {
                 {searchQuery ? (
                   <>No tables matching &quot;{searchQuery}&quot; were found.</>
                 ) : (
-                  <>The catalog <span className="font-medium text-foreground">&quot;{catalog}&quot;</span> doesn&apos;t contain any tables.</>
+                  <>
+                    The catalog{" "}
+                    <span className="font-medium text-foreground">
+                      &quot;{catalog}&quot;
+                    </span>{" "}
+                    doesn&apos;t contain any tables.
+                  </>
                 )}
               </p>
             </div>
@@ -396,7 +450,10 @@ function AppSidebarContent() {
               <SidebarMenu>
                 {filteredNamespaces.map((namespace) => (
                   <SidebarMenuItem key={namespace.name} className="mb-1">
-                    <NamespaceTreeItem catalog={catalog as string} namespace={namespace} />
+                    <NamespaceTreeItem
+                      catalog={catalog as string}
+                      namespace={namespace}
+                    />
                   </SidebarMenuItem>
                 ))}
               </SidebarMenu>
@@ -406,18 +463,46 @@ function AppSidebarContent() {
       </SidebarContent>
 
       <SidebarFooter className="border-t p-3 bg-muted/30">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-start">
+          <div className="flex items-center gap-2 mr-auto">
             <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
               <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                {user?.name?.charAt(0)?.toUpperCase() ?? 'U'}
+                {user?.name?.charAt(0)?.toUpperCase() ?? "U"}
               </span>
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-medium">{user.name}</span>
+              <span
+                className="text-sm font-medium w-24 truncate"
+                title={user.name}
+              >
+                {user.name}
+              </span>
               <span className="text-xs text-muted-foreground">{user.role}</span>
             </div>
           </div>
+
+          {user.role === "admin" && (
+            <TooltipProvider delayDuration={300}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-blue-500 "
+                    asChild
+                  >
+                    <Link href="/users">
+                      <Users className="h-4 w-4" />
+                      <span className="sr-only">User Management</span>
+                    </Link>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  <p>User Management</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
 
           <TooltipProvider delayDuration={300}>
             <Tooltip>
@@ -447,9 +532,9 @@ export function AppSidebar() {
   const { user } = useAuth()
   const pathname = usePathname()
   const isLoginPage = pathname === "/login"
-
+  const isUsersPage = pathname === "/users"
   // Don't render sidebar if user is not authenticated or on login page
-  if (!user || isLoginPage) {
+  if (!user || isLoginPage || isUsersPage) {
     return null
   }
 
