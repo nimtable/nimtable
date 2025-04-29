@@ -7,9 +7,12 @@ server:
 admin:
   username: admin
   password: admin
+# make sure the database config is consistent with the docker-compose.yml file
 database:
-  # Note: Use a volume (/nimtable/data) for the DB, so it's not lost when the container is deleted
-  url: jdbc:sqlite:file:/nimtable/data/nimtable_data.db
+  # You can also point to your own Postgres database, instead of using the one provided by docker-compose.
+  url: jdbc:postgresql://database:5432/nimtable
+  username: nimtable_user
+  password: password
 
 catalogs:
 #  - name: rest-catalog-demo

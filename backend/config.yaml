@@ -6,9 +6,14 @@ admin:
   password: admin
 
 # Database is used for users, catalogs, etc.
-# Currently only SQLite is supported. Postgres will be supported later.
+# Currently SQLite and Postgres are supported
 database:
+  # We use SQLite by default here, for ease of local development.
   url: jdbc:sqlite:file:./nimtable_data.db # SQLite file path
+  # # postgres:
+  # url: jdbc:postgresql://localhost:5432/nimtable_db
+  # username: nimtable_user
+  # password: password
 
 catalogs:
 #  - name: rest-catalog-demo

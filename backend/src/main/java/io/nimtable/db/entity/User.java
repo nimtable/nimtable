@@ -18,30 +18,41 @@ package io.nimtable.db.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.ebean.Model;
+import io.ebean.annotation.WhenCreated;
+import io.ebean.annotation.WhenModified;
+import jakarta.persistence.*;
 import java.time.Instant;
 
-public class User {
+@Entity
+@Table(name = "users")
+public class User extends Model {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
+
+    @Column(nullable = false, unique = true)
     private String username;
+
     // Field to receive plain text password from request (write-only)
-    private String password;
+    @Transient private String password;
+
     // Field to store hashed password in DB (read/write internally, ignore in
     // response)
     private String passwordHash;
-    private Instant createdAt;
-    private Instant updatedAt;
+
+    @WhenCreated private Instant createdAt;
+
+    @WhenModified private Instant updatedAt;
 
     // Constructors
     public User() {}
 
-    public User(
-            long id, String username, String passwordHash, Instant createdAt, Instant updatedAt) {
+    public User(long id, String username, String passwordHash) {
         this.id = id;
         this.username = username;
         this.passwordHash = passwordHash;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
     }
 
     // Getters and Setters
@@ -82,21 +93,5 @@ public class User {
     // Allow internal setting/getting of passwordHash
     public void setPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(Instant createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public Instant getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(Instant updatedAt) {
-        this.updatedAt = updatedAt;
     }
 }

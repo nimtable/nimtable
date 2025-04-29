@@ -25,7 +25,6 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -98,10 +97,6 @@ public class UserServlet extends HttpServlet {
             LOG.warn("Invalid user ID format in URI: {}", req.getRequestURI());
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             objectMapper.writeValue(resp.getWriter(), new ErrorResponse("Invalid user ID format."));
-        } catch (SQLException e) {
-            LOG.error("Database error during GET request: {}", e.getMessage(), e);
-            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            objectMapper.writeValue(resp.getWriter(), new ErrorResponse("Internal Server Error"));
         } catch (Exception e) {
             LOG.error("Unexpected error during GET request: {}", e.getMessage(), e);
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -117,11 +112,9 @@ public class UserServlet extends HttpServlet {
      *
      * @param userId The ID of the user to retrieve.
      * @param resp The HttpServletResponse object.
-     * @throws SQLException If a database error occurs.
      * @throws IOException If an I/O error occurs writing the response.
      */
-    private void handleGetUserById(long userId, HttpServletResponse resp)
-            throws SQLException, IOException {
+    private void handleGetUserById(long userId, HttpServletResponse resp) throws IOException {
         Optional<User> userOptional = userRepository.findUserById(userId);
         if (userOptional.isPresent()) {
             resp.setStatus(HttpServletResponse.SC_OK);
@@ -140,10 +133,9 @@ public class UserServlet extends HttpServlet {
      * JSON array of users. Password hashes are always masked in the response.
      *
      * @param resp The HttpServletResponse object.
-     * @throws SQLException If a database error occurs.
      * @throws IOException If an I/O error occurs writing the response.
      */
-    private void handleGetAllUsers(HttpServletResponse resp) throws SQLException, IOException {
+    private void handleGetAllUsers(HttpServletResponse resp) throws IOException {
         List<User> users = userRepository.getAllUsers();
         // Mask password hash for all users in the list
         users.forEach(user -> user.setPasswordHash(null));
@@ -208,25 +200,12 @@ public class UserServlet extends HttpServlet {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             objectMapper.writeValue(
                     resp.getWriter(), new ErrorResponse("Invalid request data: " + e.getMessage()));
-        } catch (SQLException e) {
-            LOG.error("Database error during POST request: {}", e.getMessage(), e);
-            if (e.getErrorCode() == 19 /* SQLITE_CONSTRAINT */) {
-                if (e.getMessage().contains("users.username")) {
-                    resp.setStatus(HttpServletResponse.SC_CONFLICT);
-                    objectMapper.writeValue(
-                            resp.getWriter(), new ErrorResponse("Username already exists."));
-                } else {
-                    resp.setStatus(
-                            HttpServletResponse.SC_INTERNAL_SERVER_ERROR); // Other constraint error
-                    objectMapper.writeValue(
-                            resp.getWriter(), new ErrorResponse("Database constraint violation."));
-                }
-            } else {
-                resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                objectMapper.writeValue(
-                        resp.getWriter(),
-                        new ErrorResponse("Database error occurred during user creation."));
-            }
+        } catch (io.ebean.DuplicateKeyException e) {
+            LOG.warn("Username already exists: {}", e.getMessage());
+            resp.setStatus(HttpServletResponse.SC_CONFLICT);
+            objectMapper.writeValue(
+                    resp.getWriter(),
+                    new ErrorResponse("Username already exists: " + e.getMessage()));
         } catch (Exception e) {
             LOG.error("Unexpected error during POST request: {}", e.getMessage(), e);
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -324,28 +303,6 @@ public class UserServlet extends HttpServlet {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             objectMapper.writeValue(
                     resp.getWriter(), new ErrorResponse("Invalid request data: " + e.getMessage()));
-        } catch (SQLException e) {
-            LOG.error(
-                    "Database error during PUT request for user ID {}: {}",
-                    matcher.group(1),
-                    e.getMessage(),
-                    e);
-            if (e.getErrorCode() == 19 /* SQLITE_CONSTRAINT */) {
-                if (e.getMessage().contains("users.username")) {
-                    resp.setStatus(HttpServletResponse.SC_CONFLICT);
-                    objectMapper.writeValue(
-                            resp.getWriter(), new ErrorResponse("Username already exists."));
-                } else {
-                    resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                    objectMapper.writeValue(
-                            resp.getWriter(), new ErrorResponse("Database constraint violation."));
-                }
-            } else {
-                resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                objectMapper.writeValue(
-                        resp.getWriter(),
-                        new ErrorResponse("Database error occurred during user update."));
-            }
         } catch (Exception e) {
             LOG.error(
                     "Unexpected error during PUT request for user ID {}: {}",

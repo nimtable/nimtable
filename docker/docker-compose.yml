@@ -6,15 +6,27 @@ services:
     # Mount configuration files
     volumes:
       - ./config.yaml:/nimtable/config.yaml
-      - nimtable-data:/nimtable/data
     environment:
       JAVA_OPTS: -Xmx2g -Xms512m
+    networks:
+      - nimtable-network
+  # Database to persist nimtable data.
+  # Make sure the setting in config.yaml is consistent with this.
+  database:
+    image: postgres:17
+    ports:
+      - "5432:5432"
+    volumes:
+      - nimtable-data-postgres:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: nimtable_user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: nimtable
     networks:
       - nimtable-network
 
 networks:
   nimtable-network:
     driver: bridge
-
 volumes:
-  nimtable-data:
+  nimtable-data-postgres:
