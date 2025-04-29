@@ -46,8 +46,6 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.component.AbstractLifeCycle;
 import org.eclipse.jetty.util.component.LifeCycle;
 import org.eclipse.jetty.util.resource.Resource;
-import org.flywaydb.core.Flyway;
-import org.flywaydb.core.api.FlywayException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -96,42 +94,6 @@ public class Server {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         Config config = mapper.readValue(new File("config.yaml"), Config.class);
         Config.Database dbConfig = config.database(); // Get DB config early
-
-        // Initialize and run Flyway migrations
-        try {
-            if (dbConfig == null || dbConfig.url() == null || dbConfig.url().isEmpty()) {
-                LOG.error("Database URL configuration is missing in config.yaml");
-                System.exit(1);
-            }
-
-            String dbUrl = dbConfig.url();
-            String dbType;
-            if (dbUrl.startsWith("jdbc:sqlite:")) {
-                dbType = "sqlite";
-            } else {
-                LOG.error("Unsupported database type for URL: {}", dbUrl);
-                System.exit(1);
-                return; // Should not be reached due to System.exit(1)
-            }
-
-            String migrationLocation = "classpath:db/migration/" + dbType;
-            LOG.info(
-                    "Using database type '{}' and migration location '{}'",
-                    dbType,
-                    migrationLocation);
-
-            Flyway flyway =
-                    Flyway.configure()
-                            .dataSource(dbUrl, dbConfig.username(), dbConfig.password())
-                            .locations(migrationLocation)
-                            .load();
-            flyway.migrate();
-            LOG.info("Database migration completed successfully.");
-
-        } catch (FlywayException e) {
-            LOG.error("Database migration failed: {}", e.getMessage(), e);
-            System.exit(1); // Exit if migration fails
-        }
 
         // Initialize Persistence Manager
         PersistenceManager.initialize(dbConfig);

@@ -31,7 +31,8 @@ public class PersistenceManager {
     private static volatile HikariDataSource dataSourceInstance;
 
     // Prevent instantiation
-    private PersistenceManager() {}
+    private PersistenceManager() {
+    }
 
     public static synchronized void initialize(Config.Database dbConfig) {
         if (dataSourceInstance == null) {
@@ -58,12 +59,13 @@ public class PersistenceManager {
                 dataSourceInstance = new HikariDataSource(config);
                 LOG.info("HikariCP DataSource initialized successfully for SQLite.");
 
+                FlywayMigrator.migrateDatabase(dataSourceInstance, dbConfig);
             } catch (Exception e) {
-                LOG.error("Failed to initialize HikariCP DataSource: {}", e.getMessage(), e);
+                LOG.error("Failed to initialize persistence: {}", e.getMessage(), e);
                 throw new RuntimeException("Failed to initialize persistence", e);
             }
         } else {
-            LOG.warn("HikariCP DataSource already initialized.");
+            LOG.warn("DataSource already initialized.");
         }
     }
 
