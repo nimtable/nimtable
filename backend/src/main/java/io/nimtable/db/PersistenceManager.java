@@ -31,8 +31,7 @@ public class PersistenceManager {
     private static volatile HikariDataSource dataSourceInstance;
 
     // Prevent instantiation
-    private PersistenceManager() {
-    }
+    private PersistenceManager() {}
 
     public static synchronized void initialize(Config.Database dbConfig) {
         if (dataSourceInstance == null) {
