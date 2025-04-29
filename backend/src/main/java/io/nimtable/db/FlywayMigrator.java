@@ -35,14 +35,13 @@ public class FlywayMigrator {
      * Run database migrations based on the database URL.
      *
      * @param dataSource The datasource to run migrations on
-     * @param dbConfig The database configuration
+     * @param dbConfig   The database configuration
      */
     public static void migrateDatabase(DataSource dataSource, Config.Database dbConfig) {
         LOG.info("Running Flyway migrations for database: {}", dbConfig.url());
 
         String dbType = detectDatabaseType(dbConfig.url());
-        FluentConfiguration flywayConfig =
-                Flyway.configure().dataSource(dataSource).validateOnMigrate(true);
+        FluentConfiguration flywayConfig = Flyway.configure().dataSource(dataSource).validateOnMigrate(true);
 
         // Configure migrations location based on database type
         if ("sqlite".equals(dbType)) {
@@ -50,8 +49,7 @@ public class FlywayMigrator {
         } else if ("postgresql".equals(dbType)) {
             flywayConfig.locations("db/migration/postgresql");
         } else {
-            LOG.warn("Unknown database type: {}. Using default migration locations.", dbType);
-            flywayConfig.locations("db/migration");
+            throw new RuntimeException("Unsupported database type: " + dbType);
         }
 
         try {
