@@ -13,12 +13,7 @@ import { UserTable } from "@/components/users/user-table"
 
 export function UserManagement() {
   const { toast } = useToast()
-  const {
-    data: users,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
+  const { data: users, refetch } = useQuery({
     queryKey: ["users"],
     queryFn: () => getUsers().then((res) => res.data),
   })
@@ -29,7 +24,7 @@ export function UserManagement() {
     createUser({
       body: user,
     })
-      .then((res) => {
+      .then(() => {
         refetch()
         setOpen(false)
       })

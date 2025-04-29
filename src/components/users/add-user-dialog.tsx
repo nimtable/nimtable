@@ -97,7 +97,7 @@ export function AddUserDialog({
                   <FormControl>
                     <Input placeholder="username" {...field} />
                   </FormControl>
-                  <FormDescription>The user's login name</FormDescription>
+                  <FormDescription>The user&apos;s login name</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
