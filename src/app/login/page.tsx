@@ -163,7 +163,7 @@ export default function LoginPage() {
                 <div className="flex flex-col md:flex-row items-center gap-10 md:gap-20">
                     {/* Enhanced left side - Branding with improved typography and spacing */}
                     <div
-                        className="w-full md:w-1/2 text-center md:text-left mb-10 md:mb-0 animate-fade-in-up"
+                        className="w-full md:w-3/5 text-center md:text-left mb-10 md:mb-0 animate-fade-in-up"
                         style={{ animationDelay: "0.2s" }}
                     >
                         <div className="flex items-center justify-center md:justify-start -ml-10">
@@ -177,14 +177,14 @@ export default function LoginPage() {
                         </div>
 
                         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 tracking-tight">
-                            <span className="block mb-2">Managed Iceberg</span>
+                            <span className="text-white">The Control Plane for </span>
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-blue-100">
-                                Made Simple
+                                Apache Iceberg™
                             </span>
                         </h1>
 
                         <p className="text-blue-100/80 text-lg md:text-xl max-w-md mx-auto md:mx-0 leading-relaxed">
-                            Access your Apache Iceberg tables with an intuitive, powerful interface designed for data professionals.
+                            A lightweight, easy-to-use platform to monitor, optimize, and govern your Iceberg-based lakehouse.
                         </p>
                     </div>
 
