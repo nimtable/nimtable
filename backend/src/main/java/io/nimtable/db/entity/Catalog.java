@@ -16,18 +16,36 @@
 
 package io.nimtable.db.entity;
 
+import io.ebean.Model;
+import io.ebean.annotation.DbJson;
+import jakarta.persistence.*;
 import java.sql.Timestamp;
 import java.util.Map;
 
-public class Catalog {
+@Entity
+@Table(name = "catalogs")
+public class Catalog extends Model {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false, unique = true)
     private String name;
+
+    @Column(nullable = false)
     private String type;
+
     private String uri;
+
     private String warehouse;
-    private Map<String, String> properties;
+
+    @DbJson private Map<String, String> properties;
+
+    @Column(insertable = true, updatable = false)
     private Timestamp createdAt;
+
+    @Column(insertable = true, updatable = true)
     private Timestamp updatedAt;
 
     public Long getId() {

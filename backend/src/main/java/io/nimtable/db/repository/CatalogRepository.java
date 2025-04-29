@@ -16,186 +16,32 @@
 
 package io.nimtable.db.repository;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.nimtable.db.PersistenceManager;
+import io.ebean.DB;
 import io.nimtable.db.entity.Catalog;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Timestamp;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class CatalogRepository {
 
     private static final Logger LOG = LoggerFactory.getLogger(CatalogRepository.class);
-    private final ObjectMapper jsonMapper = new ObjectMapper(); // For handling JSON TEXT
 
     public List<Catalog> findAll() {
-        List<Catalog> catalogs = new ArrayList<>();
-        String sql =
-                "SELECT id, name, type, uri, warehouse, properties, created_at, updated_at FROM catalogs";
-        try (Connection conn = PersistenceManager.getConnection();
-                PreparedStatement pstmt = conn.prepareStatement(sql);
-                ResultSet rs = pstmt.executeQuery()) {
-
-            while (rs.next()) {
-                catalogs.add(mapRowToCatalog(rs));
-            }
-        } catch (SQLException
-                | JsonProcessingException
-                | DateTimeParseException e) { // Catch parsing exceptions
-            LOG.error("Error finding all catalogs", e);
-            return Collections.emptyList();
-        }
-        return catalogs;
+        return new ArrayList<>(DB.find(Catalog.class).orderBy().asc("name").findList());
     }
 
     public Catalog save(Catalog catalog) {
-        if (catalog.getId() == null) {
-            return insert(catalog);
-        } else {
-            return update(catalog);
-        }
-    }
-
-    private Catalog insert(Catalog catalog) {
-        String sql =
-                "INSERT INTO catalogs (name, type, uri, warehouse, properties, created_at, updated_at) VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))";
-        try (Connection conn = PersistenceManager.getConnection();
-                PreparedStatement pstmt =
-                        conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-
-            Timestamp now = new Timestamp(System.currentTimeMillis());
-            pstmt.setString(1, catalog.getName());
-            pstmt.setString(2, catalog.getType());
-            pstmt.setString(3, catalog.getUri());
-            pstmt.setString(4, catalog.getWarehouse());
-            pstmt.setString(5, toJsonString(catalog.getProperties()));
-
-            int affectedRows = pstmt.executeUpdate();
-
-            if (affectedRows == 0) {
-                throw new SQLException("Creating catalog failed, no rows affected.");
-            }
-
-            try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
-                if (generatedKeys.next()) {
-                    catalog.setId(generatedKeys.getLong(1));
-                    catalog.setCreatedAt(now);
-                    catalog.setUpdatedAt(now);
-                    return catalog;
-                } else {
-                    throw new SQLException("Creating catalog failed, no ID obtained.");
-                }
-            }
-        } catch (SQLException | JsonProcessingException e) {
-            LOG.error("Error inserting catalog: {}", catalog.getName(), e);
-            throw new RuntimeException("Failed to insert catalog", e);
-        }
-    }
-
-    private Catalog update(Catalog catalog) {
-        String sql =
-                "UPDATE catalogs SET name = ?, type = ?, uri = ?, warehouse = ?, properties = ?, updated_at = datetime('now') WHERE id = ?";
-        try (Connection conn = PersistenceManager.getConnection();
-                PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            Timestamp now = new Timestamp(System.currentTimeMillis());
-            pstmt.setString(1, catalog.getName());
-            pstmt.setString(2, catalog.getType());
-            pstmt.setString(3, catalog.getUri());
-            pstmt.setString(4, catalog.getWarehouse());
-            pstmt.setString(5, toJsonString(catalog.getProperties()));
-            pstmt.setLong(6, catalog.getId());
-
-            int affectedRows = pstmt.executeUpdate();
-
-            if (affectedRows == 0) {
-                LOG.warn(
-                        "Updating catalog failed, no rows affected for catalog ID: {}",
-                        catalog.getId());
-                return null;
-            }
-            catalog.setUpdatedAt(now);
-            return catalog;
-        } catch (SQLException | JsonProcessingException e) {
-            LOG.error("Error updating catalog: {}", catalog.getName(), e);
-            throw new RuntimeException("Failed to update catalog", e);
-        }
-    }
-
-    private Catalog mapRowToCatalog(ResultSet rs) throws SQLException, JsonProcessingException {
-        Catalog catalog = new Catalog();
-        catalog.setId(rs.getLong("id"));
-        catalog.setName(rs.getString("name"));
-        catalog.setType(rs.getString("type"));
-        catalog.setUri(rs.getString("uri"));
-        catalog.setWarehouse(rs.getString("warehouse"));
-        catalog.setProperties(fromJsonString(rs.getString("properties")));
-        catalog.setCreatedAt(rs.getTimestamp("created_at"));
-        catalog.setUpdatedAt(rs.getTimestamp("updated_at"));
+        DB.save(catalog);
         return catalog;
     }
 
-    // Helper to convert Map to JSON String for TEXT column
-    private String toJsonString(Map<String, String> properties) throws JsonProcessingException {
-        if (properties == null || properties.isEmpty()) {
-            return null; // Store null or empty JSON string "{}" based on preference
-        }
-        return jsonMapper.writeValueAsString(properties);
-    }
-
-    // Helper to convert JSON string from DB to Map
-    private Map<String, String> fromJsonString(String jsonString) throws JsonProcessingException {
-        if (jsonString == null || jsonString.isEmpty()) {
-            return Collections.emptyMap();
-        }
-        TypeReference<Map<String, String>> typeRef = new TypeReference<>() {};
-        return jsonMapper.readValue(jsonString, typeRef);
-    }
-
     public Catalog findByName(String name) {
-        String sql =
-                "SELECT id, name, type, uri, warehouse, properties, created_at, updated_at FROM catalogs WHERE name = ?";
-        try (Connection conn = PersistenceManager.getConnection();
-                PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, name);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next()) {
-                    return mapRowToCatalog(rs);
-                }
-            }
-        } catch (SQLException | JsonProcessingException | DateTimeParseException e) {
-            LOG.error("Error finding catalog by name: {}", name, e);
-        }
-        return null;
+        return DB.find(Catalog.class).where().eq("name", name).findOne();
     }
 
     public void delete(Catalog catalog) {
-        String sql = "DELETE FROM catalogs WHERE id = ?";
-        try (Connection conn = PersistenceManager.getConnection();
-                PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setLong(1, catalog.getId());
-            int affectedRows = pstmt.executeUpdate();
-            if (affectedRows == 0) {
-                LOG.warn(
-                        "Deleting catalog failed, no rows affected for catalog ID: {}",
-                        catalog.getId());
-            }
-        } catch (SQLException e) {
-            LOG.error("Error deleting catalog: {}", catalog.getName(), e);
-            throw new RuntimeException("Failed to delete catalog", e);
-        }
+        DB.delete(catalog);
     }
 
     // Add other methods like findById, delete etc. if needed

@@ -18,18 +18,32 @@ package io.nimtable.db.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.ebean.Model;
+import jakarta.persistence.*;
 import java.time.Instant;
 
-public class User {
+@Entity
+@Table(name = "users")
+public class User extends Model {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
+
+    @Column(nullable = false, unique = true)
     private String username;
+
     // Field to receive plain text password from request (write-only)
-    private String password;
+    @Transient private String password;
+
     // Field to store hashed password in DB (read/write internally, ignore in
     // response)
     private String passwordHash;
+
+    @Column(insertable = true, updatable = false)
     private Instant createdAt;
+
+    @Column(insertable = true, updatable = true)
     private Instant updatedAt;
 
     // Constructors

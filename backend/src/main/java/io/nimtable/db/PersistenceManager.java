@@ -16,8 +16,9 @@
 
 package io.nimtable.db;
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
+import io.ebean.DatabaseFactory;
+import io.ebean.config.DatabaseConfig;
+import io.ebean.datasource.DataSourceConfig;
 import io.nimtable.Config;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -28,7 +29,7 @@ import org.slf4j.LoggerFactory;
 public class PersistenceManager {
 
     private static final Logger LOG = LoggerFactory.getLogger(PersistenceManager.class);
-    private static volatile HikariDataSource dataSourceInstance;
+    private static javax.sql.DataSource dataSourceInstance;
 
     // Prevent instantiation
     private PersistenceManager() {}
@@ -40,25 +41,33 @@ public class PersistenceManager {
                 throw new IllegalStateException("Database URL configuration is missing.");
             }
             try {
-                LOG.info("Initializing HikariCP DataSource for SQLite URL: {}", dbConfig.url());
-                HikariConfig config = new HikariConfig();
-                config.setJdbcUrl(dbConfig.url());
-                config.setDriverClassName("org.sqlite.JDBC"); // Set SQLite driver
+                LOG.info("Configuring DataSource for URL: {}", dbConfig.url());
+                DataSourceConfig dsConfig = new DataSourceConfig();
+                dsConfig.setUrl(dbConfig.url());
+                if (dbConfig.url().startsWith("jdbc:sqlite:")) {
+                    dsConfig.setUsername("user");
+                    dsConfig.setPassword("");
+                } else {
+                    dsConfig.setUsername(dbConfig.username());
+                    dsConfig.setPassword(dbConfig.password());
+                }
+                // let Ebean choose driver via URL
 
-                // HikariCP Pool settings (optional, but recommended)
-                config.setMaximumPoolSize(
-                        5); // SQLite typically handles fewer concurrent connections well
-                config.setMinimumIdle(1);
-                config.setIdleTimeout(600000); // 10 minutes
-                config.setConnectionTimeout(30000); // 30 seconds
-                config.addDataSourceProperty("cachePrepStmts", "true");
-                config.addDataSourceProperty("prepStmtCacheSize", "250");
-                config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+                // --- Ebean configuration ---
+                DatabaseConfig ebeanConfig = new DatabaseConfig();
+                ebeanConfig.setName("db");
+                ebeanConfig.setDataSourceConfig(dsConfig);
+                ebeanConfig.addPackage("io.nimtable.db.entity");
 
-                dataSourceInstance = new HikariDataSource(config);
-                LOG.info("HikariCP DataSource initialized successfully for SQLite.");
+                // Disable Ebean's DDL generation and execution
+                ebeanConfig.setDdlGenerate(false);
+                ebeanConfig.setDdlRun(false);
+                ebeanConfig.setRunMigration(false);
 
-                FlywayMigrator.migrateDatabase(dataSourceInstance, dbConfig);
+                // Create Database and get DataSource
+                javax.sql.DataSource ds = DatabaseFactory.create(ebeanConfig).dataSource();
+                // Run Flyway migrations
+                FlywayMigrator.migrateDatabase(ds, dbConfig);
             } catch (Exception e) {
                 LOG.error("Failed to initialize persistence: {}", e.getMessage(), e);
                 throw new RuntimeException("Failed to initialize persistence", e);
@@ -82,10 +91,6 @@ public class PersistenceManager {
     }
 
     public static synchronized void close() {
-        if (dataSourceInstance != null && !dataSourceInstance.isClosed()) {
-            dataSourceInstance.close();
-            dataSourceInstance = null;
-            LOG.info("HikariCP DataSource closed.");
-        }
+        // Nothing to close: Ebean will shutdown datasource on JVM exit
     }
 }
