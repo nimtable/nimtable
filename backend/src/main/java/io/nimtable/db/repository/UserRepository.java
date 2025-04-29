@@ -38,7 +38,7 @@ public class UserRepository {
      * @return The created user with the generated ID and timestamps populated.
      */
     public User createUser(User user) {
-        DB.save(user);  
+        DB.save(user);
         return user;
     }
 
