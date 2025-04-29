@@ -46,8 +46,7 @@ public class Catalog extends Model {
 
     @WhenCreated private Instant createdAt;
 
-    @WhenModified
-    private Instant updatedAt;
+    @WhenModified private Instant updatedAt;
 
     public Long getId() {
         return id;
