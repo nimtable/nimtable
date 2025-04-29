@@ -10,8 +10,7 @@ admin:
 # make sure the database config is consistent with the docker-compose.yml file
 database:
   # You can also point to your own Postgres database, instead of using the one provided by docker-compose.
-  url: jdbc:postgresql://host.docker.internal:5432/nimtable_db
-  # url: jdbc:postgresql://postgres:5432/nimtable
+  url: jdbc:postgresql://postgres:5432/nimtable
   username: nimtable_user
   password: password
 

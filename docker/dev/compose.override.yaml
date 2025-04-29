@@ -3,3 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    # optional. Using this, you can use pg on localhost like: 
+    # jdbc:postgresql://host.docker.internal:5432/nimtable_db
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

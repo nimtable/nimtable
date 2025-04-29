@@ -200,6 +200,12 @@ public class UserServlet extends HttpServlet {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             objectMapper.writeValue(
                     resp.getWriter(), new ErrorResponse("Invalid request data: " + e.getMessage()));
+        } catch (io.ebean.DuplicateKeyException e) {
+            LOG.warn("Username already exists: {}", e.getMessage());
+            resp.setStatus(HttpServletResponse.SC_CONFLICT);
+            objectMapper.writeValue(
+                    resp.getWriter(),
+                    new ErrorResponse("Username already exists: " + e.getMessage()));
         } catch (Exception e) {
             LOG.error("Unexpected error during POST request: {}", e.getMessage(), e);
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

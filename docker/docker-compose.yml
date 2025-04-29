@@ -10,8 +10,6 @@ services:
       JAVA_OPTS: -Xmx2g -Xms512m
     networks:
       - nimtable-network
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
   # Database to persist nimtable data.
   # Make sure the setting in config.yaml is consistent with this.
   database:
