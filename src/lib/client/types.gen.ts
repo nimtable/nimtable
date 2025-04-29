@@ -52,6 +52,27 @@ export type _Error = {
     details?: string;
 };
 
+export type User = {
+    id?: number;
+    username: string;
+    /**
+     * Password hash (never sent in responses)
+     */
+    passwordHash?: string;
+    createdAt?: string;
+    updatedAt?: string;
+};
+
+export type UserCreate = {
+    username: string;
+    password: string;
+};
+
+export type UserUpdate = {
+    username: string;
+    password?: string;
+};
+
 export type LoginData = {
     body: LoginRequest;
     path?: never;
@@ -80,6 +101,169 @@ export type LoginResponses = {
 };
 
 export type LoginResponse2 = LoginResponses[keyof LoginResponses];
+
+export type GetUsersData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/users';
+};
+
+export type GetUsersErrors = {
+    /**
+     * Unauthorized
+     */
+    401: _Error;
+};
+
+export type GetUsersError = GetUsersErrors[keyof GetUsersErrors];
+
+export type GetUsersResponses = {
+    /**
+     * Successfully retrieved user list
+     */
+    200: Array<User>;
+};
+
+export type GetUsersResponse = GetUsersResponses[keyof GetUsersResponses];
+
+export type CreateUserData = {
+    body: UserCreate;
+    path?: never;
+    query?: never;
+    url: '/api/users';
+};
+
+export type CreateUserErrors = {
+    /**
+     * Invalid request parameters
+     */
+    400: _Error;
+    /**
+     * Username already exists
+     */
+    409: _Error;
+    /**
+     * Internal server error
+     */
+    500: _Error;
+};
+
+export type CreateUserError = CreateUserErrors[keyof CreateUserErrors];
+
+export type CreateUserResponses = {
+    /**
+     * User created successfully
+     */
+    201: User;
+};
+
+export type CreateUserResponse = CreateUserResponses[keyof CreateUserResponses];
+
+export type DeleteUserData = {
+    body?: never;
+    path: {
+        userId: number;
+    };
+    query?: never;
+    url: '/api/users/{userId}';
+};
+
+export type DeleteUserErrors = {
+    /**
+     * Unauthorized
+     */
+    401: _Error;
+    /**
+     * User not found
+     */
+    404: _Error;
+    /**
+     * Internal server error
+     */
+    500: _Error;
+};
+
+export type DeleteUserError = DeleteUserErrors[keyof DeleteUserErrors];
+
+export type DeleteUserResponses = {
+    /**
+     * User deleted successfully
+     */
+    204: void;
+};
+
+export type DeleteUserResponse = DeleteUserResponses[keyof DeleteUserResponses];
+
+export type GetUserByIdData = {
+    body?: never;
+    path: {
+        userId: number;
+    };
+    query?: never;
+    url: '/api/users/{userId}';
+};
+
+export type GetUserByIdErrors = {
+    /**
+     * Unauthorized
+     */
+    401: _Error;
+    /**
+     * User not found
+     */
+    404: _Error;
+};
+
+export type GetUserByIdError = GetUserByIdErrors[keyof GetUserByIdErrors];
+
+export type GetUserByIdResponses = {
+    /**
+     * Successfully retrieved user
+     */
+    200: User;
+};
+
+export type GetUserByIdResponse = GetUserByIdResponses[keyof GetUserByIdResponses];
+
+export type UpdateUserData = {
+    body: UserUpdate;
+    path: {
+        userId: number;
+    };
+    query?: never;
+    url: '/api/users/{userId}';
+};
+
+export type UpdateUserErrors = {
+    /**
+     * Invalid request parameters
+     */
+    400: _Error;
+    /**
+     * User not found
+     */
+    404: _Error;
+    /**
+     * Username already exists
+     */
+    409: _Error;
+    /**
+     * Internal server error
+     */
+    500: _Error;
+};
+
+export type UpdateUserError = UpdateUserErrors[keyof UpdateUserErrors];
+
+export type UpdateUserResponses = {
+    /**
+     * User updated successfully
+     */
+    200: User;
+};
+
+export type UpdateUserResponse = UpdateUserResponses[keyof UpdateUserResponses];
 
 export type GetCatalogsData = {
     body?: never;
