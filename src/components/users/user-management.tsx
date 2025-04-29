@@ -23,7 +23,6 @@ export function UserManagement() {
     queryFn: () => getUsers().then((res) => res.data),
   })
 
-  console.log(users)
   const [open, setOpen] = useState(false)
 
   const addUser = (user: UserCreate) => {

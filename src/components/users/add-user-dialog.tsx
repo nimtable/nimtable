@@ -58,20 +58,25 @@ export function AddUserDialog({
     },
   })
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsSubmitting(true)
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      setIsSubmitting(true)
+      onAddUser({
+        username: values.name,
+        password: values.password,
+      })
+      form.reset()
+      setIsSubmitting(false)
 
-    onAddUser({
-      username: values.name,
-      password: values.password,
-    })
-    form.reset()
-    setIsSubmitting(false)
-
-    toast({
-      title: "User Created Successfully",
-      description: `User ${values.name} has been created successfully`,
-    })
+      toast({
+        title: "User Created Successfully",
+        description: `User ${values.name} has been created successfully`,
+      })
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
