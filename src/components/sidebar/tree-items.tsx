@@ -38,7 +38,7 @@ export function TableItem({ catalog, namespace, name }: { catalog: string; names
 }
 
 export function NamespaceTreeItem({ catalog, namespace }: { catalog: string; namespace: NamespaceTables }) {
-    const [isOpen, setIsOpen] = React.useState(true)
+    const [isOpen, setIsOpen] = React.useState(false)
 
     return (
         <Collapsible open={isOpen} onOpenChange={setIsOpen} className="group">
