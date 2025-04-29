@@ -16,13 +16,13 @@
 "use client"
 
 import { useParams } from "next/navigation"
-import { Database, BarChart3, ExternalLink, Layers, Gauge } from "lucide-react"
+import { Database, BarChart3, ExternalLink, Layers, Gauge, Plus, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { SidebarInset } from "@/components/ui/sidebar"
 import Image from "next/image"
 
-export default function Page() {
+const Page = () => {
     const params = useParams<{ catalog: string }>()
     const catalog = params?.catalog
 
@@ -75,9 +75,9 @@ export default function Page() {
                                 <Card className="bg-background shadow-md border-muted/60 overflow-hidden">
                                     <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-blue-400 to-blue-600"></div>
                                     <CardHeader className="pb-2 pt-6">
-                                        <CardTitle className="text-xl">Select a catalog to begin</CardTitle>
+                                        <CardTitle className="text-xl">Connect to your Iceberg catalogs</CardTitle>
                                         <CardDescription className="text-base">
-                                            Choose an Iceberg catalog from the dropdown in the sidebar
+                                            Set up a connection to your Iceberg catalog to start managing your data lake
                                         </CardDescription>
                                     </CardHeader>
                                     <CardContent>
@@ -87,9 +87,9 @@ export default function Page() {
                                                     1
                                                 </div>
                                                 <div className="space-y-1.5">
-                                                    <p className="font-medium">Open the catalog dropdown</p>
+                                                    <p className="font-medium">Create a catalog connection</p>
                                                     <p className="text-sm text-muted-foreground leading-relaxed">
-                                                        Click on the dropdown in the sidebar to see your available Iceberg catalogs
+                                                        Configure a connection to your REST, JDBC, S3 Tables, or AWS Glue catalog
                                                     </p>
                                                 </div>
                                             </div>
@@ -99,9 +99,9 @@ export default function Page() {
                                                     2
                                                 </div>
                                                 <div className="space-y-1.5">
-                                                    <p className="font-medium">Select a catalog</p>
+                                                    <p className="font-medium">Browse namespaces</p>
                                                     <p className="text-sm text-muted-foreground leading-relaxed">
-                                                        Choose from your production, development, testing, or analytics catalogs
+                                                        Navigate through your catalog&apos;s namespaces to access your Iceberg tables
                                                     </p>
                                                 </div>
                                             </div>
@@ -111,31 +111,49 @@ export default function Page() {
                                                     3
                                                 </div>
                                                 <div className="space-y-1.5">
-                                                    <p className="font-medium">Browse Iceberg tables</p>
+                                                    <p className="font-medium">Manage your tables</p>
                                                     <p className="text-sm text-muted-foreground leading-relaxed">
-                                                        Navigate through namespaces to access your tables directly in the sidebar
+                                                        View schema, query data, and optimize your Iceberg tables with built-in tools
                                                     </p>
                                                 </div>
                                             </div>
                                         </div>
                                     </CardContent>
-                                    <CardFooter className="border-t pt-5 pb-5 mt-2 bg-muted/10">
-                                        <Button
-                                            className="relative overflow-hidden group bg-blue-600 hover:bg-blue-700 text-white transition-all duration-300 shadow-md hover:shadow-lg hover:scale-[1.02] transform"
-                                            onClick={() => window.open("https://www.nimtable.com/", "_blank")}
-                                        >
-                                            {/* Animated background effect */}
-                                            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-500 via-blue-600 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-[length:200%_100%] animate-gradient-x"></div>
+                                    <CardFooter className="pb-6 flex flex-col items-center">
+                                        <div className="max-w-lg w-full flex flex-col items-center">
+                                            {/* Action buttons container */}
+                                            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
+                                                {/* Primary action - Create Catalog Connection */}
+                                                <div className="relative w-auto max-w-xs p-1 rounded-xl bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600">
+                                                    <Button
+                                                        className="relative overflow-hidden group bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02] w-auto px-6 h-12 rounded-lg"
+                                                        onClick={() => (window.location.href = "/catalog/new")}
+                                                    >
+                                                        {/* Animated shine effect */}
+                                                        <div className="absolute top-0 -left-[100%] w-[120%] h-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:left-[100%] transition-all duration-1000 ease-in-out"></div>
 
-                                            {/* Button content with animated icon */}
-                                            <div className="relative flex items-center gap-2 px-4 py-2">
-                                                <span className="font-medium">Learn more about Nimtable</span>
-                                                <ExternalLink className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:scale-110" />
+                                                        {/* Button content with animated icon */}
+                                                        <div className="relative flex items-center justify-center gap-3">
+                                                            <div className="bg-white/20 rounded-full p-1.5">
+                                                                <Plus className="h-5 w-5" />
+                                                            </div>
+                                                            <span className="font-semibold text-base tracking-wide">Create Catalog Connection</span>
+                                                        </div>
+                                                    </Button>
+                                                </div>
+
+                                                {/* Secondary action - Learn more link */}
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50/50 dark:hover:bg-blue-900/20 h-8 gap-1.5"
+                                                    onClick={() => window.open("https://www.nimtable.com/", "_blank")}
+                                                >
+                                                    Learn more about Nimtable
+                                                    <ArrowRight className="h-3.5 w-3.5" />
+                                                </Button>
                                             </div>
-
-                                            {/* Subtle glow effect */}
-                                            <div className="absolute -inset-1 rounded-lg blur-sm bg-blue-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 group-hover:animate-pulse"></div>
-                                        </Button>
+                                        </div>
                                     </CardFooter>
                                 </Card>
                             </section>
@@ -214,10 +232,10 @@ export default function Page() {
                                             <Database className="h-5 w-5 text-blue-600" />
                                         </div>
                                         <div>
-                                            <h3 className="font-medium mb-1.5">Refresh your catalogs</h3>
+                                            <h3 className="font-medium mb-1.5">Multiple catalog types supported</h3>
                                             <p className="text-sm text-muted-foreground leading-relaxed">
-                                                Use the refresh button next to the catalog selector to update your data and see the latest
-                                                changes.
+                                                Nimtable supports various Iceberg catalog implementations including REST API, JDBC, AWS Glue,
+                                                and S3 Tables. Configure your connection based on your infrastructure.
                                             </p>
                                         </div>
                                     </div>
@@ -260,3 +278,5 @@ export default function Page() {
         )
     }
 }
+
+export default Page

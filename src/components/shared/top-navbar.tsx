@@ -17,7 +17,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { ChevronRight, Code, Settings, Database, FolderTree, TableIcon } from "lucide-react"
+import { ChevronRight, Code, Settings, Database, FolderTree, TableIcon, Home } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
@@ -46,8 +46,18 @@ export function TopNavbar({ catalog, namespace, table }: TopNavbarProps) {
         <div className="border-b">
             <div className="flex items-center justify-between px-6 py-4">
                 <div className="flex items-center gap-2 text-sm">
+                    <Link
+                        href="/"
+                        className="text-muted-foreground hover:text-blue-500 hover:underline transition-colors flex items-center gap-1"
+                    >
+                        <Home className="h-3.5 w-3.5 text-blue-500" />
+                        <span className="sr-only">Home</span>
+                    </Link>
+
                     {catalog && (
                         <>
+                            {/* Add a separator only if there's a catalog */}
+                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
                             <Link
                                 href={`/catalog?catalog=${catalog}`}
                                 className="text-muted-foreground hover:text-blue-500 hover:underline transition-colors flex items-center gap-1"
