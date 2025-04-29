@@ -141,9 +141,9 @@ public class DistributionServlet extends HttpServlet {
         int dataFileCount;
         int positionDeleteFileCount;
         int eqDeleteFileCount;
-        int dataFileSizeInBytes;
-        int positionDeleteFileSizeInBytes;
-        int eqDeleteFileSizeInBytes;
+        long dataFileSizeInBytes;
+        long positionDeleteFileSizeInBytes;
+        long eqDeleteFileSizeInBytes;
         int dataFileRecordCount;
         int positionDeleteFileRecordCount;
         int eqDeleteFileRecordCount;
