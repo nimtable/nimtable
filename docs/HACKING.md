@@ -13,7 +13,9 @@ cd backend
 ./gradlew run
 ```
 
-It uses the default config file at `backend/config.yaml`. SQLite will be used for development.
+It uses the default config file at `backend/config.yaml`.
+SQLite will be used for development. To develop with Postgres, see [Docker Development](#docker-development) below.
+
 It will serve at http://localhost:8182.
 
 ### Frontend Development
@@ -29,6 +31,12 @@ npm run dev
 ```
 
 It will serve a separate UI at http://localhost:3000, which can be dynamically updated as you make changes to the frontend code.
+
+### Docker Development
+
+To setup a more complex development environment, e.g., with Postgres, or with some iceberg catalogs, you can use the `docker/dev` directory.
+
+See the [README there](../docker/dev/README.md) for details.
 
 ### API Generation
 
