@@ -19,6 +19,8 @@ package io.nimtable.db.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.ebean.Model;
+import io.ebean.annotation.WhenCreated;
+import io.ebean.annotation.WhenModified;
 import jakarta.persistence.*;
 import java.time.Instant;
 
@@ -40,22 +42,17 @@ public class User extends Model {
     // response)
     private String passwordHash;
 
-    @Column(insertable = true, updatable = false)
-    private Instant createdAt;
+    @WhenCreated private Instant createdAt;
 
-    @Column(insertable = true, updatable = true)
-    private Instant updatedAt;
+    @WhenModified private Instant updatedAt;
 
     // Constructors
     public User() {}
 
-    public User(
-            long id, String username, String passwordHash, Instant createdAt, Instant updatedAt) {
+    public User(long id, String username, String passwordHash) {
         this.id = id;
         this.username = username;
         this.passwordHash = passwordHash;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
     }
 
     // Getters and Setters
@@ -96,21 +93,5 @@ public class User extends Model {
     // Allow internal setting/getting of passwordHash
     public void setPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(Instant createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public Instant getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(Instant updatedAt) {
-        this.updatedAt = updatedAt;
     }
 }

@@ -18,8 +18,10 @@ package io.nimtable.db.entity;
 
 import io.ebean.Model;
 import io.ebean.annotation.DbJson;
+import io.ebean.annotation.WhenCreated;
+import io.ebean.annotation.WhenModified;
 import jakarta.persistence.*;
-import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.Map;
 
 @Entity
@@ -42,11 +44,10 @@ public class Catalog extends Model {
 
     @DbJson private Map<String, String> properties;
 
-    @Column(insertable = true, updatable = false)
-    private Timestamp createdAt;
+    @WhenCreated private Instant createdAt;
 
-    @Column(insertable = true, updatable = true)
-    private Timestamp updatedAt;
+    @WhenModified
+    private Instant updatedAt;
 
     public Long getId() {
         return id;
@@ -94,21 +95,5 @@ public class Catalog extends Model {
 
     public void setProperties(Map<String, String> properties) {
         this.properties = properties;
-    }
-
-    public Timestamp getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(Timestamp createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public Timestamp getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(Timestamp updatedAt) {
-        this.updatedAt = updatedAt;
     }
 }
