@@ -1,6 +1,8 @@
 services:
   nimtable:
     image: ghcr.io/nimtable/nimtable:nightly
+    depends_on:
+      - database
     ports:
       - "8182:8182"
     # Mount configuration files
