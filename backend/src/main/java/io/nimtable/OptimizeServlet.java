@@ -71,17 +71,49 @@ public class OptimizeServlet extends HttpServlet {
     }
 
     private CompactionResult compactTable(
-            SparkSession spark, String catalogName, String namespace, String tableName, long targetFileSizeBytes) {
-        String sql =
-                String.format(
-                        "CALL `%s`.system.rewrite_data_files(table => '%s.%s', options => map('rewrite-all', 'true', 'target-file-size-bytes', '%d'))",
-                        catalogName, namespace, tableName, targetFileSizeBytes);
-        Row result = spark.sql(sql).collectAsList().get(0);
-        return new CompactionResult(
-                result.getAs("rewritten_data_files_count"),
-                result.getAs("added_data_files_count"),
-                result.getAs("rewritten_bytes_count"),
-                result.getAs("failed_data_files_count"));
+            SparkSession spark, 
+            String catalogName, 
+            String namespace, 
+            String tableName, 
+            long targetFileSizeBytes,
+            String strategy,
+            String sortOrder,
+            String whereClause) throws Exception {
+        
+        StringBuilder sqlBuilder = new StringBuilder();
+        sqlBuilder.append(String.format(
+                "CALL `%s`.system.rewrite_data_files(table => '%s.%s'",
+                catalogName, namespace, tableName));
+        
+        if (strategy != null && !strategy.isEmpty()) {
+            sqlBuilder.append(String.format(", strategy => '%s'", strategy));
+        }
+        
+        if (sortOrder != null && !sortOrder.isEmpty()) {
+            sqlBuilder.append(String.format(", sort_order => '%s'", sortOrder));
+        }
+        
+        if (whereClause != null && !whereClause.isEmpty()) {
+            sqlBuilder.append(String.format(", where => '%s'", whereClause));
+        }
+        
+        // Add options
+        sqlBuilder.append(String.format(
+                ", options => map('rewrite-all', 'true', 'target-file-size-bytes', '%d'))",
+                targetFileSizeBytes));
+        
+        String sql = sqlBuilder.toString();
+        try {
+            Row result = spark.sql(sql).collectAsList().get(0);
+            return new CompactionResult(
+                    result.getAs("rewritten_data_files_count"),
+                    result.getAs("added_data_files_count"),
+                    result.getAs("rewritten_bytes_count"),
+                    result.getAs("failed_data_files_count"));
+        } catch (Exception e) {
+            logger.error("Failed to execute compaction SQL: {}", sql, e);
+            throw new Exception("Failed to execute compaction: " + e.getMessage(), e);
+        }
     }
 
     private ExpireSnapshotResult expireSnapshots(
@@ -132,7 +164,13 @@ public class OptimizeServlet extends HttpServlet {
         String path = request.getRequestURI();
         String[] parts = path.split("/");
         if (parts.length < 7) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid path format");
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "Invalid path format");
+            objectMapper.writeValue(response.getOutputStream(), errorResponse);
             return;
         }
 
@@ -152,8 +190,13 @@ public class OptimizeServlet extends HttpServlet {
             // Check database
             io.nimtable.db.entity.Catalog dbCatalog = catalogRepository.findByName(catalogName);
             if (dbCatalog == null) {
-                response.sendError(
-                        HttpServletResponse.SC_NOT_FOUND, "Catalog not found: " + catalogName);
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("success", false);
+                errorResponse.put("message", "Catalog not found: " + catalogName);
+                objectMapper.writeValue(response.getOutputStream(), errorResponse);
                 return;
             }
             properties = new HashMap<>(dbCatalog.getProperties());
@@ -170,9 +213,13 @@ public class OptimizeServlet extends HttpServlet {
                             .loadTable(TableIdentifier.of(namespace, tableName));
         } catch (Exception e) {
             logger.error("Failed to load table: {}.{}", namespace, tableName, e);
-            response.sendError(
-                    HttpServletResponse.SC_NOT_FOUND,
-                    "Table not found: " + namespace + "." + tableName);
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "Table not found: " + namespace + "." + tableName);
+            objectMapper.writeValue(response.getOutputStream(), errorResponse);
             return;
         }
 
@@ -199,6 +246,9 @@ public class OptimizeServlet extends HttpServlet {
         long targetFileSizeBytes =
                 Long.parseLong(
                         requestBody.getOrDefault("targetFileSizeBytes", String.valueOf(DEFAULT_TARGET_FILE_SIZE_BYTES)).toString());
+        String strategy = requestBody.get("strategy") != null ? requestBody.get("strategy").toString() : null;
+        String sortOrder = requestBody.get("sortOrder") != null ? requestBody.get("sortOrder").toString() : null;
+        String whereClause = requestBody.get("whereClause") != null ? requestBody.get("whereClause").toString() : null;
 
         Map<String, Object> result = new HashMap<>();
 
@@ -209,7 +259,15 @@ public class OptimizeServlet extends HttpServlet {
                     SparkSession spark = LocalSpark.getInstance(config).getSpark();
                     try {
                         CompactionResult compactionResult =
-                                compactTable(spark, catalogName, namespace, tableName, targetFileSizeBytes);
+                                compactTable(
+                                        spark,
+                                        catalogName,
+                                        namespace,
+                                        tableName,
+                                        targetFileSizeBytes,
+                                        strategy,
+                                        sortOrder,
+                                        whereClause);
                         result.put(
                                 "rewrittenDataFilesCount",
                                 compactionResult.rewrittenDataFilesCount());
@@ -219,9 +277,13 @@ public class OptimizeServlet extends HttpServlet {
                     } catch (Exception e) {
                         logger.error(
                                 "Failed to execute compaction: {}.{}", namespace, tableName, e);
-                        response.sendError(
-                                HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                                "Failed to execute compaction: " + e.getMessage());
+                        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                        response.setContentType("application/json");
+                        response.setCharacterEncoding("UTF-8");
+                        Map<String, Object> errorResponse = new HashMap<>();
+                        errorResponse.put("success", false);
+                        errorResponse.put("message", "Failed to execute compaction: " + e.getMessage());
+                        objectMapper.writeValue(response.getOutputStream(), errorResponse);
                         return;
                     }
                 }
@@ -248,9 +310,13 @@ public class OptimizeServlet extends HttpServlet {
                                 expireResult.deletedManifestListsCount());
                     } catch (Exception e) {
                         logger.error("Failed to expire snapshots: {}.{}", namespace, tableName, e);
-                        response.sendError(
-                                HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                                "Failed to expire snapshots: " + e.getMessage());
+                        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                        response.setContentType("application/json");
+                        response.setCharacterEncoding("UTF-8");
+                        Map<String, Object> errorResponse = new HashMap<>();
+                        errorResponse.put("success", false);
+                        errorResponse.put("message", "Failed to expire snapshots: " + e.getMessage());
+                        objectMapper.writeValue(response.getOutputStream(), errorResponse);
                         return;
                     }
                 }
@@ -271,9 +337,13 @@ public class OptimizeServlet extends HttpServlet {
                     } catch (Exception e) {
                         logger.error(
                                 "Failed to clean orphan files: {}.{}", namespace, tableName, e);
-                        response.sendError(
-                                HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                                "Failed to clean orphan files: " + e.getMessage());
+                        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                        response.setContentType("application/json");
+                        response.setCharacterEncoding("UTF-8");
+                        Map<String, Object> errorResponse = new HashMap<>();
+                        errorResponse.put("success", false);
+                        errorResponse.put("message", "Failed to clean orphan files: " + e.getMessage());
+                        objectMapper.writeValue(response.getOutputStream(), errorResponse);
                         return;
                     }
                 }
@@ -317,14 +387,24 @@ public class OptimizeServlet extends HttpServlet {
                 } catch (Exception e) {
                     logger.error(
                             "Failed to update table properties: {}.{}", namespace, tableName, e);
-                    response.sendError(
-                            HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                            "Failed to update table properties: " + e.getMessage());
+                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                    response.setContentType("application/json");
+                    response.setCharacterEncoding("UTF-8");
+                    Map<String, Object> errorResponse = new HashMap<>();
+                    errorResponse.put("success", false);
+                    errorResponse.put("message", "Failed to update table properties: " + e.getMessage());
+                    objectMapper.writeValue(response.getOutputStream(), errorResponse);
+                    return;
                 }
                 break;
             default:
-                response.sendError(
-                        HttpServletResponse.SC_BAD_REQUEST, "Invalid operation: " + operation);
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("success", false);
+                errorResponse.put("message", "Invalid operation: " + operation);
+                objectMapper.writeValue(response.getOutputStream(), errorResponse);
                 return;
         }
 

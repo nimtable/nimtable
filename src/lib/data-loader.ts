@@ -258,6 +258,9 @@ export interface OptimizationSettings {
     orphanFileRetention: string
     compaction: boolean
     targetFileSizeBytes?: string
+    strategy?: string
+    sortOrder?: string
+    whereClause?: string
 }
 
 /**
@@ -287,6 +290,9 @@ export async function runOptimizationOperation(
             orphanFileRetention: parseInt(settings.orphanFileRetention) * 24 * 60 * 60 * 1000,
             compaction: settings.compaction,
             targetFileSizeBytes: settings.targetFileSizeBytes,
+            strategy: settings.strategy,
+            sortOrder: settings.sortOrder,
+            whereClause: settings.whereClause,
         }),
     });
 
