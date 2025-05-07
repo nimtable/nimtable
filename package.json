@@ -51,7 +51,6 @@
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
     "url": "^0.11.4",
-    "webpack": "^5.98.0",
     "zod": "^3.24.3"
   },
   "devDependencies": {
@@ -76,5 +75,10 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3",
     "typescript-eslint": "^7.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "unrs-resolver"
+    ]
   }
 }
