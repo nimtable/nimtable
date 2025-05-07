@@ -62,6 +62,8 @@ public class OptimizeServlet extends HttpServlet {
 
     record CleanOrphanFilesResult(List<String> orphanFileLocations) {}
 
+    private static final long DEFAULT_TARGET_FILE_SIZE_BYTES = 536870912L; // 512MB
+
     public OptimizeServlet(Config config) {
         this.config = config;
         this.objectMapper = new ObjectMapper();
@@ -69,11 +71,11 @@ public class OptimizeServlet extends HttpServlet {
     }
 
     private CompactionResult compactTable(
-            SparkSession spark, String catalogName, String namespace, String tableName) {
+            SparkSession spark, String catalogName, String namespace, String tableName, long targetFileSizeBytes) {
         String sql =
                 String.format(
-                        "CALL `%s`.system.rewrite_data_files(table => '%s.%s', options => map('rewrite-all', 'true'))",
-                        catalogName, namespace, tableName);
+                        "CALL `%s`.system.rewrite_data_files(table => '%s.%s', options => map('rewrite-all', 'true', 'target-file-size-bytes', '%d'))",
+                        catalogName, namespace, tableName, targetFileSizeBytes);
         Row result = spark.sql(sql).collectAsList().get(0);
         return new CompactionResult(
                 result.getAs("rewritten_data_files_count"),
@@ -194,6 +196,9 @@ public class OptimizeServlet extends HttpServlet {
                         requestBody.getOrDefault("orphanFileRetention", "86400000").toString());
         boolean compaction =
                 Boolean.parseBoolean(requestBody.getOrDefault("compaction", false).toString());
+        long targetFileSizeBytes =
+                Long.parseLong(
+                        requestBody.getOrDefault("targetFileSizeBytes", String.valueOf(DEFAULT_TARGET_FILE_SIZE_BYTES)).toString());
 
         Map<String, Object> result = new HashMap<>();
 
@@ -204,7 +209,7 @@ public class OptimizeServlet extends HttpServlet {
                     SparkSession spark = LocalSpark.getInstance(config).getSpark();
                     try {
                         CompactionResult compactionResult =
-                                compactTable(spark, catalogName, namespace, tableName);
+                                compactTable(spark, catalogName, namespace, tableName, targetFileSizeBytes);
                         result.put(
                                 "rewrittenDataFilesCount",
                                 compactionResult.rewrittenDataFilesCount());
@@ -298,6 +303,7 @@ public class OptimizeServlet extends HttpServlet {
 
                 if (compaction) {
                     tableProperties.put("nimtable.compaction.enabled", "true");
+                    tableProperties.put("nimtable.compaction.target-file-size-bytes", String.valueOf(targetFileSizeBytes));
                 } else {
                     tableProperties.put("nimtable.compaction.enabled", "false");
                 }

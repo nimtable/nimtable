@@ -257,6 +257,7 @@ export interface OptimizationSettings {
     orphanFileDeletion: boolean
     orphanFileRetention: string
     compaction: boolean
+    targetFileSizeBytes?: string
 }
 
 /**
@@ -285,6 +286,7 @@ export async function runOptimizationOperation(
             orphanFileDeletion: settings.orphanFileDeletion,
             orphanFileRetention: parseInt(settings.orphanFileRetention) * 24 * 60 * 60 * 1000,
             compaction: settings.compaction,
+            targetFileSizeBytes: settings.targetFileSizeBytes,
         }),
     });
 

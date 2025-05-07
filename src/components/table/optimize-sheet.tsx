@@ -214,6 +214,7 @@ export function OptimizeSheet({ open, onOpenChange, catalog, namespace, table }:
     const [orphanFileDeletion, setOrphanFileDeletion] = useState(false)
     const [orphanFileRetention, setOrphanFileRetention] = useState("3")
     const [compaction, setCompaction] = useState(true)
+    const [targetFileSizeBytes, setTargetFileSizeBytes] = useState("512")
 
     // Update optimization steps based on enabled settings
     useEffect(() => {
@@ -263,6 +264,7 @@ export function OptimizeSheet({ open, onOpenChange, catalog, namespace, table }:
                 orphanFileDeletion,
                 orphanFileRetention,
                 compaction,
+                targetFileSizeBytes: compaction ? String(Number(targetFileSizeBytes) * 1024 * 1024) : undefined,
             })
 
             setOptimizationSteps((steps) => {
@@ -408,12 +410,28 @@ export function OptimizeSheet({ open, onOpenChange, catalog, namespace, table }:
                                         </div>
 
                                         {/* Compaction */}
-                                        <div className="flex items-center justify-between pt-2 border-t">
-                                            <div className="space-y-0.5">
-                                                <Label className="text-base">Compaction</Label>
-                                                <p className="text-sm text-muted-foreground">Combine small data files into larger files.</p>
+                                        <div className="space-y-4 pt-2 border-t">
+                                            <div className="flex items-center justify-between">
+                                                <div className="space-y-0.5">
+                                                    <Label className="text-base">Compaction</Label>
+                                                    <p className="text-sm text-muted-foreground">Combine small data files into larger files.</p>
+                                                </div>
+                                                <Switch checked={compaction} onCheckedChange={setCompaction} />
                                             </div>
-                                            <Switch checked={compaction} onCheckedChange={setCompaction} />
+                                            {compaction && (
+                                                <div className="grid gap-2 pl-4 pt-2">
+                                                    <Label htmlFor="target-file-size">Target file size (MB)</Label>
+                                                    <Input
+                                                        id="target-file-size"
+                                                        type="number"
+                                                        min="1"
+                                                        value={targetFileSizeBytes}
+                                                        onChange={(e) => setTargetFileSizeBytes(e.target.value)}
+                                                        placeholder="512"
+                                                        className="border-muted-foreground/20"
+                                                    />
+                                                </div>
+                                            )}
                                         </div>
 
                                         {/* Orphan File Deletion */}
@@ -422,7 +440,7 @@ export function OptimizeSheet({ open, onOpenChange, catalog, namespace, table }:
                                                 <div className="space-y-0.5">
                                                     <Label className="text-base">Orphan file deletion</Label>
                                                     <p className="text-sm text-muted-foreground">
-                                                        Automatically clean up unused files periodically.
+                                                        Clean up unused files.
                                                     </p>
                                                 </div>
                                                 <Switch checked={orphanFileDeletion} onCheckedChange={setOrphanFileDeletion} />
