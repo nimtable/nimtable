@@ -71,38 +71,42 @@ public class OptimizeServlet extends HttpServlet {
     }
 
     private CompactionResult compactTable(
-            SparkSession spark, 
-            String catalogName, 
-            String namespace, 
-            String tableName, 
+            SparkSession spark,
+            String catalogName,
+            String namespace,
+            String tableName,
             long targetFileSizeBytes,
             String strategy,
             String sortOrder,
-            String whereClause) throws Exception {
-        
+            String whereClause)
+            throws Exception {
+
         StringBuilder sqlBuilder = new StringBuilder();
-        sqlBuilder.append(String.format(
-                "CALL `%s`.system.rewrite_data_files(table => '%s.%s'",
-                catalogName, namespace, tableName));
-        
+        sqlBuilder.append(
+                String.format(
+                        "CALL `%s`.system.rewrite_data_files(table => '%s.%s'",
+                        catalogName, namespace, tableName));
+
         if (strategy != null && !strategy.isEmpty()) {
             sqlBuilder.append(String.format(", strategy => '%s'", strategy));
         }
-        
+
         if (sortOrder != null && !sortOrder.isEmpty()) {
             sqlBuilder.append(String.format(", sort_order => '%s'", sortOrder));
         }
-        
+
         if (whereClause != null && !whereClause.isEmpty()) {
             sqlBuilder.append(String.format(", where => '%s'", whereClause));
         }
-        
+
         // Add options
-        sqlBuilder.append(String.format(
-                ", options => map('rewrite-all', 'true', 'target-file-size-bytes', '%d'))",
-                targetFileSizeBytes));
-        
+        sqlBuilder.append(
+                String.format(
+                        ", options => map('rewrite-all', 'true', 'target-file-size-bytes', '%d'))",
+                        targetFileSizeBytes));
+
         String sql = sqlBuilder.toString();
+        logger.info("Executing compaction SQL: {}", sql);
         try {
             Row result = spark.sql(sql).collectAsList().get(0);
             return new CompactionResult(
@@ -129,6 +133,7 @@ public class OptimizeServlet extends HttpServlet {
                 String.format(
                         "CALL `%s`.system.expire_snapshots(table => '%s.%s', older_than => TIMESTAMP '%s', retain_last => %d)",
                         catalogName, namespace, tableName, timestampStr, minSnapshotsToKeep);
+        logger.info("Executing expire snapshots SQL: {}", sql);
         Row result = spark.sql(sql).collectAsList().get(0);
 
         return new ExpireSnapshotResult(
@@ -152,6 +157,7 @@ public class OptimizeServlet extends HttpServlet {
                 String.format(
                         "CALL `%s`.system.remove_orphan_files(table => '%s.%s', older_than => TIMESTAMP '%s')",
                         catalogName, namespace, tableName, timestampStr);
+        logger.info("Executing remove orphan files SQL: {}", sql);
         List<Row> result = spark.sql(sql).collectAsList();
         return new CleanOrphanFilesResult(
                 result.stream().map(row -> row.getString(0)).collect(Collectors.toList()));
@@ -244,11 +250,19 @@ public class OptimizeServlet extends HttpServlet {
         boolean compaction =
                 Boolean.parseBoolean(requestBody.getOrDefault("compaction", false).toString());
         long targetFileSizeBytes =
-                Long.parseLong(
-                        requestBody.getOrDefault("targetFileSizeBytes", String.valueOf(DEFAULT_TARGET_FILE_SIZE_BYTES)).toString());
-        String strategy = requestBody.get("strategy") != null ? requestBody.get("strategy").toString() : null;
-        String sortOrder = requestBody.get("sortOrder") != null ? requestBody.get("sortOrder").toString() : null;
-        String whereClause = requestBody.get("whereClause") != null ? requestBody.get("whereClause").toString() : null;
+                requestBody.get("targetFileSizeBytes") != null
+                        ? ((Number) requestBody.get("targetFileSizeBytes")).longValue()
+                        : DEFAULT_TARGET_FILE_SIZE_BYTES;
+        String strategy =
+                requestBody.get("strategy") != null ? requestBody.get("strategy").toString() : null;
+        String sortOrder =
+                requestBody.get("sortOrder") != null
+                        ? requestBody.get("sortOrder").toString()
+                        : null;
+        String whereClause =
+                requestBody.get("whereClause") != null
+                        ? requestBody.get("whereClause").toString()
+                        : null;
 
         Map<String, Object> result = new HashMap<>();
 
@@ -282,7 +296,8 @@ public class OptimizeServlet extends HttpServlet {
                         response.setCharacterEncoding("UTF-8");
                         Map<String, Object> errorResponse = new HashMap<>();
                         errorResponse.put("success", false);
-                        errorResponse.put("message", "Failed to execute compaction: " + e.getMessage());
+                        errorResponse.put(
+                                "message", "Failed to execute compaction: " + e.getMessage());
                         objectMapper.writeValue(response.getOutputStream(), errorResponse);
                         return;
                     }
@@ -315,7 +330,8 @@ public class OptimizeServlet extends HttpServlet {
                         response.setCharacterEncoding("UTF-8");
                         Map<String, Object> errorResponse = new HashMap<>();
                         errorResponse.put("success", false);
-                        errorResponse.put("message", "Failed to expire snapshots: " + e.getMessage());
+                        errorResponse.put(
+                                "message", "Failed to expire snapshots: " + e.getMessage());
                         objectMapper.writeValue(response.getOutputStream(), errorResponse);
                         return;
                     }
@@ -342,7 +358,8 @@ public class OptimizeServlet extends HttpServlet {
                         response.setCharacterEncoding("UTF-8");
                         Map<String, Object> errorResponse = new HashMap<>();
                         errorResponse.put("success", false);
-                        errorResponse.put("message", "Failed to clean orphan files: " + e.getMessage());
+                        errorResponse.put(
+                                "message", "Failed to clean orphan files: " + e.getMessage());
                         objectMapper.writeValue(response.getOutputStream(), errorResponse);
                         return;
                     }
@@ -373,7 +390,9 @@ public class OptimizeServlet extends HttpServlet {
 
                 if (compaction) {
                     tableProperties.put("nimtable.compaction.enabled", "true");
-                    tableProperties.put("nimtable.compaction.target-file-size-bytes", String.valueOf(targetFileSizeBytes));
+                    tableProperties.put(
+                            "nimtable.compaction.target-file-size-bytes",
+                            String.valueOf(targetFileSizeBytes));
                 } else {
                     tableProperties.put("nimtable.compaction.enabled", "false");
                 }
@@ -392,7 +411,8 @@ public class OptimizeServlet extends HttpServlet {
                     response.setCharacterEncoding("UTF-8");
                     Map<String, Object> errorResponse = new HashMap<>();
                     errorResponse.put("success", false);
-                    errorResponse.put("message", "Failed to update table properties: " + e.getMessage());
+                    errorResponse.put(
+                            "message", "Failed to update table properties: " + e.getMessage());
                     objectMapper.writeValue(response.getOutputStream(), errorResponse);
                     return;
                 }

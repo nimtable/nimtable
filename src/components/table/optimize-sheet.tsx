@@ -221,7 +221,7 @@ export function OptimizeSheet({ open, onOpenChange, catalog, namespace, table }:
     const [orphanFileDeletion, setOrphanFileDeletion] = useState(false)
     const [orphanFileRetention, setOrphanFileRetention] = useState("3")
     const [compaction, setCompaction] = useState(true)
-    const [targetFileSizeBytes, setTargetFileSizeBytes] = useState("512")
+    const [targetFileSizeBytes, setTargetFileSizeBytes] = useState<number>(536870912) // 512MB in bytes
     const [strategy, setStrategy] = useState("binpack")
     const [sortOrder, setSortOrder] = useState("")
     const [whereClause, setWhereClause] = useState("")
@@ -274,7 +274,7 @@ export function OptimizeSheet({ open, onOpenChange, catalog, namespace, table }:
                 orphanFileDeletion,
                 orphanFileRetention,
                 compaction,
-                targetFileSizeBytes: compaction ? String(Number(targetFileSizeBytes) * 1024 * 1024) : undefined,
+                targetFileSizeBytes: compaction ? targetFileSizeBytes : undefined,
                 strategy: compaction ? strategy : undefined,
                 sortOrder: compaction ? sortOrder : undefined,
                 whereClause: compaction ? whereClause : undefined,
@@ -439,8 +439,8 @@ export function OptimizeSheet({ open, onOpenChange, catalog, namespace, table }:
                                                             id="target-file-size"
                                                             type="number"
                                                             min="1"
-                                                            value={targetFileSizeBytes}
-                                                            onChange={(e) => setTargetFileSizeBytes(e.target.value)}
+                                                            value={Math.round(targetFileSizeBytes / (1024 * 1024))}
+                                                            onChange={(e) => setTargetFileSizeBytes(Number(e.target.value) * 1024 * 1024 || 536870912)}
                                                             placeholder="512"
                                                             className="border-muted-foreground/20"
                                                         />

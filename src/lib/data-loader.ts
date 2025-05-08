@@ -257,7 +257,7 @@ export interface OptimizationSettings {
     orphanFileDeletion: boolean
     orphanFileRetention: string
     compaction: boolean
-    targetFileSizeBytes?: string
+    targetFileSizeBytes?: number
     strategy?: string
     sortOrder?: string
     whereClause?: string
