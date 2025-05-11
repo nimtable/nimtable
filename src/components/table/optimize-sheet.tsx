@@ -43,6 +43,13 @@ import {
 } from "@/lib/data-loader"
 import { FileStatistics } from "@/components/table/file-statistics"
 import { FileDistributionLoading } from "@/components/table/file-distribution-loading"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 
 type OptimizationStep = {
     name: string
@@ -214,6 +221,10 @@ export function OptimizeSheet({ open, onOpenChange, catalog, namespace, table }:
     const [orphanFileDeletion, setOrphanFileDeletion] = useState(false)
     const [orphanFileRetention, setOrphanFileRetention] = useState("3")
     const [compaction, setCompaction] = useState(true)
+    const [targetFileSizeBytes, setTargetFileSizeBytes] = useState<number>(536870912) // 512MB in bytes
+    const [strategy, setStrategy] = useState("binpack")
+    const [sortOrder, setSortOrder] = useState("")
+    const [whereClause, setWhereClause] = useState("")
 
     // Update optimization steps based on enabled settings
     useEffect(() => {
@@ -263,6 +274,10 @@ export function OptimizeSheet({ open, onOpenChange, catalog, namespace, table }:
                 orphanFileDeletion,
                 orphanFileRetention,
                 compaction,
+                targetFileSizeBytes: compaction ? targetFileSizeBytes : undefined,
+                strategy: compaction ? strategy : undefined,
+                sortOrder: compaction ? sortOrder : undefined,
+                whereClause: compaction ? whereClause : undefined,
             })
 
             setOptimizationSteps((steps) => {
@@ -408,12 +423,79 @@ export function OptimizeSheet({ open, onOpenChange, catalog, namespace, table }:
                                         </div>
 
                                         {/* Compaction */}
-                                        <div className="flex items-center justify-between pt-2 border-t">
-                                            <div className="space-y-0.5">
-                                                <Label className="text-base">Compaction</Label>
-                                                <p className="text-sm text-muted-foreground">Combine small data files into larger files.</p>
+                                        <div className="space-y-4 pt-2 border-t">
+                                            <div className="flex items-center justify-between">
+                                                <div className="space-y-0.5">
+                                                    <Label className="text-base">Compaction</Label>
+                                                    <p className="text-sm text-muted-foreground">Combine small data files into larger files.</p>
+                                                </div>
+                                                <Switch checked={compaction} onCheckedChange={setCompaction} />
                                             </div>
-                                            <Switch checked={compaction} onCheckedChange={setCompaction} />
+                                            {compaction && (
+                                                <div className="grid gap-4 pl-4 pt-2">
+                                                    <div className="grid gap-2">
+                                                        <Label htmlFor="target-file-size">Target file size (MB)</Label>
+                                                        <Input
+                                                            id="target-file-size"
+                                                            type="number"
+                                                            min="1"
+                                                            value={Math.round(targetFileSizeBytes / (1024 * 1024))}
+                                                            onChange={(e) => setTargetFileSizeBytes(Number(e.target.value) * 1024 * 1024 || 536870912)}
+                                                            placeholder="512"
+                                                            className="border-muted-foreground/20"
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <Label>Strategy</Label>
+                                                        <Select
+                                                            value={strategy}
+                                                            onValueChange={(value) => {
+                                                                setStrategy(value);
+                                                                if (value !== "sort") {
+                                                                    setSortOrder("");
+                                                                }
+                                                            }}
+                                                        >
+                                                            <SelectTrigger>
+                                                                <SelectValue placeholder="Select strategy" />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectItem value="binpack">Binpack</SelectItem>
+                                                                <SelectItem value="sort">Sort</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                        <p className="text-sm text-muted-foreground">
+                                                            Choose between binpack (default) or sort strategy
+                                                        </p>
+                                                    </div>
+
+                                                    {strategy === "sort" && (
+                                                        <div className="space-y-2">
+                                                            <Label>Sort Order</Label>
+                                                            <Input
+                                                                value={sortOrder}
+                                                                onChange={(e) => setSortOrder(e.target.value)}
+                                                                placeholder="e.g., zorder(c1,c2) or id DESC NULLS LAST,name ASC NULLS FIRST"
+                                                            />
+                                                            <p className="text-sm text-muted-foreground">
+                                                                Specify sort order using zorder format (e.g., zorder(c1,c2)) or sort format (e.g., id DESC NULLS LAST,name ASC NULLS FIRST)
+                                                            </p>
+                                                        </div>
+                                                    )}
+
+                                                    <div className="space-y-2">
+                                                        <Label>Where Clause</Label>
+                                                        <Input
+                                                            value={whereClause}
+                                                            onChange={(e) => setWhereClause(e.target.value)}
+                                                            placeholder="e.g., id > 1000"
+                                                        />
+                                                        <p className="text-sm text-muted-foreground">
+                                                            Optional filter to specify which files should be rewritten
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
 
                                         {/* Orphan File Deletion */}
@@ -422,7 +504,7 @@ export function OptimizeSheet({ open, onOpenChange, catalog, namespace, table }:
                                                 <div className="space-y-0.5">
                                                     <Label className="text-base">Orphan file deletion</Label>
                                                     <p className="text-sm text-muted-foreground">
-                                                        Automatically clean up unused files periodically.
+                                                        Clean up unused files.
                                                     </p>
                                                 </div>
                                                 <Switch checked={orphanFileDeletion} onCheckedChange={setOrphanFileDeletion} />
