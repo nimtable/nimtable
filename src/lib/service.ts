@@ -16,9 +16,10 @@
 
 import { client } from './client/client.gen'
 import { toast } from '@/hooks/use-toast'
+import { getApiBaseUrl } from './api-config'
 
 client.setConfig({
-  baseUrl: '',
+  baseUrl: getApiBaseUrl(),
   credentials: 'include',
   throwOnError: true,
 })

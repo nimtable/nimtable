@@ -1,2 +1,16 @@
 include:
   - ../docker-compose.yml
+
+services:
+  # Override frontend service for development to use local source code
+  frontend:
+    build:
+      context: ../..
+      dockerfile: docker/frontend/Dockerfile
+    volumes:
+      - ../../src:/app/src
+      - ../../public:/app/public
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://nimtable:8182
+    command: npm run dev
