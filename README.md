@@ -60,7 +60,7 @@ docker compose logs -f
 docker compose down
 ```
 
-Access the UI at http://localhost:8182
+Access the UI at http://localhost:3000
 
 ## Configuration
 

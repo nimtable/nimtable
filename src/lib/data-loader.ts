@@ -13,12 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { CatalogConfig, LoadTableResult, PartitionSpec } from "./api"
-import { Api } from "@/lib/api"
+import { Api } from "@/lib/api";
+
+
+
+import { CatalogConfig, LoadTableResult, PartitionSpec } from "./api";
 import { getCatalogs } from "./client/sdk.gen";
+import { getApiBaseUrl } from "./api-config";
+
 
 // Re-export types from api.ts, ensuring application code don't need to access the api directly.
-export type { CatalogConfig, StructField, LoadTableResult, PartitionSpec } from "./api";
+export type {
+    CatalogConfig,
+    StructField,
+    LoadTableResult,
+    PartitionSpec,
+} from "./api"
+
+function catalogApi(catalog: string) {
+    return new Api({ baseUrl: `${getApiBaseUrl()}/api/catalog/${catalog}` })
+}
 
 // Types for the sidebar data structure
 export interface NamespaceTables {
@@ -36,7 +50,7 @@ export async function loadCatalogNames(): Promise<string[]> {
 }
 
 export async function loadNamespacesAndTables(catalog: string): Promise<NamespaceTables[]> {
-    const api = new Api({ baseUrl: `/api/catalog/${catalog}` })
+    const api = catalogApi(catalog)
 
     async function fetchNamespaceAndChildren(namespace: string[]): Promise<NamespaceTables> {
         const namespaceName = namespace.join('.')
@@ -79,7 +93,7 @@ export async function loadNamespacesAndTables(catalog: string): Promise<Namespac
 }
 
 export async function listNamespaces(catalog: string): Promise<string[]> {
-    const api = new Api({ baseUrl: `/api/catalog/${catalog}` })
+    const api = catalogApi(catalog)
 
     // Start with root namespaces
     const response = await api.v1.listNamespaces()
@@ -89,18 +103,18 @@ export async function listNamespaces(catalog: string): Promise<string[]> {
 
 
 export async function getCatalogConfig(catalog: string): Promise<CatalogConfig> {
-    const api = new Api({ baseUrl: `/api/catalog/${catalog}` })
+    const api = catalogApi(catalog)
     return await api.v1.getConfig()
 }
 
 export async function loadTableData(catalog: string, namespace: string, table: string): Promise<LoadTableResult> {
-    const api = new Api({ baseUrl: `/api/catalog/${catalog}` })
+    const api = catalogApi(catalog)
     const response = await api.v1.loadTable(namespace, table)
     return response
 }
 
 export async function dropTable(catalog: string, namespace: string, table: string): Promise<void> {
-    const api = new Api({ baseUrl: `/api/catalog/${catalog}` })
+    const api = catalogApi(catalog)
     await api.v1.dropTable(namespace, table)
 }
 
@@ -110,7 +124,7 @@ export async function renameTable(
     sourceTable: string,
     destinationTable: string,
 ): Promise<void> {
-    const api = new Api({ baseUrl: `/api/catalog/${catalog}` })
+    const api = catalogApi(catalog)
     await api.v1.renameTable({
         source: {
             namespace: namespace.split('/'),
@@ -177,7 +191,7 @@ export interface NamespaceTable {
 }
 
 export async function getNamespaceTables(catalog: string, namespace: string): Promise<NamespaceTable[]> {
-    const api = new Api({ baseUrl: `/api/catalog/${catalog}` })
+    const api = catalogApi(catalog)
     const response = await api.v1.listTables(namespace)
     return (await Promise.all(response.identifiers?.map(async (table) => {
         const tableResponse = await api.v1.loadTable(namespace, table.name)
@@ -220,10 +234,10 @@ export async function getFileDistribution(
     tableId: string,
     snapshotId?: string,
 ): Promise<DistributionData> {
-    const url = snapshotId 
+    const url = snapshotId
         ? `/api/distribution/${catalog}/${namespace}/${tableId}/${snapshotId}`
         : `/api/distribution/${catalog}/${namespace}/${tableId}`;
-    
+
     const response = await fetch(url);
     if (response.ok) {
         return await response.json();
@@ -374,4 +388,3 @@ export async function fetchSampleData(
         totalPages
     };
 }
-
