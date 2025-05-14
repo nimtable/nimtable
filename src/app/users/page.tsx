@@ -1,7 +1,8 @@
 import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
-
 import { UserManagement } from "@/components/users/user-management"
+import { ArrowLeft } from "lucide-react"
+import { UserManagement } from "@/components/users/user-management"
+import { ArrowLeft } from "lucide-react"
 
 export default function Users() {
   return (

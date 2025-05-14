@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { clsx, type ClassValue } from "clsx"
+import { type ClassValue, clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
+import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 
 export function cn(...inputs: ClassValue[]) {
@@ -22,30 +24,30 @@ export function cn(...inputs: ClassValue[]) {
 
 interface IcebergErrorResponse {
   error: {
-    message: string;
-  };
+    message: string
+  }
 }
 
 export function errorToString(error: unknown): string {
-  if (typeof error === 'string') {
+  if (typeof error === "string") {
     return error
   }
   // IcebergErrorResponse
   if (
     error &&
-    typeof error === 'object' &&
-    'error' in error &&
+    typeof error === "object" &&
+    "error" in error &&
     error.error &&
-    typeof error.error === 'object' &&
-    'message' in error.error &&
-    typeof error.error.message === 'string'
+    typeof error.error === "object" &&
+    "message" in error.error &&
+    typeof error.error.message === "string"
   ) {
-    return (error as IcebergErrorResponse).error.message;
+    return (error as IcebergErrorResponse).error.message
   }
   // Error
   if (error instanceof Error) {
-    return error.message;
+    return error.message
   }
   // Fallback
-  return "Unknown error";
+  return "Unknown error"
 }

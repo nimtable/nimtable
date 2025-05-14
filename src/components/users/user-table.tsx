@@ -1,9 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { Search } from "lucide-react"
-
-import type { User } from "@/lib/client/types.gen"
 import { Input } from "@/components/ui/input"
 import {
   Table,
@@ -13,6 +10,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import type { User } from "@/lib/client/types.gen"
+import { Search } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import type { User } from "@/lib/client/types.gen"
+import { Search } from "lucide-react"
 
 interface UserTableProps {
   users: User[]

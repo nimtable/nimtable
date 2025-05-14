@@ -17,10 +17,10 @@
 // Configuration for API endpoint that works in both browser and server environments
 export const getApiBaseUrl = () => {
   // Browser-side: empty string to use relative URLs
-  if (typeof window !== 'undefined') {
-    return '';
+  if (typeof window !== "undefined") {
+    return ""
   }
-  
+
   // Server-side: use environment variable or default to backend service URL
   return process.env.API_URL || "http://localhost:8182"
-};
+}

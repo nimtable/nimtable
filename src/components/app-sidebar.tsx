@@ -19,27 +19,7 @@ import * as React from "react"
 import { Suspense } from "react"
 import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { useAuth } from "@/contexts/auth-context"
-import { useRefresh } from "@/contexts/refresh-context"
-import {
-  AlertCircle,
-  Database,
-  FolderSearch,
-  LogOut,
-  Plus,
-  RefreshCw,
-  Search,
-  ServerCrash,
-  Users,
-} from "lucide-react"
-
-import {
-  loadCatalogNames,
-  loadNamespacesAndTables,
-  type NamespaceTables,
-} from "@/lib/data-loader"
-import { cn } from "@/lib/utils"
-import { useToast } from "@/hooks/use-toast"
+import { NamespaceTreeItem } from "@/components/sidebar/tree-items"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -63,7 +43,86 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { useAuth } from "@/contexts/auth-context"
+import { useRefresh } from "@/contexts/refresh-context"
+import { useToast } from "@/hooks/use-toast"
+import {
+  type NamespaceTables,
+  loadCatalogNames,
+  loadNamespacesAndTables,
+} from "@/lib/data-loader"
+import { cn } from "@/lib/utils"
+import {
+  AlertCircle,
+  Database,
+  FolderSearch,
+  LogOut,
+  Plus,
+  RefreshCw,
+  Search,
+  ServerCrash,
+  Users,
+} from "lucide-react"
 import { NamespaceTreeItem } from "@/components/sidebar/tree-items"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuItem,
+} from "@/components/ui/sidebar"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { useAuth } from "@/contexts/auth-context"
+import { useRefresh } from "@/contexts/refresh-context"
+import { useToast } from "@/hooks/use-toast"
+import {
+  type NamespaceTables,
+  loadCatalogNames,
+  loadNamespacesAndTables,
+} from "@/lib/data-loader"
+import { cn } from "@/lib/utils"
+import {
+  AlertCircle,
+  Database,
+  FolderSearch,
+  LogOut,
+  Plus,
+  RefreshCw,
+  Search,
+  ServerCrash,
+  Users,
+} from "lucide-react"
+
+/*
+ * Copyright 2025 Nimtable
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 function AppSidebarContent() {
   const searchParams = useSearchParams()

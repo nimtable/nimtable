@@ -1,15 +1,22 @@
 "use client"
 
 import { useState } from "react"
-import { useQuery } from "@tanstack/react-query"
-import { PlusCircle } from "lucide-react"
-
-import { createUser, getUsers } from "@/lib/client/sdk.gen"
-import type { UserCreate } from "@/lib/client/types.gen"
-import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import { AddUserDialog } from "@/components/users/add-user-dialog"
 import { UserTable } from "@/components/users/user-table"
+import { useToast } from "@/hooks/use-toast"
+import { createUser, getUsers } from "@/lib/client/sdk.gen"
+import type { UserCreate } from "@/lib/client/types.gen"
+import { useQuery } from "@tanstack/react-query"
+import { PlusCircle } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { AddUserDialog } from "@/components/users/add-user-dialog"
+import { UserTable } from "@/components/users/user-table"
+import { useToast } from "@/hooks/use-toast"
+import { createUser, getUsers } from "@/lib/client/sdk.gen"
+import type { UserCreate } from "@/lib/client/types.gen"
+import { useQuery } from "@tanstack/react-query"
+import { PlusCircle } from "lucide-react"
 
 export function UserManagement() {
   const { toast } = useToast()
