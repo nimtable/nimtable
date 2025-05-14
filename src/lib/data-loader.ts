@@ -31,7 +31,7 @@ export type {
 } from "./api"
 
 function catalogApi(catalog: string, inBrowser: boolean = true) {
-    return new Api({ baseUrl: `${getApiBaseUrl()}/api/catalog/${catalog}` })
+  return new Api({ baseUrl: `${getApiBaseUrl(inBrowser)}/api/catalog/${catalog}` })
 }
 
 // Types for the sidebar data structure
