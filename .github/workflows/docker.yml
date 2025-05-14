@@ -47,7 +47,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ matrix.image_config.image_env }}
+          images: ${{ matrix.image_config.image_name }}
           tags: |
             type=raw,value=nightly-${{matrix.arch_config.arch}}
             type=raw,value=nightly-${{ github.sha }}-${{matrix.arch_config.arch}}
@@ -62,6 +62,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          # TODO: can be removed after https://github.com/Noelware/docker-manifest-action/pull/811
           provenance: false
 
   # create multi-arch image
