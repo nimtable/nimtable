@@ -1,9 +1,7 @@
 services:
   # Frontend application (Next.js)
   nimtable-web:
-    build:
-      context: ..
-      dockerfile: docker/frontend/Dockerfile
+    image: ghcr.io/nimtable/nimtable-web:nightly
     ports:
       - "3000:3000"
     environment:
