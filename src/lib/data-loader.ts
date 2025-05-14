@@ -30,7 +30,7 @@ export type {
     PartitionSpec,
 } from "./api"
 
-function catalogApi(catalog: string) {
+function catalogApi(catalog: string, inBrowser: boolean = true) {
     return new Api({ baseUrl: `${getApiBaseUrl()}/api/catalog/${catalog}` })
 }
 

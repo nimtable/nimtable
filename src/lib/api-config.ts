@@ -15,12 +15,27 @@
  */
 
 // Configuration for API endpoint that works in both browser and server environments
-export const getApiBaseUrl = () => {
+export const getApiBaseUrl = (inBrowser: boolean = true) => {
   // Browser-side: empty string to use relative URLs
-  if (typeof window !== 'undefined') {
+  // Will be handled by nextjs rewrite
+  if (inBrowser) {
     return '';
   }
-  
+
   // Server-side: use environment variable or default to backend service URL
-  return process.env.API_URL || "http://localhost:8182"
+  const javaApiBaseUrl = getJavaApiBaseUrl()
+  if (!javaApiBaseUrl) {
+    throw new Error('JAVA_API_URL is not set')
+  }
+  return javaApiBaseUrl
+};
+
+export const getJavaApiBaseUrl = () => {
+  if (process.env.JAVA_API_URL) {
+    return process.env.JAVA_API_URL
+  } else if (process.env.NODE_ENV === 'development') {
+    return 'http://localhost:8182'
+  } else {
+    return null
+  }
 };
