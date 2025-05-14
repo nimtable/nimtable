@@ -18,6 +18,8 @@ package io.nimtable;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.nimtable.cache.DataDistributionCache;
+import io.nimtable.db.entity.DataDistribution;
 import io.nimtable.db.repository.CatalogRepository;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -32,8 +34,6 @@ import org.apache.iceberg.catalog.TableIdentifier;
 import org.apache.iceberg.io.FileIO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import io.nimtable.cache.DataDistributionCache;
-import io.nimtable.db.entity.DataDistribution;
 
 public class DistributionServlet extends HttpServlet {
     private static final Logger LOG = LoggerFactory.getLogger(DistributionServlet.class);
@@ -157,14 +157,14 @@ public class DistributionServlet extends HttpServlet {
             String catalogName = table.name().split("\\.")[0];
             String namespace = table.name().split("\\.")[1];
             String tableName = table.name().split("\\.")[2];
-            
-            DataDistribution cached = distributionCache.get(
-                String.valueOf(snapshot.snapshotId()),
-                catalogName,
-                namespace,
-                tableName
-            );
-            
+
+            DataDistribution cached =
+                    distributionCache.get(
+                            String.valueOf(snapshot.snapshotId()),
+                            catalogName,
+                            namespace,
+                            tableName);
+
             if (cached != null) {
                 LOG.debug("Using cached distribution for snapshot: {}", snapshot.snapshotId());
                 return cached;
@@ -191,9 +191,13 @@ public class DistributionServlet extends HttpServlet {
                     case DATA:
                         for (DataFile file : ManifestFiles.read(manifest, fileIO, table.specs())) {
                             processFileSize(distribution, file.fileSizeInBytes());
-                            dataDistribution.setDataFileCount(dataDistribution.getDataFileCount() + 1);
-                            dataDistribution.setDataFileSizeInBytes(dataDistribution.getDataFileSizeInBytes() + file.fileSizeInBytes());
-                            dataDistribution.setDataFileRecordCount(dataDistribution.getDataFileRecordCount() + file.recordCount());
+                            dataDistribution.setDataFileCount(
+                                    dataDistribution.getDataFileCount() + 1);
+                            dataDistribution.setDataFileSizeInBytes(
+                                    dataDistribution.getDataFileSizeInBytes()
+                                            + file.fileSizeInBytes());
+                            dataDistribution.setDataFileRecordCount(
+                                    dataDistribution.getDataFileRecordCount() + file.recordCount());
                         }
                         break;
                     case DELETES:
@@ -201,13 +205,23 @@ public class DistributionServlet extends HttpServlet {
                                 ManifestFiles.readDeleteManifest(manifest, fileIO, table.specs())) {
                             processFileSize(distribution, file.fileSizeInBytes());
                             if (file.content() == FileContent.EQUALITY_DELETES) {
-                                dataDistribution.setEqDeleteFileCount(dataDistribution.getEqDeleteFileCount() + 1);
-                                dataDistribution.setEqDeleteFileSizeInBytes(dataDistribution.getEqDeleteFileSizeInBytes() + file.fileSizeInBytes());
-                                dataDistribution.setEqDeleteFileRecordCount(dataDistribution.getEqDeleteFileRecordCount() + file.recordCount());
+                                dataDistribution.setEqDeleteFileCount(
+                                        dataDistribution.getEqDeleteFileCount() + 1);
+                                dataDistribution.setEqDeleteFileSizeInBytes(
+                                        dataDistribution.getEqDeleteFileSizeInBytes()
+                                                + file.fileSizeInBytes());
+                                dataDistribution.setEqDeleteFileRecordCount(
+                                        dataDistribution.getEqDeleteFileRecordCount()
+                                                + file.recordCount());
                             } else if (file.content() == FileContent.POSITION_DELETES) {
-                                dataDistribution.setPositionDeleteFileCount(dataDistribution.getPositionDeleteFileCount() + 1);
-                                dataDistribution.setPositionDeleteFileSizeInBytes(dataDistribution.getPositionDeleteFileSizeInBytes() + file.fileSizeInBytes());
-                                dataDistribution.setPositionDeleteFileRecordCount(dataDistribution.getPositionDeleteFileRecordCount() + file.recordCount());
+                                dataDistribution.setPositionDeleteFileCount(
+                                        dataDistribution.getPositionDeleteFileCount() + 1);
+                                dataDistribution.setPositionDeleteFileSizeInBytes(
+                                        dataDistribution.getPositionDeleteFileSizeInBytes()
+                                                + file.fileSizeInBytes());
+                                dataDistribution.setPositionDeleteFileRecordCount(
+                                        dataDistribution.getPositionDeleteFileRecordCount()
+                                                + file.recordCount());
                             }
                         }
                         break;
@@ -222,14 +236,13 @@ public class DistributionServlet extends HttpServlet {
             String catalogName = table.name().split("\\.")[0];
             String namespace = table.name().split("\\.")[1];
             String tableName = table.name().split("\\.")[2];
-            
+
             distributionCache.put(
-                String.valueOf(snapshot.snapshotId()),
-                catalogName,
-                namespace,
-                tableName,
-                dataDistribution
-            );
+                    String.valueOf(snapshot.snapshotId()),
+                    catalogName,
+                    namespace,
+                    tableName,
+                    dataDistribution);
         }
 
         return dataDistribution;

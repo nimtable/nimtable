@@ -8,7 +8,8 @@ import org.slf4j.LoggerFactory;
 public class DataDistributionRepository {
     private static final Logger LOG = LoggerFactory.getLogger(DataDistributionRepository.class);
 
-    public DataDistribution findBySnapshotId(String snapshotId, String catalogName, String namespace, String tableName) {
+    public DataDistribution findBySnapshotId(
+            String snapshotId, String catalogName, String namespace, String tableName) {
         return DB.find(DataDistribution.class)
                 .where()
                 .eq("snapshotId", snapshotId)
@@ -27,7 +28,8 @@ public class DataDistributionRepository {
         DB.delete(distribution);
     }
 
-    public void deleteBySnapshotId(String snapshotId, String catalogName, String namespace, String tableName) {
+    public void deleteBySnapshotId(
+            String snapshotId, String catalogName, String namespace, String tableName) {
         DB.find(DataDistribution.class)
                 .where()
                 .eq("snapshotId", snapshotId)
@@ -36,4 +38,4 @@ public class DataDistributionRepository {
                 .eq("tableName", tableName)
                 .delete();
     }
-} 
+}

@@ -37,14 +37,11 @@ public class DataDistribution extends Model {
     private long positionDeleteFileRecordCount;
     private long eqDeleteFileRecordCount;
 
-    @DbJson
-    private Map<String, Integer> ranges;
+    @DbJson private Map<String, Integer> ranges;
 
-    @WhenCreated
-    private Instant createdAt;
+    @WhenCreated private Instant createdAt;
 
-    @WhenModified
-    private Instant updatedAt;
+    @WhenModified private Instant updatedAt;
 
     // Getters and Setters
     public Long getId() {
@@ -182,4 +179,4 @@ public class DataDistribution extends Model {
     public void setUpdatedAt(Instant updatedAt) {
         this.updatedAt = updatedAt;
     }
-} 
+}

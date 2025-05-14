@@ -3,11 +3,10 @@ package io.nimtable.cache;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.nimtable.db.entity.DataDistribution;
 import io.nimtable.db.repository.DataDistributionRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DataDistributionCache {
     private static final Logger LOG = LoggerFactory.getLogger(DataDistributionCache.class);
@@ -29,13 +28,15 @@ public class DataDistributionCache {
         return instance;
     }
 
-    private String generateCacheKey(String snapshotId, String catalogName, String namespace, String tableName) {
+    private String generateCacheKey(
+            String snapshotId, String catalogName, String namespace, String tableName) {
         return String.format("%s:%s:%s:%s", snapshotId, catalogName, namespace, tableName);
     }
 
-    public DataDistribution get(String snapshotId, String catalogName, String namespace, String tableName) {
+    public DataDistribution get(
+            String snapshotId, String catalogName, String namespace, String tableName) {
         String cacheKey = generateCacheKey(snapshotId, catalogName, namespace, tableName);
-        
+
         // Try memory cache first
         DataDistribution cached = memoryCache.get(cacheKey);
         if (cached != null) {
@@ -55,9 +56,14 @@ public class DataDistributionCache {
         return null;
     }
 
-    public void put(String snapshotId, String catalogName, String namespace, String tableName, DataDistribution distribution) {
+    public void put(
+            String snapshotId,
+            String catalogName,
+            String namespace,
+            String tableName,
+            DataDistribution distribution) {
         String cacheKey = generateCacheKey(snapshotId, catalogName, namespace, tableName);
-        
+
         // Save to database
         distribution.setSnapshotId(snapshotId);
         distribution.setCatalogName(catalogName);
@@ -72,10 +78,10 @@ public class DataDistributionCache {
 
     public void remove(String snapshotId, String catalogName, String namespace, String tableName) {
         String cacheKey = generateCacheKey(snapshotId, catalogName, namespace, tableName);
-        
+
         // Remove from database
         repository.deleteBySnapshotId(snapshotId, catalogName, namespace, tableName);
-        
+
         // Remove from memory cache
         memoryCache.remove(cacheKey);
         LOG.debug("Removed distribution from cache for key: {}", cacheKey);
@@ -85,4 +91,4 @@ public class DataDistributionCache {
         memoryCache.clear();
         LOG.debug("Cleared memory cache");
     }
-} 
+}
