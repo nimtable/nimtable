@@ -437,7 +437,8 @@ public class OptimizeServlet extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
         String pathInfo = request.getPathInfo();
         if (pathInfo == null) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing path info");
@@ -456,7 +457,8 @@ public class OptimizeServlet extends HttpServlet {
                 handleGetSystemInfo(response);
                 break;
             default:
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Unknown operation: " + operation);
+                response.sendError(
+                        HttpServletResponse.SC_BAD_REQUEST, "Unknown operation: " + operation);
         }
     }
 
@@ -470,7 +472,8 @@ public class OptimizeServlet extends HttpServlet {
             systemInfo.put("freeMemory", runtime.freeMemory());
             systemInfo.put("usedMemory", runtime.totalMemory() - runtime.freeMemory());
 
-            logger.info("System info: CPU cores={}, Total memory={}, Max memory={}, Free memory={}",
+            logger.info(
+                    "System info: CPU cores={}, Total memory={}, Max memory={}, Free memory={}",
                     runtime.availableProcessors(),
                     runtime.totalMemory(),
                     runtime.maxMemory(),
@@ -480,7 +483,8 @@ public class OptimizeServlet extends HttpServlet {
             objectMapper.writeValue(response.getOutputStream(), systemInfo);
         } catch (Exception e) {
             logger.error("Failed to get system info", e);
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to get system info");
+            response.sendError(
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to get system info");
         }
     }
 }
