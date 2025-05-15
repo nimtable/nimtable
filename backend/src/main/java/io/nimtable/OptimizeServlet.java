@@ -435,4 +435,56 @@ public class OptimizeServlet extends HttpServlet {
         result.put("message", "Operation completed successfully");
         objectMapper.writeValue(response.getOutputStream(), result);
     }
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        String pathInfo = request.getPathInfo();
+        if (pathInfo == null) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing path info");
+            return;
+        }
+
+        String[] pathParts = pathInfo.split("/");
+        if (pathParts.length < 2) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid path");
+            return;
+        }
+
+        String operation = pathParts[1];
+        switch (operation) {
+            case "system-info":
+                handleGetSystemInfo(response);
+                break;
+            default:
+                response.sendError(
+                        HttpServletResponse.SC_BAD_REQUEST, "Unknown operation: " + operation);
+        }
+    }
+
+    private void handleGetSystemInfo(HttpServletResponse response) throws IOException {
+        try {
+            Runtime runtime = Runtime.getRuntime();
+            Map<String, Object> systemInfo = new HashMap<>();
+            systemInfo.put("cpuCount", runtime.availableProcessors());
+            systemInfo.put("totalMemory", runtime.totalMemory());
+            systemInfo.put("maxMemory", runtime.maxMemory());
+            systemInfo.put("freeMemory", runtime.freeMemory());
+            systemInfo.put("usedMemory", runtime.totalMemory() - runtime.freeMemory());
+
+            logger.info(
+                    "System info: CPU cores={}, Total memory={}, Max memory={}, Free memory={}",
+                    runtime.availableProcessors(),
+                    runtime.totalMemory(),
+                    runtime.maxMemory(),
+                    runtime.freeMemory());
+
+            response.setContentType("application/json");
+            objectMapper.writeValue(response.getOutputStream(), systemInfo);
+        } catch (Exception e) {
+            logger.error("Failed to get system info", e);
+            response.sendError(
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to get system info");
+        }
+    }
 }

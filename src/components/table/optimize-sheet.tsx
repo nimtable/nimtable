@@ -16,7 +16,7 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { ChevronRight, SettingsIcon, CheckCircle2, Circle, Loader2, RefreshCw } from "lucide-react"
+import { ChevronRight, SettingsIcon, CheckCircle2, Circle, Loader2, RefreshCw, Cpu, HardDrive, AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { errorToString } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
@@ -50,6 +50,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 type OptimizationStep = {
     name: string
@@ -213,18 +214,36 @@ export function OptimizeSheet({ open, onOpenChange, catalog, namespace, table }:
     const [isLoading] = useState(false)
     const [showProgressDialog, setShowProgressDialog] = useState(false)
     const [optimizationSteps, setOptimizationSteps] = useState<OptimizationStep[]>([])
+    const [systemInfo, setSystemInfo] = useState<{ cpuCount: number; maxMemory: number }>({ cpuCount: 0, maxMemory: 0 })
 
     // Optimization settings
     const [snapshotRetention, setSnapshotRetention] = useState(true)
     const [retentionPeriod, setRetentionPeriod] = useState("5")
     const [minSnapshotsToKeep, setMinSnapshotsToKeep] = useState("1")
-    const [orphanFileDeletion, setOrphanFileDeletion] = useState(false)
-    const [orphanFileRetention, setOrphanFileRetention] = useState("3")
     const [compaction, setCompaction] = useState(true)
     const [targetFileSizeBytes, setTargetFileSizeBytes] = useState<number>(536870912) // 512MB in bytes
     const [strategy, setStrategy] = useState("binpack")
     const [sortOrder, setSortOrder] = useState("")
     const [whereClause, setWhereClause] = useState("")
+
+    // Get system information
+    useEffect(() => {
+        const getSystemInfo = async () => {
+            try {
+                const response = await fetch('/api/optimize/system-info')
+                if (response.ok) {
+                    const data = await response.json()
+                    setSystemInfo({
+                        cpuCount: data.cpuCount,
+                        maxMemory: data.maxMemory
+                    })
+                }
+            } catch (error) {
+                console.error('Failed to fetch system info:', error)
+            }
+        }
+        getSystemInfo()
+    }, [])
 
     // Update optimization steps based on enabled settings
     useEffect(() => {
@@ -238,12 +257,8 @@ export function OptimizeSheet({ open, onOpenChange, catalog, namespace, table }:
             steps.push({ name: "Compaction", status: "pending" })
         }
 
-        if (orphanFileDeletion) {
-            steps.push({ name: "Orphan File Cleanup", status: "pending" })
-        }
-
         setOptimizationSteps(steps)
-    }, [snapshotRetention, compaction, orphanFileDeletion])
+    }, [snapshotRetention, compaction])
 
     useEffect(() => {
         if (open && catalog && namespace && table) {
@@ -271,8 +286,6 @@ export function OptimizeSheet({ open, onOpenChange, catalog, namespace, table }:
                 snapshotRetention,
                 retentionPeriod,
                 minSnapshotsToKeep,
-                orphanFileDeletion,
-                orphanFileRetention,
                 compaction,
                 targetFileSizeBytes: compaction ? targetFileSizeBytes : undefined,
                 strategy: compaction ? strategy : undefined,
@@ -494,33 +507,40 @@ export function OptimizeSheet({ open, onOpenChange, catalog, namespace, table }:
                                                             Optional filter to specify which files should be rewritten
                                                         </p>
                                                     </div>
-                                                </div>
-                                            )}
-                                        </div>
 
-                                        {/* Orphan File Deletion */}
-                                        <div className="space-y-4 pt-2 border-t">
-                                            <div className="flex items-center justify-between">
-                                                <div className="space-y-0.5">
-                                                    <Label className="text-base">Orphan file deletion</Label>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        Clean up unused files.
-                                                    </p>
-                                                </div>
-                                                <Switch checked={orphanFileDeletion} onCheckedChange={setOrphanFileDeletion} />
-                                            </div>
-                                            {orphanFileDeletion && (
-                                                <div className="grid gap-2 pl-4 pt-2">
-                                                    <Label htmlFor="orphan-retention">Delete orphan files after (days)</Label>
-                                                    <Input
-                                                        id="orphan-retention"
-                                                        type="number"
-                                                        min="1"
-                                                        value={orphanFileRetention}
-                                                        onChange={(e) => setOrphanFileRetention(e.target.value)}
-                                                        placeholder="3"
-                                                        className="border-muted-foreground/20"
-                                                    />
+                                                    {/* System Resource Information */}
+                                                    <div className="mt-4 pt-4 border-t border-muted/50">
+                                                        <div className="flex items-center gap-2 mb-2">
+                                                            <Cpu className="h-4 w-4 text-blue-500" />
+                                                            <span className="text-sm font-medium">System Resources</span>
+                                                        </div>
+                                                        <div className="grid grid-cols-2 gap-4">
+                                                            <div className="flex items-center gap-2">
+                                                                <Cpu className="h-4 w-4 text-muted-foreground" />
+                                                                <div>
+                                                                    <p className="text-sm font-medium">{systemInfo.cpuCount}</p>
+                                                                    <p className="text-xs text-muted-foreground">CPU Cores</p>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex items-center gap-2">
+                                                                <HardDrive className="h-4 w-4 text-muted-foreground" />
+                                                                <div>
+                                                                    <p className="text-sm font-medium">
+                                                                        {systemInfo.maxMemory > 0 
+                                                                            ? `${(systemInfo.maxMemory / (1024 * 1024 * 1024)).toFixed(1)} GB`
+                                                                            : 'Loading...'}
+                                                                    </p>
+                                                                    <p className="text-xs text-muted-foreground">Max Memory</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <Alert variant="warning" className="mt-4">
+                                                            <AlertTriangle className="h-4 w-4" />
+                                                            <AlertDescription className="ml-2">
+                                                                Compaction is performed using Embedded Spark with the above system resources. Please ensure these resources are sufficient for your data size.
+                                                            </AlertDescription>
+                                                        </Alert>
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>
@@ -585,9 +605,6 @@ export function OptimizeSheet({ open, onOpenChange, catalog, namespace, table }:
                                                             {step.result.deletedManifestFilesCount} manifest files
                                                         </>
                                                     )}
-                                                {step.name === "Orphan File Cleanup" && step.result?.orphanFileLocations != null && (
-                                                    <>Cleaned: {step.result.orphanFileLocations.length} orphan files</>
-                                                )}
                                             </div>
                                         )}
                                     </div>
