@@ -106,7 +106,7 @@ export default function NamespacePage(): JSX.Element {
 
     const [searchQuery, setSearchQuery] = useState("")
 
-    const { data: tables, isLoading } = useQuery<NamespaceTable[]>({
+    const { data: tables, isPending } = useQuery<NamespaceTable[]>({
         queryKey: ["namespace-tables", catalog, namespace],
         queryFn: async () => {
             if (!catalog || !namespace) return []
@@ -136,7 +136,7 @@ export default function NamespacePage(): JSX.Element {
         return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
     }
 
-    if (isLoading) {
+    if (isPending) {
         return (
             <div className="w-full h-full flex items-center justify-center">
                 <PageLoader icon={TableIcon} title="Loading namespace data" entity={namespace} entityType="Namespace" />

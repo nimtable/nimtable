@@ -46,7 +46,7 @@ export default function CatalogPage() {
     const catalogParam = searchParams.get("catalog")
     const { toast } = useToast()
 
-    const { data: config, isLoading } = useQuery({
+    const { data: config, isPending } = useQuery({
         queryKey: ["catalog-config", catalogParam],
         queryFn: async () => {
             if (!catalogParam) return undefined
@@ -85,7 +85,7 @@ export default function CatalogPage() {
     }
 
     // Loading state
-    if (isLoading || !config) {
+    if (isPending || !config) {
         return (
             <div className="w-full h-full flex items-center justify-center">
                 <PageLoader icon={Database} title="Loading catalog configuration" entity={catalogParam} entityType="Catalog" />

@@ -38,7 +38,7 @@ export default function TablePage() {
 
     const [activeTab, setActiveTab] = useState("info")
 
-    const { data: tableData, isLoading } = useQuery<LoadTableResult>({
+    const { data: tableData, isPending } = useQuery<LoadTableResult>({
         queryKey: ["table", catalog, namespace, table],
         queryFn: async () => {
             if (!isValidParams) return undefined as unknown as LoadTableResult
@@ -52,7 +52,7 @@ export default function TablePage() {
         return notFound()
     }
 
-    if (isLoading) {
+    if (isPending) {
         return (
             <div className="w-full h-full flex items-center justify-center">
                 <PageLoader icon={LayoutList} title="Loading table details" entity={table} entityType="Table" />

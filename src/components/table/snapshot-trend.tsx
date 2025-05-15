@@ -70,7 +70,7 @@ export function SnapshotTrend({ catalog, namespace, table, snapshots }: Snapshot
     const [trendType, setTrendType] = useState<TrendType>("size")
     const [granularity, setGranularity] = useState<TimeGranularity>("snapshot")
 
-    const { data, isLoading } = useQuery<TrendDataPoint[]>({
+    const { data, isPending } = useQuery<TrendDataPoint[]>({
         queryKey: ['snapshot-distribution', catalog, namespace, table, snapshots],
         queryFn: async () => {
             if (snapshots.length === 0) return []
@@ -213,7 +213,7 @@ export function SnapshotTrend({ catalog, namespace, table, snapshots }: Snapshot
         return count.toString()
     }
 
-    if (isLoading) {
+    if (isPending) {
         return (
             <Card className="border-muted/70 shadow-sm">
                 <CardHeader className="pb-2">

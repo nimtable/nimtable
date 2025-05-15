@@ -40,7 +40,7 @@ export function DataPreview({ catalog, namespace, table }: DataPreviewProps) {
     const {
         data,
         error,
-        isLoading,
+        isPending,
         refetch
     } = useQuery<FetchSampleDataResult>({
         queryKey: ["table-data-preview", catalog, namespace, table, page, pageSize],
@@ -67,8 +67,8 @@ export function DataPreview({ catalog, namespace, table }: DataPreviewProps) {
                     <span className="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
                     Data Preview
                 </h3>
-                <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading} className="gap-1.5">
-                    <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
+                <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isPending} className="gap-1.5">
+                    <RefreshCw className={`h-3.5 w-3.5 ${isPending ? "animate-spin" : ""}`} />
                     Refresh
                 </Button>
             </div>
@@ -83,7 +83,7 @@ export function DataPreview({ catalog, namespace, table }: DataPreviewProps) {
 
                 <CardContent className="p-0">
                     {/* Results or Error */}
-                    {isLoading ? (
+                    {isPending ? (
                         <div className="flex justify-center items-center py-16">
                             <div className="flex flex-col items-center gap-4">
                                 <div className="h-8 w-8 animate-spin rounded-full border-2 border-muted border-t-blue-500"></div>

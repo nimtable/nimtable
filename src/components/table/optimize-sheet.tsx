@@ -81,7 +81,7 @@ function FileDistributionSection({
         eqDeleteFileRecordCount: 0
     }
 
-    const { data: distribution, isLoading, refetch } = useQuery<DistributionData>({
+    const { data: distribution, isPending, refetch } = useQuery<DistributionData>({
         queryKey: ['file-distribution', catalog, namespace, tableId],
         queryFn: async () => {
             return await getFileDistribution(catalog, namespace, tableId)
@@ -93,7 +93,7 @@ function FileDistributionSection({
         initialData: emptyDistribution
     })
 
-    if (isLoading) {
+    if (isPending) {
         return <FileDistributionLoading />
     }
 
@@ -122,9 +122,9 @@ function FileDistributionSection({
                             size="icon"
                             className="h-6 w-6"
                             onClick={() => refetch()}
-                            disabled={isLoading}
+                            disabled={isPending}
                         >
-                            <RefreshCw className={`h-3 w-3 ${isLoading ? 'animate-spin' : ''}`} />
+                            <RefreshCw className={`h-3 w-3 ${isPending ? 'animate-spin' : ''}`} />
                         </Button>
                     </div>
                 </div>

@@ -80,7 +80,7 @@ function AppSidebarContent() {
   const [searchQuery, setSearchQuery] = React.useState("")
 
   // Fetch catalogs using React Query
-  const { data: catalogs = [], isLoading: catalogListLoading } = useQuery<string[]>({
+  const { data: catalogs = [], isPending: catalogListLoading } = useQuery<string[]>({
     queryKey: ["catalogs", refreshTrigger],
     queryFn: async () => {
       try {
@@ -110,7 +110,7 @@ function AppSidebarContent() {
   })
 
   // Fetch namespaces using React Query
-  const { data: namespaces = [], isLoading: namespacesLoading } = useQuery<NamespaceTables[]>({
+  const { data: namespaces = [], isPending: namespacesLoading } = useQuery<NamespaceTables[]>({
     queryKey: ["namespaces", catalog, refreshTrigger],
     queryFn: async () => {
       try {
