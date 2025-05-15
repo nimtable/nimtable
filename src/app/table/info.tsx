@@ -15,7 +15,7 @@
  */
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState } from "react"
 import { Database, FileText, Copy, Check, Info, RefreshCw, Layers, Hash, Calendar } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
@@ -41,6 +41,8 @@ import { cn } from "@/lib/utils"
 import { getPropertyDescription } from "@/lib/property-descriptions"
 import { FileStatistics } from "@/components/table/file-statistics"
 import { FileDistributionLoading } from "@/components/table/file-distribution-loading"
+import { useQuery } from "@tanstack/react-query"
+
 
 interface InfoTabProps {
     tableData: LoadTableResult
@@ -61,44 +63,28 @@ function FileDistributionSection({
     catalog,
     namespace,
 }: { tableId: string; catalog: string; namespace: string }) {
-    const { toast } = useToast()
-    const [loading, setLoading] = useState(true)
-    const [distribution, setDistribution] = useState<DistributionData>({
-        ranges: {},
-        dataFileCount: 0,
-        positionDeleteFileCount: 0,
-        eqDeleteFileCount: 0,
-        dataFileSizeInBytes: 0,
-        positionDeleteFileSizeInBytes: 0,
-        eqDeleteFileSizeInBytes: 0,
-        dataFileRecordCount: 0,
-        positionDeleteFileRecordCount: 0,
-        eqDeleteFileRecordCount: 0
+    const { data: distribution, isLoading, refetch } = useQuery<DistributionData>({
+        queryKey: ["file-distribution", catalog, namespace, tableId],
+        queryFn: async () => {
+            return await getFileDistribution(catalog, namespace, tableId)
+        },
+
+        enabled: !!(tableId && catalog && namespace),
+        initialData: {
+            ranges: {},
+            dataFileCount: 0,
+            positionDeleteFileCount: 0,
+            eqDeleteFileCount: 0,
+            dataFileSizeInBytes: 0,
+            positionDeleteFileSizeInBytes: 0,
+            eqDeleteFileSizeInBytes: 0,
+            dataFileRecordCount: 0,
+            positionDeleteFileRecordCount: 0,
+            eqDeleteFileRecordCount: 0
+        }
     })
 
-    const fetchData = useCallback(async () => {
-        try {
-            setLoading(true)
-            const data = await getFileDistribution(catalog, namespace, tableId)
-            setDistribution(data)
-        } catch (error) {
-            toast({
-                variant: "destructive",
-                title: "Failed to fetch distribution data",
-                description: errorToString(error),
-            })
-        } finally {
-            setLoading(false)
-        }
-    }, [catalog, namespace, tableId, toast])
-
-    useEffect(() => {
-        if (tableId && catalog && namespace) {
-            fetchData()
-        }
-    }, [tableId, catalog, namespace, toast, fetchData])
-
-    if (loading) {
+    if (isLoading) {
         return <FileDistributionLoading />
     }
 
@@ -136,10 +122,10 @@ function FileDistributionSection({
                                     variant="ghost"
                                     size="icon"
                                     className="h-6 w-6"
-                                    onClick={fetchData}
-                                    disabled={loading}
+                                    onClick={() => refetch()}
+                                    disabled={isLoading}
                                 >
-                                    <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
+                                    <RefreshCw className={`h-3 w-3 ${isLoading ? 'animate-spin' : ''}`} />
                                 </Button>
                             </div>
                         </div>

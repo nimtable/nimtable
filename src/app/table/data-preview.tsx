@@ -15,16 +15,17 @@
  */
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState } from "react"
 import { Database, RefreshCw, AlertCircle, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { DataTable } from "@/components/query/data-table"
 import { createColumns } from "@/components/query/columns"
-import { useToast } from "@/hooks/use-toast"
-import { errorToString } from "@/lib/utils"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { fetchSampleData, FetchSampleDataResult } from "@/lib/data-loader"
+import { useQuery } from "@tanstack/react-query"
+import { errorToString } from "@/lib/utils"
+
 
 interface DataPreviewProps {
     catalog: string
@@ -33,38 +34,21 @@ interface DataPreviewProps {
 }
 
 export function DataPreview({ catalog, namespace, table }: DataPreviewProps) {
-    const [data, setData] = useState<FetchSampleDataResult | null>(null)
-    const [isLoading, setIsLoading] = useState(true)
-    const [error, setError] = useState<string | null>(null)
-    const { toast } = useToast()
-
-    // Pagination state
     const [page, setPage] = useState(1)
     const [pageSize, setPageSize] = useState(10)
 
-    const loadData = useCallback(async () => {
-        setIsLoading(true)
-        setError(null)
+    const {
+        data,
+        error,
+        isLoading,
+        refetch
+    } = useQuery<FetchSampleDataResult>({
+        queryKey: ["table-data-preview", catalog, namespace, table, page, pageSize],
+        queryFn: async () => {
+            return await fetchSampleData(catalog, namespace, table, { page, pageSize })
+        },
 
-        try {
-            const result = await fetchSampleData(catalog, namespace, table, { page, pageSize })
-            setData(result)
-        } catch (err) {
-            const errorMessage = errorToString(err)
-            setError(errorMessage)
-            toast({
-                variant: "destructive",
-                title: "Failed to load data preview",
-                description: errorMessage,
-            })
-        } finally {
-            setIsLoading(false)
-        }
-    }, [catalog, namespace, table, toast, page, pageSize])
-
-    useEffect(() => {
-        loadData()
-    }, [catalog, namespace, table, page, pageSize, loadData])
+    })
 
     // Pagination handlers
     const handlePageChange = (newPage: number) => {
@@ -83,7 +67,7 @@ export function DataPreview({ catalog, namespace, table }: DataPreviewProps) {
                     <span className="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
                     Data Preview
                 </h3>
-                <Button variant="outline" size="sm" onClick={loadData} disabled={isLoading} className="gap-1.5">
+                <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading} className="gap-1.5">
                     <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
                     Refresh
                 </Button>
@@ -112,7 +96,7 @@ export function DataPreview({ catalog, namespace, table }: DataPreviewProps) {
                                 <AlertCircle className="h-8 w-8 text-destructive" />
                                 <div>
                                     <p className="text-sm font-medium">Failed to load data preview</p>
-                                    <p className="text-xs text-muted-foreground mt-1">{error}</p>
+                                        <p className="text-xs text-muted-foreground mt-1">{errorToString(error)}</p>
                                 </div>
                             </div>
                         </div>

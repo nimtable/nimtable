@@ -15,14 +15,14 @@
  */
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { useToast } from "@/hooks/use-toast"
-import { errorToString } from "@/lib/utils"
 import { getFileDistribution } from "@/lib/data-loader"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useQuery } from "@tanstack/react-query"
+
 
 interface SnapshotTrendProps {
     catalog: string
@@ -36,6 +36,14 @@ interface SnapshotTrendProps {
 
 type TrendType = "size" | "records" | "files"
 type TimeGranularity = "snapshot" | "day" | "week" | "month" | "quarter" | "year"
+
+// Define the type for trend data
+interface TrendDataPoint {
+    timestamp: number
+    dataSize: number
+    recordCount: number
+    fileCount: number
+}
 
 // ISO week helper
 function getISOWeek(date: Date) {
@@ -59,20 +67,14 @@ function getISOWeek(date: Date) {
 }
 
 export function SnapshotTrend({ catalog, namespace, table, snapshots }: SnapshotTrendProps) {
-    const { toast } = useToast()
-    const [loading, setLoading] = useState(true)
     const [trendType, setTrendType] = useState<TrendType>("size")
     const [granularity, setGranularity] = useState<TimeGranularity>("snapshot")
-    const [data, setData] = useState<Array<{
-        timestamp: number
-        dataSize: number
-        recordCount: number
-        fileCount: number
-    }>>([])
 
-    const fetchData = useCallback(async () => {
-        try {
-            setLoading(true)
+    const { data, isLoading } = useQuery<TrendDataPoint[]>({
+        queryKey: ['snapshot-distribution', catalog, namespace, table, snapshots],
+        queryFn: async () => {
+            if (snapshots.length === 0) return []
+
             const results = await Promise.all(
                 snapshots.map(async (snapshot) => {
                     const distribution = await getFileDistribution(
@@ -89,32 +91,23 @@ export function SnapshotTrend({ catalog, namespace, table, snapshots }: Snapshot
                     }
                 })
             )
-            setData(results.sort((a, b) => a.timestamp - b.timestamp))
-        } catch (error) {
-            toast({
-                variant: "destructive",
-                title: "Failed to fetch snapshot data",
-                description: errorToString(error),
-            })
-        } finally {
-            setLoading(false)
+            return results.sort((a, b) => a.timestamp - b.timestamp)
+        },
+        enabled: snapshots.length > 0,
+        meta: {
+            errorMessage: "Failed to fetch snapshot trend data for the table."
         }
-    }, [catalog, namespace, table, snapshots, toast])
+    })
 
-    useEffect(() => {
-        if (snapshots.length > 0) {
-            fetchData()
-        }
-    }, [snapshots, fetchData])
 
     const getAggregatedData = () => {
-        if (data.length === 0) return []
+        if (!data || data.length === 0) return []
 
         if (granularity === "snapshot") {
             return data
         }
 
-        const grouped = new Map<string, { timestamp: number, dataSize: number, recordCount: number, fileCount: number }>()
+        const grouped = new Map<string, TrendDataPoint>()
         data.forEach(item => {
             const date = new Date(item.timestamp)
             let key: string
@@ -123,18 +116,20 @@ export function SnapshotTrend({ catalog, namespace, table, snapshots }: Snapshot
                 case "day":
                     key = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`
                     break
-                case "week":
+                case "week": {
                     const weekStart = new Date(date)
                     weekStart.setDate(date.getDate() - date.getDay())
                     key = `${weekStart.getFullYear()}-${weekStart.getMonth() + 1}-${weekStart.getDate()}`
                     break
+                }
                 case "month":
                     key = `${date.getFullYear()}-${date.getMonth() + 1}`
                     break
-                case "quarter":
+                case "quarter": {
                     const quarter = Math.floor(date.getMonth() / 3)
                     key = `${date.getFullYear()}-Q${quarter + 1}`
                     break
+                }
                 case "year":
                     key = `${date.getFullYear()}`
                     break
@@ -218,7 +213,7 @@ export function SnapshotTrend({ catalog, namespace, table, snapshots }: Snapshot
         return count.toString()
     }
 
-    if (loading) {
+    if (isLoading) {
         return (
             <Card className="border-muted/70 shadow-sm">
                 <CardHeader className="pb-2">

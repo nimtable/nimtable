@@ -15,11 +15,9 @@
  */
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { LayoutList, Database, FileText } from "lucide-react"
 import { notFound, useSearchParams } from "next/navigation"
-import { useToast } from "@/hooks/use-toast"
-import { errorToString } from "@/lib/utils"
 import { loadTableData } from "@/lib/data-loader"
 import type { LoadTableResult } from "@/lib/data-loader"
 import { InfoTab } from "./info"
@@ -28,6 +26,8 @@ import { SnapshotsTab } from "./snapshots"
 import { TopNavbar } from "@/components/shared/top-navbar"
 import { PageLoader } from "@/components/shared/page-loader"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useQuery } from "@tanstack/react-query"
+
 
 export default function TablePage() {
     const searchParams = useSearchParams()
@@ -36,32 +36,17 @@ export default function TablePage() {
     const table = searchParams.get("table")
     const isValidParams = catalog && namespace && table
 
-    const { toast } = useToast()
-    const [tableData, setTableData] = useState<LoadTableResult | undefined>(undefined)
-    const [isLoading, setIsLoading] = useState(true)
     const [activeTab, setActiveTab] = useState("info")
 
-    useEffect(() => {
-        if (!isValidParams) return
+    const { data: tableData, isLoading } = useQuery<LoadTableResult>({
+        queryKey: ["table", catalog, namespace, table],
+        queryFn: async () => {
+            if (!isValidParams) return undefined as unknown as LoadTableResult
+            return await loadTableData(catalog!, namespace!, table!)
+        },
+        enabled: !!isValidParams,
 
-        const fetchTableData = async () => {
-            setIsLoading(true)
-            try {
-                const data = await loadTableData(catalog!, namespace!, table!)
-                setTableData(data)
-            } catch (error) {
-                toast({
-                    variant: "destructive",
-                    title: `Failed to load table ${catalog}.${namespace}.${table}`,
-                    description: errorToString(error),
-                })
-            } finally {
-                setIsLoading(false)
-            }
-        }
-
-        fetchTableData()
-    }, [catalog, namespace, table, toast, isValidParams])
+    })
 
     if (!isValidParams) {
         return notFound()

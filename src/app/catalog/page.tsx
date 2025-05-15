@@ -17,11 +17,10 @@
 "use client"
 
 import { Database, FileText, Layers, HardDrive, Settings, Trash2 } from "lucide-react"
-import { useEffect, useState } from "react"
 import { useToast } from "@/hooks/use-toast"
 import { errorToString } from "@/lib/utils"
 import { notFound, useSearchParams, useRouter } from "next/navigation"
-import { CatalogConfig, getCatalogConfig } from "@/lib/data-loader"
+import { getCatalogConfig } from "@/lib/data-loader"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { TopNavbar } from "@/components/shared/top-navbar"
 import { PageLoader } from "@/components/shared/page-loader"
@@ -38,49 +37,24 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { deleteCatalog } from "@/lib/client/sdk.gen"
+import { useQuery } from "@tanstack/react-query"
+
 
 export default function CatalogPage() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const catalogParam = searchParams.get("catalog")
-    const [config, setConfig] = useState<CatalogConfig | undefined>(undefined)
     const { toast } = useToast()
-    const [isLoading, setIsLoading] = useState(true)
 
-    useEffect(() => {
-        let didCancel = false
+    const { data: config, isLoading } = useQuery({
+        queryKey: ["catalog-config", catalogParam],
+        queryFn: async () => {
+            if (!catalogParam) return undefined
+            return await getCatalogConfig(catalogParam)
+        },
+        enabled: !!catalogParam,
 
-        const fetchConfig = async () => {
-            setIsLoading(true)
-            try {
-                if (!catalogParam) {
-                    return
-                }
-                const data = await getCatalogConfig(catalogParam)
-                if (!didCancel) {
-                    setConfig(data)
-                }
-            } catch (error) {
-                if (!didCancel) {
-                    toast({
-                        variant: "destructive",
-                        title: "Failed to load catalog configuration",
-                        description: errorToString(error),
-                    })
-                }
-            } finally {
-                if (!didCancel) {
-                    setIsLoading(false)
-                }
-            }
-        }
-
-        fetchConfig()
-
-        return () => {
-            didCancel = true
-        }
-    }, [catalogParam, toast])
+    })
 
     const handleDelete = async () => {
         if (!catalogParam) return

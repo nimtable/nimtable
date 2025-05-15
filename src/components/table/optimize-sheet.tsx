@@ -15,7 +15,7 @@
  */
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState } from "react"
 import { ChevronRight, SettingsIcon, CheckCircle2, Circle, Loader2, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { errorToString } from "@/lib/utils"
@@ -34,7 +34,6 @@ import { Switch } from "@/components/ui/switch"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import Link from "next/link"
-import { loadTableData, type LoadTableResult } from "@/lib/data-loader"
 import {
     getFileDistribution,
     runOptimizationOperation,
@@ -50,12 +49,13 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import { useQuery, useMutation } from "@tanstack/react-query"
 
 type OptimizationStep = {
     name: string
     status: "pending" | "running" | "done" | "error"
     error?: string
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     result?: any
 }
 
@@ -67,9 +67,7 @@ function FileDistributionSection({
     catalog,
     namespace,
 }: { tableId: string; catalog: string; namespace: string }) {
-    const { toast } = useToast()
-    const [loading, setLoading] = useState(true)
-    const [distribution, setDistribution] = useState<DistributionData>({
+    const emptyDistribution: DistributionData = {
         ranges: {},
         dataFileCount: 0,
         positionDeleteFileCount: 0,
@@ -80,31 +78,21 @@ function FileDistributionSection({
         dataFileRecordCount: 0,
         positionDeleteFileRecordCount: 0,
         eqDeleteFileRecordCount: 0
+    }
+
+    const { data: distribution, isLoading, refetch } = useQuery<DistributionData>({
+        queryKey: ['file-distribution', catalog, namespace, tableId],
+        queryFn: async () => {
+            return await getFileDistribution(catalog, namespace, tableId)
+        },
+        enabled: !!(tableId && catalog && namespace),
+        meta: {
+            errorMessage: "Failed to fetch file distribution data for the table."
+        },
+        initialData: emptyDistribution
     })
 
-    const fetchData = useCallback(async () => {
-        try {
-            setLoading(true)
-            const data = await getFileDistribution(catalog, namespace, tableId)
-            setDistribution(data)
-        } catch (error) {
-            toast({
-                variant: "destructive",
-                title: "Failed to fetch distribution data",
-                description: errorToString(error),
-            })
-        } finally {
-            setLoading(false)
-        }
-    }, [catalog, namespace, tableId, toast])
-
-    useEffect(() => {
-        if (tableId && catalog && namespace) {
-            fetchData()
-        }
-    }, [tableId, catalog, namespace, toast, fetchData])
-
-    if (loading) {
+    if (isLoading) {
         return <FileDistributionLoading />
     }
 
@@ -132,10 +120,10 @@ function FileDistributionSection({
                             variant="ghost"
                             size="icon"
                             className="h-6 w-6"
-                            onClick={fetchData}
-                            disabled={loading}
+                            onClick={() => refetch()}
+                            disabled={isLoading}
                         >
-                            <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
+                            <RefreshCw className={`h-3 w-3 ${isLoading ? 'animate-spin' : ''}`} />
                         </Button>
                     </div>
                 </div>
@@ -209,8 +197,6 @@ interface OptimizeSheetProps {
 
 export function OptimizeSheet({ open, onOpenChange, catalog, namespace, table }: OptimizeSheetProps) {
     const { toast } = useToast()
-    const [, setTableData] = useState<LoadTableResult | undefined>(undefined)
-    const [isLoading] = useState(false)
     const [showProgressDialog, setShowProgressDialog] = useState(false)
     const [optimizationSteps, setOptimizationSteps] = useState<OptimizationStep[]>([])
 
@@ -225,6 +211,7 @@ export function OptimizeSheet({ open, onOpenChange, catalog, namespace, table }:
     const [strategy, setStrategy] = useState("binpack")
     const [sortOrder, setSortOrder] = useState("")
     const [whereClause, setWhereClause] = useState("")
+
 
     // Update optimization steps based on enabled settings
     useEffect(() => {
@@ -245,41 +232,44 @@ export function OptimizeSheet({ open, onOpenChange, catalog, namespace, table }:
         setOptimizationSteps(steps)
     }, [snapshotRetention, compaction, orphanFileDeletion])
 
-    useEffect(() => {
-        if (open && catalog && namespace && table) {
-            loadTableData(catalog, namespace, table)
-                .then(setTableData)
-                .catch((error) => {
-                    toast({
-                        variant: "destructive",
-                        title: "Failed to load table",
-                        description: errorToString(error),
-                    })
-                })
-        }
-    }, [catalog, namespace, table, open, toast])
-
-    const runOptimizationStep = async (step: OptimizationStep, index: number) => {
-        try {
+    // Define the optimization mutation
+    const optimizeMutation = useMutation({
+        mutationFn: async ({
+            step,
+            index
+        }: {
+            step: OptimizationStep,
+            index: number
+        }) => {
             setOptimizationSteps((steps) => {
                 const newSteps = [...steps]
                 newSteps[index] = { ...step, status: "running" }
                 return newSteps
             })
 
-            const result = await runOptimizationOperation(step.name as OptimizationOperation, catalog, namespace, table, {
-                snapshotRetention,
-                retentionPeriod,
-                minSnapshotsToKeep,
-                orphanFileDeletion,
-                orphanFileRetention,
-                compaction,
-                targetFileSizeBytes: compaction ? targetFileSizeBytes : undefined,
-                strategy: compaction ? strategy : undefined,
-                sortOrder: compaction ? sortOrder : undefined,
-                whereClause: compaction ? whereClause : undefined,
-            })
-
+            return await runOptimizationOperation(
+                step.name as OptimizationOperation,
+                catalog,
+                namespace,
+                table,
+                {
+                    snapshotRetention,
+                    retentionPeriod,
+                    minSnapshotsToKeep,
+                    orphanFileDeletion,
+                    orphanFileRetention,
+                    compaction,
+                    targetFileSizeBytes: compaction ? targetFileSizeBytes : undefined,
+                    strategy: compaction ? strategy : undefined,
+                    sortOrder: compaction ? sortOrder : undefined,
+                    whereClause: compaction ? whereClause : undefined,
+                }
+            )
+        },
+        meta: {
+            errorMessage: "Failed to run optimization operation."
+        },
+        onSuccess: (result, { step, index }) => {
             setOptimizationSteps((steps) => {
                 const newSteps = [...steps]
                 newSteps[index] = {
@@ -289,17 +279,25 @@ export function OptimizeSheet({ open, onOpenChange, catalog, namespace, table }:
                 }
                 return newSteps
             })
-
-            return true
-        } catch (error) {
+        },
+        onError: (error, { step, index }) => {
             setOptimizationSteps((steps) => {
                 const newSteps = [...steps]
-                newSteps[index] = { ...step, status: "error", error: errorToString(error) }
+                newSteps[index] = {
+                    ...step,
+                    status: "error",
+                    error: errorToString(error)
+                }
                 return newSteps
             })
-            return false
+
+            toast({
+                variant: "destructive",
+                title: `Failed to run ${step.name}`,
+                description: errorToString(error),
+            })
         }
-    }
+    })
 
     const handleOptimize = async () => {
         setShowProgressDialog(true)
@@ -308,14 +306,10 @@ export function OptimizeSheet({ open, onOpenChange, catalog, namespace, table }:
         // Run steps sequentially
         for (let i = 0; i < optimizationSteps.length; i++) {
             const step = optimizationSteps[i]
-            const success = await runOptimizationStep(step, i)
-            if (!success) {
-                toast({
-                    variant: "destructive",
-                    title: `Failed to run ${step.name}`,
-                    description: step.error,
-                })
-                return
+            try {
+                await optimizeMutation.mutateAsync({ step, index: i })
+            } catch (_error) {
+                return // Stop on first error
             }
         }
 
@@ -539,10 +533,10 @@ export function OptimizeSheet({ open, onOpenChange, catalog, namespace, table }:
                         </Button>
                         <Button
                             onClick={() => handleOptimize()}
-                            disabled={isLoading}
+                            disabled={optimizeMutation.isPending}
                             className="gap-2 bg-blue-600 hover:bg-blue-700"
                         >
-                            {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                            {optimizeMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
                             Run Optimization
                         </Button>
                     </div>
