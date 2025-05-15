@@ -56,7 +56,6 @@ type OptimizationStep = {
     name: string
     status: "pending" | "running" | "done" | "error"
     error?: string
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     result?: any
 }
 

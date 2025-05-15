@@ -48,12 +48,12 @@ function getISOWeek(date: Date) {
         '-W' +
         String(
             1 +
-                Math.round(
-                    ((tmp.getTime() - week1.getTime()) / 86400000 -
-                        3 +
-                        ((week1.getDay() + 6) % 7)) /
-                        7
-                )
+            Math.round(
+                ((tmp.getTime() - week1.getTime()) / 86400000 -
+                    3 +
+                    ((week1.getDay() + 6) % 7)) /
+                7
+            )
         ).padStart(2, '0')
     );
 }
@@ -123,18 +123,20 @@ export function SnapshotTrend({ catalog, namespace, table, snapshots }: Snapshot
                 case "day":
                     key = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`
                     break
-                case "week":
+                case "week": {
                     const weekStart = new Date(date)
                     weekStart.setDate(date.getDate() - date.getDay())
                     key = `${weekStart.getFullYear()}-${weekStart.getMonth() + 1}-${weekStart.getDate()}`
                     break
+                }
                 case "month":
                     key = `${date.getFullYear()}-${date.getMonth() + 1}`
                     break
-                case "quarter":
+                case "quarter": {
                     const quarter = Math.floor(date.getMonth() / 3)
                     key = `${date.getFullYear()}-Q${quarter + 1}`
                     break
+                }
                 case "year":
                     key = `${date.getFullYear()}`
                     break
