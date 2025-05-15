@@ -262,14 +262,12 @@ export async function getFileDistribution(
     };
 }
 
-export type OptimizationOperation = "Compaction" | "Snapshot Expiration" | "Orphan File Cleanup"
+export type OptimizationOperation = "Compaction" | "Snapshot Expiration"
 
 export interface OptimizationSettings {
     snapshotRetention: boolean
     retentionPeriod: string
     minSnapshotsToKeep: string
-    orphanFileDeletion: boolean
-    orphanFileRetention: string
     compaction: boolean
     targetFileSizeBytes?: number
     strategy?: string
@@ -300,8 +298,6 @@ export async function runOptimizationOperation(
             snapshotRetention: settings?.snapshotRetention,
             retentionPeriod: parseInt(settings.retentionPeriod) * 24 * 60 * 60 * 1000,
             minSnapshotsToKeep: parseInt(settings.minSnapshotsToKeep),
-            orphanFileDeletion: settings.orphanFileDeletion,
-            orphanFileRetention: parseInt(settings.orphanFileRetention) * 24 * 60 * 60 * 1000,
             compaction: settings.compaction,
             targetFileSizeBytes: settings.targetFileSizeBytes,
             strategy: settings.strategy,
@@ -336,8 +332,6 @@ export async function scheduleOptimization(
             snapshotRetention: settings.snapshotRetention,
             retentionPeriod: parseInt(settings.retentionPeriod) * 24 * 60 * 60 * 1000,
             minSnapshotsToKeep: parseInt(settings.minSnapshotsToKeep),
-            orphanFileDeletion: settings.orphanFileDeletion,
-            orphanFileRetention: parseInt(settings.orphanFileRetention) * 24 * 60 * 60 * 1000,
             compaction: settings.compaction,
         }),
     });
