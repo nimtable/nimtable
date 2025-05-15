@@ -12,15 +12,23 @@ permissions:
 
 env:
   IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/nimtable
+  FRONTEND_IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/nimtable-web
 
 jobs:
-  build-and-push:
+  build-and-push-images:
     strategy:
       matrix:
-        config:
+        arch_config:
           - {arch: 'arm64'}
           - {arch: 'amd64'}
-    runs-on: ${{ matrix.config.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
+        image_config:
+          - type: 'backend'
+            dockerfile: './docker/Dockerfile'
+            image_name: ghcr.io/${{ github.repository_owner }}/nimtable
+          - type: 'frontend'
+            dockerfile: './docker/Dockerfile.frontend'
+            image_name: ghcr.io/${{ github.repository_owner }}/nimtable-web
+    runs-on: ${{ matrix.arch_config.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -35,20 +43,20 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata for Docker
+      - name: Extract metadata for Docker (${{ matrix.image_config.type }})
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.IMAGE_NAME }}
+          images: ${{ matrix.image_config.image_name }}
           tags: |
-            type=raw,value=nightly-${{matrix.config.arch}}
-            type=raw,value=nightly-${{ github.sha }}-${{matrix.config.arch}}
+            type=raw,value=nightly-${{matrix.arch_config.arch}}
+            type=raw,value=nightly-${{ github.sha }}-${{matrix.arch_config.arch}}
 
-      - name: Build and push Docker image
+      - name: Build and push Docker image (${{ matrix.image_config.type }})
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./docker/Dockerfile
+          file: ${{ matrix.image_config.dockerfile }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -60,7 +68,7 @@ jobs:
   # create multi-arch image
   merge-docker-manifest:
     runs-on: ubuntu-latest
-    needs: build-and-push
+    needs: [build-and-push-images]
     steps:
       - uses: docker/login-action@v3
         with:
@@ -78,4 +86,16 @@ jobs:
         with:
           inputs: ${{ env.IMAGE_NAME }}:nightly-${{ github.sha }}
           images: ${{ env.IMAGE_NAME }}:nightly-${{ github.sha }}-amd64,${{ env.IMAGE_NAME }}:nightly-${{ github.sha }}-arm64
+          push: true
+      - name: Create and push manifest images for Frontend (nightly)
+        uses: Noelware/docker-manifest-action@0.4.3
+        with:
+          inputs: ${{ env.FRONTEND_IMAGE_NAME }}:nightly
+          images: ${{ env.FRONTEND_IMAGE_NAME }}:nightly-amd64,${{ env.FRONTEND_IMAGE_NAME }}:nightly-arm64
+          push: true
+      - name: Create and push manifest images for Frontend (nightly-sha)
+        uses: Noelware/docker-manifest-action@0.4.3
+        with:
+          inputs: ${{ env.FRONTEND_IMAGE_NAME }}:nightly-${{ github.sha }}
+          images: ${{ env.FRONTEND_IMAGE_NAME }}:nightly-${{ github.sha }}-amd64,${{ env.FRONTEND_IMAGE_NAME }}:nightly-${{ github.sha }}-arm64
           push: true

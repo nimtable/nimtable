@@ -1,4 +1,17 @@
 services:
+  # Frontend application (Next.js)
+  nimtable-web:
+    image: ghcr.io/nimtable/nimtable-web:nightly
+    ports:
+      - "3000:3000"
+    environment:
+      - JAVA_API_URL=http://nimtable:8182
+    depends_on:
+      - nimtable
+    networks:
+      - nimtable-network
+
+  # Backend application
   nimtable:
     image: ghcr.io/nimtable/nimtable:nightly
     depends_on:
@@ -12,6 +25,7 @@ services:
       JAVA_OPTS: -Xmx2g -Xms512m
     networks:
       - nimtable-network
+
   # Database to persist nimtable data.
   # Make sure the setting in config.yaml is consistent with this.
   database:

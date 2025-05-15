@@ -1,5 +1,5 @@
 # Runtime image
-FROM eclipse-temurin:17-jre-jammy AS nimtable
+FROM eclipse-temurin:17-jre-jammy AS nimtable-backend-runtime
 
 WORKDIR /nimtable
 
@@ -26,3 +26,13 @@ ENTRYPOINT ["java", \
     "--add-opens=java.base/sun.util.calendar=ALL-UNNAMED", \
     "--add-opens=java.security.jgss/sun.security.krb5=ALL-UNNAMED", \
     "-jar", "/nimtable/nimtable.jar"] 
+
+FROM node:23-alpine AS nimtable-frontend-runtime
+
+WORKDIR /nimtable-web
+
+COPY package.json package-lock.json ./
+RUN npm ci --only=production
+COPY .next .next
+
+ENTRYPOINT ["npm", "start"]
