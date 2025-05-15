@@ -6,8 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "lint:fix": "next lint --fix",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
     "format:write": "prettier --write \"**/*.{ts,tsx,mdx}\" --cache",
     "format:check": "prettier --check \"**/*.{ts,tsx,mdx}\" --cache",
@@ -55,7 +55,7 @@
     "zod": "^3.24.3"
   },
   "devDependencies": {
-    "@eslint/js": "^8.56.0",
+    "@eslint/js": "^9.0.0",
     "@hey-api/openapi-ts": "^0.66.5",
     "@tanstack/react-query-devtools": "^5.74.4",
     "@trivago/prettier-plugin-sort-imports": "^5.2.2",
@@ -63,10 +63,12 @@
     "@types/prismjs": "^1.26.5",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@typescript-eslint/parser": "^8.32.1",
     "autoprefixer": "^10.4.20",
     "css-loader": "^6.10.0",
-    "eslint": "^8.56.0",
-    "eslint-config-next": "14.2.24",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "15.3.2",
+    "eslint-plugin-unused-imports": "^4.1.4",
     "postcss": "^8",
     "postcss-loader": "^8.1.1",
     "style-loader": "^3.3.4",
@@ -75,6 +77,6 @@
     "ts-loader": "^9.5.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^7.0.0"
+    "typescript-eslint": "^8.0.0"
   }
 }
