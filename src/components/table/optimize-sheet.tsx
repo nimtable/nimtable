@@ -104,6 +104,7 @@ function FileDistributionSection({
   const {
     data: distribution,
     isPending,
+    isError,
     refetch,
   } = useQuery<DistributionData>({
     queryKey: ["file-distribution", catalog, namespace, tableId],
@@ -114,10 +115,9 @@ function FileDistributionSection({
     meta: {
       errorMessage: "Failed to fetch file distribution data for the table.",
     },
-    initialData: emptyDistribution,
   })
 
-  if (isPending) {
+  if (isPending || isError) {
     return <FileDistributionLoading />
   }
 
@@ -270,8 +270,8 @@ export function OptimizeSheet({
         const data = await response.json()
         return data
       }
+      return undefined
     },
-    initialData: { cpuCount: 0, maxMemory: 0 },
   })
 
   // Update optimization steps based on enabled settings
@@ -598,7 +598,7 @@ export function OptimizeSheet({
                                 <Cpu className="h-4 w-4 text-muted-foreground" />
                                 <div>
                                   <p className="text-sm font-medium">
-                                    {systemInfo.cpuCount}
+                                    {systemInfo?.cpuCount ?? "Loading..."}
                                   </p>
                                   <p className="text-xs text-muted-foreground">
                                     CPU Cores
@@ -609,7 +609,7 @@ export function OptimizeSheet({
                                 <HardDrive className="h-4 w-4 text-muted-foreground" />
                                 <div>
                                   <p className="text-sm font-medium">
-                                    {systemInfo.maxMemory > 0
+                                    {systemInfo
                                       ? `${(systemInfo.maxMemory / (1024 * 1024 * 1024)).toFixed(1)} GB`
                                       : "Loading..."}
                                   </p>

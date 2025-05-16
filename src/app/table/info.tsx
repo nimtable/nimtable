@@ -104,6 +104,7 @@ function FileDistributionSection({
   const {
     data: distribution,
     isPending,
+    isError,
     refetch,
   } = useQuery<DistributionData>({
     queryKey: ["file-distribution", catalog, namespace, tableId],
@@ -112,21 +113,9 @@ function FileDistributionSection({
     },
 
     enabled: !!(tableId && catalog && namespace),
-    initialData: {
-      ranges: {},
-      dataFileCount: 0,
-      positionDeleteFileCount: 0,
-      eqDeleteFileCount: 0,
-      dataFileSizeInBytes: 0,
-      positionDeleteFileSizeInBytes: 0,
-      eqDeleteFileSizeInBytes: 0,
-      dataFileRecordCount: 0,
-      positionDeleteFileRecordCount: 0,
-      eqDeleteFileRecordCount: 0,
-    },
   })
 
-  if (isPending) {
+  if (isPending || isError) {
     return <FileDistributionLoading />
   }
 
