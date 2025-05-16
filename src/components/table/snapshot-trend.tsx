@@ -122,7 +122,7 @@ export function SnapshotTrend({
             dataSize: distribution.dataFileSizeInBytes,
             recordCount: distribution.dataFileRecordCount,
             fileCount: distribution.dataFileCount,
-            isCompaction: snapshot.isCompaction
+            isCompaction: snapshot.isCompaction,
           }
         })
       )
@@ -175,7 +175,7 @@ export function SnapshotTrend({
           dataSize: item.dataSize,
           recordCount: item.recordCount,
           fileCount: item.fileCount,
-          isCompaction: item.isCompaction
+          isCompaction: item.isCompaction,
         })
       }
     })
@@ -377,7 +377,9 @@ export function SnapshotTrend({
                   return (
                     <div>
                       <div>{date}</div>
-                      <div className="text-xs font-medium text-blue-600 dark:text-blue-400">Compaction</div>
+                      <div className="text-xs font-medium text-blue-600 dark:text-blue-400">
+                        Compaction
+                      </div>
                     </div>
                   )
                 }
@@ -391,23 +393,23 @@ export function SnapshotTrend({
               strokeWidth={2}
               dot={false}
             />
-            {aggregatedData.map((point, index) => (
-              point.isCompaction && (
-                <ReferenceDot
-                  key={index}
-                  x={point.timestamp}
-                  y={point[getDataKey()]}
-                  r={4}
-                  fill="#3b82f6"
-                  stroke="#fff"
-                  strokeWidth={2}
-                />
-              )
-            ))}
+            {aggregatedData.map(
+              (point, index) =>
+                point.isCompaction && (
+                  <ReferenceDot
+                    key={index}
+                    x={point.timestamp}
+                    y={point[getDataKey()]}
+                    r={4}
+                    fill="#3b82f6"
+                    stroke="#fff"
+                    strokeWidth={2}
+                  />
+                )
+            )}
           </LineChart>
         </ResponsiveContainer>
       </CardContent>
     </Card>
   )
 }
-

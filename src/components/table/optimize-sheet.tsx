@@ -249,7 +249,9 @@ function CompactionHistory({
   const { data: tableData } = useQuery({
     queryKey: ["table", catalog, namespace, table],
     queryFn: async () => {
-      const response = await fetch(`/api/catalog/${catalog}/namespace/${namespace}/table/${table}`)
+      const response = await fetch(
+        `/api/catalog/${catalog}/namespace/${namespace}/table/${table}`
+      )
       if (!response.ok) {
         throw new Error("Failed to fetch table data")
       }
@@ -290,12 +292,16 @@ function CompactionHistory({
     .map((snapshot: any) => ({
       id: snapshot["snapshot-id"],
       timestamp: snapshot["timestamp-ms"],
-      rewrittenDataFilesCount: snapshot.summary?.["rewritten-data-files-count"] || 0,
+      rewrittenDataFilesCount:
+        snapshot.summary?.["rewritten-data-files-count"] || 0,
       addedDataFilesCount: snapshot.summary?.["added-data-files-count"] || 0,
       rewrittenBytesCount: snapshot.summary?.["rewritten-bytes-count"] || 0,
       failedDataFilesCount: snapshot.summary?.["failed-data-files-count"] || 0,
     }))
-    .sort((a: CompactionHistoryItem, b: CompactionHistoryItem) => b.timestamp - a.timestamp)
+    .sort(
+      (a: CompactionHistoryItem, b: CompactionHistoryItem) =>
+        b.timestamp - a.timestamp
+    )
 
   if (compactionHistory.length === 0) {
     return (
@@ -316,9 +322,7 @@ function CompactionHistory({
       <div className="border rounded-md overflow-hidden bg-background">
         {/* Header row */}
         <div className="flex items-center py-2 px-3 border-b bg-muted/30 text-xs font-medium text-muted-foreground">
-          <div className="w-8 flex-shrink-0">
-            {/* Expand button column */}
-          </div>
+          <div className="w-8 flex-shrink-0">{/* Expand button column */}</div>
           <div className="w-[300px] flex-shrink-0 pl-4">Snapshot ID</div>
           <div className="w-[140px] flex-shrink-0">Date</div>
           <div className="w-[100px] flex-shrink-0">Operation</div>
@@ -326,31 +330,33 @@ function CompactionHistory({
 
         {/* History items */}
         <div className="max-h-[calc(100vh-400px)] overflow-y-auto">
-          {compactionHistory.map((item: CompactionHistoryItem, index: number) => (
-            <div
-              key={item.id}
-              className="flex items-center py-2 px-3 border-b last:border-b-0 hover:bg-muted/20 transition-colors"
-            >
-              <div className="w-8 flex-shrink-0 flex items-center">
-                <div className="h-2 w-2 rounded-full bg-blue-500 ml-2" />
-              </div>
+          {compactionHistory.map(
+            (item: CompactionHistoryItem, index: number) => (
+              <div
+                key={item.id}
+                className="flex items-center py-2 px-3 border-b last:border-b-0 hover:bg-muted/20 transition-colors"
+              >
+                <div className="w-8 flex-shrink-0 flex items-center">
+                  <div className="h-2 w-2 rounded-full bg-blue-500 ml-2" />
+                </div>
 
-              {/* Snapshot ID */}
-              <div className="font-mono text-xs text-muted-foreground w-[300px] flex-shrink-0 pl-4">
-                {String(item.id)}
-              </div>
+                {/* Snapshot ID */}
+                <div className="font-mono text-xs text-muted-foreground w-[300px] flex-shrink-0 pl-4">
+                  {String(item.id)}
+                </div>
 
-              {/* Date */}
-              <div className="text-xs text-muted-foreground w-[140px] flex-shrink-0">
-                {formatDate(item.timestamp)}
-              </div>
+                {/* Date */}
+                <div className="text-xs text-muted-foreground w-[140px] flex-shrink-0">
+                  {formatDate(item.timestamp)}
+                </div>
 
-              {/* Operation type */}
-              <div className="text-xs font-medium w-[100px] flex-shrink-0">
-                Compaction
+                {/* Operation type */}
+                <div className="text-xs font-medium w-[100px] flex-shrink-0">
+                  Compaction
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          )}
         </div>
       </div>
     </Card>

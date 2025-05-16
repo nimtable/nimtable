@@ -705,7 +705,7 @@ export function SnapshotsTab({
     if (tableData.metadata.snapshots) {
       tableData.metadata.snapshots.forEach((snapshot) => {
         const summary = snapshot.summary || {}
-        
+
         // A compaction operation is typically a replace operation.
         const isCompaction = summary.operation === "replace"
 
@@ -716,7 +716,7 @@ export function SnapshotsTab({
           branches: [],
           tags: [],
           summary: summary,
-          isCompaction: isCompaction
+          isCompaction: isCompaction,
         })
       })
     }
