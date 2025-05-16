@@ -15,7 +15,7 @@
  */
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState } from "react"
 import {
   Database,
   FileText,
@@ -74,6 +74,7 @@ import { cn } from "@/lib/utils"
 import { getPropertyDescription } from "@/lib/property-descriptions"
 import { FileStatistics } from "@/components/table/file-statistics"
 import { FileDistributionLoading } from "@/components/table/file-distribution-loading"
+import { useQuery } from "@tanstack/react-query"
 
 interface InfoTabProps {
   tableData: LoadTableResult
@@ -100,44 +101,21 @@ function FileDistributionSection({
   catalog: string
   namespace: string
 }) {
-  const { toast } = useToast()
-  const [loading, setLoading] = useState(true)
-  const [distribution, setDistribution] = useState<DistributionData>({
-    ranges: {},
-    dataFileCount: 0,
-    positionDeleteFileCount: 0,
-    eqDeleteFileCount: 0,
-    dataFileSizeInBytes: 0,
-    positionDeleteFileSizeInBytes: 0,
-    eqDeleteFileSizeInBytes: 0,
-    dataFileRecordCount: 0,
-    positionDeleteFileRecordCount: 0,
-    eqDeleteFileRecordCount: 0,
+  const {
+    data: distribution,
+    isPending,
+    isError,
+    refetch,
+  } = useQuery<DistributionData>({
+    queryKey: ["file-distribution", catalog, namespace, tableId],
+    queryFn: async () => {
+      return await getFileDistribution(catalog, namespace, tableId)
+    },
+
+    enabled: !!(tableId && catalog && namespace),
   })
 
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true)
-      const data = await getFileDistribution(catalog, namespace, tableId)
-      setDistribution(data)
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Failed to fetch distribution data",
-        description: errorToString(error),
-      })
-    } finally {
-      setLoading(false)
-    }
-  }, [catalog, namespace, tableId, toast])
-
-  useEffect(() => {
-    if (tableId && catalog && namespace) {
-      fetchData()
-    }
-  }, [tableId, catalog, namespace, toast, fetchData])
-
-  if (loading) {
+  if (isPending || isError) {
     return <FileDistributionLoading />
   }
 
@@ -182,11 +160,11 @@ function FileDistributionSection({
                   variant="ghost"
                   size="icon"
                   className="h-6 w-6"
-                  onClick={fetchData}
-                  disabled={loading}
+                  onClick={() => refetch()}
+                  disabled={isPending}
                 >
                   <RefreshCw
-                    className={`h-3 w-3 ${loading ? "animate-spin" : ""}`}
+                    className={`h-3 w-3 ${isPending ? "animate-spin" : ""}`}
                   />
                 </Button>
               </div>

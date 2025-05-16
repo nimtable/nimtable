@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useState } from "react"
 import {
   TableIcon,
   FileText,
@@ -34,8 +34,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { useToast } from "@/hooks/use-toast"
-import { errorToString, cn } from "@/lib/utils"
+import { cn } from "@/lib/utils"
 import { SidebarInset } from "@/components/ui/sidebar"
 import {
   getNamespaceTables,
@@ -44,6 +43,7 @@ import {
 } from "@/lib/data-loader"
 import { TopNavbar } from "@/components/shared/top-navbar"
 import { PageLoader } from "@/components/shared/page-loader"
+import { useQuery } from "@tanstack/react-query"
 
 // Update the renderPartitionSpecs function to handle the complex partition spec format
 function renderPartitionSpecs(
@@ -120,36 +120,17 @@ export default function NamespacePage(): JSX.Element {
   const searchParams = useSearchParams()
   const catalog = searchParams.get("catalog")
   const namespace = searchParams.get("namespace")
-  const { toast } = useToast()
 
-  const [tables, setTables] = useState<NamespaceTable[]>([])
-  const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
 
-  const fetchNamespaceTables = useCallback(
-    async (cat: string, ns: string) => {
-      setIsLoading(true)
-      try {
-        const data = await getNamespaceTables(cat, ns)
-        setTables(data)
-      } catch (error) {
-        toast({
-          variant: "destructive",
-          title: "Failed to load namespace tables",
-          description: errorToString(error),
-        })
-      } finally {
-        setIsLoading(false)
-      }
+  const { data: tables, isPending } = useQuery<NamespaceTable[]>({
+    queryKey: ["namespace-tables", catalog, namespace],
+    queryFn: async () => {
+      if (!catalog || !namespace) return []
+      return await getNamespaceTables(catalog, namespace)
     },
-    [toast]
-  )
-
-  useEffect(() => {
-    if (catalog && namespace) {
-      fetchNamespaceTables(catalog, namespace)
-    }
-  }, [catalog, namespace, fetchNamespaceTables])
+    enabled: !!(catalog && namespace),
+  })
 
   // Ensure we have both catalog and namespace parameters
   if (!catalog || !namespace) {
@@ -157,9 +138,11 @@ export default function NamespacePage(): JSX.Element {
   }
 
   // Filter tables based on search query
-  const filteredTables = tables.filter((table) =>
-    table.name.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredTables = tables
+    ? tables.filter((table) =>
+        table.name.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : []
 
   // Format file size for display
   const formatFileSize = (bytes: number | null): string => {
@@ -173,7 +156,7 @@ export default function NamespacePage(): JSX.Element {
     )
   }
 
-  if (isLoading) {
+  if (isPending) {
     return (
       <div className="w-full h-full flex items-center justify-center">
         <PageLoader
@@ -229,7 +212,7 @@ export default function NamespacePage(): JSX.Element {
                       />
                     </div>
                     <div className="text-sm text-muted-foreground whitespace-nowrap">
-                      {filteredTables.length} of {tables.length}
+                      {filteredTables.length} of {tables?.length ?? 0}
                     </div>
                   </div>
                 </div>

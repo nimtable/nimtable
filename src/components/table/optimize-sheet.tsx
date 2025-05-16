@@ -15,7 +15,7 @@
  */
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState } from "react"
 import {
   ChevronRight,
   SettingsIcon,
@@ -23,9 +23,9 @@ import {
   Circle,
   Loader2,
   RefreshCw,
-  Cpu,
-  HardDrive,
   AlertTriangle,
+  HardDrive,
+  Cpu,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { errorToString } from "@/lib/utils"
@@ -50,7 +50,6 @@ import {
 } from "@/components/ui/card"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import Link from "next/link"
-import { loadTableData, type LoadTableResult } from "@/lib/data-loader"
 import {
   getFileDistribution,
   runOptimizationOperation,
@@ -66,12 +65,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useQuery, useMutation } from "@tanstack/react-query"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
 type OptimizationStep = {
   name: string
   status: "pending" | "running" | "done" | "error"
   error?: string
+
   result?: any
 }
 
@@ -87,9 +88,7 @@ function FileDistributionSection({
   catalog: string
   namespace: string
 }) {
-  const { toast } = useToast()
-  const [loading, setLoading] = useState(true)
-  const [distribution, setDistribution] = useState<DistributionData>({
+  const emptyDistribution: DistributionData = {
     ranges: {},
     dataFileCount: 0,
     positionDeleteFileCount: 0,
@@ -100,31 +99,25 @@ function FileDistributionSection({
     dataFileRecordCount: 0,
     positionDeleteFileRecordCount: 0,
     eqDeleteFileRecordCount: 0,
+  }
+
+  const {
+    data: distribution,
+    isPending,
+    isError,
+    refetch,
+  } = useQuery<DistributionData>({
+    queryKey: ["file-distribution", catalog, namespace, tableId],
+    queryFn: async () => {
+      return await getFileDistribution(catalog, namespace, tableId)
+    },
+    enabled: !!(tableId && catalog && namespace),
+    meta: {
+      errorMessage: "Failed to fetch file distribution data for the table.",
+    },
   })
 
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true)
-      const data = await getFileDistribution(catalog, namespace, tableId)
-      setDistribution(data)
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Failed to fetch distribution data",
-        description: errorToString(error),
-      })
-    } finally {
-      setLoading(false)
-    }
-  }, [catalog, namespace, tableId, toast])
-
-  useEffect(() => {
-    if (tableId && catalog && namespace) {
-      fetchData()
-    }
-  }, [tableId, catalog, namespace, toast, fetchData])
-
-  if (loading) {
+  if (isPending || isError) {
     return <FileDistributionLoading />
   }
 
@@ -159,11 +152,11 @@ function FileDistributionSection({
               variant="ghost"
               size="icon"
               className="h-6 w-6"
-              onClick={fetchData}
-              disabled={loading}
+              onClick={() => refetch()}
+              disabled={isPending}
             >
               <RefreshCw
-                className={`h-3 w-3 ${loading ? "animate-spin" : ""}`}
+                className={`h-3 w-3 ${isPending ? "animate-spin" : ""}`}
               />
             </Button>
           </div>
@@ -249,16 +242,10 @@ export function OptimizeSheet({
   table,
 }: OptimizeSheetProps) {
   const { toast } = useToast()
-  const [, setTableData] = useState<LoadTableResult | undefined>(undefined)
-  const [isLoading] = useState(false)
   const [showProgressDialog, setShowProgressDialog] = useState(false)
   const [optimizationSteps, setOptimizationSteps] = useState<
     OptimizationStep[]
   >([])
-  const [systemInfo, setSystemInfo] = useState<{
-    cpuCount: number
-    maxMemory: number
-  }>({ cpuCount: 0, maxMemory: 0 })
 
   // Optimization settings
   const [snapshotRetention, setSnapshotRetention] = useState(true)
@@ -272,23 +259,20 @@ export function OptimizeSheet({
   const [whereClause, setWhereClause] = useState("")
 
   // Get system information
-  useEffect(() => {
-    const getSystemInfo = async () => {
-      try {
-        const response = await fetch("/api/optimize/system-info")
-        if (response.ok) {
-          const data = await response.json()
-          setSystemInfo({
-            cpuCount: data.cpuCount,
-            maxMemory: data.maxMemory,
-          })
-        }
-      } catch (error) {
-        console.error("Failed to fetch system info:", error)
+  const { data: systemInfo } = useQuery<{
+    cpuCount: number
+    maxMemory: number
+  }>({
+    queryKey: ["system-info"],
+    queryFn: async () => {
+      const response = await fetch("/api/optimize/system-info")
+      if (response.ok) {
+        const data = await response.json()
+        return data
       }
-    }
-    getSystemInfo()
-  }, [])
+      return undefined
+    },
+  })
 
   // Update optimization steps based on enabled settings
   useEffect(() => {
@@ -305,29 +289,22 @@ export function OptimizeSheet({
     setOptimizationSteps(steps)
   }, [snapshotRetention, compaction])
 
-  useEffect(() => {
-    if (open && catalog && namespace && table) {
-      loadTableData(catalog, namespace, table)
-        .then(setTableData)
-        .catch((error) => {
-          toast({
-            variant: "destructive",
-            title: "Failed to load table",
-            description: errorToString(error),
-          })
-        })
-    }
-  }, [catalog, namespace, table, open, toast])
-
-  const runOptimizationStep = async (step: OptimizationStep, index: number) => {
-    try {
+  // Define the optimization mutation
+  const optimizeMutation = useMutation({
+    mutationFn: async ({
+      step,
+      index,
+    }: {
+      step: OptimizationStep
+      index: number
+    }) => {
       setOptimizationSteps((steps) => {
         const newSteps = [...steps]
         newSteps[index] = { ...step, status: "running" }
         return newSteps
       })
 
-      const result = await runOptimizationOperation(
+      return await runOptimizationOperation(
         step.name as OptimizationOperation,
         catalog,
         namespace,
@@ -343,7 +320,11 @@ export function OptimizeSheet({
           whereClause: compaction ? whereClause : undefined,
         }
       )
-
+    },
+    meta: {
+      errorMessage: "Failed to run optimization operation.",
+    },
+    onSuccess: (result, { step, index }) => {
       setOptimizationSteps((steps) => {
         const newSteps = [...steps]
         newSteps[index] = {
@@ -353,9 +334,8 @@ export function OptimizeSheet({
         }
         return newSteps
       })
-
-      return true
-    } catch (error) {
+    },
+    onError: (error, { step, index }) => {
       setOptimizationSteps((steps) => {
         const newSteps = [...steps]
         newSteps[index] = {
@@ -365,9 +345,14 @@ export function OptimizeSheet({
         }
         return newSteps
       })
-      return false
-    }
-  }
+
+      toast({
+        variant: "destructive",
+        title: `Failed to run ${step.name}`,
+        description: errorToString(error),
+      })
+    },
+  })
 
   const handleOptimize = async () => {
     setShowProgressDialog(true)
@@ -378,14 +363,10 @@ export function OptimizeSheet({
     // Run steps sequentially
     for (let i = 0; i < optimizationSteps.length; i++) {
       const step = optimizationSteps[i]
-      const success = await runOptimizationStep(step, i)
-      if (!success) {
-        toast({
-          variant: "destructive",
-          title: `Failed to run ${step.name}`,
-          description: step.error,
-        })
-        return
+      try {
+        await optimizeMutation.mutateAsync({ step, index: i })
+      } catch (_error) {
+        return // Stop on first error
       }
     }
 
@@ -617,7 +598,7 @@ export function OptimizeSheet({
                                 <Cpu className="h-4 w-4 text-muted-foreground" />
                                 <div>
                                   <p className="text-sm font-medium">
-                                    {systemInfo.cpuCount}
+                                    {systemInfo?.cpuCount ?? "Loading..."}
                                   </p>
                                   <p className="text-xs text-muted-foreground">
                                     CPU Cores
@@ -628,7 +609,7 @@ export function OptimizeSheet({
                                 <HardDrive className="h-4 w-4 text-muted-foreground" />
                                 <div>
                                   <p className="text-sm font-medium">
-                                    {systemInfo.maxMemory > 0
+                                    {systemInfo
                                       ? `${(systemInfo.maxMemory / (1024 * 1024 * 1024)).toFixed(1)} GB`
                                       : "Loading..."}
                                   </p>
@@ -670,10 +651,12 @@ export function OptimizeSheet({
             </Button>
             <Button
               onClick={() => handleOptimize()}
-              disabled={isLoading}
+              disabled={optimizeMutation.isPending}
               className="gap-2 bg-blue-600 hover:bg-blue-700"
             >
-              {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+              {optimizeMutation.isPending && (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              )}
               Run Optimization
             </Button>
           </div>

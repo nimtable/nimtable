@@ -32,6 +32,7 @@ import {
   ServerCrash,
   Users,
 } from "lucide-react"
+import { useQuery } from "@tanstack/react-query"
 
 import {
   loadCatalogNames,
@@ -76,100 +77,37 @@ function AppSidebarContent() {
   const { refresh, isRefreshing, refreshTrigger } = useRefresh()
   const { user, logout } = useAuth()
 
-  const [catalogs, setCatalogs] = React.useState<string[]>([])
-  const [namespaces, setNamespaces] = React.useState<NamespaceTables[]>([])
-  const [catalogListLoading, setCatalogListLoading] = React.useState(true)
-  const [namespacesLoading, setNamespacesLoading] = React.useState(false)
   const [searchQuery, setSearchQuery] = React.useState("")
 
-  // Load catalogs on mount and when refresh is triggered
-  React.useEffect(() => {
-    let isMounted = true // Add a flag to track component mount status
+  const { data: catalogs = [], isPending: catalogListLoading } = useQuery<
+    string[]
+  >({
+    queryKey: ["catalogs", refreshTrigger],
+    queryFn: async () => {
+      const data = await loadCatalogNames()
 
-    const fetchCatalogs = async () => {
-      try {
-        setCatalogListLoading(true)
-        const data = await loadCatalogNames()
-        if (isMounted) {
-          setCatalogs(data)
-        }
-
-        // If we have catalogs and no catalog is currently selected, select the first one
-        // but don't navigate to the catalog page
-        if (data.length > 0 && !catalog && isMounted) {
-          // Update the URL with the catalog parameter without navigation
-          const url = new URL(window.location.href)
-          url.searchParams.set("catalog", data[0])
-          window.history.replaceState({}, "", url.toString())
-        }
-      } catch (err) {
-        console.error("Failed to load catalogs:", err)
-        toast({
-          title: "Failed to load catalogs",
-          description:
-            "There was an error loading the catalog list. Please try again.",
-          variant: "destructive",
-        })
-        if (isMounted) {
-          setCatalogs([])
-        }
-      } finally {
-        if (isMounted) {
-          setCatalogListLoading(false)
-        }
+      // If we have catalogs and no catalog is currently selected, select the first one
+      if (data.length > 0 && !catalog) {
+        // Update the URL with the catalog parameter without navigation
+        const url = new URL(window.location.href)
+        url.searchParams.set("catalog", data[0])
+        window.history.replaceState({}, "", url.toString())
       }
-    }
 
-    fetchCatalogs()
+      return data
+    },
+  })
 
-    return () => {
-      isMounted = false // Set the flag to false when the component unmounts
-    }
-  }, [refreshTrigger, toast, catalog])
-
-  // Load namespaces when catalog is selected and when refresh is triggered
-  React.useEffect(() => {
-    let isMounted = true
-    let shouldFetchNamespaces = false
-
-    if (catalog) {
-      shouldFetchNamespaces = true
-    }
-
-    const fetchNamespaces = async () => {
-      try {
-        setNamespacesLoading(true)
-        const data = await loadNamespacesAndTables(catalog as string)
-        if (isMounted) {
-          setNamespaces(data)
-        }
-      } catch (err) {
-        console.error(`Failed to load namespaces for catalog ${catalog}:`, err)
-        toast({
-          title: "Failed to load namespaces",
-          description: `There was an error loading namespaces for catalog "${catalog}". Please try again.`,
-          variant: "destructive",
-        })
-        if (isMounted) {
-          setNamespaces([])
-        }
-      } finally {
-        if (isMounted) {
-          setNamespacesLoading(false)
-        }
-      }
-    }
-
-    if (shouldFetchNamespaces) {
-      fetchNamespaces()
-    } else {
-      setNamespaces([])
-    }
-
-    return () => {
-      isMounted = false
-    }
-  }, [catalog, refreshTrigger, toast])
+  const { data: namespaces = [], isPending: namespacesLoading } = useQuery<
+    NamespaceTables[]
+  >({
+    queryKey: ["namespaces", catalog, refreshTrigger],
+    queryFn: async () => {
+      if (!catalog) return []
+      return await loadNamespacesAndTables(catalog)
+    },
+    enabled: !!catalog,
+  })
 
   const handleRefresh = React.useCallback(() => {
     refresh()

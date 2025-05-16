@@ -15,7 +15,7 @@
  */
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState } from "react"
 import {
   Card,
   CardContent,
@@ -23,8 +23,6 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card"
-import { useToast } from "@/hooks/use-toast"
-import { errorToString } from "@/lib/utils"
 import { getFileDistribution } from "@/lib/data-loader"
 import {
   LineChart,
@@ -43,6 +41,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useQuery } from "@tanstack/react-query"
 
 interface SnapshotTrendProps {
   catalog: string
@@ -62,6 +61,14 @@ type TimeGranularity =
   | "month"
   | "quarter"
   | "year"
+
+// Define the type for trend data
+interface TrendDataPoint {
+  timestamp: number
+  dataSize: number
+  recordCount: number
+  fileCount: number
+}
 
 // ISO week helper
 function getISOWeek(date: Date) {
@@ -90,22 +97,14 @@ export function SnapshotTrend({
   table,
   snapshots,
 }: SnapshotTrendProps) {
-  const { toast } = useToast()
-  const [loading, setLoading] = useState(true)
   const [trendType, setTrendType] = useState<TrendType>("size")
   const [granularity, setGranularity] = useState<TimeGranularity>("snapshot")
-  const [data, setData] = useState<
-    Array<{
-      timestamp: number
-      dataSize: number
-      recordCount: number
-      fileCount: number
-    }>
-  >([])
 
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true)
+  const { data, isPending } = useQuery<TrendDataPoint[]>({
+    queryKey: ["snapshot-distribution", catalog, namespace, table, snapshots],
+    queryFn: async () => {
+      if (snapshots.length === 0) return []
+
       const results = await Promise.all(
         snapshots.map(async (snapshot) => {
           const distribution = await getFileDistribution(
@@ -122,40 +121,22 @@ export function SnapshotTrend({
           }
         })
       )
-      setData(results.sort((a, b) => a.timestamp - b.timestamp))
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Failed to fetch snapshot data",
-        description: errorToString(error),
-      })
-    } finally {
-      setLoading(false)
-    }
-  }, [catalog, namespace, table, snapshots, toast])
-
-  useEffect(() => {
-    if (snapshots.length > 0) {
-      fetchData()
-    }
-  }, [snapshots, fetchData])
+      return results.sort((a, b) => a.timestamp - b.timestamp)
+    },
+    enabled: snapshots.length > 0,
+    meta: {
+      errorMessage: "Failed to fetch snapshot trend data for the table.",
+    },
+  })
 
   const getAggregatedData = () => {
-    if (data.length === 0) return []
+    if (!data || data.length === 0) return []
 
     if (granularity === "snapshot") {
       return data
     }
 
-    const grouped = new Map<
-      string,
-      {
-        timestamp: number
-        dataSize: number
-        recordCount: number
-        fileCount: number
-      }
-    >()
+    const grouped = new Map<string, TrendDataPoint>()
     data.forEach((item) => {
       const date = new Date(item.timestamp)
       let key: string
@@ -263,7 +244,7 @@ export function SnapshotTrend({
     return count.toString()
   }
 
-  if (loading) {
+  if (isPending) {
     return (
       <Card className="border-muted/70 shadow-sm">
         <CardHeader className="pb-2">
