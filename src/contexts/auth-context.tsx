@@ -59,10 +59,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     checkAuth()
   }, [])
 
-  const login = async (username: string, password: string): Promise<boolean> => {
+  const login = async (
+    username: string,
+    password: string
+  ): Promise<boolean> => {
     try {
-
-     const response = await loginApi({
+      const response = await loginApi({
         body: {
           username,
           password,
@@ -99,7 +101,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logout,
       isLoading,
     }),
-    [user, isLoading, logout],
+    [user, isLoading, logout]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
