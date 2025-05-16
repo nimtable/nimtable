@@ -84,28 +84,17 @@ function AppSidebarContent() {
   >({
     queryKey: ["catalogs", refreshTrigger],
     queryFn: async () => {
-      try {
-        const data = await loadCatalogNames()
+      const data = await loadCatalogNames()
 
-        // If we have catalogs and no catalog is currently selected, select the first one
-        if (data.length > 0 && !catalog) {
-          // Update the URL with the catalog parameter without navigation
-          const url = new URL(window.location.href)
-          url.searchParams.set("catalog", data[0])
-          window.history.replaceState({}, "", url.toString())
-        }
-
-        return data
-      } catch (error) {
-        console.error("Failed to load catalogs:", error)
-        toast({
-          title: "Failed to load catalogs",
-          description:
-            "There was an error loading the catalog list. Please try again.",
-          variant: "destructive",
-        })
-        return []
+      // If we have catalogs and no catalog is currently selected, select the first one
+      if (data.length > 0 && !catalog) {
+        // Update the URL with the catalog parameter without navigation
+        const url = new URL(window.location.href)
+        url.searchParams.set("catalog", data[0])
+        window.history.replaceState({}, "", url.toString())
       }
+
+      return data
     },
   })
 
@@ -114,21 +103,8 @@ function AppSidebarContent() {
   >({
     queryKey: ["namespaces", catalog, refreshTrigger],
     queryFn: async () => {
-      try {
-        if (!catalog) return []
-        return await loadNamespacesAndTables(catalog)
-      } catch (error) {
-        console.error(
-          `Failed to load namespaces for catalog ${catalog}:`,
-          error
-        )
-        toast({
-          title: "Failed to load namespaces",
-          description: `There was an error loading namespaces for catalog "${catalog}". Please try again.`,
-          variant: "destructive",
-        })
-        return []
-      }
+      if (!catalog) return []
+      return await loadNamespacesAndTables(catalog)
     },
     enabled: !!catalog,
   })
