@@ -8,6 +8,7 @@ import {
   CardDescription,
 } from "@/components/ui/card"
 import { FileStatistics } from "@/components/table/file-statistics"
+import { FileDistributionLoading } from "@/components/table/file-distribution-loading"
 import type { DistributionData } from "@/lib/data-loader"
 
 // Define the order of size ranges
@@ -15,80 +16,67 @@ export const rangeOrder = ["0-8M", "8M-32M", "32M-128M", "128M-512M", "512M+"]
 
 // Shared compaction recommendation logic
 export const getCompactionRecommendation = (distribution: DistributionData) => {
-  const ranges = distribution.ranges
-  const totalFiles = Object.values(ranges).reduce(
-    (sum, item) => sum + item.count,
-    0
-  )
-
+  const ranges = distribution.ranges;
+  const totalFiles = Object.values(ranges).reduce((sum, item) => sum + item.count, 0);
+  
   // Check if there are enough files to warrant compaction
   if (totalFiles < 10) {
     return {
       shouldCompact: false,
-      recommendations: [
-        `Total file count (${totalFiles}) is too low to warrant compaction. At least 10 files are recommended.`,
-      ],
-    }
+      recommendations: [`Total file count (${totalFiles}) is too low to warrant compaction. At least 10 files are recommended.`]
+    };
   }
-
+  
   // 1. Check small files
-  const smallFilesCount =
-    (ranges["0-8M"]?.count || 0) + (ranges["8M-32M"]?.count || 0)
-  const smallFilesPercentage = (smallFilesCount / totalFiles) * 100
-
+  const smallFilesCount = (ranges["0-8M"]?.count || 0) + (ranges["8M-32M"]?.count || 0);
+  const smallFilesPercentage = (smallFilesCount / totalFiles) * 100;
+  
   // 2. Check total files
-  const tooManyFiles = totalFiles > 1000
-
+  const tooManyFiles = totalFiles > 1000;
+  
   // 3. Check file size distribution
   const fileSizes = Object.entries(ranges).flatMap(([range, data]) => {
-    const [min, max] = range.split("-").map((size) => {
+    const [min, max] = range.split("-").map(size => {
       if (size.endsWith("M")) {
-        return parseInt(size) * 1024 * 1024
+        return parseInt(size) * 1024 * 1024;
       }
-      return parseInt(size)
-    })
-    const avgSize = (min + max) / 2
-    return Array(data.count).fill(avgSize)
-  })
-
-  const mean = fileSizes.reduce((a, b) => a + b, 0) / fileSizes.length
-  const variance =
-    fileSizes.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / fileSizes.length
-  const stdDev = Math.sqrt(variance)
-  const coefficientOfVariation = stdDev / mean
-  const unevenDistribution = coefficientOfVariation > 0.5
-
+      return parseInt(size);
+    });
+    const avgSize = (min + max) / 2;
+    return Array(data.count).fill(avgSize);
+  });
+  
+  const mean = fileSizes.reduce((a, b) => a + b, 0) / fileSizes.length;
+  const variance = fileSizes.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / fileSizes.length;
+  const stdDev = Math.sqrt(variance);
+  const coefficientOfVariation = stdDev / mean;
+  const unevenDistribution = coefficientOfVariation > 0.5;
+  
   // 4. Check medium files
-  const mediumFilesCount = ranges["32M-128M"]?.count || 0
-  const mediumFilesPercentage = (mediumFilesCount / totalFiles) * 100
-  const tooManyMediumFiles = mediumFilesPercentage > 40
-
-  const recommendations = []
-
+  const mediumFilesCount = ranges["32M-128M"]?.count || 0;
+  const mediumFilesPercentage = (mediumFilesCount / totalFiles) * 100;
+  const tooManyMediumFiles = mediumFilesPercentage > 40;
+  
+  const recommendations = [];
+  
   if (smallFilesPercentage > 30) {
-    recommendations.push(
-      `Small files (0-32M) account for ${smallFilesPercentage.toFixed(1)}% of total files`
-    )
+    recommendations.push(`Small files (0-32M) account for ${smallFilesPercentage.toFixed(1)}% of total files`);
   }
   if (tooManyFiles) {
-    recommendations.push(`Total file count (${totalFiles}) exceeds 1000 files`)
+    recommendations.push(`Total file count (${totalFiles}) exceeds 1000 files`);
   }
   if (unevenDistribution) {
-    recommendations.push(
-      `File size distribution is uneven (coefficient of variation: ${coefficientOfVariation.toFixed(2)})`
-    )
+    recommendations.push(`File size distribution is uneven (coefficient of variation: ${coefficientOfVariation.toFixed(2)})`);
   }
   if (tooManyMediumFiles) {
-    recommendations.push(
-      `Medium-sized files (32M-128M) account for ${mediumFilesPercentage.toFixed(1)}% of total files`
-    )
+    recommendations.push(`Medium-sized files (32M-128M) account for ${mediumFilesPercentage.toFixed(1)}% of total files`);
   }
-
+  
   return {
     shouldCompact: recommendations.length > 0,
-    recommendations,
-  }
-}
+    recommendations
+  };
+};
 
 interface FileDistributionProps {
   distribution: DistributionData
@@ -119,8 +107,7 @@ export function FileDistribution({
   )
 
   // Get compaction recommendation
-  const { shouldCompact, recommendations } =
-    getCompactionRecommendation(distribution)
+  const { shouldCompact, recommendations } = getCompactionRecommendation(distribution);
 
   return (
     <Card className="border-muted/70 shadow-sm h-full">
@@ -232,8 +219,7 @@ export function FileDistribution({
                   {shouldCompact ? (
                     <div className="space-y-2">
                       <p className="text-muted-foreground">
-                        This table would benefit from compaction for the
-                        following reasons:
+                        This table would benefit from compaction for the following reasons:
                       </p>
                       <ul className="list-disc pl-4 space-y-1 text-muted-foreground">
                         {recommendations.map((reason, index) => (
@@ -243,8 +229,7 @@ export function FileDistribution({
                     </div>
                   ) : (
                     <p className="text-muted-foreground">
-                      This table's file distribution is optimal and does not
-                      require compaction at this time.
+                      This table's file distribution is optimal and does not require compaction at this time.
                     </p>
                   )}
                 </div>
