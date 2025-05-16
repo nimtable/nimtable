@@ -304,33 +304,31 @@ function CompactionHistory({
 
         {/* History items */}
         <div className="max-h-[calc(100vh-400px)] overflow-y-auto">
-          {compactionHistory.map(
-            (item: CompactionHistoryItem) => (
-              <div
-                key={item.id}
-                className="flex items-center py-2 px-3 border-b last:border-b-0 hover:bg-muted/20 transition-colors"
-              >
-                <div className="w-8 flex-shrink-0 flex items-center">
-                  <div className="h-2 w-2 rounded-full bg-blue-500 ml-2" />
-                </div>
-
-                {/* Snapshot ID */}
-                <div className="font-mono text-xs text-muted-foreground w-[300px] flex-shrink-0 pl-4">
-                  {String(item.id)}
-                </div>
-
-                {/* Date */}
-                <div className="text-xs text-muted-foreground w-[140px] flex-shrink-0">
-                  {formatDate(item.timestamp)}
-                </div>
-
-                {/* Operation type */}
-                <div className="text-xs font-medium w-[100px] flex-shrink-0">
-                  Compaction
-                </div>
+          {compactionHistory.map((item: CompactionHistoryItem) => (
+            <div
+              key={item.id}
+              className="flex items-center py-2 px-3 border-b last:border-b-0 hover:bg-muted/20 transition-colors"
+            >
+              <div className="w-8 flex-shrink-0 flex items-center">
+                <div className="h-2 w-2 rounded-full bg-blue-500 ml-2" />
               </div>
-            )
-          )}
+
+              {/* Snapshot ID */}
+              <div className="font-mono text-xs text-muted-foreground w-[300px] flex-shrink-0 pl-4">
+                {String(item.id)}
+              </div>
+
+              {/* Date */}
+              <div className="text-xs text-muted-foreground w-[140px] flex-shrink-0">
+                {formatDate(item.timestamp)}
+              </div>
+
+              {/* Operation type */}
+              <div className="text-xs font-medium w-[100px] flex-shrink-0">
+                Compaction
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </Card>
