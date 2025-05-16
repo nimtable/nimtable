@@ -23,7 +23,9 @@ interface RefreshContextType {
   isRefreshing: boolean
 }
 
-const RefreshContext = React.createContext<RefreshContextType | undefined>(undefined)
+const RefreshContext = React.createContext<RefreshContextType | undefined>(
+  undefined
+)
 
 export function RefreshProvider({ children }: { children: React.ReactNode }) {
   const [refreshTrigger, setRefreshTrigger] = React.useState(0)
@@ -45,10 +47,12 @@ export function RefreshProvider({ children }: { children: React.ReactNode }) {
       refresh,
       isRefreshing,
     }),
-    [refreshTrigger, refresh, isRefreshing],
+    [refreshTrigger, refresh, isRefreshing]
   )
 
-  return <RefreshContext.Provider value={value}>{children}</RefreshContext.Provider>
+  return (
+    <RefreshContext.Provider value={value}>{children}</RefreshContext.Provider>
+  )
 }
 
 export function useRefresh() {
@@ -58,4 +62,3 @@ export function useRefresh() {
   }
   return context
 }
-

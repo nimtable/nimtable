@@ -57,8 +57,8 @@
   "devDependencies": {
     "@eslint/js": "^9.0.0",
     "@hey-api/openapi-ts": "^0.66.5",
-    "@ianvs/prettier-plugin-sort-imports": "^4.4.1",
     "@tanstack/react-query-devtools": "^5.74.4",
+    "@trivago/prettier-plugin-sort-imports": "^5.2.2",
     "@types/node": "^22",
     "@types/prismjs": "^1.26.5",
     "@types/react": "^18",

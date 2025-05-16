@@ -29,7 +29,9 @@ export function createColumns(columnNames: string[]): ColumnDef<any>[] {
 
       // Handle different value types appropriately
       if (value === null || value === undefined) {
-        return <span className="text-muted-foreground italic text-sm">null</span>
+        return (
+          <span className="text-muted-foreground italic text-sm">null</span>
+        )
       }
 
       if (typeof value === "boolean") {
@@ -39,7 +41,7 @@ export function createColumns(columnNames: string[]): ColumnDef<any>[] {
               "px-2 py-1 rounded-full text-xs font-medium",
               value
                 ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+                : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
             )}
           >
             {value ? "true" : "false"}
@@ -53,11 +55,18 @@ export function createColumns(columnNames: string[]): ColumnDef<any>[] {
 
       if (
         value instanceof Date ||
-        (typeof value === "string" && !isNaN(Date.parse(value)) && value.includes("-") && value.includes(":"))
+        (typeof value === "string" &&
+          !isNaN(Date.parse(value)) &&
+          value.includes("-") &&
+          value.includes(":"))
       ) {
         try {
           const date = value instanceof Date ? value : new Date(value)
-          return <span className="text-sm tabular-nums">{date.toLocaleString()}</span>
+          return (
+            <span className="text-sm tabular-nums">
+              {date.toLocaleString()}
+            </span>
+          )
         } catch {
           return String(value)
         }
@@ -65,9 +74,17 @@ export function createColumns(columnNames: string[]): ColumnDef<any>[] {
 
       if (typeof value === "object") {
         try {
-          return <span className="font-mono text-xs bg-muted/30 px-1.5 py-0.5 rounded">{JSON.stringify(value)}</span>
+          return (
+            <span className="font-mono text-xs bg-muted/30 px-1.5 py-0.5 rounded">
+              {JSON.stringify(value)}
+            </span>
+          )
         } catch {
-          return <span className="text-muted-foreground italic text-sm">[Object]</span>
+          return (
+            <span className="text-muted-foreground italic text-sm">
+              [Object]
+            </span>
+          )
         }
       }
 
