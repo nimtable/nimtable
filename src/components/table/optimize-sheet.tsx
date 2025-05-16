@@ -26,7 +26,6 @@ import {
   AlertTriangle,
   HardDrive,
   Cpu,
-  Clock,
   GitCommit,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -90,19 +89,6 @@ function FileDistributionSection({
   catalog: string
   namespace: string
 }) {
-  const emptyDistribution: DistributionData = {
-    ranges: {},
-    dataFileCount: 0,
-    positionDeleteFileCount: 0,
-    eqDeleteFileCount: 0,
-    dataFileSizeInBytes: 0,
-    positionDeleteFileSizeInBytes: 0,
-    eqDeleteFileSizeInBytes: 0,
-    dataFileRecordCount: 0,
-    positionDeleteFileRecordCount: 0,
-    eqDeleteFileRecordCount: 0,
-  }
-
   const {
     data: distribution,
     isPending,
@@ -270,18 +256,6 @@ function CompactionHistory({
     }).format(date)
   }
 
-  // Format file size
-  const formatFileSize = (bytes: number) => {
-    const units = ["B", "KB", "MB", "GB", "TB"]
-    let size = bytes
-    let unitIndex = 0
-    while (size >= 1024 && unitIndex < units.length - 1) {
-      size /= 1024
-      unitIndex++
-    }
-    return `${size.toFixed(1)} ${units[unitIndex]}`
-  }
-
   if (!tableData?.metadata?.snapshots) {
     return null
   }
@@ -331,7 +305,7 @@ function CompactionHistory({
         {/* History items */}
         <div className="max-h-[calc(100vh-400px)] overflow-y-auto">
           {compactionHistory.map(
-            (item: CompactionHistoryItem, index: number) => (
+            (item: CompactionHistoryItem) => (
               <div
                 key={item.id}
                 className="flex items-center py-2 px-3 border-b last:border-b-0 hover:bg-muted/20 transition-colors"

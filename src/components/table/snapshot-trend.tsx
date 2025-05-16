@@ -33,7 +33,6 @@ import {
   Tooltip,
   ResponsiveContainer,
   ReferenceDot,
-  Label,
 } from "recharts"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import {
@@ -366,7 +365,6 @@ export function SnapshotTrend({
             />
             <Tooltip
               formatter={(value: number, name: string, props: any) => {
-                const data = props.payload
                 const formattedValue = getFormatter()(value)
                 return formattedValue
               }}
