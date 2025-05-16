@@ -80,7 +80,9 @@ function AppSidebarContent() {
   const [searchQuery, setSearchQuery] = React.useState("")
 
   // Fetch catalogs using React Query
-  const { data: catalogs = [], isPending: catalogListLoading } = useQuery<string[]>({
+  const { data: catalogs = [], isPending: catalogListLoading } = useQuery<
+    string[]
+  >({
     queryKey: ["catalogs", refreshTrigger],
     queryFn: async () => {
       try {
@@ -106,18 +108,22 @@ function AppSidebarContent() {
         return []
       }
     },
-
   })
 
   // Fetch namespaces using React Query
-  const { data: namespaces = [], isPending: namespacesLoading } = useQuery<NamespaceTables[]>({
+  const { data: namespaces = [], isPending: namespacesLoading } = useQuery<
+    NamespaceTables[]
+  >({
     queryKey: ["namespaces", catalog, refreshTrigger],
     queryFn: async () => {
       try {
         if (!catalog) return []
         return await loadNamespacesAndTables(catalog)
       } catch (error) {
-        console.error(`Failed to load namespaces for catalog ${catalog}:`, error)
+        console.error(
+          `Failed to load namespaces for catalog ${catalog}:`,
+          error
+        )
         toast({
           title: "Failed to load namespaces",
           description: `There was an error loading namespaces for catalog "${catalog}". Please try again.`,
@@ -127,7 +133,6 @@ function AppSidebarContent() {
       }
     },
     enabled: !!catalog,
-
   })
 
   const handleRefresh = React.useCallback(() => {

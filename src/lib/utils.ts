@@ -22,30 +22,30 @@ export function cn(...inputs: ClassValue[]) {
 
 interface IcebergErrorResponse {
   error: {
-    message: string;
-  };
+    message: string
+  }
 }
 
 export function errorToString(error: unknown): string {
-  if (typeof error === 'string') {
+  if (typeof error === "string") {
     return error
   }
   // IcebergErrorResponse
   if (
     error &&
-    typeof error === 'object' &&
-    'error' in error &&
+    typeof error === "object" &&
+    "error" in error &&
     error.error &&
-    typeof error.error === 'object' &&
-    'message' in error.error &&
-    typeof error.error.message === 'string'
+    typeof error.error === "object" &&
+    "message" in error.error &&
+    typeof error.error.message === "string"
   ) {
-    return (error as IcebergErrorResponse).error.message;
+    return (error as IcebergErrorResponse).error.message
   }
   // Error
   if (error instanceof Error) {
-    return error.message;
+    return error.message
   }
   // Fallback
-  return "Unknown error";
+  return "Unknown error"
 }

@@ -26,55 +26,55 @@
  * NOTE(eric):
  * As stated above, this file was generated via swagger-typescript-api by:
  *   npx swagger-typescript-api -p https://raw.githubusercontent.com/apache/iceberg/refs/heads/main/open-api/rest-catalog-open-api.yaml -o ./src/lib -n api.ts --unwrap-response-data
- * 
+ *
  * If you make any changes to this file manually, please also note down here.
  * - Added `format: "json"` to all requests to ensure the response is parsed.
  * - Modified `request()` to throw `r.error` instead of `data` if the response is not ok.
  * - Modified `response.json()` to parse `snapshot-id` as strings because it may be greater than MAX_SAFE_INTEGER
  */
-type UtilRequiredKeys<T, K extends keyof T> = Omit<T, K> & Required<Pick<T, K>>;
+type UtilRequiredKeys<T, K extends keyof T> = Omit<T, K> & Required<Pick<T, K>>
 
 /** JSON error payload returned in a response with further details on the error */
 export interface ErrorModel {
   /** Human-readable error message */
-  message: string;
+  message: string
   /**
    * Internal type definition of the error
    * @example "NoSuchNamespaceException"
    */
-  type: string;
+  type: string
   /**
    * HTTP response code
    * @min 400
    * @max 600
    * @example 404
    */
-  code: number;
-  stack?: string[];
+  code: number
+  stack?: string[]
 }
 
 /** Server-provided configuration for the catalog. */
 export interface CatalogConfig {
   /** Properties that should be used to override client configuration; applied after defaults and client configuration. */
-  overrides: Record<string, string>;
+  overrides: Record<string, string>
   /** Properties that should be used as default configuration; applied before client configuration. */
-  defaults: Record<string, string>;
+  defaults: Record<string, string>
   /**
    * A list of endpoints that the server supports. The format of each endpoint must be "<HTTP verb> <resource path from OpenAPI REST spec>". The HTTP verb and the resource path must be separated by a space character.
    * @example ["GET /v1/{prefix}/namespaces/{namespace}","GET /v1/{prefix}/namespaces","POST /v1/{prefix}/namespaces","GET /v1/{prefix}/namespaces/{namespace}/tables/{table}","GET /v1/{prefix}/namespaces/{namespace}/views/{view}"]
    */
-  endpoints?: string[];
+  endpoints?: string[]
 }
 
 export interface CreateNamespaceRequest {
   /** Reference to one or more levels of a namespace */
-  namespace: Namespace;
+  namespace: Namespace
   /**
    * Configured string to string map of properties for the namespace
    * @default {}
    * @example {"owner":"Hank Bendickson"}
    */
-  properties?: Record<string, string>;
+  properties?: Record<string, string>
 }
 
 export interface UpdateNamespacePropertiesRequest {
@@ -82,21 +82,21 @@ export interface UpdateNamespacePropertiesRequest {
    * @uniqueItems true
    * @example ["department","access_group"]
    */
-  removals?: string[];
+  removals?: string[]
   /** @example {"owner":"Hank Bendickson"} */
-  updates?: Record<string, string>;
+  updates?: Record<string, string>
 }
 
 export interface RenameTableRequest {
-  source: TableIdentifier;
-  destination: TableIdentifier;
+  source: TableIdentifier
+  destination: TableIdentifier
 }
 
 /**
  * Reference to one or more levels of a namespace
  * @example ["accounting","tax"]
  */
-export type Namespace = string[];
+export type Namespace = string[]
 
 /**
  * An opaque token that allows clients to make use of pagination for list APIs (e.g. ListTables). Clients may initiate the first paginated request by sending an empty query parameter `pageToken` to the server.
@@ -105,54 +105,54 @@ export type Namespace = string[];
  * Servers that do not support pagination should ignore the `pageToken` parameter and return all results in a single response. The `next-page-token` must be omitted from the response.
  * Clients must interpret either `null` or missing response value of `next-page-token` as the end of the listing results.
  */
-export type PageToken = string | null;
+export type PageToken = string | null
 
 export interface TableIdentifier {
   /** Reference to one or more levels of a namespace */
-  namespace: Namespace;
-  name: string;
+  namespace: Namespace
+  name: string
 }
 
 /** @example ["long","string","fixed[16]","decimal(10,2)"] */
-export type PrimitiveType = string;
+export type PrimitiveType = string
 
 export interface StructField {
-  id: number;
-  name: string;
-  type: Type;
-  required: boolean;
-  doc?: string;
-  "initial-default"?: PrimitiveTypeValue;
-  "write-default"?: PrimitiveTypeValue;
+  id: number
+  name: string
+  type: Type
+  required: boolean
+  doc?: string
+  "initial-default"?: PrimitiveTypeValue
+  "write-default"?: PrimitiveTypeValue
 }
 
 export interface StructType {
-  type: "struct";
-  fields: StructField[];
+  type: "struct"
+  fields: StructField[]
 }
 
 export interface ListType {
-  type: "list";
-  "element-id": number;
-  element: Type;
-  "element-required": boolean;
+  type: "list"
+  "element-id": number
+  element: Type
+  "element-required": boolean
 }
 
 export interface MapType {
-  type: "map";
-  "key-id": number;
-  key: Type;
-  "value-id": number;
-  value: Type;
-  "value-required": boolean;
+  type: "map"
+  "key-id": number
+  key: Type
+  "value-id": number
+  value: Type
+  "value-required": boolean
 }
 
-export type Type = PrimitiveType | StructType | ListType | MapType;
+export type Type = PrimitiveType | StructType | ListType | MapType
 
 export type Schema = StructType & {
-  "schema-id"?: number;
-  "identifier-field-ids"?: number[];
-};
+  "schema-id"?: number
+  "identifier-field-ids"?: number[]
+}
 
 export type Expression =
   | TrueExpression
@@ -161,72 +161,72 @@ export type Expression =
   | NotExpression
   | SetExpression
   | LiteralExpression
-  | UnaryExpression;
+  | UnaryExpression
 
 /** @example ["true","false","eq","and","or","not","in","not-in","lt","lt-eq","gt","gt-eq","not-eq","starts-with","not-starts-with","is-null","not-null","is-nan","not-nan"] */
-export type ExpressionType = string;
+export type ExpressionType = string
 
 export interface TrueExpression {
-  type: ExpressionType;
+  type: ExpressionType
 }
 
 export interface FalseExpression {
-  type: ExpressionType;
+  type: ExpressionType
 }
 
 export interface AndOrExpression {
-  type: ExpressionType;
-  left: Expression;
-  right: Expression;
+  type: ExpressionType
+  left: Expression
+  right: Expression
 }
 
 export interface NotExpression {
-  type: ExpressionType;
-  child: Expression;
+  type: ExpressionType
+  child: Expression
 }
 
 export interface UnaryExpression {
-  type: ExpressionType;
-  term: Term;
-  value: object;
+  type: ExpressionType
+  term: Term
+  value: object
 }
 
 export interface LiteralExpression {
-  type: ExpressionType;
-  term: Term;
-  value: object;
+  type: ExpressionType
+  term: Term
+  value: object
 }
 
 export interface SetExpression {
-  type: ExpressionType;
-  term: Term;
-  values: object[];
+  type: ExpressionType
+  term: Term
+  values: object[]
 }
 
-export type Term = Reference | TransformTerm;
+export type Term = Reference | TransformTerm
 
 /** @example ["column-name"] */
-export type Reference = string;
+export type Reference = string
 
 export interface TransformTerm {
-  type: "transform";
-  transform: Transform;
-  term: Reference;
+  type: "transform"
+  transform: Transform
+  term: Reference
 }
 
 /** @example ["identity","year","month","day","hour","bucket[256]","truncate[16]"] */
-export type Transform = string;
+export type Transform = string
 
 export interface PartitionField {
-  "field-id"?: number;
-  "source-id": number;
-  name: string;
-  transform: Transform;
+  "field-id"?: number
+  "source-id": number
+  name: string
+  transform: Transform
 }
 
 export interface PartitionSpec {
-  "spec-id"?: number;
-  fields: PartitionField[];
+  "spec-id"?: number
+  fields: PartitionField[]
 }
 
 export enum SortDirection {
@@ -240,299 +240,320 @@ export enum NullOrder {
 }
 
 export interface SortField {
-  "source-id": number;
-  transform: Transform;
-  direction: SortDirection;
-  "null-order": NullOrder;
+  "source-id": number
+  transform: Transform
+  direction: SortDirection
+  "null-order": NullOrder
 }
 
 export interface SortOrder {
-  "order-id": number;
-  fields: SortField[];
+  "order-id": number
+  fields: SortField[]
 }
 
 export interface Snapshot {
   /** @format int64 */
-  "snapshot-id": string;
+  "snapshot-id": string
   /** @format int64 */
-  "parent-snapshot-id"?: string;
+  "parent-snapshot-id"?: string
   /** @format int64 */
-  "sequence-number"?: number;
+  "sequence-number"?: number
   /** @format int64 */
-  "timestamp-ms": number;
+  "timestamp-ms": number
   /** Location of the snapshot's manifest list file */
-  "manifest-list": string;
+  "manifest-list": string
   summary: {
-    operation: "append" | "replace" | "overwrite" | "delete";
-    [key: string]: any;
-  };
-  "schema-id"?: number;
+    operation: "append" | "replace" | "overwrite" | "delete"
+    [key: string]: any
+  }
+  "schema-id"?: number
 }
 
 export interface SnapshotReference {
-  type: "tag" | "branch";
+  type: "tag" | "branch"
   /** @format int64 */
-  "snapshot-id": string;
+  "snapshot-id": string
   /** @format int64 */
-  "max-ref-age-ms"?: number;
+  "max-ref-age-ms"?: number
   /** @format int64 */
-  "max-snapshot-age-ms"?: number;
-  "min-snapshots-to-keep"?: number;
+  "max-snapshot-age-ms"?: number
+  "min-snapshots-to-keep"?: number
 }
 
-export type SnapshotReferences = Record<string, SnapshotReference>;
+export type SnapshotReferences = Record<string, SnapshotReference>
 
 export type SnapshotLog = {
   /** @format int64 */
-  "snapshot-id": string;
+  "snapshot-id": string
   /** @format int64 */
-  "timestamp-ms": number;
-}[];
+  "timestamp-ms": number
+}[]
 
 export type MetadataLog = {
-  "metadata-file": string;
+  "metadata-file": string
   /** @format int64 */
-  "timestamp-ms": number;
-}[];
+  "timestamp-ms": number
+}[]
 
 export interface TableMetadata {
   /**
    * @min 1
    * @max 2
    */
-  "format-version": number;
-  "table-uuid": string;
-  location?: string;
+  "format-version": number
+  "table-uuid": string
+  location?: string
   /** @format int64 */
-  "last-updated-ms"?: number;
-  properties?: Record<string, string>;
-  schemas?: Schema[];
-  "current-schema-id"?: number;
-  "last-column-id"?: number;
-  "partition-specs"?: PartitionSpec[];
-  "default-spec-id"?: number;
-  "last-partition-id"?: number;
-  "sort-orders"?: SortOrder[];
-  "default-sort-order-id"?: number;
-  snapshots?: Snapshot[];
-  refs?: SnapshotReferences;
+  "last-updated-ms"?: number
+  properties?: Record<string, string>
+  schemas?: Schema[]
+  "current-schema-id"?: number
+  "last-column-id"?: number
+  "partition-specs"?: PartitionSpec[]
+  "default-spec-id"?: number
+  "last-partition-id"?: number
+  "sort-orders"?: SortOrder[]
+  "default-sort-order-id"?: number
+  snapshots?: Snapshot[]
+  refs?: SnapshotReferences
   /** @format int64 */
-  "current-snapshot-id"?: string;
+  "current-snapshot-id"?: string
   /** @format int64 */
-  "last-sequence-number"?: number;
-  "snapshot-log"?: SnapshotLog;
-  "metadata-log"?: MetadataLog;
-  statistics?: StatisticsFile[];
-  "partition-statistics"?: PartitionStatisticsFile[];
+  "last-sequence-number"?: number
+  "snapshot-log"?: SnapshotLog
+  "metadata-log"?: MetadataLog
+  statistics?: StatisticsFile[]
+  "partition-statistics"?: PartitionStatisticsFile[]
 }
 
 export interface SQLViewRepresentation {
-  type: string;
-  sql: string;
-  dialect: string;
+  type: string
+  sql: string
+  dialect: string
 }
 
-export type ViewRepresentation = SQLViewRepresentation;
+export type ViewRepresentation = SQLViewRepresentation
 
 export interface ViewHistoryEntry {
-  "version-id": number;
+  "version-id": number
   /** @format int64 */
-  "timestamp-ms": number;
+  "timestamp-ms": number
 }
 
 export interface ViewVersion {
-  "version-id": number;
+  "version-id": number
   /** @format int64 */
-  "timestamp-ms": number;
+  "timestamp-ms": number
   /** Schema ID to set as current, or -1 to set last added schema */
-  "schema-id": number;
-  summary: Record<string, string>;
-  representations: ViewRepresentation[];
-  "default-catalog"?: string;
+  "schema-id": number
+  summary: Record<string, string>
+  representations: ViewRepresentation[]
+  "default-catalog"?: string
   /** Reference to one or more levels of a namespace */
-  "default-namespace": Namespace;
+  "default-namespace": Namespace
 }
 
 export interface ViewMetadata {
-  "view-uuid": string;
+  "view-uuid": string
   /**
    * @min 1
    * @max 1
    */
-  "format-version": number;
-  location: string;
-  "current-version-id": number;
-  versions: ViewVersion[];
-  "version-log": ViewHistoryEntry[];
-  schemas: Schema[];
-  properties?: Record<string, string>;
+  "format-version": number
+  location: string
+  "current-version-id": number
+  versions: ViewVersion[]
+  "version-log": ViewHistoryEntry[]
+  schemas: Schema[]
+  properties?: Record<string, string>
 }
 
 export type BaseUpdate = BaseBaseUpdate &
   (
     | BaseBaseUpdateActionMapping<"assign-uuid", AssignUUIDUpdate>
-    | BaseBaseUpdateActionMapping<"upgrade-format-version", UpgradeFormatVersionUpdate>
+    | BaseBaseUpdateActionMapping<
+        "upgrade-format-version",
+        UpgradeFormatVersionUpdate
+      >
     | BaseBaseUpdateActionMapping<"add-schema", AddSchemaUpdate>
     | BaseBaseUpdateActionMapping<"set-current-schema", SetCurrentSchemaUpdate>
     | BaseBaseUpdateActionMapping<"add-spec", AddPartitionSpecUpdate>
     | BaseBaseUpdateActionMapping<"set-default-spec", SetDefaultSpecUpdate>
     | BaseBaseUpdateActionMapping<"add-sort-order", AddSortOrderUpdate>
-    | BaseBaseUpdateActionMapping<"set-default-sort-order", SetDefaultSortOrderUpdate>
+    | BaseBaseUpdateActionMapping<
+        "set-default-sort-order",
+        SetDefaultSortOrderUpdate
+      >
     | BaseBaseUpdateActionMapping<"add-snapshot", AddSnapshotUpdate>
     | BaseBaseUpdateActionMapping<"set-snapshot-ref", SetSnapshotRefUpdate>
     | BaseBaseUpdateActionMapping<"remove-snapshots", RemoveSnapshotsUpdate>
-    | BaseBaseUpdateActionMapping<"remove-snapshot-ref", RemoveSnapshotRefUpdate>
+    | BaseBaseUpdateActionMapping<
+        "remove-snapshot-ref",
+        RemoveSnapshotRefUpdate
+      >
     | BaseBaseUpdateActionMapping<"set-location", SetLocationUpdate>
     | BaseBaseUpdateActionMapping<"set-properties", SetPropertiesUpdate>
     | BaseBaseUpdateActionMapping<"remove-properties", RemovePropertiesUpdate>
     | BaseBaseUpdateActionMapping<"add-view-version", AddViewVersionUpdate>
-    | BaseBaseUpdateActionMapping<"set-current-view-version", SetCurrentViewVersionUpdate>
+    | BaseBaseUpdateActionMapping<
+        "set-current-view-version",
+        SetCurrentViewVersionUpdate
+      >
     | BaseBaseUpdateActionMapping<"set-statistics", SetStatisticsUpdate>
     | BaseBaseUpdateActionMapping<"remove-statistics", RemoveStatisticsUpdate>
-    | BaseBaseUpdateActionMapping<"set-partition-statistics", SetPartitionStatisticsUpdate>
-    | BaseBaseUpdateActionMapping<"remove-partition-statistics", RemovePartitionStatisticsUpdate>
-    | BaseBaseUpdateActionMapping<"remove-partition-specs", RemovePartitionSpecsUpdate>
+    | BaseBaseUpdateActionMapping<
+        "set-partition-statistics",
+        SetPartitionStatisticsUpdate
+      >
+    | BaseBaseUpdateActionMapping<
+        "remove-partition-statistics",
+        RemovePartitionStatisticsUpdate
+      >
+    | BaseBaseUpdateActionMapping<
+        "remove-partition-specs",
+        RemovePartitionSpecsUpdate
+      >
     | BaseBaseUpdateActionMapping<"remove-schemas", RemoveSchemasUpdate>
     | BaseBaseUpdateActionMapping<"enable-row-lineage", EnableRowLineageUpdate>
-  );
+  )
 
 /** Assigning a UUID to a table/view should only be done when creating the table/view. It is not safe to re-assign the UUID if a table/view already has a UUID assigned */
 export type AssignUUIDUpdate = BaseBaseUpdate & {
-  action?: "assign-uuid";
-  uuid: string;
-};
+  action?: "assign-uuid"
+  uuid: string
+}
 
 export type UpgradeFormatVersionUpdate = BaseBaseUpdate & {
-  action?: "upgrade-format-version";
-  "format-version": number;
-};
+  action?: "upgrade-format-version"
+  "format-version": number
+}
 
 export type AddSchemaUpdate = BaseBaseUpdate & {
-  action?: "add-schema";
-  schema: Schema;
+  action?: "add-schema"
+  schema: Schema
   /**
    * This optional field is **DEPRECATED for REMOVAL** since it more safe to handle this internally, and shouldn't be exposed to the clients.
    * The highest assigned column ID for the table. This is used to ensure columns are always assigned an unused ID when evolving schemas. When omitted, it will be computed on the server side.
    * @deprecated
    */
-  "last-column-id"?: number;
-};
+  "last-column-id"?: number
+}
 
 export type SetCurrentSchemaUpdate = BaseBaseUpdate & {
-  action?: "set-current-schema";
+  action?: "set-current-schema"
   /** Schema ID to set as current, or -1 to set last added schema */
-  "schema-id": number;
-};
+  "schema-id": number
+}
 
 export type AddPartitionSpecUpdate = BaseBaseUpdate & {
-  action?: "add-spec";
-  spec: PartitionSpec;
-};
+  action?: "add-spec"
+  spec: PartitionSpec
+}
 
 export type SetDefaultSpecUpdate = BaseBaseUpdate & {
-  action?: "set-default-spec";
+  action?: "set-default-spec"
   /** Partition spec ID to set as the default, or -1 to set last added spec */
-  "spec-id": number;
-};
+  "spec-id": number
+}
 
 export type AddSortOrderUpdate = BaseBaseUpdate & {
-  action?: "add-sort-order";
-  "sort-order": SortOrder;
-};
+  action?: "add-sort-order"
+  "sort-order": SortOrder
+}
 
 export type SetDefaultSortOrderUpdate = BaseBaseUpdate & {
-  action?: "set-default-sort-order";
+  action?: "set-default-sort-order"
   /** Sort order ID to set as the default, or -1 to set last added sort order */
-  "sort-order-id": number;
-};
+  "sort-order-id": number
+}
 
 export type AddSnapshotUpdate = BaseBaseUpdate & {
-  action?: "add-snapshot";
-  snapshot: Snapshot;
-};
+  action?: "add-snapshot"
+  snapshot: Snapshot
+}
 
 export type SetSnapshotRefUpdate = (BaseBaseUpdate & SnapshotReference) & {
-  action?: "set-snapshot-ref";
-  "ref-name": string;
-};
+  action?: "set-snapshot-ref"
+  "ref-name": string
+}
 
 export type RemoveSnapshotsUpdate = BaseBaseUpdate & {
-  action?: "remove-snapshots";
-  "snapshot-ids": number[];
-};
+  action?: "remove-snapshots"
+  "snapshot-ids": number[]
+}
 
 export type RemoveSnapshotRefUpdate = BaseBaseUpdate & {
-  action?: "remove-snapshot-ref";
-  "ref-name": string;
-};
+  action?: "remove-snapshot-ref"
+  "ref-name": string
+}
 
 export type SetLocationUpdate = BaseBaseUpdate & {
-  action?: "set-location";
-  location: string;
-};
+  action?: "set-location"
+  location: string
+}
 
 export type SetPropertiesUpdate = BaseBaseUpdate & {
-  action?: "set-properties";
-  updates: Record<string, string>;
-};
+  action?: "set-properties"
+  updates: Record<string, string>
+}
 
 export type RemovePropertiesUpdate = BaseBaseUpdate & {
-  action?: "remove-properties";
-  removals: string[];
-};
+  action?: "remove-properties"
+  removals: string[]
+}
 
 export type AddViewVersionUpdate = BaseBaseUpdate & {
-  action?: "add-view-version";
-  "view-version": ViewVersion;
-};
+  action?: "add-view-version"
+  "view-version": ViewVersion
+}
 
 export type SetCurrentViewVersionUpdate = BaseBaseUpdate & {
-  action?: "set-current-view-version";
+  action?: "set-current-view-version"
   /** The view version id to set as current, or -1 to set last added view version id */
-  "view-version-id": number;
-};
+  "view-version-id": number
+}
 
 export type SetStatisticsUpdate = BaseBaseUpdate & {
-  action?: "set-statistics";
+  action?: "set-statistics"
   /**
    * This optional field is **DEPRECATED for REMOVAL** since it contains redundant information. Clients should use the `statistics.snapshot-id` field instead.
    * @deprecated
    * @format int64
    */
-  "snapshot-id"?: string;
-  statistics: StatisticsFile;
-};
+  "snapshot-id"?: string
+  statistics: StatisticsFile
+}
 
 export type RemoveStatisticsUpdate = BaseBaseUpdate & {
-  action?: "remove-statistics";
+  action?: "remove-statistics"
   /** @format int64 */
-  "snapshot-id": string;
-};
+  "snapshot-id": string
+}
 
 export type SetPartitionStatisticsUpdate = BaseBaseUpdate & {
-  action?: "set-partition-statistics";
-  "partition-statistics": PartitionStatisticsFile;
-};
+  action?: "set-partition-statistics"
+  "partition-statistics": PartitionStatisticsFile
+}
 
 export type RemovePartitionStatisticsUpdate = BaseBaseUpdate & {
-  action?: "remove-partition-statistics";
+  action?: "remove-partition-statistics"
   /** @format int64 */
-  "snapshot-id": string;
-};
+  "snapshot-id": string
+}
 
 export type RemovePartitionSpecsUpdate = BaseBaseUpdate & {
-  action?: "remove-partition-specs";
-  "spec-ids": number[];
-};
+  action?: "remove-partition-specs"
+  "spec-ids": number[]
+}
 
 export type RemoveSchemasUpdate = BaseBaseUpdate & {
-  action?: "remove-schemas";
-  "schema-ids": number[];
-};
+  action?: "remove-schemas"
+  "schema-ids": number[]
+}
 
 export type EnableRowLineageUpdate = BaseBaseUpdate & {
-  action?: "enable-row-lineage";
-};
+  action?: "enable-row-lineage"
+}
 
 export type TableUpdate =
   | AssignUUIDUpdate
@@ -554,7 +575,7 @@ export type TableUpdate =
   | RemoveStatisticsUpdate
   | RemovePartitionSpecsUpdate
   | RemoveSchemasUpdate
-  | EnableRowLineageUpdate;
+  | EnableRowLineageUpdate
 
 export type ViewUpdate =
   | AssignUUIDUpdate
@@ -564,85 +585,104 @@ export type ViewUpdate =
   | SetPropertiesUpdate
   | RemovePropertiesUpdate
   | AddViewVersionUpdate
-  | SetCurrentViewVersionUpdate;
+  | SetCurrentViewVersionUpdate
 
 export type TableRequirement = BaseTableRequirement &
   (
     | BaseTableRequirementTypeMapping<"assert-create", AssertCreate>
     | BaseTableRequirementTypeMapping<"assert-table-uuid", AssertTableUUID>
-    | BaseTableRequirementTypeMapping<"assert-ref-snapshot-id", AssertRefSnapshotId>
-    | BaseTableRequirementTypeMapping<"assert-last-assigned-field-id", AssertLastAssignedFieldId>
-    | BaseTableRequirementTypeMapping<"assert-current-schema-id", AssertCurrentSchemaId>
-    | BaseTableRequirementTypeMapping<"assert-last-assigned-partition-id", AssertLastAssignedPartitionId>
-    | BaseTableRequirementTypeMapping<"assert-default-spec-id", AssertDefaultSpecId>
-    | BaseTableRequirementTypeMapping<"assert-default-sort-order-id", AssertDefaultSortOrderId>
-  );
+    | BaseTableRequirementTypeMapping<
+        "assert-ref-snapshot-id",
+        AssertRefSnapshotId
+      >
+    | BaseTableRequirementTypeMapping<
+        "assert-last-assigned-field-id",
+        AssertLastAssignedFieldId
+      >
+    | BaseTableRequirementTypeMapping<
+        "assert-current-schema-id",
+        AssertCurrentSchemaId
+      >
+    | BaseTableRequirementTypeMapping<
+        "assert-last-assigned-partition-id",
+        AssertLastAssignedPartitionId
+      >
+    | BaseTableRequirementTypeMapping<
+        "assert-default-spec-id",
+        AssertDefaultSpecId
+      >
+    | BaseTableRequirementTypeMapping<
+        "assert-default-sort-order-id",
+        AssertDefaultSortOrderId
+      >
+  )
 
 /** The table must not already exist; used for create transactions */
 export type AssertCreate = UtilRequiredKeys<BaseTableRequirement, "type"> & {
-  type: "assert-create";
-};
+  type: "assert-create"
+}
 
 /** The table UUID must match the requirement's `uuid` */
 export type AssertTableUUID = UtilRequiredKeys<BaseTableRequirement, "type"> & {
-  type: "assert-table-uuid";
-  uuid: string;
-};
+  type: "assert-table-uuid"
+  uuid: string
+}
 
 /** The table branch or tag identified by the requirement's `ref` must reference the requirement's `snapshot-id`; if `snapshot-id` is `null` or missing, the ref must not already exist */
 export type AssertRefSnapshotId = BaseTableRequirement & {
-  type?: "assert-ref-snapshot-id";
-  ref: string;
+  type?: "assert-ref-snapshot-id"
+  ref: string
   /** @format int64 */
-  "snapshot-id": string;
-};
+  "snapshot-id": string
+}
 
 /** The table's last assigned column id must match the requirement's `last-assigned-field-id` */
 export type AssertLastAssignedFieldId = BaseTableRequirement & {
-  type?: "assert-last-assigned-field-id";
-  "last-assigned-field-id": number;
-};
+  type?: "assert-last-assigned-field-id"
+  "last-assigned-field-id": number
+}
 
 /** The table's current schema id must match the requirement's `current-schema-id` */
 export type AssertCurrentSchemaId = BaseTableRequirement & {
-  type?: "assert-current-schema-id";
-  "current-schema-id": number;
-};
+  type?: "assert-current-schema-id"
+  "current-schema-id": number
+}
 
 /** The table's last assigned partition id must match the requirement's `last-assigned-partition-id` */
 export type AssertLastAssignedPartitionId = BaseTableRequirement & {
-  type?: "assert-last-assigned-partition-id";
-  "last-assigned-partition-id": number;
-};
+  type?: "assert-last-assigned-partition-id"
+  "last-assigned-partition-id": number
+}
 
 /** The table's default spec id must match the requirement's `default-spec-id` */
 export type AssertDefaultSpecId = BaseTableRequirement & {
-  type?: "assert-default-spec-id";
-  "default-spec-id": number;
-};
+  type?: "assert-default-spec-id"
+  "default-spec-id": number
+}
 
 /** The table's default sort order id must match the requirement's `default-sort-order-id` */
 export type AssertDefaultSortOrderId = BaseTableRequirement & {
-  type?: "assert-default-sort-order-id";
-  "default-sort-order-id": number;
-};
+  type?: "assert-default-sort-order-id"
+  "default-sort-order-id": number
+}
 
-export type ViewRequirement = BaseViewRequirement & BaseViewRequirementTypeMapping<"assert-view-uuid", AssertViewUUID>;
+export type ViewRequirement = BaseViewRequirement &
+  BaseViewRequirementTypeMapping<"assert-view-uuid", AssertViewUUID>
 
 /** The view UUID must match the requirement's `uuid` */
 export interface AssertViewUUID {
-  type: "assert-view-uuid";
-  uuid: string;
+  type: "assert-view-uuid"
+  uuid: string
 }
 
 export interface StorageCredential {
   /** Indicates a storage location prefix where the credential is relevant. Clients should choose the most specific prefix (by selecting the longest prefix) if several credentials of the same type are available. */
-  prefix: string;
-  config: Record<string, string>;
+  prefix: string
+  config: Record<string, string>
 }
 
 export interface LoadCredentialsResponse {
-  "storage-credentials": StorageCredential[];
+  "storage-credentials": StorageCredential[]
 }
 
 /**
@@ -679,10 +719,10 @@ export interface LoadCredentialsResponse {
  */
 export interface LoadTableResult {
   /** May be null if the table is staged as part of a transaction */
-  "metadata-location"?: string;
-  metadata: TableMetadata;
-  config?: Record<string, string>;
-  "storage-credentials"?: StorageCredential[];
+  "metadata-location"?: string
+  metadata: TableMetadata
+  config?: Record<string, string>
+  "storage-credentials"?: StorageCredential[]
 }
 
 /**
@@ -698,39 +738,39 @@ export interface LoadTableResult {
  */
 export interface ScanTasks {
   /** Delete files referenced by file scan tasks */
-  "delete-files"?: DeleteFile[];
-  "file-scan-tasks"?: FileScanTask[];
-  "plan-tasks"?: PlanTask[];
+  "delete-files"?: DeleteFile[]
+  "file-scan-tasks"?: FileScanTask[]
+  "plan-tasks"?: PlanTask[]
 }
 
 /** Completed server-side planning result */
 export type CompletedPlanningResult = ScanTasks & {
   /** Status of a server-side planning operation */
-  status: PlanStatus;
-};
+  status: PlanStatus
+}
 
 export type CompletedPlanningWithIDResult = CompletedPlanningResult & {
   /** ID used to track a planning request */
-  "plan-id"?: string;
-};
+  "plan-id"?: string
+}
 
 /** Failed server-side planning result */
 export type FailedPlanningResult = IcebergErrorResponse & {
   /** Status of a server-side planning operation */
-  status: PlanStatus;
-};
+  status: PlanStatus
+}
 
 export interface AsyncPlanningResult {
   /** Status of a server-side planning operation */
-  status: PlanStatus;
+  status: PlanStatus
   /** ID used to track a planning request */
-  "plan-id"?: string;
+  "plan-id"?: string
 }
 
 /** Empty server-side planning result */
 export interface EmptyPlanningResult {
   /** Status of a server-side planning operation */
-  status: PlanStatus;
+  status: PlanStatus
 }
 
 /** Status of a server-side planning operation */
@@ -748,65 +788,68 @@ export type FetchPlanningResult = BaseFetchPlanningResult &
     | BaseFetchPlanningResultStatusMapping<"submitted", EmptyPlanningResult>
     | BaseFetchPlanningResultStatusMapping<"cancelled", EmptyPlanningResult>
     | BaseFetchPlanningResultStatusMapping<"failed", FailedPlanningResult>
-  );
+  )
 
 /** Result of server-side scan planning for planTableScan */
 export type PlanTableScanResult = BasePlanTableScanResult &
   (
-    | BasePlanTableScanResultStatusMapping<"completed", CompletedPlanningWithIDResult>
+    | BasePlanTableScanResultStatusMapping<
+        "completed",
+        CompletedPlanningWithIDResult
+      >
     | BasePlanTableScanResultStatusMapping<"submitted", AsyncPlanningResult>
     | BasePlanTableScanResultStatusMapping<"cancelled", EmptyPlanningResult>
     | BasePlanTableScanResultStatusMapping<"failed", FailedPlanningResult>
-  );
+  )
 
 /** Response schema for fetchScanTasks */
-export type FetchScanTasksResult = ScanTasks;
+export type FetchScanTasksResult = ScanTasks
 
 export interface CommitTableRequest {
   /** Table identifier to update; must be present for CommitTransactionRequest */
-  identifier?: TableIdentifier;
-  requirements: TableRequirement[];
-  updates: TableUpdate[];
+  identifier?: TableIdentifier
+  requirements: TableRequirement[]
+  updates: TableUpdate[]
 }
 
 export interface CommitViewRequest {
   /** View identifier to update */
-  identifier?: TableIdentifier;
-  requirements?: ViewRequirement[];
-  updates: ViewUpdate[];
+  identifier?: TableIdentifier
+  requirements?: ViewRequirement[]
+  updates: ViewUpdate[]
 }
 
 export interface CommitTransactionRequest {
-  "table-changes": CommitTableRequest[];
+  "table-changes": CommitTableRequest[]
 }
 
 export interface CreateTableRequest {
-  name: string;
-  location?: string;
-  schema: Schema;
-  "partition-spec"?: PartitionSpec;
-  "write-order"?: SortOrder;
-  "stage-create"?: boolean;
-  properties?: Record<string, string>;
+  name: string
+  location?: string
+  schema: Schema
+  "partition-spec"?: PartitionSpec
+  "write-order"?: SortOrder
+  "stage-create"?: boolean
+  properties?: Record<string, string>
 }
 
 export interface RegisterTableRequest {
-  name: string;
-  "metadata-location": string;
+  name: string
+  "metadata-location": string
   /**
    * Whether to overwrite table metadata if the table already exists
    * @default false
    */
-  overwrite?: boolean;
+  overwrite?: boolean
 }
 
 export interface CreateViewRequest {
-  name: string;
-  location?: string;
-  schema: Schema;
+  name: string
+  location?: string
+  schema: Schema
   /** The view version to create, will replace the schema-id sent within the view-version with the id assigned to the provided schema */
-  "view-version": ViewVersion;
-  properties: Record<string, string>;
+  "view-version": ViewVersion
+  properties: Record<string, string>
 }
 
 /**
@@ -825,9 +868,9 @@ export interface CreateViewRequest {
  * - `token`: Authorization bearer token to use for view requests if OAuth2 security is enabled
  */
 export interface LoadViewResult {
-  "metadata-location": string;
-  metadata: ViewMetadata;
-  config?: Record<string, string>;
+  "metadata-location": string
+  metadata: ViewMetadata
+  config?: Record<string, string>
 }
 
 /**
@@ -853,20 +896,20 @@ export enum TokenType {
  * @deprecated
  */
 export interface OAuthClientCredentialsRequest {
-  grant_type: "client_credentials";
-  scope?: string;
+  grant_type: "client_credentials"
+  scope?: string
   /**
    * Client ID
    *
    * This can be sent in the request body, but OAuth2 recommends sending it in a Basic Authorization header.
    */
-  client_id: string;
+  client_id: string
   /**
    * Client secret
    *
    * This can be sent in the request body, but OAuth2 recommends sending it in a Basic Authorization header.
    */
-  client_secret: string;
+  client_secret: string
 }
 
 /**
@@ -878,82 +921,84 @@ export interface OAuthClientCredentialsRequest {
  * @deprecated
  */
 export interface OAuthTokenExchangeRequest {
-  grant_type: "urn:ietf:params:oauth:grant-type:token-exchange";
-  scope?: string;
+  grant_type: "urn:ietf:params:oauth:grant-type:token-exchange"
+  scope?: string
   /**
    * Token type identifier, from RFC 8693 Section 3
    *
    * See https://datatracker.ietf.org/doc/html/rfc8693#section-3
    */
-  requested_token_type?: TokenType;
+  requested_token_type?: TokenType
   /** Subject token for token exchange request */
-  subject_token: string;
+  subject_token: string
   /**
    * Token type identifier, from RFC 8693 Section 3
    *
    * See https://datatracker.ietf.org/doc/html/rfc8693#section-3
    */
-  subject_token_type: TokenType;
+  subject_token_type: TokenType
   /** Actor token for token exchange request */
-  actor_token?: string;
+  actor_token?: string
   /**
    * Token type identifier, from RFC 8693 Section 3
    *
    * See https://datatracker.ietf.org/doc/html/rfc8693#section-3
    */
-  actor_token_type?: TokenType;
+  actor_token_type?: TokenType
 }
 
 /**
  * The `oauth/tokens` endpoint and related schemas are **DEPRECATED for REMOVAL** from this spec, see description of the endpoint.
  * @deprecated
  */
-export type OAuthTokenRequest = OAuthClientCredentialsRequest | OAuthTokenExchangeRequest;
+export type OAuthTokenRequest =
+  | OAuthClientCredentialsRequest
+  | OAuthTokenExchangeRequest
 
 export interface CounterResult {
-  unit: string;
+  unit: string
   /** @format int64 */
-  value: number;
+  value: number
 }
 
 export interface TimerResult {
-  "time-unit": string;
+  "time-unit": string
   /** @format int64 */
-  count: number;
+  count: number
   /** @format int64 */
-  "total-duration": number;
+  "total-duration": number
 }
 
-export type MetricResult = CounterResult | TimerResult;
+export type MetricResult = CounterResult | TimerResult
 
 /** @example {"metrics":{"total-planning-duration":{"count":1,"time-unit":"nanoseconds","total-duration":2644235116},"result-data-files":{"unit":"count","value":1},"result-delete-files":{"unit":"count","value":0},"total-data-manifests":{"unit":"count","value":1},"total-delete-manifests":{"unit":"count","value":0},"scanned-data-manifests":{"unit":"count","value":1},"skipped-data-manifests":{"unit":"count","value":0},"total-file-size-bytes":{"unit":"bytes","value":10},"total-delete-file-size-bytes":{"unit":"bytes","value":0}}} */
-export type Metrics = Record<string, MetricResult>;
+export type Metrics = Record<string, MetricResult>
 
 export type ReportMetricsRequest = (ScanReport | CommitReport) & {
-  "report-type": string;
-};
+  "report-type": string
+}
 
 export interface ScanReport {
-  "table-name": string;
+  "table-name": string
   /** @format int64 */
-  "snapshot-id": string;
-  filter: Expression;
-  "schema-id": number;
-  "projected-field-ids": number[];
-  "projected-field-names": string[];
-  metrics: Metrics;
-  metadata?: Record<string, string>;
+  "snapshot-id": string
+  filter: Expression
+  "schema-id": number
+  "projected-field-ids": number[]
+  "projected-field-names": string[]
+  metrics: Metrics
+  metadata?: Record<string, string>
 }
 
 export interface CommitReport {
-  "table-name": string;
+  "table-name": string
   /** @format int64 */
-  "snapshot-id": string;
+  "snapshot-id": string
   /** @format int64 */
-  "sequence-number": number;
-  operation: string;
-  metrics: Metrics;
-  metadata?: Record<string, string>;
+  "sequence-number": number
+  operation: string
+  metrics: Metrics
+  metadata?: Record<string, string>
 }
 
 /**
@@ -967,9 +1012,9 @@ export interface OAuthError {
     | "invalid_grant"
     | "unauthorized_client"
     | "unsupported_grant_type"
-    | "invalid_scope";
-  error_description?: string;
-  error_uri?: string;
+    | "invalid_scope"
+  error_description?: string
+  error_uri?: string
 }
 
 /**
@@ -978,25 +1023,25 @@ export interface OAuthError {
  */
 export interface OAuthTokenResponse {
   /** The access token, for client credentials or token exchange */
-  access_token: string;
+  access_token: string
   /**
    * Access token type for client credentials or token exchange
    *
    * See https://datatracker.ietf.org/doc/html/rfc6749#section-7.1
    */
-  token_type: "bearer" | "mac" | "N_A";
+  token_type: "bearer" | "mac" | "N_A"
   /** Lifetime of the access token in seconds for client credentials or token exchange */
-  expires_in?: number;
+  expires_in?: number
   /**
    * Token type identifier, from RFC 8693 Section 3
    *
    * See https://datatracker.ietf.org/doc/html/rfc8693#section-3
    */
-  issued_token_type?: TokenType;
+  issued_token_type?: TokenType
   /** Refresh token for client credentials or token exchange */
-  refresh_token?: string;
+  refresh_token?: string
   /** Authorization scope for client credentials or token exchange */
-  scope?: string;
+  scope?: string
 }
 
 /**
@@ -1005,29 +1050,29 @@ export interface OAuthTokenResponse {
  */
 export interface IcebergErrorResponse {
   /** JSON error payload returned in a response with further details on the error */
-  error: ErrorModel;
+  error: ErrorModel
 }
 
 export interface CreateNamespaceResponse {
   /** Reference to one or more levels of a namespace */
-  namespace: Namespace;
+  namespace: Namespace
   /**
    * Properties stored on the namespace, if supported by the server.
    * @default {}
    * @example {"owner":"Ralph","created_at":"1452120468"}
    */
-  properties?: Record<string, string>;
+  properties?: Record<string, string>
 }
 
 export interface GetNamespaceResponse {
   /** Reference to one or more levels of a namespace */
-  namespace: Namespace;
+  namespace: Namespace
   /**
    * Properties stored on the namespace, if supported by the server. If the server does not support namespace properties, it should return null for this field. If namespace properties are supported, but none are set, it should return an empty object.
    * @default {}
    * @example {"owner":"Ralph","transient_lastDdlTime":"1452120468"}
    */
-  properties?: Record<string, string>;
+  properties?: Record<string, string>
 }
 
 export interface ListTablesResponse {
@@ -1038,9 +1083,9 @@ export interface ListTablesResponse {
    * Servers that do not support pagination should ignore the `pageToken` parameter and return all results in a single response. The `next-page-token` must be omitted from the response.
    * Clients must interpret either `null` or missing response value of `next-page-token` as the end of the listing results.
    */
-  "next-page-token"?: PageToken;
+  "next-page-token"?: PageToken
   /** @uniqueItems true */
-  identifiers?: TableIdentifier[];
+  identifiers?: TableIdentifier[]
 }
 
 export interface ListNamespacesResponse {
@@ -1051,9 +1096,9 @@ export interface ListNamespacesResponse {
    * Servers that do not support pagination should ignore the `pageToken` parameter and return all results in a single response. The `next-page-token` must be omitted from the response.
    * Clients must interpret either `null` or missing response value of `next-page-token` as the end of the listing results.
    */
-  "next-page-token"?: PageToken;
+  "next-page-token"?: PageToken
   /** @uniqueItems true */
-  namespaces?: Namespace[];
+  namespaces?: Namespace[]
 }
 
 export interface UpdateNamespacePropertiesResponse {
@@ -1061,79 +1106,79 @@ export interface UpdateNamespacePropertiesResponse {
    * List of property keys that were added or updated
    * @uniqueItems true
    */
-  updated: string[];
+  updated: string[]
   /** List of properties that were removed */
-  removed: string[];
+  removed: string[]
   /** List of properties requested for removal that were not found in the namespace's properties. Represents a partial success response. Server's do not need to implement this. */
-  missing?: string[] | null;
+  missing?: string[] | null
 }
 
 export interface CommitTableResponse {
-  "metadata-location": string;
-  metadata: TableMetadata;
+  "metadata-location": string
+  metadata: TableMetadata
 }
 
 export interface StatisticsFile {
   /** @format int64 */
-  "snapshot-id": string;
-  "statistics-path": string;
+  "snapshot-id": string
+  "statistics-path": string
   /** @format int64 */
-  "file-size-in-bytes": number;
+  "file-size-in-bytes": number
   /** @format int64 */
-  "file-footer-size-in-bytes": number;
-  "blob-metadata": BlobMetadata[];
+  "file-footer-size-in-bytes": number
+  "blob-metadata": BlobMetadata[]
 }
 
 export interface BlobMetadata {
-  type: string;
+  type: string
   /** @format int64 */
-  "snapshot-id": string;
+  "snapshot-id": string
   /** @format int64 */
-  "sequence-number": number;
-  fields: number[];
-  properties?: Record<string, string>;
+  "sequence-number": number
+  fields: number[]
+  properties?: Record<string, string>
 }
 
 export interface PartitionStatisticsFile {
   /** @format int64 */
-  "snapshot-id": string;
-  "statistics-path": string;
+  "snapshot-id": string
+  "statistics-path": string
   /** @format int64 */
-  "file-size-in-bytes": number;
+  "file-size-in-bytes": number
 }
 
 /** @example true */
-export type BooleanTypeValue = boolean;
+export type BooleanTypeValue = boolean
 
 /** @example 42 */
-export type IntegerTypeValue = number;
+export type IntegerTypeValue = number
 
 /**
  * @format int64
  * @example 9223372036854776000
  */
-export type LongTypeValue = number;
+export type LongTypeValue = number
 
 /**
  * @format float
  * @example 3.14
  */
-export type FloatTypeValue = number;
+export type FloatTypeValue = number
 
 /**
  * @format double
  * @example 123.456
  */
-export type DoubleTypeValue = number;
+export type DoubleTypeValue = number
 
 /**
  * Decimal type values are serialized as strings. Decimals with a positive scale serialize as numeric plain  text, while decimals with a negative scale use scientific notation and the exponent will be equal to the  negated scale. For instance, a decimal with a positive scale is '123.4500', with zero scale is '2',  and with a negative scale is '2E+20'
  * @example "123.4500"
  */
-export type DecimalTypeValue = string;
+export type DecimalTypeValue = string
 
 /** @example "hello" */
-export type StringTypeValue = string;
+export type StringTypeValue = string
 
 /**
  * UUID type values are serialized as a 36-character lowercase string in standard UUID format as specified  by RFC-4122
@@ -1143,71 +1188,71 @@ export type StringTypeValue = string;
  * @pattern ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
  * @example "eb26bdb1-a1d8-4aa6-990e-da940875492c"
  */
-export type UUIDTypeValue = string;
+export type UUIDTypeValue = string
 
 /**
  * Date type values follow the 'YYYY-MM-DD' ISO-8601 standard date format
  * @format date
  * @example "2007-12-03"
  */
-export type DateTypeValue = string;
+export type DateTypeValue = string
 
 /**
  * Time type values follow the 'HH:MM:SS.ssssss' ISO-8601 format with microsecond precision
  * @example "22:31:08.123456"
  */
-export type TimeTypeValue = string;
+export type TimeTypeValue = string
 
 /**
  * Timestamp type values follow the 'YYYY-MM-DDTHH:MM:SS.ssssss' ISO-8601 format with microsecond precision
  * @example "2007-12-03T10:15:30.123456"
  */
-export type TimestampTypeValue = string;
+export type TimestampTypeValue = string
 
 /**
  * TimestampTz type values follow the 'YYYY-MM-DDTHH:MM:SS.ssssss+00:00' ISO-8601 format with microsecond precision,  and a timezone offset (+00:00 for UTC)
  * @example "2007-12-03T10:15:30.123456+00:00"
  */
-export type TimestampTzTypeValue = string;
+export type TimestampTzTypeValue = string
 
 /**
  * Timestamp_ns type values follow the 'YYYY-MM-DDTHH:MM:SS.sssssssss' ISO-8601 format with nanosecond precision
  * @example "2007-12-03T10:15:30.123456789"
  */
-export type TimestampNanoTypeValue = string;
+export type TimestampNanoTypeValue = string
 
 /**
  * Timestamp_ns type values follow the 'YYYY-MM-DDTHH:MM:SS.sssssssss+00:00' ISO-8601 format with nanosecond  precision, and a timezone offset (+00:00 for UTC)
  * @example "2007-12-03T10:15:30.123456789+00:00"
  */
-export type TimestampTzNanoTypeValue = string;
+export type TimestampTzNanoTypeValue = string
 
 /**
  * Fixed length type values are stored and serialized as an uppercase hexadecimal string  preserving the fixed length
  * @example "78797A"
  */
-export type FixedTypeValue = string;
+export type FixedTypeValue = string
 
 /**
  * Binary type values are stored and serialized as an uppercase hexadecimal string
  * @example "78797A"
  */
-export type BinaryTypeValue = string;
+export type BinaryTypeValue = string
 
 /** @example {"keys":[1,2],"values":[100,200]} */
 export interface CountMap {
   /** List of integer column ids for each corresponding value */
-  keys?: IntegerTypeValue[];
+  keys?: IntegerTypeValue[]
   /** List of Long values, matched to 'keys' by index */
-  values?: LongTypeValue[];
+  values?: LongTypeValue[]
 }
 
 /** @example {"keys":[1,2],"values":[100,"test"]} */
 export interface ValueMap {
   /** List of integer column ids for each corresponding value */
-  keys?: IntegerTypeValue[];
+  keys?: IntegerTypeValue[]
   /** List of primitive type values, matched to 'keys' by index */
-  values?: PrimitiveTypeValue[];
+  values?: PrimitiveTypeValue[]
 }
 
 export type PrimitiveTypeValue =
@@ -1226,7 +1271,7 @@ export type PrimitiveTypeValue =
   | TimestampNanoTypeValue
   | TimestampTzNanoTypeValue
   | FixedTypeValue
-  | BinaryTypeValue;
+  | BinaryTypeValue
 
 export enum FileFormat {
   Avro = "avro",
@@ -1240,217 +1285,229 @@ export type ContentFile = BaseContentFile &
     | BaseContentFileContentMapping<"data", DataFile>
     | BaseContentFileContentMapping<"position-deletes", PositionDeleteFile>
     | BaseContentFileContentMapping<"equality-deletes", EqualityDeleteFile>
-  );
+  )
 
 export type DataFile = UtilRequiredKeys<BaseContentFile, "content"> & {
-  content: "data";
+  content: "data"
   /** Map of column id to total count, including null and NaN */
-  "column-sizes"?: CountMap;
+  "column-sizes"?: CountMap
   /** Map of column id to null value count */
-  "value-counts"?: CountMap;
+  "value-counts"?: CountMap
   /** Map of column id to null value count */
-  "null-value-counts"?: CountMap;
+  "null-value-counts"?: CountMap
   /** Map of column id to number of NaN values in the column */
-  "nan-value-counts"?: CountMap;
+  "nan-value-counts"?: CountMap
   /** Map of column id to lower bound primitive type values */
-  "lower-bounds"?: ValueMap;
+  "lower-bounds"?: ValueMap
   /** Map of column id to upper bound primitive type values */
-  "upper-bounds"?: ValueMap;
-};
+  "upper-bounds"?: ValueMap
+}
 
 export type DeleteFile =
   | ({
-      content: "position-deletes";
+      content: "position-deletes"
     } & PositionDeleteFile)
   | ({
-      content: "equality-deletes";
-    } & EqualityDeleteFile);
+      content: "equality-deletes"
+    } & EqualityDeleteFile)
 
-export type PositionDeleteFile = UtilRequiredKeys<BaseContentFile, "content"> & {
-  content: "position-deletes";
+export type PositionDeleteFile = UtilRequiredKeys<
+  BaseContentFile,
+  "content"
+> & {
+  content: "position-deletes"
   /**
    * Offset within the delete file of delete content
    * @format int64
    */
-  "content-offset"?: number;
+  "content-offset"?: number
   /**
    * Length, in bytes, of the delete content; required if content-offset is present
    * @format int64
    */
-  "content-size-in-bytes"?: number;
-};
+  "content-size-in-bytes"?: number
+}
 
-export type EqualityDeleteFile = UtilRequiredKeys<BaseContentFile, "content"> & {
-  content: "equality-deletes";
+export type EqualityDeleteFile = UtilRequiredKeys<
+  BaseContentFile,
+  "content"
+> & {
+  content: "equality-deletes"
   /** List of equality field IDs */
-  "equality-ids"?: number[];
-};
+  "equality-ids"?: number[]
+}
 
 export interface PlanTableScanRequest {
   /**
    * Identifier for the snapshot to scan in a point-in-time scan
    * @format int64
    */
-  "snapshot-id"?: string;
+  "snapshot-id"?: string
   /** List of selected schema fields */
-  select?: FieldName[];
+  select?: FieldName[]
   /** Expression used to filter the table data */
-  filter?: Expression;
+  filter?: Expression
   /**
    * Enables case sensitive field matching for filter and select
    * @default true
    */
-  "case-sensitive"?: boolean;
+  "case-sensitive"?: boolean
   /**
    * Whether to use the schema at the time the snapshot was written.
    * When time travelling, the snapshot schema should be used (true). When scanning a branch, the table schema should be used (false).
    * @default false
    */
-  "use-snapshot-schema"?: boolean;
+  "use-snapshot-schema"?: boolean
   /**
    * Starting snapshot ID for an incremental scan (exclusive)
    * @format int64
    */
-  "start-snapshot-id"?: string;
+  "start-snapshot-id"?: string
   /**
    * Ending snapshot ID for an incremental scan (inclusive).
    * Required when start-snapshot-id is specified.
    * @format int64
    */
-  "end-snapshot-id"?: string;
+  "end-snapshot-id"?: string
   /** List of fields for which the service should send column stats. */
-  "stats-fields"?: FieldName[];
+  "stats-fields"?: FieldName[]
 }
 
 /**
  * A full field name (including parent field names), such as those passed in APIs like Java `Schema#findField(String name)`.
  * The nested field name follows these rules - Nested struct fields are named by concatenating field names at each struct level using dot (`.`) delimiter, e.g. employer.contact_info.address.zip_code - Nested fields in a map key are named using the keyword `key`, e.g. employee_address_map.key.first_name - Nested fields in a map value are named using the keyword `value`, e.g. employee_address_map.value.zip_code - Nested fields in a list are named using the keyword `element`, e.g. employees.element.first_name
  */
-export type FieldName = string;
+export type FieldName = string
 
 export interface FetchScanTasksRequest {
   /** An opaque string provided by the REST server that represents a unit of work to produce file scan tasks for scan planning. This allows clients to fetch tasks across multiple requests to accommodate large result sets. */
-  "plan-task": PlanTask;
+  "plan-task": PlanTask
 }
 
 /** An opaque string provided by the REST server that represents a unit of work to produce file scan tasks for scan planning. This allows clients to fetch tasks across multiple requests to accommodate large result sets. */
-export type PlanTask = string;
+export type PlanTask = string
 
 export interface FileScanTask {
-  "data-file": DataFile;
+  "data-file": DataFile
   /** A list of indices in the delete files array (0-based) */
-  "delete-file-references"?: number[];
+  "delete-file-references"?: number[]
   /**
    * An optional filter to be applied to rows in this file scan task.
    * If the residual is not present, the client must produce the residual or use the original filter.
    */
-  "residual-filter"?: Expression;
+  "residual-filter"?: Expression
 }
 
 interface BaseBaseUpdate {
-  action: string;
+  action: string
 }
 
 type BaseBaseUpdateActionMapping<Key, Type> = {
-  action: Key;
-} & Type;
+  action: Key
+} & Type
 
 interface BaseTableRequirement {
-  type: string;
+  type: string
 }
 
 type BaseTableRequirementTypeMapping<Key, Type> = {
-  type: Key;
-} & Type;
+  type: Key
+} & Type
 
-type BaseViewRequirement = object;
+type BaseViewRequirement = object
 
 type BaseViewRequirementTypeMapping<Key, Type> = {
-  type: Key;
-} & Type;
+  type: Key
+} & Type
 
 /** Result of server-side scan planning for fetchPlanningResult */
-type BaseFetchPlanningResult = object;
+type BaseFetchPlanningResult = object
 
 type BaseFetchPlanningResultStatusMapping<Key, Type> = {
-  status: Key;
-} & Type;
+  status: Key
+} & Type
 
 /** Result of server-side scan planning for planTableScan */
-type BasePlanTableScanResult = object;
+type BasePlanTableScanResult = object
 
 type BasePlanTableScanResultStatusMapping<Key, Type> = {
-  status: Key;
-} & Type;
+  status: Key
+} & Type
 
 interface BaseContentFile {
-  content: string;
-  "file-path": string;
-  "file-format": FileFormat;
-  "spec-id": number;
+  content: string
+  "file-path": string
+  "file-format": FileFormat
+  "spec-id": number
   /**
    * A list of partition field values ordered based on the fields of the partition spec specified by the `spec-id`
    * @example [1,"bar"]
    */
-  partition: PrimitiveTypeValue[];
+  partition: PrimitiveTypeValue[]
   /**
    * Total file size in bytes
    * @format int64
    */
-  "file-size-in-bytes": number;
+  "file-size-in-bytes": number
   /**
    * Number of records in the file
    * @format int64
    */
-  "record-count": number;
+  "record-count": number
   /** Encryption key metadata blob */
-  "key-metadata"?: BinaryTypeValue;
+  "key-metadata"?: BinaryTypeValue
   /** List of splittable offsets */
-  "split-offsets"?: number[];
-  "sort-order-id"?: number;
+  "split-offsets"?: number[]
+  "sort-order-id"?: number
 }
 
 type BaseContentFileContentMapping<Key, Type> = {
-  content: Key;
-} & Type;
+  content: Key
+} & Type
 
-export type QueryParamsType = Record<string | number, any>;
-export type ResponseFormat = keyof Omit<Body, "body" | "bodyUsed">;
+export type QueryParamsType = Record<string | number, any>
+export type ResponseFormat = keyof Omit<Body, "body" | "bodyUsed">
 
 export interface FullRequestParams extends Omit<RequestInit, "body"> {
   /** set parameter to `true` for call `securityWorker` for this request */
-  secure?: boolean;
+  secure?: boolean
   /** request path */
-  path: string;
+  path: string
   /** content type of request body */
-  type?: ContentType;
+  type?: ContentType
   /** query params */
-  query?: QueryParamsType;
+  query?: QueryParamsType
   /** format of response (i.e. response.json() -> format: "json") */
-  format?: ResponseFormat;
+  format?: ResponseFormat
   /** request body */
-  body?: unknown;
+  body?: unknown
   /** base url */
-  baseUrl?: string;
+  baseUrl?: string
   /** request cancellation token */
-  cancelToken?: CancelToken;
+  cancelToken?: CancelToken
 }
 
-export type RequestParams = Omit<FullRequestParams, "body" | "method" | "query" | "path">;
+export type RequestParams = Omit<
+  FullRequestParams,
+  "body" | "method" | "query" | "path"
+>
 
 export interface ApiConfig<SecurityDataType = unknown> {
-  baseUrl?: string;
-  baseApiParams?: Omit<RequestParams, "baseUrl" | "cancelToken" | "signal">;
-  securityWorker?: (securityData: SecurityDataType | null) => Promise<RequestParams | void> | RequestParams | void;
-  customFetch?: typeof fetch;
+  baseUrl?: string
+  baseApiParams?: Omit<RequestParams, "baseUrl" | "cancelToken" | "signal">
+  securityWorker?: (
+    securityData: SecurityDataType | null
+  ) => Promise<RequestParams | void> | RequestParams | void
+  customFetch?: typeof fetch
 }
 
-export interface HttpResponse<D extends unknown, E extends unknown = unknown> extends Response {
-  data: D;
-  error: E;
+export interface HttpResponse<D extends unknown, E extends unknown = unknown>
+  extends Response {
+  data: D
+  error: E
 }
 
-type CancelToken = Symbol | string | number;
+type CancelToken = Symbol | string | number
 
 export enum ContentType {
   Json = "application/json",
@@ -1460,75 +1517,90 @@ export enum ContentType {
 }
 
 export class HttpClient<SecurityDataType = unknown> {
-  public baseUrl: string = "{scheme}://{host}/{basePath}";
-  private securityData: SecurityDataType | null = null;
-  private securityWorker?: ApiConfig<SecurityDataType>["securityWorker"];
-  private abortControllers = new Map<CancelToken, AbortController>();
-  private customFetch = (...fetchParams: Parameters<typeof fetch>) => fetch(...fetchParams);
+  public baseUrl: string = "{scheme}://{host}/{basePath}"
+  private securityData: SecurityDataType | null = null
+  private securityWorker?: ApiConfig<SecurityDataType>["securityWorker"]
+  private abortControllers = new Map<CancelToken, AbortController>()
+  private customFetch = (...fetchParams: Parameters<typeof fetch>) =>
+    fetch(...fetchParams)
 
   private baseApiParams: RequestParams = {
     credentials: "same-origin",
     headers: {},
     redirect: "follow",
     referrerPolicy: "no-referrer",
-  };
+  }
 
   constructor(apiConfig: ApiConfig<SecurityDataType> = {}) {
-    Object.assign(this, apiConfig);
+    Object.assign(this, apiConfig)
   }
 
   public setSecurityData = (data: SecurityDataType | null) => {
-    this.securityData = data;
-  };
+    this.securityData = data
+  }
 
   protected encodeQueryParam(key: string, value: any) {
-    const encodedKey = encodeURIComponent(key);
-    return `${encodedKey}=${encodeURIComponent(typeof value === "number" ? value : `${value}`)}`;
+    const encodedKey = encodeURIComponent(key)
+    return `${encodedKey}=${encodeURIComponent(typeof value === "number" ? value : `${value}`)}`
   }
 
   protected addQueryParam(query: QueryParamsType, key: string) {
-    return this.encodeQueryParam(key, query[key]);
+    return this.encodeQueryParam(key, query[key])
   }
 
   protected addArrayQueryParam(query: QueryParamsType, key: string) {
-    const value = query[key];
-    return value.map((v: any) => this.encodeQueryParam(key, v)).join("&");
+    const value = query[key]
+    return value.map((v: any) => this.encodeQueryParam(key, v)).join("&")
   }
 
   protected toQueryString(rawQuery?: QueryParamsType): string {
-    const query = rawQuery || {};
-    const keys = Object.keys(query).filter((key) => "undefined" !== typeof query[key]);
+    const query = rawQuery || {}
+    const keys = Object.keys(query).filter(
+      (key) => "undefined" !== typeof query[key]
+    )
     return keys
-      .map((key) => (Array.isArray(query[key]) ? this.addArrayQueryParam(query, key) : this.addQueryParam(query, key)))
-      .join("&");
+      .map((key) =>
+        Array.isArray(query[key])
+          ? this.addArrayQueryParam(query, key)
+          : this.addQueryParam(query, key)
+      )
+      .join("&")
   }
 
   protected addQueryParams(rawQuery?: QueryParamsType): string {
-    const queryString = this.toQueryString(rawQuery);
-    return queryString ? `?${queryString}` : "";
+    const queryString = this.toQueryString(rawQuery)
+    return queryString ? `?${queryString}` : ""
   }
 
   private contentFormatters: Record<ContentType, (input: any) => any> = {
     [ContentType.Json]: (input: any) =>
-      input !== null && (typeof input === "object" || typeof input === "string") ? JSON.stringify(input) : input,
-    [ContentType.Text]: (input: any) => (input !== null && typeof input !== "string" ? JSON.stringify(input) : input),
+      input !== null && (typeof input === "object" || typeof input === "string")
+        ? JSON.stringify(input)
+        : input,
+    [ContentType.Text]: (input: any) =>
+      input !== null && typeof input !== "string"
+        ? JSON.stringify(input)
+        : input,
     [ContentType.FormData]: (input: any) =>
       Object.keys(input || {}).reduce((formData, key) => {
-        const property = input[key];
+        const property = input[key]
         formData.append(
           key,
           property instanceof Blob
             ? property
             : typeof property === "object" && property !== null
               ? JSON.stringify(property)
-              : `${property}`,
-        );
-        return formData;
+              : `${property}`
+        )
+        return formData
       }, new FormData()),
     [ContentType.UrlEncoded]: (input: any) => this.toQueryString(input),
-  };
+  }
 
-  protected mergeRequestParams(params1: RequestParams, params2?: RequestParams): RequestParams {
+  protected mergeRequestParams(
+    params1: RequestParams,
+    params2?: RequestParams
+  ): RequestParams {
     return {
       ...this.baseApiParams,
       ...params1,
@@ -1538,31 +1610,33 @@ export class HttpClient<SecurityDataType = unknown> {
         ...(params1.headers || {}),
         ...((params2 && params2.headers) || {}),
       },
-    };
+    }
   }
 
-  protected createAbortSignal = (cancelToken: CancelToken): AbortSignal | undefined => {
+  protected createAbortSignal = (
+    cancelToken: CancelToken
+  ): AbortSignal | undefined => {
     if (this.abortControllers.has(cancelToken)) {
-      const abortController = this.abortControllers.get(cancelToken);
+      const abortController = this.abortControllers.get(cancelToken)
       if (abortController) {
-        return abortController.signal;
+        return abortController.signal
       }
-      return void 0;
+      return void 0
     }
 
-    const abortController = new AbortController();
-    this.abortControllers.set(cancelToken, abortController);
-    return abortController.signal;
-  };
+    const abortController = new AbortController()
+    this.abortControllers.set(cancelToken, abortController)
+    return abortController.signal
+  }
 
   public abortRequest = (cancelToken: CancelToken) => {
-    const abortController = this.abortControllers.get(cancelToken);
+    const abortController = this.abortControllers.get(cancelToken)
 
     if (abortController) {
-      abortController.abort();
-      this.abortControllers.delete(cancelToken);
+      abortController.abort()
+      this.abortControllers.delete(cancelToken)
     }
-  };
+  }
 
   public request = async <T = any, E = any>({
     body,
@@ -1579,56 +1653,67 @@ export class HttpClient<SecurityDataType = unknown> {
       ((typeof secure === "boolean" ? secure : this.baseApiParams.secure) &&
         this.securityWorker &&
         (await this.securityWorker(this.securityData))) ||
-      {};
-    const requestParams = this.mergeRequestParams(params, secureParams);
-    const queryString = query && this.toQueryString(query);
-    const payloadFormatter = this.contentFormatters[type || ContentType.Json];
-    const responseFormat = format || requestParams.format;
+      {}
+    const requestParams = this.mergeRequestParams(params, secureParams)
+    const queryString = query && this.toQueryString(query)
+    const payloadFormatter = this.contentFormatters[type || ContentType.Json]
+    const responseFormat = format || requestParams.format
 
-    return this.customFetch(`${baseUrl || this.baseUrl || ""}${path}${queryString ? `?${queryString}` : ""}`, {
-      ...requestParams,
-      headers: {
-        ...(requestParams.headers || {}),
-        ...(type && type !== ContentType.FormData ? { "Content-Type": type } : {}),
-      },
-      signal: (cancelToken ? this.createAbortSignal(cancelToken) : requestParams.signal) || null,
-      body: typeof body === "undefined" || body === null ? null : payloadFormatter(body),
-    }).then(async (response) => {
-      const r = response.clone() as HttpResponse<T, E>;
-      r.data = null as unknown as T;
-      r.error = null as unknown as E;
+    return this.customFetch(
+      `${baseUrl || this.baseUrl || ""}${path}${queryString ? `?${queryString}` : ""}`,
+      {
+        ...requestParams,
+        headers: {
+          ...(requestParams.headers || {}),
+          ...(type && type !== ContentType.FormData
+            ? { "Content-Type": type }
+            : {}),
+        },
+        signal:
+          (cancelToken
+            ? this.createAbortSignal(cancelToken)
+            : requestParams.signal) || null,
+        body:
+          typeof body === "undefined" || body === null
+            ? null
+            : payloadFormatter(body),
+      }
+    ).then(async (response) => {
+      const r = response.clone() as HttpResponse<T, E>
+      r.data = null as unknown as T
+      r.error = null as unknown as E
 
       // Parse snapshot-id as strings because it may be greater than MAX_SAFE_INTEGER
-      const JSONbigintString = require("json-bigint")({ storeAsString: true });
+      const JSONbigintString = require("json-bigint")({ storeAsString: true })
       response.json = async () => {
-        const text = await response.text();
-        return JSONbigintString.parse(text);
-      };
+        const text = await response.text()
+        return JSONbigintString.parse(text)
+      }
 
       const data = !responseFormat
         ? r
         : await response[responseFormat]()
             .then((data) => {
               if (r.ok) {
-                r.data = data;
+                r.data = data
               } else {
-                r.error = data;
+                r.error = data
               }
-              return r;
+              return r
             })
             .catch((e) => {
-              r.error = e;
-              return r;
-            });
+              r.error = e
+              return r
+            })
 
       if (cancelToken) {
-        this.abortControllers.delete(cancelToken);
+        this.abortControllers.delete(cancelToken)
       }
 
-      if (!response.ok) throw r.error;
-      return data.data;
-    });
-  };
+      if (!response.ok) throw r.error
+      return data.data
+    })
+  }
 }
 
 /**
@@ -1639,7 +1724,9 @@ export class HttpClient<SecurityDataType = unknown> {
  *
  * Defines the specification for the first version of the REST Catalog API. Implementations should ideally support both Iceberg table specs v1 and v2, with priority given to v2.
  */
-export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDataType> {
+export class Api<
+  SecurityDataType extends unknown,
+> extends HttpClient<SecurityDataType> {
   v1 = {
     /**
      * @description All REST clients should first call this route to get catalog configuration properties from the server to configure the catalog and its HTTP client. Configuration from the server consists of two sets of key/value pairs. - defaults -  properties that should be used as default configuration; applied before client configuration - overrides - properties that should be used to override client configuration; applied after defaults and client configuration Catalog configuration is constructed by setting the defaults, then client- provided configuration, and finally overrides. The final property set is then used to configure the catalog. For example, a default configuration property might set the size of the client pool, which can be replaced with a client-specific setting. An override might be used to set the warehouse location, which is stored on the server rather than in client configuration. Common catalog configuration settings are documented at https://iceberg.apache.org/docs/latest/configuration/#catalog-properties The catalog configuration also holds an optional `endpoints` field that contains information about the endpoints supported by the server. If a server does not send the `endpoints` field, a default set of endpoints is assumed: - GET /v1/{prefix}/namespaces - POST /v1/{prefix}/namespaces - GET /v1/{prefix}/namespaces/{namespace} - HEAD /v1/{prefix}/namespaces/{namespace} - DELETE /v1/{prefix}/namespaces/{namespace} - POST /v1/{prefix}/namespaces/{namespace}/properties - GET /v1/{prefix}/namespaces/{namespace}/tables - POST /v1/{prefix}/namespaces/{namespace}/tables - GET /v1/{prefix}/namespaces/{namespace}/tables/{table} - HEAD /v1/{prefix}/namespaces/{namespace}/tables/{table} - POST /v1/{prefix}/namespaces/{namespace}/tables/{table} - DELETE /v1/{prefix}/namespaces/{namespace}/tables/{table} - POST /v1/{prefix}/namespaces/{namespace}/register - POST /v1/{prefix}/namespaces/{namespace}/tables/{table}/metrics - POST /v1/{prefix}/tables/rename - POST /v1/{prefix}/transactions/commit
@@ -1653,9 +1740,9 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     getConfig: (
       query?: {
         /** Warehouse location or identifier to request from the service */
-        warehouse?: string;
+        warehouse?: string
       },
-      params: RequestParams = {},
+      params: RequestParams = {}
     ) =>
       this.request<CatalogConfig, IcebergErrorResponse>({
         path: `/v1/config`,
@@ -1705,19 +1792,19 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
          * Servers that do not support pagination should ignore the `pageToken` parameter and return all results in a single response. The `next-page-token` must be omitted from the response.
          * Clients must interpret either `null` or missing response value of `next-page-token` as the end of the listing results.
          */
-        pageToken?: PageToken;
+        pageToken?: PageToken
         /**
          * For servers that support pagination, this signals an upper bound of the number of results that a client will receive. For servers that do not support pagination, clients may receive results larger than the indicated `pageSize`.
          * @min 1
          */
-        pageSize?: number;
+        pageSize?: number
         /**
          * An optional namespace, underneath which to list namespaces. If not provided or empty, all top-level namespaces should be listed. If parent is a multipart namespace, the parts must be separated by the unit separator (`0x1F`) byte.
          * @example "accounting%1Ftax"
          */
-        parent?: string;
+        parent?: string
       },
-      params: RequestParams = {},
+      params: RequestParams = {}
     ) =>
       this.request<ListNamespacesResponse, IcebergErrorResponse>({
         path: `/v1/namespaces`,
@@ -1737,7 +1824,10 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @request POST:/v1/{prefix}/namespaces
      * @secure
      */
-    createNamespace: ( data: CreateNamespaceRequest, params: RequestParams = {}) =>
+    createNamespace: (
+      data: CreateNamespaceRequest,
+      params: RequestParams = {}
+    ) =>
       this.request<CreateNamespaceResponse, IcebergErrorResponse | ErrorModel>({
         path: `/v1/namespaces`,
         method: "POST",
@@ -1757,7 +1847,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @request GET:/v1/{prefix}/namespaces/{namespace}
      * @secure
      */
-    loadNamespaceMetadata: ( namespace: string, params: RequestParams = {}) =>
+    loadNamespaceMetadata: (namespace: string, params: RequestParams = {}) =>
       this.request<GetNamespaceResponse, IcebergErrorResponse>({
         path: `/v1/namespaces/${namespace}`,
         method: "GET",
@@ -1775,7 +1865,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @request HEAD:/v1/{prefix}/namespaces/{namespace}
      * @secure
      */
-    namespaceExists: ( namespace: string, params: RequestParams = {}) =>
+    namespaceExists: (namespace: string, params: RequestParams = {}) =>
       this.request<void, IcebergErrorResponse>({
         path: `/v1/namespaces/${namespace}`,
         method: "HEAD",
@@ -1793,7 +1883,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @request DELETE:/v1/{prefix}/namespaces/{namespace}
      * @secure
      */
-    dropNamespace: ( namespace: string, params: RequestParams = {}) =>
+    dropNamespace: (namespace: string, params: RequestParams = {}) =>
       this.request<void, IcebergErrorResponse>({
         path: `/v1/namespaces/${namespace}`,
         method: "DELETE",
@@ -1814,9 +1904,12 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     updateProperties: (
       namespace: string,
       data: UpdateNamespacePropertiesRequest,
-      params: RequestParams = {},
+      params: RequestParams = {}
     ) =>
-      this.request<UpdateNamespacePropertiesResponse, IcebergErrorResponse | ErrorModel>({
+      this.request<
+        UpdateNamespacePropertiesResponse,
+        IcebergErrorResponse | ErrorModel
+      >({
         path: `/v1/namespaces/${namespace}/properties`,
         method: "POST",
         body: data,
@@ -1845,14 +1938,14 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
          * Servers that do not support pagination should ignore the `pageToken` parameter and return all results in a single response. The `next-page-token` must be omitted from the response.
          * Clients must interpret either `null` or missing response value of `next-page-token` as the end of the listing results.
          */
-        pageToken?: PageToken;
+        pageToken?: PageToken
         /**
          * For servers that support pagination, this signals an upper bound of the number of results that a client will receive. For servers that do not support pagination, clients may receive results larger than the indicated `pageSize`.
          * @min 1
          */
-        pageSize?: number;
+        pageSize?: number
       },
-      params: RequestParams = {},
+      params: RequestParams = {}
     ) =>
       this.request<ListTablesResponse, IcebergErrorResponse>({
         path: `/v1/namespaces/${namespace}/tables`,
@@ -1872,7 +1965,11 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @request POST:/v1/{prefix}/namespaces/{namespace}/tables
      * @secure
      */
-    createTable: ( namespace: string, data: CreateTableRequest, params: RequestParams = {}) =>
+    createTable: (
+      namespace: string,
+      data: CreateTableRequest,
+      params: RequestParams = {}
+    ) =>
       this.request<LoadTableResult, IcebergErrorResponse>({
         path: `/v1/namespaces/${namespace}/tables`,
         method: "POST",
@@ -1896,7 +1993,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
       namespace: string,
       table: string,
       data: PlanTableScanRequest,
-      params: RequestParams = {},
+      params: RequestParams = {}
     ) =>
       this.request<PlanTableScanResult, IcebergErrorResponse | ErrorModel>({
         path: `/v1/namespaces/${namespace}/tables/${table}/plan`,
@@ -1921,7 +2018,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
       namespace: string,
       table: string,
       planId: string,
-      params: RequestParams = {},
+      params: RequestParams = {}
     ) =>
       this.request<FetchPlanningResult, IcebergErrorResponse>({
         path: `/v1/namespaces/${namespace}/tables/${table}/plan/${planId}`,
@@ -1940,7 +2037,12 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @request DELETE:/v1/{prefix}/namespaces/{namespace}/tables/{table}/plan/{plan-id}
      * @secure
      */
-    cancelPlanning: ( namespace: string, table: string, planId: string, params: RequestParams = {}) =>
+    cancelPlanning: (
+      namespace: string,
+      table: string,
+      planId: string,
+      params: RequestParams = {}
+    ) =>
       this.request<void, IcebergErrorResponse>({
         path: `/v1/namespaces/${namespace}/tables/${table}/plan/${planId}`,
         method: "DELETE",
@@ -1962,7 +2064,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
       namespace: string,
       table: string,
       data: FetchScanTasksRequest,
-      params: RequestParams = {},
+      params: RequestParams = {}
     ) =>
       this.request<FetchScanTasksResult, IcebergErrorResponse>({
         path: `/v1/namespaces/${namespace}/tables/${table}/tasks`,
@@ -1983,7 +2085,11 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @request POST:/v1/{prefix}/namespaces/{namespace}/register
      * @secure
      */
-    registerTable: ( namespace: string, data: RegisterTableRequest, params: RequestParams = {}) =>
+    registerTable: (
+      namespace: string,
+      data: RegisterTableRequest,
+      params: RequestParams = {}
+    ) =>
       this.request<LoadTableResult, IcebergErrorResponse>({
         path: `/v1/namespaces/${namespace}/register`,
         method: "POST",
@@ -2011,9 +2117,9 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
          * The snapshots to return in the body of the metadata. Setting the value to `all` would return the full set of snapshots currently valid for the table. Setting the value to `refs` would load all snapshots referenced by branches or tags.
          * Default if no param is provided is `all`.
          */
-        snapshots?: "all" | "refs";
+        snapshots?: "all" | "refs"
       },
-      params: RequestParams = {},
+      params: RequestParams = {}
     ) =>
       this.request<LoadTableResult, void | IcebergErrorResponse>({
         path: `/v1/namespaces/${namespace}/tables/${table}`,
@@ -2037,7 +2143,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
       namespace: string,
       table: string,
       data: CommitTableRequest,
-      params: RequestParams = {},
+      params: RequestParams = {}
     ) =>
       this.request<CommitTableResponse, IcebergErrorResponse>({
         path: `/v1/namespaces/${namespace}/tables/${table}`,
@@ -2066,9 +2172,9 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
          * Whether the user requested to purge the underlying table's data and metadata
          * @default false
          */
-        purgeRequested?: boolean;
+        purgeRequested?: boolean
       },
-      params: RequestParams = {},
+      params: RequestParams = {}
     ) =>
       this.request<void, IcebergErrorResponse>({
         path: `/v1/namespaces/${namespace}/tables/${table}`,
@@ -2088,7 +2194,11 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @request HEAD:/v1/{prefix}/namespaces/{namespace}/tables/{table}
      * @secure
      */
-    tableExists: ( namespace: string, table: string, params: RequestParams = {}) =>
+    tableExists: (
+      namespace: string,
+      table: string,
+      params: RequestParams = {}
+    ) =>
       this.request<void, IcebergErrorResponse>({
         path: `/v1/namespaces/${namespace}/tables/${table}`,
         method: "HEAD",
@@ -2106,7 +2216,11 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @request GET:/v1/{prefix}/namespaces/{namespace}/tables/{table}/credentials
      * @secure
      */
-    loadCredentials: ( namespace: string, table: string, params: RequestParams = {}) =>
+    loadCredentials: (
+      namespace: string,
+      table: string,
+      params: RequestParams = {}
+    ) =>
       this.request<LoadCredentialsResponse, IcebergErrorResponse>({
         path: `/v1/namespaces/${namespace}/tables/${table}/credentials`,
         method: "GET",
@@ -2124,7 +2238,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @request POST:/v1/{prefix}/tables/rename
      * @secure
      */
-    renameTable: ( data: RenameTableRequest, params: RequestParams = {}) =>
+    renameTable: (data: RenameTableRequest, params: RequestParams = {}) =>
       this.request<void, IcebergErrorResponse | ErrorModel>({
         path: `/v1/tables/rename`,
         method: "POST",
@@ -2148,7 +2262,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
       namespace: string,
       table: string,
       data: ReportMetricsRequest,
-      params: RequestParams = {},
+      params: RequestParams = {}
     ) =>
       this.request<void, IcebergErrorResponse>({
         path: `/v1/namespaces/${namespace}/tables/${table}/metrics`,
@@ -2169,7 +2283,10 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @request POST:/v1/{prefix}/transactions/commit
      * @secure
      */
-    commitTransaction: ( data: CommitTransactionRequest, params: RequestParams = {}) =>
+    commitTransaction: (
+      data: CommitTransactionRequest,
+      params: RequestParams = {}
+    ) =>
       this.request<void, IcebergErrorResponse>({
         path: `/v1/transactions/commit`,
         method: "POST",
@@ -2199,14 +2316,14 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
          * Servers that do not support pagination should ignore the `pageToken` parameter and return all results in a single response. The `next-page-token` must be omitted from the response.
          * Clients must interpret either `null` or missing response value of `next-page-token` as the end of the listing results.
          */
-        pageToken?: PageToken;
+        pageToken?: PageToken
         /**
          * For servers that support pagination, this signals an upper bound of the number of results that a client will receive. For servers that do not support pagination, clients may receive results larger than the indicated `pageSize`.
          * @min 1
          */
-        pageSize?: number;
+        pageSize?: number
       },
-      params: RequestParams = {},
+      params: RequestParams = {}
     ) =>
       this.request<ListTablesResponse, IcebergErrorResponse | ErrorModel>({
         path: `/v1/namespaces/${namespace}/views`,
@@ -2226,7 +2343,11 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @request POST:/v1/{prefix}/namespaces/{namespace}/views
      * @secure
      */
-    createView: ( namespace: string, data: CreateViewRequest, params: RequestParams = {}) =>
+    createView: (
+      namespace: string,
+      data: CreateViewRequest,
+      params: RequestParams = {}
+    ) =>
       this.request<LoadViewResult, IcebergErrorResponse | ErrorModel>({
         path: `/v1/namespaces/${namespace}/views`,
         method: "POST",
@@ -2246,7 +2367,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @request GET:/v1/{prefix}/namespaces/{namespace}/views/{view}
      * @secure
      */
-    loadView: ( namespace: string, view: string, params: RequestParams = {}) =>
+    loadView: (namespace: string, view: string, params: RequestParams = {}) =>
       this.request<LoadViewResult, IcebergErrorResponse | ErrorModel>({
         path: `/v1/namespaces/${namespace}/views/${view}`,
         method: "GET",
@@ -2268,7 +2389,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
       namespace: string,
       view: string,
       data: CommitViewRequest,
-      params: RequestParams = {},
+      params: RequestParams = {}
     ) =>
       this.request<LoadViewResult, IcebergErrorResponse | ErrorModel>({
         path: `/v1/namespaces/${namespace}/views/${view}`,
@@ -2289,7 +2410,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @request DELETE:/v1/{prefix}/namespaces/{namespace}/views/{view}
      * @secure
      */
-    dropView: ( namespace: string, view: string, params: RequestParams = {}) =>
+    dropView: (namespace: string, view: string, params: RequestParams = {}) =>
       this.request<void, IcebergErrorResponse | ErrorModel>({
         path: `/v1/namespaces/${namespace}/views/${view}`,
         method: "DELETE",
@@ -2307,7 +2428,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @request HEAD:/v1/{prefix}/namespaces/{namespace}/views/{view}
      * @secure
      */
-    viewExists: ( namespace: string, view: string, params: RequestParams = {}) =>
+    viewExists: (namespace: string, view: string, params: RequestParams = {}) =>
       this.request<void, void | IcebergErrorResponse>({
         path: `/v1/namespaces/${namespace}/views/${view}`,
         method: "HEAD",
@@ -2325,7 +2446,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @request POST:/v1/{prefix}/views/rename
      * @secure
      */
-    renameView: ( data: RenameTableRequest, params: RequestParams = {}) =>
+    renameView: (data: RenameTableRequest, params: RequestParams = {}) =>
       this.request<void, IcebergErrorResponse | ErrorModel>({
         path: `/v1/views/rename`,
         method: "POST",
@@ -2335,5 +2456,5 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         format: "json",
         ...params,
       }),
-  };
+  }
 }

@@ -19,23 +19,23 @@ export const getApiBaseUrl = (inBrowser: boolean = true) => {
   // Browser-side: empty string to use relative URLs
   // Will be handled by nextjs rewrite
   if (inBrowser) {
-    return '';
+    return ""
   }
 
   // Server-side: use environment variable or default to backend service URL
   const javaApiBaseUrl = getJavaApiBaseUrl()
   if (!javaApiBaseUrl) {
-    throw new Error('JAVA_API_URL is not set')
+    throw new Error("JAVA_API_URL is not set")
   }
   return javaApiBaseUrl
-};
+}
 
 export const getJavaApiBaseUrl = () => {
   if (process.env.JAVA_API_URL) {
     return process.env.JAVA_API_URL
-  } else if (process.env.NODE_ENV === 'development') {
-    return 'http://localhost:8182'
+  } else if (process.env.NODE_ENV === "development") {
+    return "http://localhost:8182"
   } else {
     return null
   }
-};
+}

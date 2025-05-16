@@ -35,9 +35,7 @@ export const metadata: Metadata = {
   title: "Nimtable",
   description: "The Control Plane for Apache Iceberg™",
   icons: "/nimtable_icon.png",
-};
-
-
+}
 
 export default function RootLayout({
   children,
@@ -47,18 +45,23 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <ReactQueryProvider >
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <ReactQueryProvider>
             <AuthProvider>
               <RefreshProvider>
                 <SidebarProvider>
-                <ProtectedRoute>
-                  {/* The AppSidebar should only be rendered when the user is authenticated */}
-                  <AppSidebar />
-                  <Suspense fallback={<></>}>{children}</Suspense>
-                </ProtectedRoute>
-                <Toaster />
-              </SidebarProvider>
+                  <ProtectedRoute>
+                    {/* The AppSidebar should only be rendered when the user is authenticated */}
+                    <AppSidebar />
+                    <Suspense fallback={<></>}>{children}</Suspense>
+                  </ProtectedRoute>
+                  <Toaster />
+                </SidebarProvider>
               </RefreshProvider>
             </AuthProvider>
           </ReactQueryProvider>
@@ -67,4 +70,3 @@ export default function RootLayout({
     </html>
   )
 }
-
