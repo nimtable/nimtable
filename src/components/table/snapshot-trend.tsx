@@ -32,6 +32,8 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  ReferenceDot,
+  Label,
 } from "recharts"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import {
@@ -50,6 +52,7 @@ interface SnapshotTrendProps {
   snapshots: Array<{
     id: string | number
     timestamp: number
+    isCompaction?: boolean
   }>
 }
 
@@ -68,6 +71,7 @@ interface TrendDataPoint {
   dataSize: number
   recordCount: number
   fileCount: number
+  isCompaction?: boolean
 }
 
 // ISO week helper
@@ -118,6 +122,7 @@ export function SnapshotTrend({
             dataSize: distribution.dataFileSizeInBytes,
             recordCount: distribution.dataFileRecordCount,
             fileCount: distribution.dataFileCount,
+            isCompaction: snapshot.isCompaction
           }
         })
       )
@@ -170,6 +175,7 @@ export function SnapshotTrend({
           dataSize: item.dataSize,
           recordCount: item.recordCount,
           fileCount: item.fileCount,
+          isCompaction: item.isCompaction
         })
       }
     })
@@ -359,8 +365,24 @@ export function SnapshotTrend({
               padding={{ top: 20, bottom: 20 }}
             />
             <Tooltip
-              formatter={(value: number) => getFormatter()(value)}
-              labelFormatter={(label: number) => formatDate(label)}
+              formatter={(value: number, name: string, props: any) => {
+                const data = props.payload
+                const formattedValue = getFormatter()(value)
+                return formattedValue
+              }}
+              labelFormatter={(label: number, payload: any) => {
+                const data = payload[0]?.payload
+                const date = formatDate(label)
+                if (data?.isCompaction) {
+                  return (
+                    <div>
+                      <div>{date}</div>
+                      <div className="text-xs font-medium text-blue-600 dark:text-blue-400">Compaction</div>
+                    </div>
+                  )
+                }
+                return date
+              }}
             />
             <Line
               type="monotone"
@@ -369,9 +391,23 @@ export function SnapshotTrend({
               strokeWidth={2}
               dot={false}
             />
+            {aggregatedData.map((point, index) => (
+              point.isCompaction && (
+                <ReferenceDot
+                  key={index}
+                  x={point.timestamp}
+                  y={point[getDataKey()]}
+                  r={4}
+                  fill="#3b82f6"
+                  stroke="#fff"
+                  strokeWidth={2}
+                />
+              )
+            ))}
           </LineChart>
         </ResponsiveContainer>
       </CardContent>
     </Card>
   )
 }
+

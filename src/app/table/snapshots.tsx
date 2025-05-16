@@ -66,6 +66,7 @@ interface Snapshot {
   branches: string[]
   tags: string[]
   summary?: Record<string, string>
+  isCompaction?: boolean
 }
 
 interface ManifestDetails {
@@ -703,13 +704,19 @@ export function SnapshotsTab({
     // First, create snapshot objects
     if (tableData.metadata.snapshots) {
       tableData.metadata.snapshots.forEach((snapshot) => {
+        const summary = snapshot.summary || {}
+        
+        // A compaction operation is typically a replace operation.
+        const isCompaction = summary.operation === "replace"
+
         result.push({
           id: snapshot["snapshot-id"],
           parentId: snapshot["parent-snapshot-id"],
           timestamp: snapshot["timestamp-ms"],
           branches: [],
           tags: [],
-          summary: snapshot.summary,
+          summary: summary,
+          isCompaction: isCompaction
         })
       })
     }

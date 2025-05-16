@@ -26,6 +26,8 @@ import {
   AlertTriangle,
   HardDrive,
   Cpu,
+  Clock,
+  GitCommit,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { errorToString } from "@/lib/utils"
@@ -226,6 +228,135 @@ function FileDistributionSection({
   )
 }
 
+interface CompactionHistoryItem {
+  id: string | number
+  timestamp: number
+  rewrittenDataFilesCount: number
+  addedDataFilesCount: number
+  rewrittenBytesCount: number
+  failedDataFilesCount: number
+}
+
+function CompactionHistory({
+  catalog,
+  namespace,
+  table,
+}: {
+  catalog: string
+  namespace: string
+  table: string
+}) {
+  const { data: tableData } = useQuery({
+    queryKey: ["table", catalog, namespace, table],
+    queryFn: async () => {
+      const response = await fetch(`/api/catalog/${catalog}/namespace/${namespace}/table/${table}`)
+      if (!response.ok) {
+        throw new Error("Failed to fetch table data")
+      }
+      return await response.json()
+    },
+  })
+
+  // Format timestamp to be more compact
+  const formatDate = (timestamp: number) => {
+    const date = new Date(timestamp)
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(date)
+  }
+
+  // Format file size
+  const formatFileSize = (bytes: number) => {
+    const units = ["B", "KB", "MB", "GB", "TB"]
+    let size = bytes
+    let unitIndex = 0
+    while (size >= 1024 && unitIndex < units.length - 1) {
+      size /= 1024
+      unitIndex++
+    }
+    return `${size.toFixed(1)} ${units[unitIndex]}`
+  }
+
+  if (!tableData?.metadata?.snapshots) {
+    return null
+  }
+
+  // Filter snapshots with operation type "replace" and sort by timestamp
+  const compactionHistory = tableData.metadata.snapshots
+    .filter((snapshot: any) => snapshot.summary?.operation === "replace")
+    .map((snapshot: any) => ({
+      id: snapshot["snapshot-id"],
+      timestamp: snapshot["timestamp-ms"],
+      rewrittenDataFilesCount: snapshot.summary?.["rewritten-data-files-count"] || 0,
+      addedDataFilesCount: snapshot.summary?.["added-data-files-count"] || 0,
+      rewrittenBytesCount: snapshot.summary?.["rewritten-bytes-count"] || 0,
+      failedDataFilesCount: snapshot.summary?.["failed-data-files-count"] || 0,
+    }))
+    .sort((a: CompactionHistoryItem, b: CompactionHistoryItem) => b.timestamp - a.timestamp)
+
+  if (compactionHistory.length === 0) {
+    return (
+      <Card className="border-muted/70 shadow-sm overflow-hidden">
+        <CardContent className="flex flex-col items-center justify-center py-12">
+          <GitCommit className="h-12 w-12 mb-4 text-muted-foreground/20" />
+          <p className="text-sm font-medium">No compaction history</p>
+          <p className="text-xs mt-1 text-muted-foreground">
+            This table doesn&apos;t have any compaction operations yet
+          </p>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  return (
+    <Card className="border-muted/70 shadow-sm overflow-hidden">
+      <div className="border rounded-md overflow-hidden bg-background">
+        {/* Header row */}
+        <div className="flex items-center py-2 px-3 border-b bg-muted/30 text-xs font-medium text-muted-foreground">
+          <div className="w-8 flex-shrink-0">
+            {/* Expand button column */}
+          </div>
+          <div className="w-[300px] flex-shrink-0 pl-4">Snapshot ID</div>
+          <div className="w-[140px] flex-shrink-0">Date</div>
+          <div className="w-[100px] flex-shrink-0">Operation</div>
+        </div>
+
+        {/* History items */}
+        <div className="max-h-[calc(100vh-400px)] overflow-y-auto">
+          {compactionHistory.map((item: CompactionHistoryItem, index: number) => (
+            <div
+              key={item.id}
+              className="flex items-center py-2 px-3 border-b last:border-b-0 hover:bg-muted/20 transition-colors"
+            >
+              <div className="w-8 flex-shrink-0 flex items-center">
+                <div className="h-2 w-2 rounded-full bg-blue-500 ml-2" />
+              </div>
+
+              {/* Snapshot ID */}
+              <div className="font-mono text-xs text-muted-foreground w-[300px] flex-shrink-0 pl-4">
+                {String(item.id)}
+              </div>
+
+              {/* Date */}
+              <div className="text-xs text-muted-foreground w-[140px] flex-shrink-0">
+                {formatDate(item.timestamp)}
+              </div>
+
+              {/* Operation type */}
+              <div className="text-xs font-medium w-[100px] flex-shrink-0">
+                Compaction
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </Card>
+  )
+}
+
 interface OptimizeSheetProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -410,7 +541,7 @@ export function OptimizeSheet({
               <h1 className="text-xl font-semibold">Table Optimization</h1>
               <p className="text-sm text-muted-foreground mt-1">
                 Configure and run Iceberg optimization operations including
-                compaction, snapshot expiration, and orphan file cleanup
+                compaction, snapshot expiration...
               </p>
             </div>
           </div>
@@ -635,6 +766,19 @@ export function OptimizeSheet({
                   </CardContent>
                 </Card>
               </div>
+            </div>
+
+            {/* Compaction History */}
+            <div className="mt-16">
+              <h2 className="text-lg font-medium mb-4 flex items-center gap-2">
+                <div className="h-1.5 w-1.5 rounded-full bg-blue-500"></div>
+                Compaction History
+              </h2>
+              <CompactionHistory
+                catalog={catalog}
+                namespace={namespace}
+                table={table}
+              />
             </div>
           </div>
         </div>
