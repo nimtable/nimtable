@@ -22,11 +22,9 @@ import {
   Copy,
   Check,
   Info,
-  RefreshCw,
   Layers,
   Hash,
   Calendar,
-  AlertTriangle,
 } from "lucide-react"
 import {
   Table,
@@ -56,7 +54,6 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "@/components/ui/card"
 import {
   Tooltip,
@@ -73,7 +70,6 @@ import {
 } from "@/lib/data-loader"
 import { cn } from "@/lib/utils"
 import { getPropertyDescription } from "@/lib/property-descriptions"
-import { FileStatistics } from "@/components/table/file-statistics"
 import { FileDistributionLoading } from "@/components/table/file-distribution-loading"
 import { useQuery } from "@tanstack/react-query"
 import { FileDistribution } from "@/components/table/file-distribution"

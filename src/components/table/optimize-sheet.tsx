@@ -22,7 +22,6 @@ import {
   CheckCircle2,
   Circle,
   Loader2,
-  RefreshCw,
   AlertTriangle,
   HardDrive,
   Cpu,
@@ -45,9 +44,6 @@ import { Switch } from "@/components/ui/switch"
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
 } from "@/components/ui/card"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import Link from "next/link"
@@ -57,7 +53,6 @@ import {
   type DistributionData,
   type OptimizationOperation,
 } from "@/lib/data-loader"
-import { FileStatistics } from "@/components/table/file-statistics"
 import { FileDistributionLoading } from "@/components/table/file-distribution-loading"
 import {
   Select,
@@ -76,9 +71,6 @@ type OptimizationStep = {
   error?: string
   result?: any
 }
-
-// Define the order of size ranges
-const rangeOrder = ["0-8M", "8M-32M", "32M-128M", "128M-512M", "512M+"]
 
 function FileDistributionSection({
   tableId,

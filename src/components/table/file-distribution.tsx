@@ -8,7 +8,6 @@ import {
   CardDescription,
 } from "@/components/ui/card"
 import { FileStatistics } from "@/components/table/file-statistics"
-import { FileDistributionLoading } from "@/components/table/file-distribution-loading"
 import type { DistributionData } from "@/lib/data-loader"
 
 // Define the order of size ranges
