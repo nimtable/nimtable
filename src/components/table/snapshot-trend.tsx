@@ -364,7 +364,7 @@ export function SnapshotTrend({
               padding={{ top: 20, bottom: 20 }}
             />
             <Tooltip
-              formatter={(value: number, name: string, props: any) => {
+              formatter={(value: number, _name: string, _props: any) => {
                 const formattedValue = getFormatter()(value)
                 return formattedValue
               }}
