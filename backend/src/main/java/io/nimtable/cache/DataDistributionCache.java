@@ -106,4 +106,8 @@ public class DataDistributionCache {
         memoryCache.clear();
         LOG.debug("Cleared memory cache");
     }
+
+    public Map<String, DataDistribution> getMemoryCache() {
+        return memoryCache;
+    }
 }
