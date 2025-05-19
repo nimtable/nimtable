@@ -16,7 +16,7 @@ cd backend
 It uses the default config file at `backend/config.yaml`.
 SQLite will be used for development. To develop with Postgres, see [Docker Development](#docker-development) below.
 
-It will serve at http://localhost:8182.
+The backend API will be available at http://localhost:8182.
 
 ### Frontend Development
 
@@ -30,7 +30,7 @@ npm install
 npm run dev
 ```
 
-It will serve a separate UI at http://localhost:3000, which can be dynamically updated as you make changes to the frontend code.
+The UI will be available at http://localhost:3000.
 
 ### Docker Development
 

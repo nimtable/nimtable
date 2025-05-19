@@ -18,6 +18,8 @@ package io.nimtable;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.nimtable.cache.DataDistributionCache;
+import io.nimtable.db.entity.DataDistribution;
 import io.nimtable.db.repository.CatalogRepository;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -39,11 +41,13 @@ public class DistributionServlet extends HttpServlet {
     private final Config config;
     private final ObjectMapper objectMapper;
     private final CatalogRepository catalogRepository;
+    private final DataDistributionCache distributionCache;
 
     public DistributionServlet(Config config) {
         this.config = config;
         this.objectMapper = new ObjectMapper();
         this.catalogRepository = new CatalogRepository();
+        this.distributionCache = DataDistributionCache.getInstance();
     }
 
     @Override
@@ -95,13 +99,13 @@ public class DistributionServlet extends HttpServlet {
 
             DataDistribution dataDistribution = calculateDistributionStats(table, snapshotId);
             int totalFiles = 0;
-            for (Map.Entry<String, Integer> entry : dataDistribution.ranges.entrySet()) {
+            for (Map.Entry<String, Integer> entry : dataDistribution.getRanges().entrySet()) {
                 totalFiles += entry.getValue();
             }
 
             ObjectNode rootNode = MAPPER.createObjectNode();
             ObjectNode rangeNode = MAPPER.createObjectNode();
-            for (Map.Entry<String, Integer> entry : dataDistribution.ranges.entrySet()) {
+            for (Map.Entry<String, Integer> entry : dataDistribution.getRanges().entrySet()) {
                 String range = entry.getKey();
                 int count = entry.getValue();
                 double percentage = totalFiles > 0 ? Math.round((count * 100.0) / totalFiles) : 0;
@@ -114,19 +118,19 @@ public class DistributionServlet extends HttpServlet {
             }
 
             rootNode.set("ranges", rangeNode);
-            rootNode.put("dataFileCount", dataDistribution.dataFileCount);
-            rootNode.put("positionDeleteFileCount", dataDistribution.positionDeleteFileCount);
-            rootNode.put("eqDeleteFileCount", dataDistribution.eqDeleteFileCount);
-            rootNode.put("dataFileSizeInBytes", dataDistribution.dataFileSizeInBytes);
+            rootNode.put("dataFileCount", dataDistribution.getDataFileCount());
+            rootNode.put("positionDeleteFileCount", dataDistribution.getPositionDeleteFileCount());
+            rootNode.put("eqDeleteFileCount", dataDistribution.getEqDeleteFileCount());
+            rootNode.put("dataFileSizeInBytes", dataDistribution.getDataFileSizeInBytes());
             rootNode.put(
                     "positionDeleteFileSizeInBytes",
-                    dataDistribution.positionDeleteFileSizeInBytes);
-            rootNode.put("eqDeleteFileSizeInBytes", dataDistribution.eqDeleteFileSizeInBytes);
-            rootNode.put("dataFileRecordCount", dataDistribution.dataFileRecordCount);
+                    dataDistribution.getPositionDeleteFileSizeInBytes());
+            rootNode.put("eqDeleteFileSizeInBytes", dataDistribution.getEqDeleteFileSizeInBytes());
+            rootNode.put("dataFileRecordCount", dataDistribution.getDataFileRecordCount());
             rootNode.put(
                     "positionDeleteFileRecordCount",
-                    dataDistribution.positionDeleteFileRecordCount);
-            rootNode.put("eqDeleteFileRecordCount", dataDistribution.eqDeleteFileRecordCount);
+                    dataDistribution.getPositionDeleteFileRecordCount());
+            rootNode.put("eqDeleteFileRecordCount", dataDistribution.getEqDeleteFileRecordCount());
 
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
@@ -135,19 +139,6 @@ public class DistributionServlet extends HttpServlet {
             LOG.error("Error processing distribution request", e);
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
-    }
-
-    class DataDistribution {
-        int dataFileCount;
-        int positionDeleteFileCount;
-        int eqDeleteFileCount;
-        long dataFileSizeInBytes;
-        long positionDeleteFileSizeInBytes;
-        long eqDeleteFileSizeInBytes;
-        int dataFileRecordCount;
-        int positionDeleteFileRecordCount;
-        int eqDeleteFileRecordCount;
-        Map<String, Integer> ranges;
     }
 
     private DataDistribution calculateDistributionStats(Table table, String snapshotId) {
@@ -161,6 +152,25 @@ public class DistributionServlet extends HttpServlet {
             snapshot = table.currentSnapshot();
         }
 
+        // Try to get from cache first
+        if (snapshot != null) {
+            String catalogName = table.name().split("\\.")[0];
+            String namespace = table.name().split("\\.")[1];
+            String tableName = table.name().split("\\.")[2];
+
+            DataDistribution cached =
+                    distributionCache.get(
+                            String.valueOf(snapshot.snapshotId()),
+                            catalogName,
+                            namespace,
+                            tableName);
+
+            if (cached != null) {
+                LOG.debug("Using cached distribution for snapshot: {}", snapshot.snapshotId());
+                return cached;
+            }
+        }
+
         DataDistribution dataDistribution = new DataDistribution();
         Map<String, Integer> distribution = new HashMap<>();
         distribution.put("0-8M", 0);
@@ -168,7 +178,7 @@ public class DistributionServlet extends HttpServlet {
         distribution.put("32M-128M", 0);
         distribution.put("128M-512M", 0);
         distribution.put("512M+", 0);
-        dataDistribution.ranges = distribution;
+        dataDistribution.setRanges(distribution);
 
         if (snapshot == null) {
             return dataDistribution;
@@ -181,9 +191,13 @@ public class DistributionServlet extends HttpServlet {
                     case DATA:
                         for (DataFile file : ManifestFiles.read(manifest, fileIO, table.specs())) {
                             processFileSize(distribution, file.fileSizeInBytes());
-                            dataDistribution.dataFileCount += 1;
-                            dataDistribution.dataFileSizeInBytes += file.fileSizeInBytes();
-                            dataDistribution.dataFileRecordCount += file.recordCount();
+                            dataDistribution.setDataFileCount(
+                                    dataDistribution.getDataFileCount() + 1);
+                            dataDistribution.setDataFileSizeInBytes(
+                                    dataDistribution.getDataFileSizeInBytes()
+                                            + file.fileSizeInBytes());
+                            dataDistribution.setDataFileRecordCount(
+                                    dataDistribution.getDataFileRecordCount() + file.recordCount());
                         }
                         break;
                     case DELETES:
@@ -191,15 +205,23 @@ public class DistributionServlet extends HttpServlet {
                                 ManifestFiles.readDeleteManifest(manifest, fileIO, table.specs())) {
                             processFileSize(distribution, file.fileSizeInBytes());
                             if (file.content() == FileContent.EQUALITY_DELETES) {
-                                dataDistribution.eqDeleteFileCount += 1;
-                                dataDistribution.eqDeleteFileSizeInBytes += file.fileSizeInBytes();
-                                dataDistribution.eqDeleteFileRecordCount += file.recordCount();
+                                dataDistribution.setEqDeleteFileCount(
+                                        dataDistribution.getEqDeleteFileCount() + 1);
+                                dataDistribution.setEqDeleteFileSizeInBytes(
+                                        dataDistribution.getEqDeleteFileSizeInBytes()
+                                                + file.fileSizeInBytes());
+                                dataDistribution.setEqDeleteFileRecordCount(
+                                        dataDistribution.getEqDeleteFileRecordCount()
+                                                + file.recordCount());
                             } else if (file.content() == FileContent.POSITION_DELETES) {
-                                dataDistribution.positionDeleteFileCount += 1;
-                                dataDistribution.positionDeleteFileSizeInBytes +=
-                                        file.fileSizeInBytes();
-                                dataDistribution.positionDeleteFileRecordCount +=
-                                        file.recordCount();
+                                dataDistribution.setPositionDeleteFileCount(
+                                        dataDistribution.getPositionDeleteFileCount() + 1);
+                                dataDistribution.setPositionDeleteFileSizeInBytes(
+                                        dataDistribution.getPositionDeleteFileSizeInBytes()
+                                                + file.fileSizeInBytes());
+                                dataDistribution.setPositionDeleteFileRecordCount(
+                                        dataDistribution.getPositionDeleteFileRecordCount()
+                                                + file.recordCount());
                             }
                         }
                         break;
@@ -207,6 +229,20 @@ public class DistributionServlet extends HttpServlet {
                         throw new RuntimeException("unreachable");
                 }
             }
+        }
+
+        // Cache the result
+        if (snapshot != null) {
+            String catalogName = table.name().split("\\.")[0];
+            String namespace = table.name().split("\\.")[1];
+            String tableName = table.name().split("\\.")[2];
+
+            distributionCache.put(
+                    String.valueOf(snapshot.snapshotId()),
+                    catalogName,
+                    namespace,
+                    tableName,
+                    dataDistribution);
         }
 
         return dataDistribution;

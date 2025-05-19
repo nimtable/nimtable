@@ -15,11 +15,9 @@
  */
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { LayoutList, Database, FileText } from "lucide-react"
 import { notFound, useSearchParams } from "next/navigation"
-import { useToast } from "@/hooks/use-toast"
-import { errorToString } from "@/lib/utils"
 import { loadTableData } from "@/lib/data-loader"
 import type { LoadTableResult } from "@/lib/data-loader"
 import { InfoTab } from "./info"
@@ -28,100 +26,113 @@ import { SnapshotsTab } from "./snapshots"
 import { TopNavbar } from "@/components/shared/top-navbar"
 import { PageLoader } from "@/components/shared/page-loader"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useQuery } from "@tanstack/react-query"
 
 export default function TablePage() {
-    const searchParams = useSearchParams()
-    const catalog = searchParams.get("catalog")
-    const namespace = searchParams.get("namespace")
-    const table = searchParams.get("table")
-    const isValidParams = catalog && namespace && table
+  const searchParams = useSearchParams()
+  const catalog = searchParams.get("catalog")
+  const namespace = searchParams.get("namespace")
+  const table = searchParams.get("table")
+  const isValidParams = catalog && namespace && table
 
-    const { toast } = useToast()
-    const [tableData, setTableData] = useState<LoadTableResult | undefined>(undefined)
-    const [isLoading, setIsLoading] = useState(true)
-    const [activeTab, setActiveTab] = useState("info")
+  const [activeTab, setActiveTab] = useState("info")
 
-    useEffect(() => {
-        if (!isValidParams) return
+  const { data: tableData, isPending } = useQuery<LoadTableResult>({
+    queryKey: ["table", catalog, namespace, table],
+    queryFn: async () => {
+      if (!isValidParams) return undefined as unknown as LoadTableResult
+      return await loadTableData(catalog!, namespace!, table!)
+    },
+    enabled: !!isValidParams,
+  })
 
-        const fetchTableData = async () => {
-            setIsLoading(true)
-            try {
-                const data = await loadTableData(catalog!, namespace!, table!)
-                setTableData(data)
-            } catch (error) {
-                toast({
-                    variant: "destructive",
-                    title: `Failed to load table ${catalog}.${namespace}.${table}`,
-                    description: errorToString(error),
-                })
-            } finally {
-                setIsLoading(false)
-            }
-        }
+  if (!isValidParams) {
+    return notFound()
+  }
 
-        fetchTableData()
-    }, [catalog, namespace, table, toast, isValidParams])
-
-    if (!isValidParams) {
-        return notFound()
-    }
-
-    if (isLoading) {
-        return (
-            <div className="w-full h-full flex items-center justify-center">
-                <PageLoader icon={LayoutList} title="Loading table details" entity={table} entityType="Table" />
-            </div>
-        )
-    }
-
-    if (!tableData) {
-        return (
-            <div className="h-full w-full flex items-center justify-center">
-                <div className="flex flex-col items-center gap-4">
-                    <p className="text-lg font-medium">Table data not found</p>
-                    <p className="text-sm text-muted-foreground">Unable to load data for this table.</p>
-                </div>
-            </div>
-        )
-    }
-
+  if (isPending) {
     return (
-        <div className="flex flex-col h-full w-full">
-            <TopNavbar catalog={catalog} namespace={namespace} table={table} />
-
-            <div className="flex-1 overflow-auto h-full">
-                <div className="max-w-6xl mx-auto px-6 py-6">
-                    <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-                        <TabsList className="grid grid-cols-3 w-full max-w-md mb-6">
-                            <TabsTrigger value="info" className="flex items-center gap-1.5">
-                                <FileText className="h-4 w-4" />
-                                <span>Info</span>
-                            </TabsTrigger>
-                            <TabsTrigger value="data" className="flex items-center gap-1.5">
-                                <Database className="h-4 w-4" />
-                                <span>Data Preview</span>
-                            </TabsTrigger>
-                            <TabsTrigger value="snapshots" className="flex items-center gap-1.5">
-                                <LayoutList className="h-4 w-4" />
-                                <span>Version Control</span>
-                            </TabsTrigger>
-                        </TabsList>
-
-                        <TabsContent value="info" className="space-y-8 mt-0">
-                            <InfoTab tableData={tableData} catalog={catalog} namespace={namespace} table={table} />
-                        </TabsContent>
-
-                        <TabsContent value="data" className="space-y-8 mt-0">
-                            <DataPreview catalog={catalog} namespace={namespace} table={table} />
-                        </TabsContent>
-
-                        <TabsContent value="snapshots" className="space-y-8 mt-0">
-                            <SnapshotsTab tableData={tableData} catalog={catalog} namespace={namespace} table={table} />
-                        </TabsContent>
-                    </Tabs>
-                </div>
-            </div>
-        </div>
+      <div className="w-full h-full flex items-center justify-center">
+        <PageLoader
+          icon={LayoutList}
+          title="Loading table details"
+          entity={table}
+          entityType="Table"
+        />
+      </div>
     )
+  }
+
+  if (!tableData) {
+    return (
+      <div className="h-full w-full flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <p className="text-lg font-medium">Table data not found</p>
+          <p className="text-sm text-muted-foreground">
+            Unable to load data for this table.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col h-full w-full">
+      <TopNavbar catalog={catalog} namespace={namespace} table={table} />
+
+      <div className="flex-1 overflow-auto h-full">
+        <div className="max-w-6xl mx-auto px-6 py-6">
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="space-y-8"
+          >
+            <TabsList className="grid grid-cols-3 w-full max-w-md mb-6">
+              <TabsTrigger value="info" className="flex items-center gap-1.5">
+                <FileText className="h-4 w-4" />
+                <span>Info</span>
+              </TabsTrigger>
+              <TabsTrigger value="data" className="flex items-center gap-1.5">
+                <Database className="h-4 w-4" />
+                <span>Data Preview</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="snapshots"
+                className="flex items-center gap-1.5"
+              >
+                <LayoutList className="h-4 w-4" />
+                <span>Version Control</span>
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="info" className="space-y-8 mt-0">
+              <InfoTab
+                tableData={tableData}
+                catalog={catalog}
+                namespace={namespace}
+                table={table}
+              />
+            </TabsContent>
+
+            <TabsContent value="data" className="space-y-8 mt-0">
+              <DataPreview
+                catalog={catalog}
+                namespace={namespace}
+                table={table}
+              />
+            </TabsContent>
+
+            <TabsContent value="snapshots" className="space-y-8 mt-0">
+              <SnapshotsTab
+                tableData={tableData}
+                catalog={catalog}
+                namespace={namespace}
+                table={table}
+              />
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
+    </div>
+  )
 }

@@ -44,3 +44,5 @@ dist/
 .DS_Store
 
 nimtable-all.jar
+
+**/.claude/settings.local.json
