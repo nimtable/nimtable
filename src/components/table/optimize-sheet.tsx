@@ -18,7 +18,7 @@
 import { useEffect, useState } from "react"
 import {
   ChevronRight,
-  SettingsIcon,
+  Settings,
   CheckCircle2,
   Circle,
   Loader2,
@@ -74,7 +74,6 @@ type OptimizationStep = {
   name: string
   status: "pending" | "running" | "done" | "error"
   error?: string
-
   result?: any
 }
 
@@ -418,7 +417,7 @@ export function OptimizeSheet({
         <div className="bg-muted/5 border-b px-6 py-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
-              <SettingsIcon className="h-5 w-5 text-blue-500" />
+              <Settings className="h-5 w-5 text-blue-500" />
             </div>
             <div>
               <h1 className="text-xl font-semibold">Table Optimization</h1>
@@ -445,9 +444,7 @@ export function OptimizeSheet({
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label className="text-base">
-                          Snapshot retention
-                        </Label>
+                        <Label className="text-base">Snapshot retention</Label>
                         <p className="text-sm text-muted-foreground">
                           Removing old snapshots.
                         </p>
@@ -468,9 +465,7 @@ export function OptimizeSheet({
                             type="number"
                             min="1"
                             value={retentionPeriod}
-                            onChange={(e) =>
-                              setRetentionPeriod(e.target.value)
-                            }
+                            onChange={(e) => setRetentionPeriod(e.target.value)}
                             placeholder="5"
                             className="border-muted-foreground/20"
                           />
@@ -566,8 +561,8 @@ export function OptimizeSheet({
                             />
                             <p className="text-sm text-muted-foreground">
                               Specify sort order using zorder format (e.g.,
-                              zorder(c1,c2)) or sort format (e.g., id DESC
-                              NULLS LAST,name ASC NULLS FIRST)
+                              zorder(c1,c2)) or sort format (e.g., id DESC NULLS
+                              LAST,name ASC NULLS FIRST)
                             </p>
                           </div>
                         )}
@@ -622,10 +617,9 @@ export function OptimizeSheet({
                           <Alert variant="warning" className="mt-4">
                             <AlertTriangle className="h-4 w-4" />
                             <AlertDescription className="ml-2">
-                              Compaction is performed using Embedded Spark
-                              with the above system resources. Please ensure
-                              these resources are sufficient for your data
-                              size.
+                              Compaction is performed using Embedded Spark with
+                              the above system resources. Please ensure these
+                              resources are sufficient for your data size.
                             </AlertDescription>
                           </Alert>
                         </div>
