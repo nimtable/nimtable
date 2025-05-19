@@ -95,9 +95,9 @@ public class DistributionServlet extends HttpServlet {
                     CatalogUtil.buildIcebergCatalog(
                             catalogName, properties, new org.apache.hadoop.conf.Configuration());
 
-            Table table = catalog.loadTable(TableIdentifier.of(namespace, tableName));
-
-            DataDistribution dataDistribution = calculateDistributionStats(table, snapshotId);
+            DataDistribution dataDistribution =
+                    calculateDistributionStats(
+                            catalog, catalogName, namespace, tableName, snapshotId);
             int totalFiles = 0;
             for (Map.Entry<String, Integer> entry : dataDistribution.getRanges().entrySet()) {
                 totalFiles += entry.getValue();
@@ -141,7 +141,30 @@ public class DistributionServlet extends HttpServlet {
         }
     }
 
-    private DataDistribution calculateDistributionStats(Table table, String snapshotId) {
+    private DataDistribution calculateDistributionStats(
+            Catalog catalog,
+            String catalogName,
+            String namespace,
+            String tableName,
+            String snapshotId) {
+        if (snapshotId != null) {
+            // Try to get from cache first
+            DataDistribution cached =
+                    distributionCache.get(snapshotId, catalogName, namespace, tableName);
+
+            if (cached != null) {
+                LOG.debug(
+                        "Using cached distribution for snapshot: {}, catalogName: {}, namespace: {}, tableName {}",
+                        snapshotId,
+                        catalogName,
+                        namespace,
+                        tableName);
+                return cached;
+            }
+        }
+
+        Table table = catalog.loadTable(TableIdentifier.of(namespace, tableName));
+
         Snapshot snapshot;
         if (snapshotId != null) {
             snapshot = table.snapshot(Long.parseLong(snapshotId));
@@ -150,24 +173,23 @@ public class DistributionServlet extends HttpServlet {
             }
         } else {
             snapshot = table.currentSnapshot();
-        }
-
-        // Try to get from cache first
-        if (snapshot != null) {
-            String catalogName = table.name().split("\\.")[0];
-            String namespace = table.name().split("\\.")[1];
-            String tableName = table.name().split("\\.")[2];
-
-            DataDistribution cached =
-                    distributionCache.get(
-                            String.valueOf(snapshot.snapshotId()),
+            // try cache again
+            if (snapshot != null) {
+                DataDistribution cached =
+                        distributionCache.get(
+                                String.valueOf(snapshot.snapshotId()),
+                                catalogName,
+                                namespace,
+                                tableName);
+                if (cached != null) {
+                    LOG.debug(
+                            "Using cached distribution for snapshot: {}, catalogName: {}, namespace: {}, tableName {}",
+                            snapshotId,
                             catalogName,
                             namespace,
                             tableName);
-
-            if (cached != null) {
-                LOG.debug("Using cached distribution for snapshot: {}", snapshot.snapshotId());
-                return cached;
+                    return cached;
+                }
             }
         }
 
@@ -233,10 +255,6 @@ public class DistributionServlet extends HttpServlet {
 
         // Cache the result
         if (snapshot != null) {
-            String catalogName = table.name().split("\\.")[0];
-            String namespace = table.name().split("\\.")[1];
-            String tableName = table.name().split("\\.")[2];
-
             distributionCache.put(
                     String.valueOf(snapshot.snapshotId()),
                     catalogName,
