@@ -16,18 +16,21 @@
 
 import type React from "react"
 import { Inter } from "next/font/google"
+
 import "@/styles/globals.css"
 import "@/styles/animations.css"
-import { RefreshProvider } from "@/contexts/refresh-context"
-import { SidebarProvider } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { ThemeProvider } from "@/components/theme-provider"
-import { Toaster } from "@/components/ui/toaster"
+
 import { Suspense } from "react"
-import { AuthProvider } from "@/contexts/auth-context"
-import { ProtectedRoute } from "@/components/protected-route"
 import type { Metadata } from "next"
+import { AuthProvider } from "@/contexts/auth-context"
+import { RefreshProvider } from "@/contexts/refresh-context"
+
+import { SidebarProvider } from "@/components/ui/sidebar"
+import { Toaster } from "@/components/ui/toaster"
+import { AppSidebar } from "@/components/app-sidebar"
+import { ProtectedRoute } from "@/components/protected-route"
 import { ReactQueryProvider } from "@/components/Providers/ReactQuery"
+import { ThemeProvider } from "@/components/theme-provider"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -35,9 +38,7 @@ export const metadata: Metadata = {
   title: "Nimtable",
   description: "The Control Plane for Apache Iceberg™",
   icons: "/nimtable_icon.png",
-};
-
-
+}
 
 export default function RootLayout({
   children,
@@ -47,18 +48,23 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <ReactQueryProvider >
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <ReactQueryProvider>
             <AuthProvider>
               <RefreshProvider>
                 <SidebarProvider>
-                <ProtectedRoute>
-                  {/* The AppSidebar should only be rendered when the user is authenticated */}
-                  {/* <AppSidebar /> */}
-                  <Suspense fallback={<></>}>{children}</Suspense>
-                </ProtectedRoute>
-                <Toaster />
-              </SidebarProvider>
+                  <ProtectedRoute>
+                    {/* The AppSidebar should only be rendered when the user is authenticated */}
+                    {/* <AppSidebar /> */}
+                    <Suspense fallback={<></>}>{children}</Suspense>
+                  </ProtectedRoute>
+                  <Toaster />
+                </SidebarProvider>
               </RefreshProvider>
             </AuthProvider>
           </ReactQueryProvider>
@@ -67,4 +73,3 @@ export default function RootLayout({
     </html>
   )
 }
-

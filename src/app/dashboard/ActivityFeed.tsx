@@ -5,13 +5,22 @@ import {
   Clock,
   FileText,
   GitCompare,
+  LucideIcon,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 
 export function ActivityFeed() {
   // Mock data for recent activities
-  const activities = [
+  const activities: {
+    id: number
+    table: string
+    type: string
+    timestamp: string
+    description: string
+    icon: LucideIcon
+    iconColor: string
+  }[] = [
     {
       id: 1,
       type: "compaction",

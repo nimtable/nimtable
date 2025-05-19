@@ -6,8 +6,6 @@ import { BarChart2, Eye, GitCompare, MoreHorizontal, Star } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 
-import { EditWatchlistDialog } from "./EditWatchlistDialog"
-
 export function TableWatchlist() {
   // Mock data for watchlist tables
   const [watchlistTables, setWatchlistTables] = useState([
@@ -57,10 +55,6 @@ export function TableWatchlist() {
           <Star className="h-5 w-5 text-amber-500" />
           <h2 className="font-semibold text-lg">Watchlist</h2>
         </div>
-        <EditWatchlistDialog
-          tables={watchlistTables}
-          onSave={setWatchlistTables}
-        />
       </div>
       <div className="divide-y">
         {watchlistTables.map((table) => (
@@ -68,7 +62,7 @@ export function TableWatchlist() {
             <div className="flex items-center justify-between mb-2">
               <h3 className="font-medium">{table.name}</h3>
               <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                <MoreHorizontal className="h-4 w-4" />
+                {/* <MoreHorizontal className="h-4 w-4" /> */}
               </Button>
             </div>
             <div className="flex items-center justify-between">

@@ -1,26 +1,31 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useState } from "react"
 import {
-  Database,
-  LayoutGrid,
   BarChart3,
-  Users,
-  Settings,
   ChevronDown,
   ChevronRight,
-  Home,
-  FolderTree,
-  Layers,
+  Database,
   FolderOpen,
+  FolderTree,
+  Home,
+  Layers,
+  LayoutGrid,
   PackageIcon as PipelineIcon,
   ServerIcon,
+  Settings,
   TableIcon,
+  Users,
 } from "lucide-react"
+
 import { cn } from "@/lib/utils"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
 
 export function Sidebar() {
   const pathname = usePathname()
@@ -38,17 +43,17 @@ export function Sidebar() {
   const dataNavItems = [
     {
       title: "Catalogs",
-      href: "/catalogs",
+      href: "/data/catalogs",
       icon: FolderTree,
     },
     {
       title: "Namespaces",
-      href: "/namespaces",
+      href: "/data/namespaces",
       icon: FolderOpen,
     },
     {
       title: "Tables",
-      href: "/tables",
+      href: "/data/tables",
       icon: Database,
     },
   ]
@@ -120,7 +125,7 @@ export function Sidebar() {
                 "flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium",
                 pathname === item.href
                   ? "bg-gray-100 text-gray-900"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
+                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
               )}
             >
               <item.icon className="h-5 w-5" />
@@ -131,7 +136,11 @@ export function Sidebar() {
 
         {/* Data Section with Collapsible */}
         <div className="mt-6">
-          <Collapsible open={dataExpanded} onOpenChange={setDataExpanded} className="px-2">
+          <Collapsible
+            open={dataExpanded}
+            onOpenChange={setDataExpanded}
+            className="px-2"
+          >
             <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2 text-sm font-medium text-gray-900 rounded-md hover:bg-gray-50">
               <div className="flex items-center gap-2">
                 <Layers className="h-5 w-5" />
@@ -152,7 +161,7 @@ export function Sidebar() {
                     "flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium",
                     pathname === item.href
                       ? "bg-gray-100 text-gray-900"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
+                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                   )}
                 >
                   <item.icon className="h-4 w-4" />
@@ -165,7 +174,11 @@ export function Sidebar() {
 
         {/* Ingestion Section with Collapsible */}
         <div className="mt-6">
-          <Collapsible open={ingestionExpanded} onOpenChange={setIngestionExpanded} className="px-2">
+          <Collapsible
+            open={ingestionExpanded}
+            onOpenChange={setIngestionExpanded}
+            className="px-2"
+          >
             <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2 text-sm font-medium text-gray-900 rounded-md hover:bg-gray-50">
               <div className="flex items-center gap-2">
                 <PipelineIcon className="h-5 w-5" />
@@ -186,7 +199,7 @@ export function Sidebar() {
                     "flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium",
                     pathname === item.href
                       ? "bg-gray-100 text-gray-900"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
+                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                   )}
                 >
                   <item.icon className="h-4 w-4" />
@@ -207,7 +220,7 @@ export function Sidebar() {
                   "flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium",
                   pathname === item.href
                     ? "bg-gray-100 text-gray-900"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                 )}
               >
                 <item.icon className="h-5 w-5" />
@@ -218,7 +231,9 @@ export function Sidebar() {
         </div>
 
         <div className="mt-8">
-          <div className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Other</div>
+          <div className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+            Other
+          </div>
           <nav className="mt-2 px-2 space-y-1">
             {secondaryNavItems.map((item) => (
               <Link
@@ -228,7 +243,7 @@ export function Sidebar() {
                   "flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium",
                   pathname === item.href
                     ? "bg-gray-100 text-gray-900"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                 )}
               >
                 <item.icon className="h-5 w-5" />
