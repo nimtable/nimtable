@@ -101,8 +101,11 @@ export async function loadNamespacesAndTables(
   return result.sort((a, b) => a.shortName.localeCompare(b.shortName))
 }
 
-export async function listNamespaces(catalog: string): Promise<string[]> {
-  const api = catalogApi(catalog)
+export async function listNamespaces(
+  catalog: string,
+  inBrowser: boolean = true
+): Promise<string[]> {
+  const api = catalogApi(catalog, inBrowser)
 
   // Start with root namespaces
   const response = await api.v1.listNamespaces()
@@ -111,18 +114,20 @@ export async function listNamespaces(catalog: string): Promise<string[]> {
 }
 
 export async function getCatalogConfig(
-  catalog: string
+  catalog: string,
+  inBrowser: boolean = true
 ): Promise<CatalogConfig> {
-  const api = catalogApi(catalog)
+  const api = catalogApi(catalog, inBrowser)
   return await api.v1.getConfig()
 }
 
 export async function loadTableData(
   catalog: string,
   namespace: string,
-  table: string
+  table: string,
+  inBrowser: boolean = true
 ): Promise<LoadTableResult> {
-  const api = catalogApi(catalog)
+  const api = catalogApi(catalog, inBrowser)
   const response = await api.v1.loadTable(namespace, table)
   return response
 }
@@ -130,9 +135,10 @@ export async function loadTableData(
 export async function dropTable(
   catalog: string,
   namespace: string,
-  table: string
+  table: string,
+  inBrowser: boolean = true
 ): Promise<void> {
-  const api = catalogApi(catalog)
+  const api = catalogApi(catalog, inBrowser)
   await api.v1.dropTable(namespace, table)
 }
 
@@ -140,9 +146,10 @@ export async function renameTable(
   catalog: string,
   namespace: string,
   sourceTable: string,
-  destinationTable: string
+  destinationTable: string,
+  inBrowser: boolean = true
 ): Promise<void> {
-  const api = catalogApi(catalog)
+  const api = catalogApi(catalog, inBrowser)
   await api.v1.renameTable({
     source: {
       namespace: namespace.split("/"),
@@ -216,9 +223,10 @@ export interface NamespaceTable {
 
 export async function getNamespaceTables(
   catalog: string,
-  namespace: string
+  namespace: string,
+  inBrowser: boolean = true
 ): Promise<NamespaceTable[]> {
-  const api = catalogApi(catalog)
+  const api = catalogApi(catalog, inBrowser)
   const response = await api.v1.listTables(namespace)
   return (await Promise.all(
     response.identifiers?.map(async (table) => {
