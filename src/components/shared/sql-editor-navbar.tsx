@@ -21,7 +21,6 @@ import { Button } from "@/components/ui/button"
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
@@ -30,26 +29,24 @@ export function SqlEditorNavbar() {
     <div className="border-b">
       <div className="flex items-center justify-between px-6 py-4">
         <div className="flex items-center gap-3">
-          <TooltipProvider delayDuration={300}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8 border-muted-foreground/20"
-                  asChild
-                >
-                  <Link href="/">
-                    <Home className="h-4 w-4" />
-                    <span className="sr-only">Go to dashboard</span>
-                  </Link>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">
-                <p>Go to dashboard</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8 border-muted-foreground/20"
+                asChild
+              >
+                <Link href="/">
+                  <Home className="h-4 w-4" />
+                  <span className="sr-only">Go to dashboard</span>
+                </Link>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <p>Go to dashboard</p>
+            </TooltipContent>
+          </Tooltip>
 
           <div className="flex items-center gap-2">
             <div className="p-1.5 bg-blue-50 dark:bg-blue-950/30 rounded-md">

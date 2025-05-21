@@ -30,7 +30,6 @@ import { Button } from "@/components/ui/button"
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
@@ -113,74 +112,70 @@ export function TopNavbar({ catalog, namespace, table }: TopNavbarProps) {
         <div className="flex items-center gap-3">
           {/* Only show the Optimize button on table pages */}
           {isTablePage && (
-            <TooltipProvider delayDuration={300}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    className={cn(
-                      "group relative overflow-hidden",
-                      "bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700",
-                      "text-white shadow-md hover:shadow-lg transition-all duration-300",
-                      "border-0 hover:scale-[1.03] transform"
-                    )}
-                    onClick={() => setShowOptimizeSheet(true)}
-                  >
-                    {/* Animated glow effect */}
-                    <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-purple-400/0 via-purple-400/30 to-purple-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-[length:200%_100%] animate-gradient-x"></div>
-
-                    {/* Button content */}
-                    <div className="relative flex items-center gap-2 py-2">
-                      <div className="p-1 bg-white/20 rounded-md flex items-center justify-center group-hover:bg-white/30 transition-colors">
-                        <Settings className="h-3.5 w-3.5 text-white" />
-                      </div>
-                      <span className="font-medium">Optimize Table</span>
-                    </div>
-
-                    {/* Subtle pulse effect */}
-                    <span className="absolute -inset-3 block rounded-full bg-purple-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">
-                  <p>Optimize table</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-
-          <TooltipProvider delayDuration={300}>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   className={cn(
                     "group relative overflow-hidden",
-                    "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700",
+                    "bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700",
                     "text-white shadow-md hover:shadow-lg transition-all duration-300",
                     "border-0 hover:scale-[1.03] transform"
                   )}
-                  asChild
+                  onClick={() => setShowOptimizeSheet(true)}
                 >
-                  <Link href={sqlEditorUrl}>
-                    {/* Animated glow effect */}
-                    <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-400/0 via-blue-400/30 to-blue-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-[length:200%_100%] animate-gradient-x"></div>
+                  {/* Animated glow effect */}
+                  <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-purple-400/0 via-purple-400/30 to-purple-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-[length:200%_100%] animate-gradient-x"></div>
 
-                    {/* Button content */}
-                    <div className="relative flex items-center gap-2 py-2">
-                      <div className="p-1 bg-white/20 rounded-md flex items-center justify-center group-hover:bg-white/30 transition-colors">
-                        <Code className="h-3.5 w-3.5 text-white" />
-                      </div>
-                      <span className="font-medium">SQL Query</span>
+                  {/* Button content */}
+                  <div className="relative flex items-center gap-2 py-2">
+                    <div className="p-1 bg-white/20 rounded-md flex items-center justify-center group-hover:bg-white/30 transition-colors">
+                      <Settings className="h-3.5 w-3.5 text-white" />
                     </div>
+                    <span className="font-medium">Optimize Table</span>
+                  </div>
 
-                    {/* Subtle pulse effect */}
-                    <span className="absolute -inset-3 block rounded-full bg-blue-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></span>
-                  </Link>
+                  {/* Subtle pulse effect */}
+                  <span className="absolute -inset-3 block rounded-full bg-purple-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></span>
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom">
-                <p>Open SQL editor</p>
+                <p>Optimize table</p>
               </TooltipContent>
             </Tooltip>
-          </TooltipProvider>
+          )}
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                className={cn(
+                  "group relative overflow-hidden",
+                  "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700",
+                  "text-white shadow-md hover:shadow-lg transition-all duration-300",
+                  "border-0 hover:scale-[1.03] transform"
+                )}
+                asChild
+              >
+                <Link href={sqlEditorUrl}>
+                  {/* Animated glow effect */}
+                  <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-400/0 via-blue-400/30 to-blue-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-[length:200%_100%] animate-gradient-x"></div>
+
+                  {/* Button content */}
+                  <div className="relative flex items-center gap-2 py-2">
+                    <div className="p-1 bg-white/20 rounded-md flex items-center justify-center group-hover:bg-white/30 transition-colors">
+                      <Code className="h-3.5 w-3.5 text-white" />
+                    </div>
+                    <span className="font-medium">SQL Query</span>
+                  </div>
+
+                  {/* Subtle pulse effect */}
+                  <span className="absolute -inset-3 block rounded-full bg-blue-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></span>
+                </Link>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <p>Open SQL editor</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
       </div>
 

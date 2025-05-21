@@ -53,7 +53,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import type { LoadTableResult, StructField } from "@/lib/data-loader"
@@ -228,41 +227,39 @@ export function InfoTab({
                   <h4 className="text-xs font-medium text-muted-foreground">
                     Table UUID
                   </h4>
-                  <TooltipProvider delayDuration={300}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className={cn(
-                            "h-6 w-6 rounded-md transition-all duration-200",
-                            copyingField === "Table UUID"
-                              ? "bg-muted text-blue-500"
-                              : "text-muted-foreground"
-                          )}
-                          onClick={() =>
-                            copyToClipboard(
-                              tableData.metadata["table-uuid"],
-                              "Table UUID"
-                            )
-                          }
-                        >
-                          {copyingField === "Table UUID" ? (
-                            <Check className="h-3 w-3" />
-                          ) : (
-                            <Copy className="h-3 w-3" />
-                          )}
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="left">
-                        <p>
-                          {copyingField === "Table UUID"
-                            ? "Copied!"
-                            : "Copy to clipboard"}
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={cn(
+                          "h-6 w-6 rounded-md transition-all duration-200",
+                          copyingField === "Table UUID"
+                            ? "bg-muted text-blue-500"
+                            : "text-muted-foreground"
+                        )}
+                        onClick={() =>
+                          copyToClipboard(
+                            tableData.metadata["table-uuid"],
+                            "Table UUID"
+                          )
+                        }
+                      >
+                        {copyingField === "Table UUID" ? (
+                          <Check className="h-3 w-3" />
+                        ) : (
+                          <Copy className="h-3 w-3" />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="left">
+                      <p>
+                        {copyingField === "Table UUID"
+                          ? "Copied!"
+                          : "Copy to clipboard"}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
                 <div className="border border-muted/30 rounded-md p-1.5 bg-muted/30 font-mono">
                   <p className="text-xs text-foreground/90 break-all">
@@ -276,41 +273,39 @@ export function InfoTab({
                   <h4 className="text-xs font-medium text-muted-foreground">
                     Location
                   </h4>
-                  <TooltipProvider delayDuration={300}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className={cn(
-                            "h-6 w-6 rounded-md transition-all duration-200",
-                            copyingField === "Location"
-                              ? "bg-muted text-blue-500"
-                              : "text-muted-foreground"
-                          )}
-                          onClick={() =>
-                            copyToClipboard(
-                              tableData.metadata.location || "",
-                              "Location"
-                            )
-                          }
-                        >
-                          {copyingField === "Location" ? (
-                            <Check className="h-3 w-3" />
-                          ) : (
-                            <Copy className="h-3 w-3" />
-                          )}
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="left">
-                        <p>
-                          {copyingField === "Location"
-                            ? "Copied!"
-                            : "Copy to clipboard"}
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={cn(
+                          "h-6 w-6 rounded-md transition-all duration-200",
+                          copyingField === "Location"
+                            ? "bg-muted text-blue-500"
+                            : "text-muted-foreground"
+                        )}
+                        onClick={() =>
+                          copyToClipboard(
+                            tableData.metadata.location || "",
+                            "Location"
+                          )
+                        }
+                      >
+                        {copyingField === "Location" ? (
+                          <Check className="h-3 w-3" />
+                        ) : (
+                          <Copy className="h-3 w-3" />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="left">
+                      <p>
+                        {copyingField === "Location"
+                          ? "Copied!"
+                          : "Copy to clipboard"}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
                 <div className="border border-muted/30 rounded-md p-1.5 bg-muted/30 font-mono">
                   <p className="text-xs text-foreground/90 break-all">
@@ -496,18 +491,16 @@ export function InfoTab({
                       <h4 className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
                         {key}
                         {getPropertyDescription(key) && (
-                          <TooltipProvider delayDuration={300}>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Info className="h-3.5 w-3.5 text-muted-foreground/70 cursor-help" />
-                              </TooltipTrigger>
-                              <TooltipContent side="top" className="max-w-sm">
-                                <p className="text-xs">
-                                  {getPropertyDescription(key)}
-                                </p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className="h-3.5 w-3.5 text-muted-foreground/70 cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="max-w-sm">
+                              <p className="text-xs">
+                                {getPropertyDescription(key)}
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
                         )}
                       </h4>
                     </div>
