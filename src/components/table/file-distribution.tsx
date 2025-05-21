@@ -1,4 +1,4 @@
-import { AlertTriangle, RefreshCw, CheckCircle2 } from "lucide-react"
+import { AlertTriangle, RefreshCw, CheckCircle2, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -92,14 +92,14 @@ export const getCompactionRecommendation = (distribution: DistributionData) => {
 
 interface FileDistributionProps {
   distribution: DistributionData
-  isPending: boolean
+  isFetching: boolean
   onRefresh?: () => void
   showRecommendation?: boolean
 }
 
 export function FileDistribution({
   distribution,
-  isPending,
+  isFetching,
   onRefresh,
   showRecommendation = true,
 }: FileDistributionProps) {
@@ -132,21 +132,23 @@ export function FileDistribution({
               Current distribution of file sizes in the table
             </CardDescription>
           </div>
-          {shouldCompact ? (
-            <div className="flex items-center gap-2 px-3 py-1 bg-yellow-50 dark:bg-yellow-950/30 rounded-md border border-yellow-200 dark:border-yellow-900/50">
-              <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-500" />
-              <span className="text-sm font-medium text-yellow-700 dark:text-yellow-400">
-                Needs Compaction
-              </span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 px-3 py-1 bg-green-50 dark:bg-green-950/30 rounded-md border border-green-200 dark:border-green-900/50">
-              <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-500" />
-              <span className="text-sm font-medium text-green-700 dark:text-green-400">
-                Health
-              </span>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            {shouldCompact ? (
+              <div className="flex items-center gap-2 px-3 py-1 bg-yellow-50 dark:bg-yellow-950/30 rounded-md border border-yellow-200 dark:border-yellow-900/50">
+                <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-500" />
+                <span className="text-sm font-medium text-yellow-700 dark:text-yellow-400">
+                  Needs Compaction
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 px-3 py-1 bg-green-50 dark:bg-green-950/30 rounded-md border border-green-200 dark:border-green-900/50">
+                <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-500" />
+                <span className="text-sm font-medium text-green-700 dark:text-green-400">
+                  Health
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent className="pt-4">
@@ -169,10 +171,10 @@ export function FileDistribution({
                     size="icon"
                     className="h-6 w-6"
                     onClick={onRefresh}
-                    disabled={isPending}
+                    disabled={isFetching}
                   >
                     <RefreshCw
-                      className={`h-3 w-3 ${isPending ? "animate-spin" : ""}`}
+                      className={`h-3 w-3 ${isFetching ? "animate-spin" : ""}`}
                     />
                   </Button>
                 )}

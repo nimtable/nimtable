@@ -7,14 +7,10 @@ export function useTableData(
   namespace: string,
   table: string
 ) {
-  const { data, isLoading, error } = useQuery({
+  const result = useQuery({
     queryKey: ["tableData", catalog, namespace, table],
     queryFn: () => loadTableData(catalog, namespace, table),
   })
 
-  return {
-    data,
-    isLoading: isLoading,
-    error: error,
-  }
+  return result
 }

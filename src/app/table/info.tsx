@@ -74,6 +74,7 @@ interface InfoTabProps {
   catalog: string
   namespace: string
   table: string
+  refreshKey?: number
 }
 
 // Function to check if a property key contains sensitive information that should be redacted
@@ -89,21 +90,22 @@ function FileDistributionSection({
   tableId,
   catalog,
   namespace,
+  refreshKey,
 }: {
   tableId: string
   catalog: string
   namespace: string
+  refreshKey?: number
 }) {
   const {
     data: distribution,
     isPending,
+    isFetching,
     isError,
     refetch,
   } = useQuery<DistributionData>({
-    queryKey: ["file-distribution", catalog, namespace, tableId],
-    queryFn: async () => {
-      return await getFileDistribution(catalog, namespace, tableId)
-    },
+    queryKey: ["file-distribution", catalog, namespace, tableId, refreshKey],
+    queryFn: ()=>getFileDistribution(catalog, namespace, tableId),
     enabled: !!(tableId && catalog && namespace),
   })
 
@@ -114,7 +116,7 @@ function FileDistributionSection({
   return (
     <FileDistribution
       distribution={distribution}
-      isPending={isPending}
+      isFetching={isFetching}
       onRefresh={refetch}
     />
   )
@@ -128,6 +130,7 @@ export function InfoTab({
   catalog,
   namespace,
   table,
+  refreshKey,
 }: InfoTabProps) {
   const { toast } = useToast()
   const router = useRouter()
@@ -212,6 +215,7 @@ export function InfoTab({
           tableId={table}
           catalog={catalog}
           namespace={namespace}
+          refreshKey={refreshKey}
         />
 
         <Card className="border-muted/70 shadow-sm overflow-hidden">
