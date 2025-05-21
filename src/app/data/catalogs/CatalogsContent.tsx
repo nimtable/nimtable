@@ -11,9 +11,24 @@ import {
   Search,
   Settings,
   Shield,
+  Trash2,
   X,
 } from "lucide-react"
 
+import { deleteCatalog } from "@/lib/client"
+import { errorToString } from "@/lib/utils"
+import { useToast } from "@/hooks/use-toast"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -32,60 +47,6 @@ import { Switch } from "@/components/ui/switch"
 import { useCatalogs } from "../hooks/useCatalogs"
 import { CreateCatalogModal } from "./CreateCatalogModal"
 
-// Mock data for catalogs
-const catalogs = [
-  {
-    id: "1",
-    name: "nimtable_catalog",
-    namespaceCount: 5,
-    tableCount: 24,
-    storageSize: "42.7 GB",
-    lastModified: "2 hours ago",
-    status: "Healthy",
-    type: "Native",
-  },
-  {
-    id: "2",
-    name: "analytics_catalog",
-    namespaceCount: 3,
-    tableCount: 12,
-    storageSize: "18.3 GB",
-    lastModified: "1 day ago",
-    status: "Healthy",
-    type: "Native",
-  },
-  {
-    id: "3",
-    name: "staging_catalog",
-    namespaceCount: 2,
-    tableCount: 8,
-    storageSize: "7.5 GB",
-    lastModified: "3 days ago",
-    status: "Needs Attention",
-    type: "Native",
-  },
-  {
-    id: "4",
-    name: "external_data_source",
-    namespaceCount: 4,
-    tableCount: 16,
-    storageSize: "23.1 GB",
-    lastModified: "12 hours ago",
-    status: "Healthy",
-    type: "Mirrored",
-  },
-  {
-    id: "5",
-    name: "legacy_warehouse",
-    namespaceCount: 1,
-    tableCount: 5,
-    storageSize: "3.2 GB",
-    lastModified: "5 days ago",
-    status: "Error",
-    type: "Mirrored",
-  },
-]
-
 export function CatalogsContent() {
   const {
     catalogs,
@@ -102,6 +63,7 @@ export function CatalogsContent() {
     readOnly: true,
   })
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
+  const { toast } = useToast()
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -210,6 +172,28 @@ export function CatalogsContent() {
     return true
   })
 
+  const handleDeleteClick = (catalog: string) => {
+    deleteCatalog({
+      path: {
+        catalogName: catalog,
+      },
+    })
+      .then(() => {
+        toast({
+          title: "Catalog deleted successfully",
+          description: "The catalog has been removed from the database.",
+        })
+        refetchCatalogs()
+      })
+      .catch((error) => {
+        toast({
+          variant: "destructive",
+          title: "Failed to delete catalog",
+          description: errorToString(error),
+        })
+      })
+  }
+
   if (isLoadingCatalogs) {
     return <div>Loading...</div>
   }
@@ -249,7 +233,6 @@ export function CatalogsContent() {
               onClick={() => setMirrorModalOpen(true)}
             >
               <ExternalLink className="h-4 w-4" />
-              <span className="sr-only">Mirror External Catalog</span>
             </Button>
           </div>
         </div>
@@ -304,15 +287,30 @@ export function CatalogsContent() {
                         </div>
                       </div>
                     </div>
-                    {/* <Badge
-                      variant="outline"
-                      className={`flex items-center gap-1 ${getStatusColor(
-                        catalog.status
-                      )}`}
-                    >
-                      {getStatusIcon(catalog.status)}
-                      {catalog.status}
-                    </Badge> */}
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <button className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently
+                            delete the catalog and remove it from the database.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDeleteClick(catalog)}
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </div>
                 <div className="flex border-t">
