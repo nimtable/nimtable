@@ -46,7 +46,6 @@ import {
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { Button } from "@/components/ui/button"
@@ -182,23 +181,21 @@ function SnapshotItem({
         {/* Snapshot ID - full */}
         <div className="font-mono text-xs text-muted-foreground w-[300px] flex-shrink-0 pl-4 flex items-center gap-2">
           <span className="flex-1">{String(snapshot.id)}</span>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 p-0"
-                  onClick={handleTimeTravel}
-                >
-                  <Clock className="h-3.5 w-3.5 text-muted-foreground hover:text-primary" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Time travel to this snapshot</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 p-0"
+                onClick={handleTimeTravel}
+              >
+                <Clock className="h-3.5 w-3.5 text-muted-foreground hover:text-primary" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Time travel to this snapshot</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
 
         {/* Date */}

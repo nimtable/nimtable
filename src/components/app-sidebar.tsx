@@ -61,7 +61,6 @@ import {
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { NamespaceTreeItem } from "@/components/sidebar/tree-items"
@@ -153,10 +152,7 @@ function AppSidebarContent() {
                 table.toLowerCase().includes(searchLower) || // Exact match
                 isSubsequence(searchLower, table) // Subsequence match
             )
-            return {
-              ...child,
-              tables: childFilteredTables,
-            }
+            return { ...child, tables: childFilteredTables }
           })
           .filter((child) => child.tables.length > 0)
 
@@ -243,58 +239,6 @@ function AppSidebarContent() {
                     </SelectContent>
                   </Select>
                 </div>
-                <TooltipProvider delayDuration={300}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className={cn(
-                          "h-9 w-9 flex-shrink-0 border-muted-foreground/20 transition-all duration-200",
-                          isRefreshing && "border-blue-500/50 bg-blue-500/10"
-                        )}
-                        onClick={handleRefresh}
-                        disabled={isRefreshing || catalogListLoading}
-                      >
-                        <RefreshCw
-                          className={cn(
-                            "h-4 w-4",
-                            isRefreshing
-                              ? "animate-spin text-blue-500"
-                              : "text-muted-foreground/50"
-                          )}
-                        />
-                        <span className="sr-only">Refresh</span>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">
-                      <p>Refresh catalog data</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search tables..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8 h-9 bg-background border-muted-foreground/20 hover:border-blue-400 hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors"
-                />
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1 h-9 border-muted-foreground/20 hover:border-blue-400 hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors"
-                onClick={() => router.push("/catalog/new")}
-              >
-                <Plus className="mr-2 h-4 w-4 text-blue-500" />
-                New Catalog
-              </Button>
-              <TooltipProvider delayDuration={300}>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
@@ -322,7 +266,55 @@ function AppSidebarContent() {
                     <p>Refresh catalog data</p>
                   </TooltipContent>
                 </Tooltip>
-              </TooltipProvider>
+              </div>
+              <div className="relative">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search tables..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8 h-9 bg-background border-muted-foreground/20 hover:border-blue-400 hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors"
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 h-9 border-muted-foreground/20 hover:border-blue-400 hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors"
+                onClick={() => router.push("/catalog/new")}
+              >
+                <Plus className="mr-2 h-4 w-4 text-blue-500" />
+                New Catalog
+              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className={cn(
+                      "h-9 w-9 flex-shrink-0 border-muted-foreground/20 transition-all duration-200",
+                      isRefreshing && "border-blue-500/50 bg-blue-500/10"
+                    )}
+                    onClick={handleRefresh}
+                    disabled={isRefreshing || catalogListLoading}
+                  >
+                    <RefreshCw
+                      className={cn(
+                        "h-4 w-4",
+                        isRefreshing
+                          ? "animate-spin text-blue-500"
+                          : "text-muted-foreground/50"
+                      )}
+                    />
+                    <span className="sr-only">Refresh</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  <p>Refresh catalog data</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
           )}
         </SidebarHeader>
@@ -420,46 +412,42 @@ function AppSidebarContent() {
           </div>
 
           {user.role === "admin" && (
-            <TooltipProvider delayDuration={300}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:text-blue-500 "
-                    asChild
-                  >
-                    <Link href="/users">
-                      <Users className="h-4 w-4" />
-                      <span className="sr-only">User Management</span>
-                    </Link>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  <p>User Management</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-
-          <TooltipProvider delayDuration={300}>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                  onClick={logout}
+                  className="h-8 w-8 text-muted-foreground hover:text-blue-500 "
+                  asChild
                 >
-                  <LogOut className="h-4 w-4" />
-                  <span className="sr-only">Logout</span>
+                  <Link href="/users">
+                    <Users className="h-4 w-4" />
+                    <span className="sr-only">User Management</span>
+                  </Link>
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="right">
-                <p>Logout</p>
+                <p>User Management</p>
               </TooltipContent>
             </Tooltip>
-          </TooltipProvider>
+          )}
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                onClick={logout}
+              >
+                <LogOut className="h-4 w-4" />
+                <span className="sr-only">Logout</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right">
+              <p>Logout</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
       </SidebarFooter>
     </Sidebar>

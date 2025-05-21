@@ -27,6 +27,7 @@ import { RefreshProvider } from "@/contexts/refresh-context"
 
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { Toaster } from "@/components/ui/toaster"
+import { TooltipProvider } from "@/components/ui/tooltip"
 import { AppSidebar } from "@/components/app-sidebar"
 import { ProtectedRoute } from "@/components/protected-route"
 import { ReactQueryProvider } from "@/components/Providers/ReactQuery"
@@ -42,33 +43,33 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
       <body className={inter.className}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <ReactQueryProvider>
-            <AuthProvider>
-              <RefreshProvider>
-                <SidebarProvider>
-                  <ProtectedRoute>
-                    {/* The AppSidebar should only be rendered when the user is authenticated */}
-                    {/* <AppSidebar /> */}
-                    <Suspense fallback={<></>}>{children}</Suspense>
-                  </ProtectedRoute>
-                  <Toaster />
-                </SidebarProvider>
-              </RefreshProvider>
-            </AuthProvider>
-          </ReactQueryProvider>
-        </ThemeProvider>
+        <TooltipProvider delayDuration={300}>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <ReactQueryProvider>
+              <AuthProvider>
+                <RefreshProvider>
+                  <SidebarProvider>
+                    <ProtectedRoute>
+                      {/* The AppSidebar should only be rendered when the user is authenticated */}
+                      <AppSidebar />
+                      <Suspense fallback={<></>}>{children}</Suspense>
+                    </ProtectedRoute>
+                    <Toaster />
+                  </SidebarProvider>
+                </RefreshProvider>
+              </AuthProvider>
+            </ReactQueryProvider>
+          </ThemeProvider>
+        </TooltipProvider>
       </body>
     </html>
   )
