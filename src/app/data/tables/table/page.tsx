@@ -1,9 +1,23 @@
 "use client"
 
+import { useState } from "react"
 import { useSearchParams } from "next/navigation"
-import { LayoutList } from "lucide-react"
+import {
+  Database,
+  Download,
+  FileText,
+  LayoutList,
+  RefreshCw,
+  X,
+} from "lucide-react"
 
+import { Button } from "@/components/ui/button"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { PageLoader } from "@/components/shared/page-loader"
+import { DataPreview } from "@/app/table/data-preview"
+import { InfoTab } from "@/app/table/info"
+import { SnapshotsTab } from "@/app/table/snapshots"
 
 import { useTableData } from "../../hooks/useTableData"
 
@@ -12,12 +26,13 @@ export default function TablePage() {
   const catalog = params.get("catalog")
   const namespace = params.get("namespace")
   const table = params.get("table")
+  const isValidParams = catalog && namespace && table
+
   const { data, isLoading, error } = useTableData(
     catalog as string,
     namespace as string,
     table as string
   )
-  console.log(1111, data)
 
   if (isLoading) {
     return (
@@ -32,5 +47,82 @@ export default function TablePage() {
     )
   }
 
-  return <div>TablePage1</div>
+  if (!isValidParams) {
+    return <div>Invalid params</div>
+  }
+
+  if (!data) {
+    return null
+  }
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex-1 p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div className="space-y-1">
+            <h2 className="text-2xl font-semibold tracking-tight">{table}</h2>
+            <p className="text-sm text-muted-foreground">
+              {catalog} - {namespace}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm">
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Refresh
+            </Button>
+            <Button variant="outline" size="sm">
+              <Download className="w-4 h-4 mr-2" />
+              Export
+            </Button>
+          </div>
+        </div>
+
+        <Tabs defaultValue="info" className="space-y-4">
+          <TabsList className="grid grid-cols-3 w-full max-w-md mb-6">
+            <TabsTrigger value="info" className="flex items-center gap-1.5">
+              <FileText className="h-4 w-4" />
+              <span>Info</span>
+            </TabsTrigger>
+            <TabsTrigger value="data" className="flex items-center gap-1.5">
+              <Database className="h-4 w-4" />
+              <span>Data Preview</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="snapshots"
+              className="flex items-center gap-1.5"
+            >
+              <LayoutList className="h-4 w-4" />
+              <span>Version Control</span>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="info" className="space-y-4">
+            <InfoTab
+              tableData={data}
+              catalog={catalog}
+              namespace={namespace}
+              table={table}
+            />
+          </TabsContent>
+
+          <TabsContent value="data">
+            <DataPreview
+              catalog={catalog}
+              namespace={namespace}
+              table={table}
+            />
+          </TabsContent>
+
+          <TabsContent value="snapshots">
+            <SnapshotsTab
+              tableData={data}
+              catalog={catalog}
+              namespace={namespace}
+              table={table}
+            />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  )
 }

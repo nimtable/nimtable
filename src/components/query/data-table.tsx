@@ -117,19 +117,19 @@ export function DataTable<TData, TValue>({
           </div>
         </div>
       )}
-      <div className="rounded-md border overflow-hidden">
+      <div className="rounded-lg border border-border/40 shadow-sm overflow-hidden">
         <Table>
-          <TableHeader className="bg-muted/40">
+          <TableHeader className="bg-muted/50">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow
                 key={headerGroup.id}
-                className="hover:bg-transparent border-b border-muted/60"
+                className="hover:bg-transparent border-b border-border/40"
               >
                 {headerGroup.headers.map((header) => {
                   return (
                     <TableHead
                       key={header.id}
-                      className="whitespace-nowrap font-semibold text-foreground py-3 px-4"
+                      className="whitespace-nowrap font-medium text-foreground/80 py-4 px-6"
                       onClick={header.column.getToggleSortingHandler()}
                       style={{
                         cursor: header.column.getCanSort()
@@ -137,7 +137,7 @@ export function DataTable<TData, TValue>({
                           : "default",
                       }}
                     >
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1.5">
                         {header.isPlaceholder
                           ? null
                           : flexRender(
@@ -147,11 +147,11 @@ export function DataTable<TData, TValue>({
                         {header.column.getCanSort() && (
                           <div className="ml-1 flex items-center">
                             {header.column.getIsSorted() === "asc" ? (
-                              <SortAsc className="h-3.5 w-3.5 text-blue-500" />
+                              <SortAsc className="h-4 w-4 text-primary" />
                             ) : header.column.getIsSorted() === "desc" ? (
-                              <SortDesc className="h-3.5 w-3.5 text-blue-500" />
+                              <SortDesc className="h-4 w-4 text-primary" />
                             ) : (
-                              <ChevronDown className="h-3 w-3 opacity-50" />
+                              <ChevronDown className="h-4 w-4 opacity-50" />
                             )}
                           </div>
                         )}
@@ -169,12 +169,15 @@ export function DataTable<TData, TValue>({
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
                   className={cn(
-                    "hover:bg-muted/30 transition-colors",
-                    rowIndex % 2 === 0 ? "bg-background" : "bg-muted/10"
+                    "hover:bg-muted/40 transition-colors",
+                    rowIndex % 2 === 0 ? "bg-background" : "bg-muted/5"
                   )}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="py-3 px-4">
+                    <TableCell 
+                      key={cell.id} 
+                      className="py-4 px-6 border-b border-border/40 last:border-r-0"
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
@@ -187,11 +190,11 @@ export function DataTable<TData, TValue>({
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-24 text-center"
+                  className="h-32 text-center"
                 >
-                  <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
+                  <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
                     <p className="text-sm font-medium">No results found</p>
-                    <p className="text-xs mt-1">
+                    <p className="text-xs mt-1.5">
                       Try adjusting your search or filters
                     </p>
                   </div>
