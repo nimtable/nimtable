@@ -3,12 +3,7 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { useQueries, useQuery } from "@tanstack/react-query"
 import { ArrowRight, Database, FolderOpen, Plus, Search } from "lucide-react"
-
-import { getCatalogs } from "@/lib/client"
-import { loadNamespacesAndTables } from "@/lib/data-loader"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -47,18 +42,6 @@ export function NamespacesContent() {
     }
   }, [catalogFromUrl])
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Healthy":
-        return "bg-green-100 text-green-800 hover:bg-green-200"
-      case "Needs Attention":
-        return "bg-amber-100 text-amber-800 hover:bg-amber-200"
-      case "Error":
-        return "bg-red-100 text-red-800 hover:bg-red-200"
-      default:
-        return "bg-gray-100 text-gray-800 hover:bg-gray-200"
-    }
-  }
 
   // Filter namespaces based on selected catalog and search query
   const filteredNamespaces = allNamespaces.filter((namespace) => {
@@ -170,12 +153,7 @@ export function NamespacesContent() {
                 >
                   Last Modified
                 </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Status
-                </th>
+          
                 <th
                   scope="col"
                   className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -212,14 +190,7 @@ export function NamespacesContent() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {namespace.lastModified}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <Badge
-                      variant="outline"
-                      className={getStatusColor(namespace.status)}
-                    >
-                      {namespace.status}
-                    </Badge>
-                  </td>
+          
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <Link
                       href={`/data/tables?catalog=${namespace.catalog}&namespace=${namespace.name}`}
