@@ -22,7 +22,6 @@ import {
   Copy,
   Check,
   Info,
-  RefreshCw,
   Layers,
   Hash,
   Calendar,
@@ -50,13 +49,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Tooltip,
   TooltipContent,
@@ -72,9 +65,9 @@ import {
 } from "@/lib/data-loader"
 import { cn } from "@/lib/utils"
 import { getPropertyDescription } from "@/lib/property-descriptions"
-import { FileStatistics } from "@/components/table/file-statistics"
 import { FileDistributionLoading } from "@/components/table/file-distribution-loading"
 import { useQuery } from "@tanstack/react-query"
+import { FileDistribution } from "@/components/table/file-distribution"
 
 interface InfoTabProps {
   tableData: LoadTableResult
@@ -111,7 +104,6 @@ function FileDistributionSection({
     queryFn: async () => {
       return await getFileDistribution(catalog, namespace, tableId)
     },
-
     enabled: !!(tableId && catalog && namespace),
   })
 
@@ -119,116 +111,12 @@ function FileDistributionSection({
     return <FileDistributionLoading />
   }
 
-  // Sort the distribution data according to our predefined size order
-  const sortedDistributionEntries = Object.entries(distribution.ranges).sort(
-    (a, b) => {
-      const indexA = rangeOrder.indexOf(a[0])
-      const indexB = rangeOrder.indexOf(b[0])
-      return indexA - indexB
-    }
-  )
-
-  // Calculate total files
-  const totalFiles = Object.values(distribution.ranges).reduce(
-    (sum, item) => sum + item.count,
-    0
-  )
-
   return (
-    <Card className="border-muted/70 shadow-sm h-full">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base">File Size Distribution</CardTitle>
-        <CardDescription>
-          Current distribution of file sizes in the table
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="pt-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Left section - File Statistics */}
-          <div className="space-y-6">
-            <div className="pt-4">
-              <FileStatistics distribution={distribution} />
-            </div>
-          </div>
-
-          {/* Right section - Distribution Chart, Total Files and Recommendation */}
-          <div className="space-y-6">
-            <div className="flex justify-between items-center text-sm">
-              <div className="flex items-center gap-2">
-                <span className="font-medium">Total Files: {totalFiles}</span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6"
-                  onClick={() => refetch()}
-                  disabled={isPending}
-                >
-                  <RefreshCw
-                    className={`h-3 w-3 ${isPending ? "animate-spin" : ""}`}
-                  />
-                </Button>
-              </div>
-            </div>
-
-            <div className="space-y-5">
-              {sortedDistributionEntries.map(([range, data]) => (
-                <div key={range} className="space-y-1.5">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className={`h-3 w-3 rounded-full ${
-                          range === "0-8M"
-                            ? "bg-blue-300 dark:bg-blue-400/80"
-                            : range === "8M-32M"
-                              ? "bg-blue-400 dark:bg-blue-500/80"
-                              : range === "32M-128M"
-                                ? "bg-blue-500"
-                                : range === "128M-512M"
-                                  ? "bg-blue-600"
-                                  : "bg-blue-700"
-                        }`}
-                      />
-                      <span className="text-sm font-medium">{range}</span>
-                    </div>
-                    <span className="text-sm text-muted-foreground">
-                      {data.count} files ({data.percentage}%)
-                    </span>
-                  </div>
-                  <div className="h-2.5 bg-muted/50 rounded-full w-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full ${
-                        range === "0-8M"
-                          ? "bg-blue-300 dark:bg-blue-400/80"
-                          : range === "8M-32M"
-                            ? "bg-blue-400 dark:bg-blue-500/80"
-                            : range === "32M-128M"
-                              ? "bg-blue-500"
-                              : range === "128M-512M"
-                                ? "bg-blue-600"
-                                : "bg-blue-700"
-                      }`}
-                      style={{ width: `${data.percentage}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="pt-4 border-t border-muted/50">
-              <div className="text-sm">
-                <p className="mb-2 font-medium text-foreground">
-                  Optimization Recommendation:
-                </p>
-                <p className="text-muted-foreground">
-                  This table has {distribution.ranges["0-8M"]?.count || 0} small
-                  files that could benefit from compaction.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+    <FileDistribution
+      distribution={distribution}
+      isPending={isPending}
+      onRefresh={refetch}
+    />
   )
 }
 
