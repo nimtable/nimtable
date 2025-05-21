@@ -1,8 +1,10 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import {
+  Code,
   Database,
   Download,
   FileText,
@@ -41,6 +43,11 @@ export default function TablePage() {
   const handleRefresh = () => {
     refetch()
   }
+
+  // Build SQL editor URL with appropriate query parameters
+  const sqlEditorUrl = catalog
+    ? `/sql-editor?catalog=${catalog}${namespace ? `&namespace=${namespace}` : ""}${table ? `&table=${table}` : ""}`
+    : "/sql-editor"
 
   if (isFetching) {
     return (
@@ -90,6 +97,13 @@ export default function TablePage() {
           >
             <Settings className="w-4 h-4 mr-2" />
             Optimize Table
+          </Button>
+
+          <Button size="sm">
+            <Link href={sqlEditorUrl} className="flex items-center">
+              <Code className="w-4 h-4 mr-2" />
+              <span>SQL Query</span>
+            </Link>
           </Button>
         </div>
       </div>
