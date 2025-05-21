@@ -22,7 +22,7 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Check if the request path starts with /api/
-  if (pathname.startsWith("/api/")) {
+  if (pathname.startsWith("/api/") && !pathname.startsWith("/api/agent/")) {
     const javaApiBaseUrl = getJavaApiBaseUrl()
     if (!javaApiBaseUrl) {
       return NextResponse.json(
