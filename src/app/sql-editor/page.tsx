@@ -37,7 +37,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { highlightSQL } from "@/lib/sql-highlighter"
@@ -153,9 +152,7 @@ export default function SQLEditorPage() {
     try {
       await navigator.clipboard.writeText(query)
       setIsCopying(true)
-      toast({
-        title: "Query copied to clipboard",
-      })
+      toast({ title: "Query copied to clipboard" })
       setTimeout(() => setIsCopying(false), 2000)
     } catch (error) {
       toast({
@@ -219,45 +216,41 @@ export default function SQLEditorPage() {
                   SQL Statement
                 </CardTitle>
                 <div className="flex items-center gap-2">
-                  <TooltipProvider delayDuration={300}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          onClick={handleRunQuery}
-                          disabled={isLoading}
-                          size="sm"
-                          className="bg-blue-600 hover:bg-blue-700 text-white"
-                        >
-                          <Play className="mr-1 h-3.5 w-3.5" />
-                          Run Query
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        Execute SQL query (Ctrl+Enter)
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        onClick={handleRunQuery}
+                        disabled={isLoading}
+                        size="sm"
+                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                      >
+                        <Play className="mr-1 h-3.5 w-3.5" />
+                        Run Query
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      Execute SQL query (Ctrl+Enter)
+                    </TooltipContent>
+                  </Tooltip>
 
-                  <TooltipProvider delayDuration={300}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          onClick={handleCopyQuery}
-                          variant="outline"
-                          size="sm"
-                          className="border-muted-foreground/20"
-                        >
-                          {isCopying ? (
-                            <Check className="mr-1 h-3.5 w-3.5" />
-                          ) : (
-                            <Copy className="mr-1 h-3.5 w-3.5" />
-                          )}
-                          Copy
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Copy query to clipboard</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        onClick={handleCopyQuery}
+                        variant="outline"
+                        size="sm"
+                        className="border-muted-foreground/20"
+                      >
+                        {isCopying ? (
+                          <Check className="mr-1 h-3.5 w-3.5" />
+                        ) : (
+                          <Copy className="mr-1 h-3.5 w-3.5" />
+                        )}
+                        Copy
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Copy SQL query</TooltipContent>
+                  </Tooltip>
                 </div>
               </CardHeader>
 
