@@ -1,105 +1,98 @@
+import { ArrowRight, Clock, GitCompare } from "lucide-react"
+import { formatDistanceToNow } from "date-fns"
+import { enUS } from "date-fns/locale"
 import Link from "next/link"
-import {
-  ArrowRight,
-  BarChart2,
-  Clock,
-  FileText,
-  GitCompare,
-  LucideIcon,
-} from "lucide-react"
 
+import { OverviewContext } from "./OverviewProvider"
+import { useQueries } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
+import { getTableInfo } from "@/lib/client"
+import { useContext } from "react"
 
 export function ActivityFeed() {
-  // Mock data for recent activities
-  const activities: {
-    id: number
-    table: string
-    type: string
-    timestamp: string
-    description: string
-    icon: LucideIcon
-    iconColor: string
-  }[] = [
-    {
-      id: 1,
-      type: "compaction",
-      table: "customer_orders",
-      timestamp: "2 hours ago",
-      description: "Compaction job completed",
-      icon: GitCompare,
-      iconColor: "bg-green-100 text-green-600",
-    },
-    {
-      id: 2,
-      type: "stats",
-      table: "product_inventory",
-      timestamp: "4 hours ago",
-      description: "Statistics updated",
-      icon: BarChart2,
-      iconColor: "bg-blue-100 text-blue-600",
-    },
-    {
-      id: 3,
-      type: "schema",
-      table: "user_events",
-      timestamp: "Yesterday",
-      description: "Schema changed: 2 columns added",
-      icon: FileText,
-      iconColor: "bg-amber-100 text-amber-600",
-    },
-    {
-      id: 4,
-      type: "compaction",
-      table: "transaction_history",
-      timestamp: "Yesterday",
-      description: "Compaction job completed",
-      icon: GitCompare,
-      iconColor: "bg-green-100 text-green-600",
-    },
-    {
-      id: 5,
-      type: "stats",
-      table: "marketing_campaigns",
-      timestamp: "2 days ago",
-      description: "Statistics updated",
-      icon: BarChart2,
-      iconColor: "bg-blue-100 text-blue-600",
-    },
-    {
-      id: 6,
-      type: "schema",
-      table: "website_analytics",
-      timestamp: "3 days ago",
-      description: "Schema changed: 1 column removed",
-      icon: FileText,
-      iconColor: "bg-amber-100 text-amber-600",
-    },
-  ]
+  const { tables } = useContext(OverviewContext)
+
+  const compactionQueries = useQueries({
+    queries: tables.map((table) => ({
+      queryKey: [
+        "compactionHistory",
+        table?.table,
+        table?.catalog,
+        table?.namespace,
+      ],
+      queryFn: () => {
+        if (!table) return null
+        return getTableInfo({
+          path: {
+            catalog: table.catalog,
+            namespace: table.namespace,
+            table: table.table,
+          },
+        }).then((res) => {
+          return {
+            data: res.data,
+            table: table.table,
+            catalog: table.catalog,
+            namespace: table.namespace,
+          }
+        })
+      },
+      enabled: !!table,
+    })),
+  })
+
+  const isLoading = compactionQueries.some((query) => query.isLoading)
+
+  const compactionHistory = compactionQueries
+    .filter((query) => query.data?.data?.metadata?.snapshots)
+    .flatMap((query) => {
+      const snapshots = query.data?.data?.metadata?.snapshots || []
+      return snapshots.map((snapshot) => ({
+        ...snapshot,
+        table: query.data?.table,
+        catalog: query.data?.catalog,
+        namespace: query.data?.namespace,
+        timestamp: snapshot["timestamp-ms"] || 0,
+      }))
+    })
+    .sort((a, b) => b.timestamp - a.timestamp)
+    .slice(0, 5)
+
+  if (isLoading) {
+    return <div>loading...</div>
+  }
 
   return (
-    <div className="bg-white rounded-lg border shadow-sm">
-      <div className="px-6 py-4 border-b flex items-center justify-between">
+    <div className="rounded-lg border bg-white shadow-sm">
+      <div className="flex items-center justify-between border-b px-6 py-4">
         <div className="flex items-center gap-2">
           <Clock className="h-5 w-5 text-gray-500" />
-          <h2 className="font-semibold text-lg">Recent Activity</h2>
+          <h2 className="text-lg font-semibold">Recent Activity</h2>
         </div>
         <Button variant="ghost" size="sm" className="text-sm">
           <Link href="/dashboard/activity">View all</Link>
         </Button>
       </div>
       <div className="divide-y">
-        {activities.map((activity) => (
-          <div key={activity.id} className="px-6 py-4 flex items-center gap-4">
-            <div className={`p-2 rounded-md ${activity.iconColor}`}>
-              <activity.icon className="h-5 w-5" />
+        {compactionHistory.map((activity, index) => (
+          <div key={index} className="flex items-center gap-4 px-6 py-4">
+            <div className={`rounded-md bg-green-100 p-2 text-green-600`}>
+              <GitCompare className="h-5 w-5" />
             </div>
-            <div className="flex-1 min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="font-medium">
-                <span className="text-gray-900">{activity.table}</span>
-                <span className="text-gray-500"> — {activity.description}</span>
+                <span className="text-gray-900">{activity?.table}</span>
+                <span className="text-gray-500">
+                  {" "}
+                  — Compaction job completed
+                </span>
               </p>
-              <p className="text-sm text-gray-500">{activity.timestamp}</p>
+              <p className="text-sm text-gray-500">
+                {formatDistanceToNow(new Date(activity.timestamp), {
+                  addSuffix: true,
+                  locale: enUS,
+                })}
+              </p>
             </div>
             <Button variant="ghost" size="sm" className="text-xs">
               <ArrowRight className="h-4 w-4" />

@@ -1,89 +1,68 @@
 "use client"
 
-import { useState } from "react"
-import { BarChart2, Eye, GitCompare, MoreHorizontal, Star } from "lucide-react"
+import { Eye, Star } from "lucide-react"
+import { useContext } from "react"
 
-import { Badge } from "@/components/ui/badge"
+import { getCompactionRecommendation } from "@/components/table/file-distribution"
+import { OverviewContext } from "./OverviewProvider"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import Link from "next/link"
 
 export function TableWatchlist() {
-  // Mock data for watchlist tables
-  const [watchlistTables, setWatchlistTables] = useState([
-    {
-      id: "1",
-      name: "customer_orders",
-      status: "Healthy",
-      lastModified: "2 hours ago",
-    },
-    {
-      id: "2",
-      name: "product_inventory",
-      status: "Needs Compaction",
-      lastModified: "1 day ago",
-    },
-    {
-      id: "3",
-      name: "user_events",
-      status: "Schema Drift",
-      lastModified: "3 days ago",
-    },
-    {
-      id: "4",
-      name: "transaction_history",
-      status: "Healthy",
-      lastModified: "5 days ago",
-    },
-  ])
+  const { tables } = useContext(OverviewContext)
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Healthy":
-        return "bg-green-100 text-green-800 hover:bg-green-200"
-      case "Needs Compaction":
-        return "bg-amber-100 text-amber-800 hover:bg-amber-200"
-      case "Schema Drift":
-        return "bg-red-100 text-red-800 hover:bg-red-200"
-      default:
-        return "bg-gray-100 text-gray-800 hover:bg-gray-200"
-    }
-  }
+  const tablesNeedingCompaction = tables
+    .map((table) => {
+      if (table) {
+        const recommendation = getCompactionRecommendation(table)
+        return recommendation.shouldCompact ? table : null
+      }
+      return null
+    })
+    .filter((item) => item !== null)
 
   return (
-    <div className="bg-white rounded-lg border shadow-sm">
-      <div className="px-6 py-4 border-b flex items-center justify-between">
+    <div className="rounded-lg border bg-white shadow-sm">
+      <div className="flex items-center justify-between border-b px-6 py-4">
         <div className="flex items-center gap-2">
           <Star className="h-5 w-5 text-amber-500" />
-          <h2 className="font-semibold text-lg">Watchlist</h2>
+          <h2 className="text-lg font-semibold">Watchlist</h2>
         </div>
       </div>
       <div className="divide-y">
-        {watchlistTables.map((table) => (
-          <div key={table.id} className="px-6 py-4">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="font-medium">{table.name}</h3>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                {/* <MoreHorizontal className="h-4 w-4" /> */}
-              </Button>
-            </div>
-            <div className="flex items-center justify-between">
-              <Badge variant="outline" className={getStatusColor(table.status)}>
-                {table.status}
+        {tablesNeedingCompaction.map((table, index) => (
+          <div key={index} className="px-6 py-4">
+            <div className="mb-2 flex items-center justify-between">
+              <h3 className="font-medium">{table.table}</h3>
+
+              <Badge
+                variant="outline"
+                className="bg-amber-100 text-amber-800 hover:bg-amber-200"
+              >
+                <span className="flex items-center pt-0.5">
+                  Needs Compaction
+                </span>
               </Badge>
-              <p className="text-xs text-gray-500">{table.lastModified}</p>
             </div>
-            <div className="flex gap-2 mt-3">
-              <Button variant="outline" size="sm" className="h-7 text-xs gap-1">
+
+            <div className="mt-3 flex gap-2">
+              {/* <Button variant="outline" size="sm" className="h-7 gap-1 text-xs">
                 <GitCompare className="h-3 w-3" />
                 Compact
-              </Button>
-              <Button variant="outline" size="sm" className="h-7 text-xs gap-1">
-                <BarChart2 className="h-3 w-3" />
-                Stats
-              </Button>
-              <Button variant="outline" size="sm" className="h-7 text-xs gap-1">
-                <Eye className="h-3 w-3" />
-                View
-              </Button>
+              </Button> */}
+              <Link
+                href={`/data/tables/table?catalog=${table.catalog}&namespace=${table.namespace}&table=${table.table}`}
+              >
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 gap-1 text-xs"
+                >
+                  <Eye className="h-3 w-3" />
+                  View
+                </Button>
+              </Link>
             </div>
           </div>
         ))}

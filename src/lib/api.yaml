@@ -308,6 +308,55 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+  /api/catalog/{catalog}/v1/namespaces/{namespace}/tables/{table}:
+    get:
+      summary: Get table information
+      description: Returns detailed information about a specific table including metadata and snapshots
+      operationId: getTableInfo
+      tags:
+        - Table
+      parameters:
+        - name: catalog
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: namespace
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: table
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successfully retrieved table information
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TableInfo"
+        "404":
+          description: Table not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
 components:
   schemas:
     LoginRequest:
@@ -424,6 +473,167 @@ components:
           format: password
       required:
         - username
+
+    TableInfo:
+      type: object
+      properties:
+        "metadata-location":
+          type: string
+          description: The location of the metadata file
+        metadata:
+          type: object
+          properties:
+            "format-version":
+              type: integer
+            "table-uuid":
+              type: string
+            location:
+              type: string
+            "last-sequence-number":
+              type: integer
+            "last-updated-ms":
+              type: integer
+              format: int64
+            "last-column-id":
+              type: integer
+            "current-schema-id":
+              type: integer
+            schemas:
+              type: array
+              items:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  "schema-id":
+                    type: integer
+                  fields:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        name:
+                          type: string
+                        required:
+                          type: boolean
+                        type:
+                          type: string
+            "default-spec-id":
+              type: integer
+            "partition-specs":
+              type: array
+              items:
+                type: object
+                properties:
+                  "spec-id":
+                    type: integer
+                  fields:
+                    type: array
+                    items:
+                      type: object
+            "last-partition-id":
+              type: integer
+            "default-sort-order-id":
+              type: integer
+            "sort-orders":
+              type: array
+              items:
+                type: object
+                properties:
+                  "order-id":
+                    type: integer
+                  fields:
+                    type: array
+                    items:
+                      type: object
+            properties:
+              type: object
+              additionalProperties:
+                type: string
+            "current-snapshot-id":
+              type: integer
+              format: int64
+            refs:
+              type: object
+              properties:
+                main:
+                  type: object
+                  properties:
+                    "snapshot-id":
+                      type: integer
+                      format: int64
+                    type:
+                      type: string
+            snapshots:
+              type: array
+              items:
+                type: object
+                properties:
+                  "sequence-number":
+                    type: integer
+                  "snapshot-id":
+                    type: integer
+                    format: int64
+                  "parent-snapshot-id":
+                    type: integer
+                    format: int64
+                  "timestamp-ms":
+                    type: integer
+                    format: int64
+                  summary:
+                    type: object
+                    properties:
+                      operation:
+                        type: string
+                      "added-data-files":
+                        type: string
+                      "deleted-data-files":
+                        type: string
+                      "added-records":
+                        type: string
+                      "deleted-records":
+                        type: string
+                      "added-files-size":
+                        type: string
+                      "removed-files-size":
+                        type: string
+                      "changed-partition-count":
+                        type: string
+                      "iceberg-version":
+                        type: string
+                  "manifest-list":
+                    type: string
+                  "schema-id":
+                    type: integer
+            statistics:
+              type: array
+            "partition-statistics":
+              type: array
+            "snapshot-log":
+              type: array
+              items:
+                type: object
+                properties:
+                  "timestamp-ms":
+                    type: integer
+                    format: int64
+                  "snapshot-id":
+                    type: integer
+                    format: int64
+            "metadata-log":
+              type: array
+              items:
+                type: object
+                properties:
+                  "timestamp-ms":
+                    type: integer
+                    format: int64
+                  "metadata-file":
+                    type: string
+      required:
+        - metadata
 
   securitySchemes:
     BearerAuth:

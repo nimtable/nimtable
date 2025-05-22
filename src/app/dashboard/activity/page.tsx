@@ -1,109 +1,91 @@
 "use client"
 
-import { useState } from "react"
-import {
-  BarChart2,
-  Clock,
-  FileText,
-  Filter,
-  GitCompare,
-  Search,
-} from "lucide-react"
+import { Clock, GitCompare, Search } from "lucide-react"
+import { useContext, useState } from "react"
 
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { OverviewContext } from "../OverviewProvider"
+import { useQueries } from "@tanstack/react-query"
+import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-
-// Mock activity data
-const activities = [
-  {
-    id: 1,
-    type: "compaction",
-    table: "customer_orders",
-    timestamp: "2 hours ago",
-    description: "Compaction job completed",
-    icon: GitCompare,
-    iconColor: "bg-green-100 text-green-600",
-  },
-  {
-    id: 2,
-    type: "stats",
-    table: "product_inventory",
-    timestamp: "4 hours ago",
-    description: "Statistics updated",
-    icon: BarChart2,
-    iconColor: "bg-blue-100 text-blue-600",
-  },
-  {
-    id: 3,
-    type: "schema",
-    table: "user_events",
-    timestamp: "Yesterday",
-    description: "Schema changed: 2 columns added",
-    icon: FileText,
-    iconColor: "bg-amber-100 text-amber-600",
-  },
-  {
-    id: 4,
-    type: "compaction",
-    table: "transaction_history",
-    timestamp: "Yesterday",
-    description: "Compaction job completed",
-    icon: GitCompare,
-    iconColor: "bg-green-100 text-green-600",
-  },
-  {
-    id: 5,
-    type: "stats",
-    table: "marketing_campaigns",
-    timestamp: "2 days ago",
-    description: "Statistics updated",
-    icon: BarChart2,
-    iconColor: "bg-blue-100 text-blue-600",
-  },
-  {
-    id: 6,
-    type: "schema",
-    table: "website_analytics",
-    timestamp: "3 days ago",
-    description: "Schema changed: 1 column removed",
-    icon: FileText,
-    iconColor: "bg-amber-100 text-amber-600",
-  },
-]
+import { getTableInfo } from "@/lib/client"
+import { formatDate } from "@/lib/format"
 
 export default function ActivityPage() {
   const [searchQuery, setSearchQuery] = useState("")
-  const [typeFilter, setTypeFilter] = useState("all")
+  const { tables } = useContext(OverviewContext)
 
-  const filteredActivities = activities.filter((activity) => {
-    const matchesSearch =
-      activity.table.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      activity.description.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesType = typeFilter === "all" || activity.type === typeFilter
-    return matchesSearch && matchesType
+  const compactionQueries = useQueries({
+    queries: tables.map((table) => ({
+      queryKey: [
+        "compactionHistory",
+        table?.table,
+        table?.catalog,
+        table?.namespace,
+      ],
+      queryFn: () => {
+        if (!table) return null
+        return getTableInfo({
+          path: {
+            catalog: table.catalog,
+            namespace: table.namespace,
+            table: table.table,
+          },
+        }).then((res) => {
+          return {
+            data: res.data,
+            table: table.table,
+            catalog: table.catalog,
+            namespace: table.namespace,
+          }
+        })
+      },
+      enabled: !!table,
+    })),
   })
 
+  const isLoading = compactionQueries.some((query) => query.isLoading)
+
+  if (isLoading) {
+    return <div>Loading...</div>
+  }
+
+  const compactionHistory = compactionQueries
+    .filter((query) => {
+      if (!query.data?.data?.metadata?.snapshots) return false
+
+      if (searchQuery) {
+        return query.data?.table
+          ?.toLowerCase()
+          .includes(searchQuery.toLowerCase())
+      }
+
+      return true
+    })
+    .flatMap((query) => {
+      const snapshots = query.data?.data?.metadata?.snapshots || []
+      return snapshots.map((snapshot) => ({
+        ...snapshot,
+        table: query.data?.table,
+        catalog: query.data?.catalog,
+        namespace: query.data?.namespace,
+        timestamp: snapshot["timestamp-ms"] || 0,
+      }))
+    })
+    .sort((a, b) => b.timestamp - a.timestamp)
+
   return (
-    <div className="container mx-auto py-8">
-      <div className="flex items-center justify-between mb-6">
+    <div className="container mx-auto max-w-7xl px-6 py-8">
+      <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold">Activity Log</h1>
           <p className="text-muted-foreground">View all data lake activities</p>
         </div>
       </div>
 
-      <div className="flex gap-4 mb-6">
+      <div className="mb-6 flex gap-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
           <Input
             placeholder="Search by table name or activity description..."
             value={searchQuery}
@@ -111,17 +93,6 @@ export default function ActivityPage() {
             className="pl-9"
           />
         </div>
-        <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select activity type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value="compaction">Compaction</SelectItem>
-            <SelectItem value="stats">Statistics</SelectItem>
-            <SelectItem value="schema">Schema</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
       <Card>
@@ -130,28 +101,28 @@ export default function ActivityPage() {
         </CardHeader>
         <CardContent className="p-0">
           <div className="divide-y">
-            {filteredActivities.map((activity) => (
+            {compactionHistory.map((activity, index) => (
               <div
-                key={activity.id}
-                className="p-6 flex items-center gap-4 hover:bg-muted/50 transition-colors"
+                key={index}
+                className="flex items-center gap-4 p-6 transition-colors hover:bg-muted/50"
               >
-                <div className={`p-2 rounded-md ${activity.iconColor}`}>
-                  <activity.icon className="h-5 w-5" />
+                <div className={`rounded-md bg-green-100 p-2 text-green-600`}>
+                  <GitCompare className="h-5 w-5" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
+                <div className="min-w-0 flex-1">
+                  <div className="mb-1 flex items-center gap-2">
                     <span className="font-medium">{activity.table}</span>
                     <Badge variant="outline" className="text-xs">
-                      {activity.type}
+                      Compaction
                     </Badge>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    {activity.description}
+                    Compaction job completed
                   </p>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Clock className="h-4 w-4" />
-                  <span>{activity.timestamp}</span>
+                  <span>{formatDate(activity.timestamp)}</span>
                 </div>
               </div>
             ))}

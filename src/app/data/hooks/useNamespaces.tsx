@@ -23,9 +23,6 @@ export function useNamespaces(catalogs: string[]) {
         name: ns.shortName,
         catalog: catalog,
         tableCount: ns.tables.length,
-        storageSize: "0 GB", // TODO: Get storage size from metadata
-        lastModified: "Unknown", // TODO: Get last modified time from metadata
-        status: "Healthy", // TODO: Get status from metadata
         tables: ns.tables,
       }))
     })
