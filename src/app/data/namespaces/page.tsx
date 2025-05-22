@@ -1,11 +1,11 @@
-import { NamespacesContent } from "./NamespacesContent";
+import { NamespacesContent } from "./NamespacesContent"
 
 export default function NamespacesPage() {
   return (
-      <div className="flex h-full">
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <NamespacesContent />
-        </div>
+    <div className="flex h-full">
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <NamespacesContent />
       </div>
+    </div>
   )
 }

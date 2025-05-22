@@ -15,7 +15,6 @@
  */
 "use client"
 
-import * as React from "react"
 import {
   type ColumnDef,
   type ColumnFiltersState,
@@ -36,9 +35,8 @@ import {
   SortAsc,
   SortDesc,
 } from "lucide-react"
+import * as React from "react"
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import {
   Table,
   TableBody,
@@ -54,6 +52,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 
 interface DataTableProps<TData, TValue> {
@@ -108,28 +108,28 @@ export function DataTable<TData, TValue>({
                   .getColumn(searchColumn)
                   ?.setFilterValue(event.target.value)
               }
-              className="max-w-sm h-9 bg-muted/30 border-muted-foreground/20 focus-visible:ring-blue-500"
+              className="h-9 max-w-sm border-muted-foreground/20 bg-muted/30 focus-visible:ring-blue-500"
             />
-            <p className="text-sm text-muted-foreground whitespace-nowrap min-w-fit">
+            <p className="min-w-fit whitespace-nowrap text-sm text-muted-foreground">
               Showing {table.getFilteredRowModel().rows.length} of {data.length}{" "}
               rows
             </p>
           </div>
         </div>
       )}
-      <div className="rounded-lg border border-border/40 shadow-sm overflow-hidden">
+      <div className="overflow-hidden rounded-lg border border-border/40 shadow-sm">
         <Table>
           <TableHeader className="bg-muted/50">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow
                 key={headerGroup.id}
-                className="hover:bg-transparent border-b border-border/40"
+                className="border-b border-border/40 hover:bg-transparent"
               >
                 {headerGroup.headers.map((header) => {
                   return (
                     <TableHead
                       key={header.id}
-                      className="whitespace-nowrap font-medium text-foreground/80 py-4 px-6"
+                      className="whitespace-nowrap px-6 py-4 font-medium text-foreground/80"
                       onClick={header.column.getToggleSortingHandler()}
                       style={{
                         cursor: header.column.getCanSort()
@@ -169,14 +169,14 @@ export function DataTable<TData, TValue>({
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
                   className={cn(
-                    "hover:bg-muted/40 transition-colors",
+                    "transition-colors hover:bg-muted/40",
                     rowIndex % 2 === 0 ? "bg-background" : "bg-muted/5"
                   )}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell 
-                      key={cell.id} 
-                      className="py-4 px-6 border-b border-border/40 last:border-r-0"
+                    <TableCell
+                      key={cell.id}
+                      className="border-b border-border/40 px-6 py-4 last:border-r-0"
                     >
                       {flexRender(
                         cell.column.columnDef.cell,
@@ -194,7 +194,7 @@ export function DataTable<TData, TValue>({
                 >
                   <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
                     <p className="text-sm font-medium">No results found</p>
-                    <p className="text-xs mt-1.5">
+                    <p className="mt-1.5 text-xs">
                       Try adjusting your search or filters
                     </p>
                   </div>
@@ -223,7 +223,7 @@ export function DataTable<TData, TValue>({
                   table.setPageSize(Number(value))
                 }}
               >
-                <SelectTrigger className="h-8 w-[70px] bg-muted/30 border-muted-foreground/20">
+                <SelectTrigger className="h-8 w-[70px] border-muted-foreground/20 bg-muted/30">
                   <SelectValue
                     placeholder={table.getState().pagination.pageSize}
                   />
@@ -244,7 +244,7 @@ export function DataTable<TData, TValue>({
             <div className="flex items-center space-x-2">
               <Button
                 variant="outline"
-                className="hidden h-8 w-8 p-0 lg:flex items-center justify-center bg-muted/30 border-muted-foreground/20"
+                className="hidden h-8 w-8 items-center justify-center border-muted-foreground/20 bg-muted/30 p-0 lg:flex"
                 onClick={() => table.setPageIndex(0)}
                 disabled={!table.getCanPreviousPage()}
               >
@@ -253,7 +253,7 @@ export function DataTable<TData, TValue>({
               </Button>
               <Button
                 variant="outline"
-                className="h-8 w-8 p-0 flex items-center justify-center bg-muted/30 border-muted-foreground/20"
+                className="flex h-8 w-8 items-center justify-center border-muted-foreground/20 bg-muted/30 p-0"
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
               >
@@ -262,7 +262,7 @@ export function DataTable<TData, TValue>({
               </Button>
               <Button
                 variant="outline"
-                className="h-8 w-8 p-0 flex items-center justify-center bg-muted/30 border-muted-foreground/20"
+                className="flex h-8 w-8 items-center justify-center border-muted-foreground/20 bg-muted/30 p-0"
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
               >
@@ -271,7 +271,7 @@ export function DataTable<TData, TValue>({
               </Button>
               <Button
                 variant="outline"
-                className="hidden h-8 w-8 p-0 lg:flex items-center justify-center bg-muted/30 border-muted-foreground/20"
+                className="hidden h-8 w-8 items-center justify-center border-muted-foreground/20 bg-muted/30 p-0 lg:flex"
                 onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                 disabled={!table.getCanNextPage()}
               >

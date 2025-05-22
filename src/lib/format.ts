@@ -5,5 +5,5 @@ export const formatDate = (timestamp: number) => {
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
-    }).format(date)
-  }
+  }).format(date)
+}

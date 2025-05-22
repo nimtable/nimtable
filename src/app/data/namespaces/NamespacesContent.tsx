@@ -1,11 +1,5 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import Link from "next/link"
-import { useSearchParams } from "next/navigation"
-import { ArrowRight, Database, FolderOpen, Plus, Search } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
@@ -13,9 +7,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { ArrowRight, Database, FolderOpen, Plus, Search } from "lucide-react"
+import { useSearchParams } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { useEffect, useState } from "react"
+import Link from "next/link"
 
-import { useCatalogs } from "../hooks/useCatalogs"
 import { useNamespaces } from "../hooks/useNamespaces"
+import { useCatalogs } from "../hooks/useCatalogs"
 
 export function NamespacesContent() {
   const searchParams = useSearchParams()
@@ -42,7 +42,6 @@ export function NamespacesContent() {
     }
   }, [catalogFromUrl])
 
-
   // Filter namespaces based on selected catalog and search query
   const filteredNamespaces = allNamespaces.filter((namespace) => {
     // Filter by catalog
@@ -66,17 +65,17 @@ export function NamespacesContent() {
 
   if (isLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
+      <div className="flex flex-1 items-center justify-center">
         <div className="text-gray-500">Loading...</div>
       </div>
     )
   }
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-gray-50">
+    <div className="flex flex-1 flex-col overflow-hidden bg-gray-50">
       {/* Search Bar */}
-      <div className="p-6 border-b bg-white">
-        <div className="flex items-center justify-between mb-4">
+      <div className="border-b bg-white p-6">
+        <div className="mb-4 flex items-center justify-between">
           <h1 className="text-2xl font-semibold">Namespaces</h1>
         </div>
 
@@ -100,10 +99,10 @@ export function NamespacesContent() {
 
           {/* Search Input */}
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
             <Input
               placeholder="Search namespaces..."
-              className="pl-9 h-10"
+              className="h-10 pl-9"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -119,69 +118,69 @@ export function NamespacesContent() {
 
       {/* Namespaces List */}
       <div className="flex-1 overflow-auto p-6">
-        <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
+        <div className="overflow-hidden rounded-lg border bg-white shadow-sm">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th
                   scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
                 >
                   Namespace
                 </th>
                 <th
                   scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
                 >
                   Catalog
                 </th>
                 <th
                   scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
                 >
                   Tables
                 </th>
                 <th
                   scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
                 >
                   Storage Size
                 </th>
                 <th
                   scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
                 >
                   Last Modified
                 </th>
-          
+
                 <th
                   scope="col"
-                  className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500"
                 >
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="divide-y divide-gray-200 bg-white">
               {filteredNamespaces.map((namespace) => (
                 <tr key={namespace.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="whitespace-nowrap px-6 py-4">
                     <div className="flex items-center">
-                      <FolderOpen className="h-5 w-5 text-gray-400 mr-2" />
+                      <FolderOpen className="mr-2 h-5 w-5 text-gray-400" />
                       <div className="font-medium text-gray-900">
                         {namespace.name}
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="whitespace-nowrap px-6 py-4">
                     <div className="flex items-center">
-                      <Database className="h-4 w-4 text-gray-400 mr-2" />
+                      <Database className="mr-2 h-4 w-4 text-gray-400" />
                       <div className="text-sm text-gray-500">
                         {namespace.catalog}
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
                     {namespace.tableCount}
                   </td>
                   {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -190,11 +189,11 @@ export function NamespacesContent() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {namespace.lastModified}
                   </td> */}
-          
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+
+                  <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
                     <Link
                       href={`/data/tables?catalog=${namespace.catalog}&namespace=${namespace.name}`}
-                      className="text-blue-600 hover:text-blue-900 inline-flex items-center gap-1"
+                      className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-900"
                     >
                       View Tables
                       <ArrowRight className="h-3 w-3" />
@@ -205,7 +204,7 @@ export function NamespacesContent() {
             </tbody>
           </table>
           {filteredNamespaces.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
+            <div className="py-8 text-center text-gray-500">
               No namespaces found matching your criteria
             </div>
           )}

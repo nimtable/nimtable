@@ -15,7 +15,28 @@
  */
 "use client"
 
-import { useState } from "react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import {
+  dropTable,
+  renameTable,
+  getFileDistribution,
+  type DistributionData,
+} from "@/lib/data-loader"
 import {
   Database,
   FileText,
@@ -27,46 +48,25 @@ import {
   Calendar,
 } from "lucide-react"
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import { useToast } from "@/hooks/use-toast"
-import { errorToString } from "@/lib/utils"
-import { useRouter } from "next/navigation"
-import { useRefresh } from "@/contexts/refresh-context"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import type { LoadTableResult, StructField } from "@/lib/data-loader"
-import {
-  dropTable,
-  renameTable,
-  getFileDistribution,
-  type DistributionData,
-} from "@/lib/data-loader"
-import { cn } from "@/lib/utils"
-import { getPropertyDescription } from "@/lib/property-descriptions"
 import { FileDistributionLoading } from "@/components/table/file-distribution-loading"
-import { useQuery } from "@tanstack/react-query"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { FileDistribution } from "@/components/table/file-distribution"
+import type { LoadTableResult, StructField } from "@/lib/data-loader"
+import { getPropertyDescription } from "@/lib/property-descriptions"
+import { useRefresh } from "@/contexts/refresh-context"
+import { useQuery } from "@tanstack/react-query"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { useToast } from "@/hooks/use-toast"
+import { useRouter } from "next/navigation"
+import { errorToString } from "@/lib/utils"
+import { cn } from "@/lib/utils"
+import { useState } from "react"
 
 interface InfoTabProps {
   tableData: LoadTableResult
@@ -104,7 +104,7 @@ function FileDistributionSection({
     refetch,
   } = useQuery<DistributionData>({
     queryKey: ["file-distribution", catalog, namespace, tableId, refreshKey],
-    queryFn: ()=>getFileDistribution(catalog, namespace, tableId),
+    queryFn: () => getFileDistribution(catalog, namespace, tableId),
     enabled: !!(tableId && catalog && namespace),
   })
 
@@ -120,9 +120,6 @@ function FileDistributionSection({
     />
   )
 }
-
-// Define the order of size ranges
-const rangeOrder = ["0-8M", "8M-32M", "32M-128M", "128M-512M", "512M+"]
 
 export function InfoTab({
   tableData,
@@ -217,9 +214,9 @@ export function InfoTab({
           refreshKey={refreshKey}
         />
 
-        <Card className="border-muted/70 shadow-sm overflow-hidden">
-          <CardHeader className="pb-2 border-b py-3">
-            <CardTitle className="text-base flex items-center gap-2">
+        <Card className="overflow-hidden border-muted/70 shadow-sm">
+          <CardHeader className="border-b py-3 pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
               <Database className="h-4 w-4 text-blue-500" />
               Table Information
             </CardTitle>
@@ -227,7 +224,7 @@ export function InfoTab({
           <CardContent className="px-0 py-2">
             <div className="divide-y divide-muted/30">
               <div className="px-6 py-3">
-                <div className="flex items-center justify-between mb-1">
+                <div className="mb-1 flex items-center justify-between">
                   <h4 className="text-xs font-medium text-muted-foreground">
                     Table UUID
                   </h4>
@@ -265,15 +262,15 @@ export function InfoTab({
                     </TooltipContent>
                   </Tooltip>
                 </div>
-                <div className="border border-muted/30 rounded-md p-1.5 bg-muted/30 font-mono">
-                  <p className="text-xs text-foreground/90 break-all">
+                <div className="rounded-md border border-muted/30 bg-muted/30 p-1.5 font-mono">
+                  <p className="break-all text-xs text-foreground/90">
                     {tableData.metadata["table-uuid"]}
                   </p>
                 </div>
               </div>
 
               <div className="px-6 py-3">
-                <div className="flex items-center justify-between mb-1">
+                <div className="mb-1 flex items-center justify-between">
                   <h4 className="text-xs font-medium text-muted-foreground">
                     Location
                   </h4>
@@ -311,18 +308,18 @@ export function InfoTab({
                     </TooltipContent>
                   </Tooltip>
                 </div>
-                <div className="border border-muted/30 rounded-md p-1.5 bg-muted/30 font-mono">
-                  <p className="text-xs text-foreground/90 break-all">
+                <div className="rounded-md border border-muted/30 bg-muted/30 p-1.5 font-mono">
+                  <p className="break-all text-xs text-foreground/90">
                     {tableData.metadata.location}
                   </p>
                 </div>
               </div>
 
               <div className="px-6 py-3">
-                <h4 className="text-xs font-medium text-muted-foreground mb-1">
+                <h4 className="mb-1 text-xs font-medium text-muted-foreground">
                   Last Updated
                 </h4>
-                <p className="text-xs pl-1 font-medium">
+                <p className="pl-1 text-xs font-medium">
                   {tableData.metadata["last-updated-ms"]
                     ? new Date(
                         tableData.metadata["last-updated-ms"]
@@ -335,9 +332,9 @@ export function InfoTab({
         </Card>
 
         {/* Schema Section */}
-        <Card className="border-muted/70 shadow-sm overflow-hidden">
-          <CardHeader className="pb-2 border-b">
-            <CardTitle className="text-base flex items-center gap-2">
+        <Card className="overflow-hidden border-muted/70 shadow-sm">
+          <CardHeader className="border-b pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
               <FileText className="h-4 w-4 text-blue-500" />
               Table Schema
             </CardTitle>
@@ -371,9 +368,9 @@ export function InfoTab({
         </Card>
 
         {/* Partition Information */}
-        <Card className="border-muted/70 shadow-sm overflow-hidden">
-          <CardHeader className="pb-2 border-b">
-            <CardTitle className="text-base flex items-center gap-2">
+        <Card className="overflow-hidden border-muted/70 shadow-sm">
+          <CardHeader className="border-b pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
               <FileText className="h-4 w-4 text-blue-500" />
               Partition Specs
             </CardTitle>
@@ -401,7 +398,7 @@ export function InfoTab({
                           </div>
                         ) : (
                           <div className="flex flex-col gap-1">
-                            <div className="flex items-center gap-2 mb-1">
+                            <div className="mb-1 flex items-center gap-2">
                               <Layers className="h-3.5 w-3.5 text-muted-foreground" />
                               <span className="text-xs text-muted-foreground">
                                 Partitioned by:
@@ -435,7 +432,7 @@ export function InfoTab({
                                 return (
                                   <div
                                     key={field["source-id"]}
-                                    className={`${bgColor} ${textColor} px-2 py-1 rounded-md text-xs flex items-center gap-1`}
+                                    className={`${bgColor} ${textColor} flex items-center gap-1 rounded-md px-2 py-1 text-xs`}
                                   >
                                     {icon}
                                     <span>{field.name}</span>
@@ -452,7 +449,7 @@ export function InfoTab({
                       <TableCell>
                         {spec["spec-id"] ===
                         tableData.metadata["default-spec-id"] ? (
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                          <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-400">
                             Default
                           </span>
                         ) : null}
@@ -476,9 +473,9 @@ export function InfoTab({
       </div>
 
       {/* Properties Section */}
-      <Card className="border-muted/70 shadow-sm overflow-hidden">
-        <CardHeader className="pb-2 border-b py-3">
-          <CardTitle className="text-base flex items-center gap-2">
+      <Card className="overflow-hidden border-muted/70 shadow-sm">
+        <CardHeader className="border-b py-3 pb-2">
+          <CardTitle className="flex items-center gap-2 text-base">
             <FileText className="h-4 w-4 text-blue-500" />
             Properties
           </CardTitle>
@@ -491,13 +488,13 @@ export function InfoTab({
                 .filter(([key]) => !isSensitiveProperty(key)) // Filter out sensitive properties
                 .map(([key, value]) => (
                   <div key={key} className="px-6 py-3">
-                    <div className="flex items-center justify-between mb-1">
-                      <h4 className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                    <div className="mb-1 flex items-center justify-between">
+                      <h4 className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                         {key}
                         {getPropertyDescription(key) && (
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Info className="h-3.5 w-3.5 text-muted-foreground/70 cursor-help" />
+                              <Info className="h-3.5 w-3.5 cursor-help text-muted-foreground/70" />
                             </TooltipTrigger>
                             <TooltipContent side="top" className="max-w-sm">
                               <p className="text-xs">
@@ -508,8 +505,8 @@ export function InfoTab({
                         )}
                       </h4>
                     </div>
-                    <div className="border border-muted/30 rounded-md p-1.5 bg-muted/30">
-                      <p className="text-xs text-foreground/90 break-all font-mono">
+                    <div className="rounded-md border border-muted/30 bg-muted/30 p-1.5">
+                      <p className="break-all font-mono text-xs text-foreground/90">
                         {value}
                       </p>
                     </div>
@@ -517,7 +514,7 @@ export function InfoTab({
                 ))}
             </div>
           ) : (
-            <div className="px-4 py-6 text-center text-muted-foreground text-xs">
+            <div className="px-4 py-6 text-center text-xs text-muted-foreground">
               No properties defined
             </div>
           )}
