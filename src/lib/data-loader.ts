@@ -48,9 +48,10 @@ export async function loadCatalogNames(): Promise<string[]> {
 }
 
 export async function loadNamespacesAndTables(
-  catalog: string
+  catalog: string,
+  inBrowser: boolean = true
 ): Promise<NamespaceTables[]> {
-  const api = catalogApi(catalog)
+  const api = catalogApi(catalog, inBrowser)
 
   async function fetchNamespaceAndChildren(
     namespace: string[]

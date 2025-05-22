@@ -14,6 +14,7 @@
     "gen-client-api": "./scripts/generate-client.sh"
   },
   "dependencies": {
+    "@ai-sdk/openai-compatible": "^0.2.14",
     "@hey-api/client-fetch": "^0.10.1",
     "@hey-api/client-next": "^0.3.1",
     "@hookform/resolvers": "^5.0.1",
@@ -35,6 +36,7 @@
     "@tanstack/react-query": "^5.76.1",
     "@tanstack/react-table": "^8.21.3",
     "@types/js-yaml": "^4.0.9",
+    "ai": "^4.3.16",
     "autoprefixer": "^10.4.21",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
