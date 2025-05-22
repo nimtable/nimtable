@@ -18,13 +18,13 @@
 
 import type React from "react"
 
-import { useState, useEffect, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { User, Lock, AlertCircle } from "lucide-react"
+import { useState, useEffect, useRef } from "react"
+import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useAuth } from "@/contexts/auth-context"
 import { useToast } from "@/hooks/use-toast"
 import Image from "next/image"
 
@@ -52,7 +52,7 @@ export default function LoginPage() {
   const { toast } = useToast()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const redirectPath = searchParams.get("redirect") || "/"
+  const redirectPath = searchParams.get("redirect") || "/dashboard"
 
   // Animation effect when component mounts
   useEffect(() => {
@@ -107,66 +107,66 @@ export default function LoginPage() {
   }, [error])
 
   return (
-    <div className="min-h-screen w-full overflow-hidden relative flex items-center justify-center bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800">
+    <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800">
       {/* Enhanced animated background elements with flowing animations */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden">
+      <div className="absolute left-0 top-0 h-full w-full overflow-hidden">
         {/* Improved gradient overlay with more depth */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-950/95 via-blue-900/85 to-blue-800/90 z-10"></div>
+        <div className="absolute inset-0 z-10 bg-gradient-to-br from-blue-950/95 via-blue-900/85 to-blue-800/90"></div>
 
         {/* Animated flowing background elements */}
-        <div className="absolute top-[-5%] left-[-10%] w-[70%] h-[60%] bg-blue-400/8 rounded-[60%_40%_30%_70%/60%_30%_70%_40%] blur-3xl animate-wave animate-flow-diagonal"></div>
+        <div className="bg-blue-400/8 animate-wave animate-flow-diagonal absolute left-[-10%] top-[-5%] h-[60%] w-[70%] rounded-[60%_40%_30%_70%/60%_30%_70%_40%] blur-3xl"></div>
 
         <div
-          className="absolute bottom-[-10%] right-[-5%] w-[60%] h-[70%] bg-blue-500/8 rounded-[40%_60%_70%_30%/60%_40%_30%_60%] blur-3xl animate-wave animate-flow-diagonal-reverse"
+          className="bg-blue-500/8 animate-wave animate-flow-diagonal-reverse absolute bottom-[-10%] right-[-5%] h-[70%] w-[60%] rounded-[40%_60%_70%_30%/60%_40%_30%_60%] blur-3xl"
           style={{ animationDelay: "-5s" }}
         ></div>
 
         <div
-          className="absolute top-[20%] right-[10%] w-[45%] h-[40%] bg-indigo-400/8 rounded-[50%_60%_30%_40%/40%_30%_70%_60%] blur-2xl animate-wave animate-flow-x"
+          className="bg-indigo-400/8 animate-wave animate-flow-x absolute right-[10%] top-[20%] h-[40%] w-[45%] rounded-[50%_60%_30%_40%/40%_30%_70%_60%] blur-2xl"
           style={{ animationDelay: "-10s" }}
         ></div>
 
         <div
-          className="absolute bottom-[30%] left-[15%] w-[40%] h-[35%] bg-blue-300/8 rounded-[30%_60%_70%_40%/50%_60%_30%_60%] blur-2xl animate-wave animate-flow-y"
+          className="bg-blue-300/8 animate-wave animate-flow-y absolute bottom-[30%] left-[15%] h-[35%] w-[40%] rounded-[30%_60%_70%_40%/50%_60%_30%_60%] blur-2xl"
           style={{ animationDelay: "-15s" }}
         ></div>
 
         {/* Refined animated circles with better positioning and effects */}
         <div
-          className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full bg-blue-400/10 animate-pulse-slow blur-2xl animate-flow-x"
+          className="animate-pulse-slow animate-flow-x absolute left-1/4 top-1/4 h-[600px] w-[600px] rounded-full bg-blue-400/10 blur-2xl"
           style={{ animationDelay: "-8s" }}
         ></div>
 
         <div
-          className="absolute bottom-1/4 right-1/3 w-[700px] h-[700px] rounded-full bg-blue-500/10 animate-pulse-slower blur-3xl animate-flow-diagonal"
+          className="animate-pulse-slower animate-flow-diagonal absolute bottom-1/4 right-1/3 h-[700px] w-[700px] rounded-full bg-blue-500/10 blur-3xl"
           style={{ animationDelay: "-12s" }}
         ></div>
 
         <div
-          className="absolute top-1/3 right-1/4 w-[500px] h-[500px] rounded-full bg-blue-300/10 animate-float blur-xl animate-flow-y"
+          className="animate-float animate-flow-y absolute right-1/4 top-1/3 h-[500px] w-[500px] rounded-full bg-blue-300/10 blur-xl"
           style={{ animationDelay: "-6s" }}
         ></div>
 
         <div
-          className="absolute bottom-1/3 left-1/3 w-[300px] h-[300px] rounded-full bg-indigo-400/10 animate-float-reverse blur-xl animate-flow-diagonal-reverse"
+          className="animate-float-reverse animate-flow-diagonal-reverse absolute bottom-1/3 left-1/3 h-[300px] w-[300px] rounded-full bg-indigo-400/10 blur-xl"
           style={{ animationDelay: "-10s" }}
         ></div>
 
         {/* Enhanced grid pattern overlay with better opacity */}
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGZpbGw9IiMxNDI3NEUiIGQ9Ik0wIDBoNjB2NjBIMHoiLz48cGF0aCBkPSJNMzAgMzBoMzB2MzBIMzB6TTAgMzBoMzB2MzBIMHoiIGZpbGw9IiMxNDI3NEUiIGZpbGwtb3BhY2l0eT0iLjUiLz48cGF0aCBkPSJNMzAgMGgzMHYzMEgzMHpNMCAwaDMwdjMwSDB6IiBmaWxsPSIjMTQyNzRFIiBmaWxsLW9wYWNpdHk9Ii4yNSIvPjwvZz48L3N2Zz4=')] opacity-4 z-0"></div>
+        <div className="opacity-4 absolute inset-0 z-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGZpbGw9IiMxNDI3NEUiIGQ9Ik0wIDBoNjB2NjBIMHoiLz48cGF0aCBkPSJNMzAgMzBoMzB2MzBIMzB6TTAgMzBoMzB2MzBIMHoiIGZpbGw9IiMxNDI3NEUiIGZpbGwtb3BhY2l0eT0iLjUiLz48cGF0aCBkPSJNMzAgMGgzMHYzMEgzMHpNMCAwaDMwdjMwSDB6IiBmaWxsPSIjMTQyNzRFIiBmaWxsLW9wYWNpdHk9Ii4yNSIvPjwvZz48L3N2Zz4=')]"></div>
       </div>
 
       {/* Refined content container with improved transitions */}
       <div
-        className={`relative z-20 w-full max-w-6xl mx-auto px-6 py-12 transition-all duration-1000 ease-out ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
+        className={`relative z-20 mx-auto w-full max-w-6xl px-6 py-12 transition-all duration-1000 ease-out ${mounted ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"}`}
       >
-        <div className="flex flex-col md:flex-row items-center gap-10 md:gap-20">
+        <div className="flex flex-col items-center gap-10 md:flex-row md:gap-20">
           {/* Enhanced left side - Branding with improved typography and spacing */}
           <div
-            className="w-full md:w-3/5 text-center md:text-left mb-10 md:mb-0 animate-fade-in-up"
+            className="animate-fade-in-up mb-10 w-full text-center md:mb-0 md:w-3/5 md:text-left"
             style={{ animationDelay: "0.2s" }}
           >
-            <div className="flex items-center justify-center md:justify-start -ml-10">
+            <div className="-ml-10 flex items-center justify-center md:justify-start">
               <Image
                 src="/horizontal-dark.svg"
                 alt="Nimtable Logo"
@@ -176,14 +176,14 @@ export default function LoginPage() {
               />
             </div>
 
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 tracking-tight">
+            <h1 className="mb-6 text-4xl font-bold tracking-tight text-white md:text-5xl lg:text-6xl">
               <span className="text-white">The Control Plane for </span>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-blue-100">
+              <span className="bg-gradient-to-r from-blue-300 to-blue-100 bg-clip-text text-transparent">
                 Apache Iceberg™
               </span>
             </h1>
 
-            <p className="text-blue-100/80 text-lg md:text-xl max-w-md mx-auto md:mx-0 leading-relaxed">
+            <p className="mx-auto max-w-md text-lg leading-relaxed text-blue-100/80 md:mx-0 md:text-xl">
               A lightweight, easy-to-use platform to monitor, optimize, and
               govern your Iceberg-based lakehouse.
             </p>
@@ -191,28 +191,28 @@ export default function LoginPage() {
 
           {/* Enhanced right side - Login form with improved styling and interactions */}
           <div
-            className="w-full md:w-1/2 max-w-md animate-fade-in-up"
+            className="animate-fade-in-up w-full max-w-md md:w-1/2"
             style={{ animationDelay: "0.4s" }}
           >
-            <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-[0_8px_30px_rgb(0,0,0,0.12)] overflow-hidden transition-all duration-500 hover:shadow-[0_8px_30px_rgba(59,130,246,0.1)] group">
+            <div className="group overflow-hidden rounded-2xl border border-white/20 bg-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.12)] backdrop-blur-xl transition-all duration-500 hover:shadow-[0_8px_30px_rgba(59,130,246,0.1)]">
               {/* Added accent bar at the top */}
               <div className="h-1 w-full bg-gradient-to-r from-blue-400 to-blue-600"></div>
 
               <div className="p-8 md:p-10">
                 <div className="mb-8">
-                  <h2 className="text-2xl font-bold text-white mb-2">
+                  <h2 className="mb-2 text-2xl font-bold text-white">
                     Login to Nimtable
                   </h2>
-                  <p className="text-blue-100/70 text-sm">
+                  <p className="text-sm text-blue-100/70">
                     Enter your credentials to access your data catalogs
                   </p>
                 </div>
 
                 {error && (
-                  <div className="mb-6 p-4 bg-red-500/20 border-l-4 border-red-500 rounded-lg flex items-start gap-3 text-red-200 animate-fade-in shadow-sm">
-                    <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0 text-red-300" />
+                  <div className="animate-fade-in mb-6 flex items-start gap-3 rounded-lg border-l-4 border-red-500 bg-red-500/20 p-4 text-red-200 shadow-sm">
+                    <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-300" />
                     <div>
-                      <h4 className="text-sm font-semibold text-red-300 mb-0.5">
+                      <h4 className="mb-0.5 text-sm font-semibold text-red-300">
                         Authentication Failed
                       </h4>
                       <p className="text-sm">{error}</p>
@@ -228,22 +228,22 @@ export default function LoginPage() {
                   <div className="space-y-2">
                     <Label
                       htmlFor="username"
-                      className="text-blue-100 text-sm font-medium"
+                      className="text-sm font-medium text-blue-100"
                     >
                       Username
                     </Label>
-                    <div className="relative group/input">
+                    <div className="group/input relative">
                       <User
-                        className={`absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors ${error ? "text-red-400" : "text-blue-300 group-focus-within/input:text-blue-400"}`}
+                        className={`absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 transition-colors ${error ? "text-red-400" : "text-blue-300 group-focus-within/input:text-blue-400"}`}
                       />
                       <Input
                         id="username"
                         type="text"
                         placeholder="Enter your username"
-                        className={`pl-10 h-11 bg-white/10 text-white placeholder:text-blue-200/40 transition-all ${
+                        className={`h-11 bg-white/10 pl-10 text-white transition-all placeholder:text-blue-200/40 ${
                           error
-                            ? "border-red-500 focus-visible:ring-red-500/50 focus-visible:border-red-500"
-                            : "border-white/20 focus-visible:ring-blue-400/50 focus-visible:border-blue-400/50"
+                            ? "border-red-500 focus-visible:border-red-500 focus-visible:ring-red-500/50"
+                            : "border-white/20 focus-visible:border-blue-400/50 focus-visible:ring-blue-400/50"
                         }`}
                         value={username}
                         onChange={(e) => {
@@ -258,22 +258,22 @@ export default function LoginPage() {
                   <div className="space-y-2">
                     <Label
                       htmlFor="password"
-                      className="text-blue-100 text-sm font-medium"
+                      className="text-sm font-medium text-blue-100"
                     >
                       Password
                     </Label>
-                    <div className="relative group/input">
+                    <div className="group/input relative">
                       <Lock
-                        className={`absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors ${error ? "text-red-400" : "text-blue-300 group-focus-within/input:text-blue-400"}`}
+                        className={`absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 transition-colors ${error ? "text-red-400" : "text-blue-300 group-focus-within/input:text-blue-400"}`}
                       />
                       <Input
                         id="password"
                         type="password"
                         placeholder="Enter your password"
-                        className={`pl-10 h-11 bg-white/10 text-white placeholder:text-blue-200/40 transition-all ${
+                        className={`h-11 bg-white/10 pl-10 text-white transition-all placeholder:text-blue-200/40 ${
                           error
-                            ? "border-red-500 focus-visible:ring-red-500/50 focus-visible:border-red-500 animate-pulse-once"
-                            : "border-white/20 focus-visible:ring-blue-400/50 focus-visible:border-blue-400/50"
+                            ? "animate-pulse-once border-red-500 focus-visible:border-red-500 focus-visible:ring-red-500/50"
+                            : "border-white/20 focus-visible:border-blue-400/50 focus-visible:ring-blue-400/50"
                         }`}
                         value={password}
                         onChange={(e) => {
@@ -292,7 +292,7 @@ export default function LoginPage() {
 
                   <Button
                     type="submit"
-                    className="w-full h-11 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium shadow-lg shadow-blue-500/20 transition-all hover:shadow-blue-500/40 group-hover:translate-y-0.5 duration-300"
+                    className="h-11 w-full bg-gradient-to-r from-blue-500 to-blue-600 font-medium text-white shadow-lg shadow-blue-500/20 transition-all duration-300 hover:from-blue-600 hover:to-blue-700 hover:shadow-blue-500/40 group-hover:translate-y-0.5"
                   >
                     Login
                   </Button>
@@ -308,7 +308,7 @@ export default function LoginPage() {
                   alt="Nimtable Logo"
                   width={120}
                   height={32}
-                  className="h-8 w-auto filter brightness-0 invert -mr-2 -mt-[2px]"
+                  className="-mr-2 -mt-[2px] h-8 w-auto brightness-0 invert filter"
                 />
                 <p className="text-xs text-blue-200/70">
                   v1.0 — Managed Iceberg Made Simple

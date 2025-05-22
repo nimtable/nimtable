@@ -9,19 +9,22 @@ export const OverviewContext = createContext<{
     | undefined
   )[]
   isLoading: boolean
+  isFileDistributionLoading: boolean
 }>({
   tables: [],
   isLoading: true,
+  isFileDistributionLoading: false,
 })
 
 export function DashboardProvider({ children }: { children: React.ReactNode }) {
-  const { tables, isLoading } = useAllTables()
+  const { tables, isLoading, isFileDistributionLoading } = useAllTables()
 
   return (
     <OverviewContext.Provider
       value={{
         tables,
         isLoading,
+        isFileDistributionLoading,
       }}
     >
       {children}

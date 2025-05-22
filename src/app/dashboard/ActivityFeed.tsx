@@ -1,16 +1,17 @@
-import { ArrowRight, Clock, GitCompare } from "lucide-react"
+import { ArrowRight, Clock, GitCompare, Star } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { enUS } from "date-fns/locale"
 import Link from "next/link"
 
 import { OverviewContext } from "./OverviewProvider"
+import { Skeleton } from "@/components/ui/skeleton"
 import { useQueries } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import { getTableInfo } from "@/lib/client"
 import { useContext } from "react"
 
 export function ActivityFeed() {
-  const { tables } = useContext(OverviewContext)
+  const { tables, isLoading: isLoadingTables } = useContext(OverviewContext)
 
   const compactionQueries = useQueries({
     queries: tables.map((table) => ({
@@ -58,8 +59,46 @@ export function ActivityFeed() {
     .sort((a, b) => b.timestamp - a.timestamp)
     .slice(0, 5)
 
-  if (isLoading) {
-    return <div>loading...</div>
+  if (isLoadingTables || isLoading) {
+    return (
+      <div className="rounded-lg border bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b px-6 py-4">
+          <div className="flex items-center gap-2">
+            <Clock className="h-5 w-5 text-gray-500" />
+            <h2 className="text-lg font-semibold">Recent Activity</h2>
+          </div>
+        </div>
+        <div className="divide-y">
+          {[1, 2, 3, 4, 5].map((index) => (
+            <div key={index} className="flex items-center gap-4 px-6 py-4">
+              <Skeleton className="h-9 w-9 rounded-md" />
+              <div className="min-w-0 flex-1">
+                <Skeleton className="mb-2 h-5 w-32" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+              <Skeleton className="h-8 w-8 rounded-md" />
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (compactionHistory.length === 0) {
+    return (
+      <div className="rounded-lg border bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b px-6 py-4">
+          <div className="flex items-center gap-2">
+            <Clock className="h-5 w-5 text-gray-500" />
+            <h2 className="text-lg font-semibold">Recent Activity</h2>
+          </div>
+        </div>
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <Star className="h-8 w-8 text-muted-foreground/50" />
+          <h3 className="mt-2 text-sm font-medium">No recent activity</h3>
+        </div>
+      </div>
+    )
   }
 
   return (

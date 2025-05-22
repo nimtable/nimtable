@@ -5,7 +5,7 @@ import { Database, GitCompare } from "lucide-react"
 import { useContext } from "react"
 
 export function MetricsSummary() {
-  const { tables } = useContext(OverviewContext)
+  const { tables, isFileDistributionLoading } = useContext(OverviewContext)
 
   const tablesNeedingCompaction = tables
     .map((table) => table && getCompactionRecommendation(table))
@@ -31,7 +31,11 @@ export function MetricsSummary() {
               Tables Needing Compaction
             </p>
             <p className="mt-2 text-3xl font-semibold">
-              {tablesNeedingCompaction.length}
+              {isFileDistributionLoading ? (
+                <div className="mt-4 h-4 w-16 animate-pulse rounded bg-gray-200" />
+              ) : (
+                tablesNeedingCompaction.length
+              )}
             </p>
           </div>
           <div className={`rounded-md bg-amber-500 p-3 text-white`}>

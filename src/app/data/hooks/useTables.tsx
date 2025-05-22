@@ -47,10 +47,8 @@ export const useAllTables = () => {
 
   return {
     tables,
-    isLoading:
-      tablesQueries.some((query) => query.isLoading) ||
-      isLoadingCatalogs ||
-      isLoadingNamespaces,
+    isLoading: isLoadingCatalogs || isLoadingNamespaces,
+    isFileDistributionLoading: tablesQueries.some((query) => query.isLoading),
     error: tablesQueries.some((query) => query.error),
   }
 }
