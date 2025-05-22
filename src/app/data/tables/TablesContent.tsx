@@ -202,8 +202,8 @@ export function TablesContent() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 bg-white">
-              {catalogNamespaces.map((namespace, index) => {
-                return namespace.tables.map((table, oindex) => (
+              {catalogNamespaces.map((namespace) => {
+                return namespace.tables.map((table) => (
                   <tr
                     key={namespace.name + "." + table}
                     className="cursor-pointer hover:bg-gray-50"

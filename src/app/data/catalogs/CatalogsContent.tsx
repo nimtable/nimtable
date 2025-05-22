@@ -1,23 +1,10 @@
 "use client"
 
-import type React from "react"
+import { ExternalLink, Plus, Search, Trash2 } from "lucide-react"
 import { useState } from "react"
+import type React from "react"
 import Link from "next/link"
-import {
-  AlertTriangle,
-  Check,
-  ExternalLink,
-  Plus,
-  Search,
-  Settings,
-  Shield,
-  Trash2,
-  X,
-} from "lucide-react"
 
-import { deleteCatalog } from "@/lib/client"
-import { errorToString } from "@/lib/utils"
-import { useToast } from "@/hooks/use-toast"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,9 +16,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import {
   Dialog,
   DialogContent,
@@ -40,12 +24,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Switch } from "@/components/ui/switch"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
+import { useToast } from "@/hooks/use-toast"
+import { deleteCatalog } from "@/lib/client"
+import { errorToString } from "@/lib/utils"
 
-import { useCatalogs } from "../hooks/useCatalogs"
 import { CreateCatalogModal } from "./CreateCatalogModal"
+import { useCatalogs } from "../hooks/useCatalogs"
 
 export function CatalogsContent() {
   const {
@@ -127,40 +116,6 @@ export function CatalogsContent() {
     }
   }
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "Healthy":
-        return <Check className="h-4 w-4" />
-      case "Needs Attention":
-        return <AlertTriangle className="h-4 w-4" />
-      case "Error":
-        return <X className="h-4 w-4" />
-      default:
-        return null
-    }
-  }
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Healthy":
-        return "bg-green-100 text-green-800 hover:bg-green-200"
-      case "Needs Attention":
-        return "bg-amber-100 text-amber-800 hover:bg-amber-200"
-      case "Error":
-        return "bg-red-100 text-red-800 hover:bg-red-200"
-      default:
-        return "bg-gray-100 text-gray-800 hover:bg-gray-200"
-    }
-  }
-
-  const getTypeIcon = (type: string) => {
-    return type === "Mirrored" ? (
-      <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
-    ) : (
-      <Shield className="h-3.5 w-3.5 ml-1.5" />
-    )
-  }
-
   // Filter catalogs based on search query
   const filteredCatalogs = catalogs?.filter((catalog) => {
     if (
@@ -199,20 +154,20 @@ export function CatalogsContent() {
   }
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-gray-50">
+    <div className="flex flex-1 flex-col overflow-hidden bg-gray-50">
       {/* Search Bar */}
-      <div className="p-6 border-b bg-white">
-        <div className="flex items-center justify-between mb-4">
+      <div className="border-b bg-white p-6">
+        <div className="mb-4 flex items-center justify-between">
           <h1 className="text-2xl font-semibold">Catalogs</h1>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
           {/* Search Input */}
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
             <Input
               placeholder="Search catalogs..."
-              className="pl-9 h-10"
+              className="h-10 pl-9"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -224,7 +179,7 @@ export function CatalogsContent() {
               className="rounded-r-none"
               onClick={() => setCreateModalOpen(true)}
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="mr-2 h-4 w-4" />
               Create Catalog
             </Button>
             <Button
@@ -240,11 +195,11 @@ export function CatalogsContent() {
 
       {/* Catalogs Grid */}
       <div className="flex-1 overflow-auto p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredCatalogs?.map((catalog, index) => (
             <Card
               key={index}
-              className="overflow-hidden border border-gray-200 hover:shadow-md transition-shadow duration-200"
+              className="overflow-hidden border border-gray-200 transition-shadow duration-200 hover:shadow-md"
             >
               <CardContent className="p-0">
                 <div className="p-6">
@@ -252,7 +207,7 @@ export function CatalogsContent() {
                     <div>
                       <div className="flex items-center">
                         <h3 className="text-lg font-medium">{catalog}</h3>
-                        <span className="text-xs text-gray-500 flex items-center ml-2">
+                        <span className="ml-2 flex items-center text-xs text-gray-500">
                           {/* {catalog.type}
                           {getTypeIcon(catalog.type)} */}
                           catalogType
@@ -289,7 +244,7 @@ export function CatalogsContent() {
                     </div>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <button className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors">
+                        <button className="rounded-full p-1 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600">
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </AlertDialogTrigger>
@@ -316,7 +271,7 @@ export function CatalogsContent() {
                 <div className="flex border-t">
                   <Link
                     href={`/data/namespaces?catalog=${catalog}`}
-                    className="flex-1 py-3 px-4 text-center text-sm font-medium text-blue-600 hover:bg-blue-50"
+                    className="flex-1 px-4 py-3 text-center text-sm font-medium text-blue-600 hover:bg-blue-50"
                   >
                     View Namespaces
                   </Link>
@@ -326,7 +281,7 @@ export function CatalogsContent() {
           ))}
         </div>
         {filteredCatalogs?.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
+          <div className="py-8 text-center text-gray-500">
             No catalogs found matching your criteria
           </div>
         )}

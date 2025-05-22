@@ -26,11 +26,7 @@ export function NamespacesContent() {
   )
   const [searchQuery, setSearchQuery] = useState<string>("")
 
-  const {
-    catalogs,
-    isLoading: isLoadingCatalogs,
-    refetch: refetchCatalogs,
-  } = useCatalogs()
+  const { catalogs, isLoading: isLoadingCatalogs } = useCatalogs()
   // Use useQueries to fetch namespaces for all catalogs in parallel
   const { namespaces: allNamespaces, isLoading: isLoadingNamespaces } =
     useNamespaces(catalogs || [])

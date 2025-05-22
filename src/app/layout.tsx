@@ -14,24 +14,23 @@
  * limitations under the License.
  */
 
-import type React from "react"
 import { Inter } from "next/font/google"
+import type React from "react"
 
-import "@/styles/globals.css"
 import "@/styles/animations.css"
+import "@/styles/globals.css"
 
-import { Suspense } from "react"
-import type { Metadata } from "next"
-import { AuthProvider } from "@/contexts/auth-context"
 import { RefreshProvider } from "@/contexts/refresh-context"
+import { AuthProvider } from "@/contexts/auth-context"
+import type { Metadata } from "next"
+import { Suspense } from "react"
 
-import { SidebarProvider } from "@/components/ui/sidebar"
-import { Toaster } from "@/components/ui/toaster"
-import { TooltipProvider } from "@/components/ui/tooltip"
-import { AppSidebar } from "@/components/app-sidebar"
-import { ProtectedRoute } from "@/components/protected-route"
 import { ReactQueryProvider } from "@/components/Providers/ReactQuery"
+import { ProtectedRoute } from "@/components/protected-route"
 import { ThemeProvider } from "@/components/theme-provider"
+import { SidebarProvider } from "@/components/ui/sidebar"
+import { TooltipProvider } from "@/components/ui/tooltip"
+import { Toaster } from "@/components/ui/toaster"
 
 const inter = Inter({ subsets: ["latin"] })
 
