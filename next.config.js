@@ -7,6 +7,15 @@ const nextConfig = {
       destination: "http://localhost:8182/api/:path*",
     },
   ],
+  async redirects() {
+    return [
+      {
+        source: "/",
+        destination: "/dashboard",
+        permanent: false,
+      },
+    ]
+  },
   eslint: {
     // Warning: This allows production builds to successfully complete even if
     // your project has ESLint errors.
