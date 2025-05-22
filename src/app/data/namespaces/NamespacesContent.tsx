@@ -179,13 +179,6 @@ export function NamespacesContent() {
                   <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
                     {namespace.tableCount}
                   </td>
-                  {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {namespace.storageSize}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {namespace.lastModified}
-                  </td> */}
-
                   <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
                     <Link
                       href={`/data/tables?catalog=${namespace.catalog}&namespace=${namespace.name}`}

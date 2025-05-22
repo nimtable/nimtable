@@ -42,9 +42,11 @@ export function TablesContent() {
   )
   const [searchQuery, setSearchQuery] = useState<string>("")
 
-  if (!selectedCatalog && catalogs.length > 0) {
-    setSelectedCatalog(catalogs[0])
-  }
+  useEffect(() => {
+    if (!selectedCatalog && catalogs.length > 0) {
+      setSelectedCatalog(catalogs[0])
+    }
+  }, [catalogs, selectedCatalog])
 
   // Update selected catalog and namespace if URL parameters change
   useEffect(() => {
