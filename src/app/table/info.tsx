@@ -241,13 +241,6 @@ export function InfoTab({
           </CardHeader>
           <CardContent className="px-0 py-2">
             <div className="divide-y divide-muted/30">
-              <TableSummary
-                catalog={catalog}
-                namespace={namespace}
-                table={table}
-                tableData={tableData}
-              />
-
               <div className="px-6 py-3">
                 <div className="mb-1 flex items-center justify-between">
                   <h4 className="text-xs font-medium text-muted-foreground">
@@ -353,6 +346,24 @@ export function InfoTab({
                 </p>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Table Context */}
+        <Card className="border-muted/70 shadow-sm overflow-hidden">
+          <CardHeader className="pb-2 border-b">
+            <CardTitle className="text-base flex items-center gap-2">
+              <FileText className="h-4 w-4 text-blue-500" />
+              Table Context
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <TableSummary
+              catalog={catalog}
+              namespace={namespace}
+              table={table}
+              tableData={tableData}
+            />
           </CardContent>
         </Card>
 

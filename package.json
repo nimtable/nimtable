@@ -11,6 +11,8 @@
     "typecheck": "tsc --noEmit",
     "format:write": "prettier --write \"**/*.{ts,tsx,mdx}\" --cache",
     "format:check": "prettier --check \"**/*.{ts,tsx,mdx}\" --cache",
+    "check": "npm run format:check && npm run lint",
+    "fix": "npm run format:write && npm run lint:fix",
     "gen-client-api": "./scripts/generate-client.sh"
   },
   "dependencies": {
