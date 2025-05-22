@@ -88,8 +88,8 @@ database:
 
 ### Database Configuration
 
-Nimtable needs a database to store data. Currently, SQLite and PostgreSQL are supported.
-For production, PostgreSQL is recommended. If you deploy with the `docker-compose.yml` file,
+Nimtable needs a PostgreSQL database to store data.
+If you deploy with the `docker-compose.yml` file,
 a Postgres container is included.
 
 You can also use your own Postgres database by setting the `url`, `username`, and `password`

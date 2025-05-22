@@ -45,9 +45,7 @@ public class FlywayMigrator {
                 Flyway.configure().dataSource(dataSource).validateOnMigrate(true);
 
         // Configure migrations location based on database type
-        if ("sqlite".equals(dbType)) {
-            flywayConfig.locations("db/migration/sqlite");
-        } else if ("postgresql".equals(dbType)) {
+        if ("postgresql".equals(dbType)) {
             flywayConfig.locations("db/migration/postgresql");
         } else {
             throw new RuntimeException("Unsupported database type: " + dbType);
@@ -67,12 +65,10 @@ public class FlywayMigrator {
      * Detects the database type from the JDBC URL.
      *
      * @param jdbcUrl The JDBC URL
-     * @return The database type (sqlite, postgresql, etc.)
+     * @return The database type (postgresql, etc.)
      */
     private static String detectDatabaseType(String jdbcUrl) {
-        if (jdbcUrl.startsWith("jdbc:sqlite:")) {
-            return "sqlite";
-        } else if (jdbcUrl.startsWith("jdbc:postgresql:") || jdbcUrl.contains("postgresql")) {
+        if (jdbcUrl.startsWith("jdbc:postgresql:") || jdbcUrl.contains("postgresql")) {
             return "postgresql";
         } else {
             // Unknown database type, log warning and return empty string

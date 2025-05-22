@@ -6,6 +6,7 @@ services:
       - "3000:3000"
     environment:
       - JAVA_API_URL=http://nimtable:8182
+      - DATABASE_URL=postgresql://nimtable_user:password@database:5432/nimtable
     depends_on:
       - nimtable
     networks:

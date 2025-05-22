@@ -38,7 +38,7 @@ import {
   type DistributionData,
 } from "@/lib/data-loader"
 import { omit } from "lodash"
-import { useActionState, useState } from "react"
+import { useActionState, useState, useEffect, useTransition } from "react"
 import {
   Database,
   FileText,
@@ -74,6 +74,7 @@ import { useRouter } from "next/navigation"
 import { errorToString } from "@/lib/utils"
 import { cn } from "@/lib/utils"
 import { actionGenerateTableSummary } from "@/components/table/actions"
+import type { TableSummary as TableSummaryType } from "@/db/db"
 
 interface InfoTabProps {
   tableData: LoadTableResult
@@ -625,36 +626,83 @@ export function TableSummary({
   tableData: LoadTableResult
 }) {
   const queryClient = useQueryClient()
+  const [isTransitionPending, startTransition] = useTransition()
 
-  const [tableSummaryText, generateTableSummary, isLoading] = useActionState(
-    async (_state: string | null, _formData: any) => {
-      // use shared queryClient to fetch cached distribution data
-      const fileDistribution = await queryClient.fetchQuery(
-        fileDistributionQuery(catalog, namespace, table)
+  const {
+    data: tableSummary,
+    isPending: isQueryPending,
+    isError: isQueryError,
+  } = useQuery<TableSummaryType>({
+    queryKey: ["table-summary", catalog, namespace, table],
+    queryFn: async () => {
+      const res = await fetch(
+        `/api/agent/table_summary?table=${table}&namespace=${namespace}&catalog=${catalog}`
       )
-      // TODO: add more infor, e.g., sample data / snapshot trend
-
-      // Currently we collect table data in frontend,
-      // and just let the backend to generate summary
-      const summary = await actionGenerateTableSummary({
-        qualifiedName: `${catalog}.${namespace}.${table}`,
-        fileDistribution,
-        metadata: omit(
-          tableData.metadata,
-          "snapshots",
-          "refs",
-          "metadata-log",
-          "snapshot-log",
-          "last-updated-ms"
-        ),
-        lastUpdatedTime: tableData.metadata["last-updated-ms"]
-          ? new Date(tableData.metadata["last-updated-ms"]).toLocaleString()
-          : "",
-      })
-      return summary
+      const data = await res.json()
+      return data
     },
-    null
-  )
+  })
+
+  const [_tableSummaryText, generateTableSummary, isGenerating] =
+    useActionState(async (_state: string | null, _formData: any) => {
+      try {
+        // use shared queryClient to fetch cached distribution data
+        const fileDistribution = await queryClient.fetchQuery(
+          fileDistributionQuery(catalog, namespace, table)
+        )
+        // TODO: add more info, e.g., sample data / snapshot trend
+
+        // Currently we collect table data in frontend,
+        // and just let the backend to generate summary
+        const summary = await actionGenerateTableSummary({
+          catalog,
+          namespace,
+          table,
+          fileDistribution,
+          metadata: omit(
+            tableData.metadata,
+            "snapshots",
+            "refs",
+            "metadata-log",
+            "snapshot-log",
+            "last-updated-ms"
+          ),
+          lastUpdatedTime: tableData.metadata["last-updated-ms"]
+            ? new Date(tableData.metadata["last-updated-ms"]).toLocaleString()
+            : "",
+        })
+        queryClient.invalidateQueries({
+          queryKey: ["table-summary", catalog, namespace, table],
+        })
+        return summary
+      } catch (error) {
+        console.error("Failed to generate table summary:", error)
+        throw error
+      }
+    }, null)
+
+  // Auto-generate summary if no data exists after initial load
+  useEffect(() => {
+    if (
+      !isQueryPending &&
+      !isQueryError &&
+      !tableSummary?.summary &&
+      !isGenerating &&
+      !isTransitionPending
+    ) {
+      startTransition(() => {
+        generateTableSummary(null)
+      })
+    }
+  }, [
+    isQueryPending,
+    isQueryError,
+    tableSummary?.summary,
+    isGenerating,
+    isTransitionPending,
+    generateTableSummary,
+    startTransition,
+  ])
 
   return (
     <div className="px-6 py-3">
@@ -675,16 +723,16 @@ export function TableSummary({
                 type="submit"
               >
                 <Loader2
-                  className={cn("h-3 w-3", isLoading && "animate-spin")}
+                  className={cn("h-3 w-3", isGenerating && "animate-spin")}
                 />
               </Button>
             </form>
           </TooltipTrigger>
           <TooltipContent side="left">
             <p>
-              {isLoading
+              {isGenerating
                 ? "Generating..."
-                : tableSummaryText
+                : tableSummary?.summary
                   ? "Regenerate"
                   : "Generate"}
             </p>
@@ -692,15 +740,19 @@ export function TableSummary({
         </Tooltip>
       </div>
       <div className="border border-muted/30 rounded-md p-1.5 bg-muted/30 font-mono">
-        <p
-          className="text-xs text-muted-foreground break-all"
-          dangerouslySetInnerHTML={{
-            __html: isLoading
-              ? "Generating..."
-              : tableSummaryText?.replaceAll("\n", "<br />") ||
-                "Click button on the right to generate",
-          }}
-        ></p>
+        {isGenerating ? (
+          <p className="text-xs text-muted-foreground">Generating...</p>
+        ) : tableSummary?.summary ? (
+          <div className="text-xs text-muted-foreground break-all space-y-1">
+            {tableSummary.summary.split("\n").map((line, index) => (
+              <p key={index}>{line || "\u00A0"}</p>
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            Click button on the right to generate
+          </p>
+        )}
       </div>
     </div>
   )
