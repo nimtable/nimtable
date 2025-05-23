@@ -44,13 +44,8 @@ public class PersistenceManager {
                 LOG.info("Configuring DataSource for URL: {}", dbConfig.url());
                 DataSourceConfig dsConfig = new DataSourceConfig();
                 dsConfig.setUrl(dbConfig.url());
-                if (dbConfig.url().startsWith("jdbc:sqlite:")) {
-                    dsConfig.setUsername("user");
-                    dsConfig.setPassword("");
-                } else {
-                    dsConfig.setUsername(dbConfig.username());
-                    dsConfig.setPassword(dbConfig.password());
-                }
+                dsConfig.setUsername(dbConfig.username());
+                dsConfig.setPassword(dbConfig.password());
                 // let Ebean choose driver via URL
 
                 // --- Ebean configuration ---

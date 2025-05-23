@@ -14,7 +14,8 @@ cd backend
 ```
 
 It uses the default config file at `backend/config.yaml`.
-SQLite will be used for development. To develop with Postgres, see [Docker Development](#docker-development) below.
+To develop with Postgres, start a Postgres with docker or homebrew, and update the config file.
+You can also develop with `docker-compose.yml`. See [Docker Development](#docker-development) below.
 
 The backend API will be available at http://localhost:8182.
 

@@ -86,7 +86,6 @@ dependencies {
 
   implementation 'com.google.guava:guava:33.3.0-jre'
 
-  implementation 'org.xerial:sqlite-jdbc:3.46.1.0'
   implementation 'org.postgresql:postgresql:42.7.4'
 
   // DB dependencies
@@ -95,7 +94,6 @@ dependencies {
   implementation "org.flywaydb:flyway-database-postgresql:${flywayVersion}"
   // Ebean ORM
   implementation "io.ebean:ebean-postgres:${ebeanVersion}"
-  implementation "io.ebean:ebean-sqlite:${ebeanVersion}"
   implementation "io.ebean:ebean-querybean:${ebeanVersion}"
   implementation "io.ebean:ebean-jackson-mapper:${ebeanVersion}"
   annotationProcessor "io.ebean:querybean-generator:${ebeanVersion}"

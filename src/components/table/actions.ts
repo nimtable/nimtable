@@ -16,13 +16,16 @@
 
 "use server"
 
+import { saveTableSummary } from "@/db/db"
 import { model, systemPrompt } from "@/lib/agent/utils"
 import { TableMetadata } from "@/lib/api"
 import { DistributionData } from "@/lib/data-loader"
 import { generateText } from "ai"
 
 type TableInfo = {
-  qualifiedName: string
+  catalog: string
+  namespace: string
+  table: string
   fileDistribution: DistributionData
   /**
    * We pass only part of TableMetadata, e.g., avoid full snapshot history list
@@ -64,6 +67,14 @@ ${new Date().toLocaleString()}
     prompt: prompt,
   })
   console.log("Generated table summary", text)
+
+  await saveTableSummary({
+    catalogName: tableData.catalog,
+    namespace: tableData.namespace,
+    tableName: tableData.table,
+    summary: text,
+    createdBy: "agent",
+  })
 
   return text
 }
