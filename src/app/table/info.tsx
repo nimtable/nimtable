@@ -72,6 +72,7 @@ import { useRefresh } from "@/contexts/refresh-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
 import { errorToString } from "@/lib/utils"
@@ -875,6 +876,13 @@ export function TableSummary({
           </p>
         )}
       </div>
+      {tableSummary?.createdAt && (
+        <div className="mb-2">
+          <p className="text-xs text-muted-foreground">
+            Last updated at: {new Date(tableSummary.createdAt).toLocaleString()}
+          </p>
+        </div>
+      )}
     </div>
   )
 }
