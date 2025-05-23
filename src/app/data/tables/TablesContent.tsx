@@ -1,7 +1,7 @@
 "use client"
 
+import { ArrowRight, Filter, Loader2, Search } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { Filter, Loader2, Search } from "lucide-react"
 import { useEffect, useState } from "react"
 import { Choose } from "react-extras"
 
@@ -266,6 +266,10 @@ export function TablesContent() {
                     >
                       Status
                     </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+                    ></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white">
@@ -312,6 +316,12 @@ export function TablesContent() {
                             Healthy
                           </Badge>
                         )}
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4">
+                        <span className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-900">
+                          View
+                          <ArrowRight className="h-3 w-3" />
+                        </span>
                       </td>
                     </tr>
                   ))}

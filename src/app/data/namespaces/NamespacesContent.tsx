@@ -11,8 +11,8 @@ import { ArrowRight, Database, FolderOpen, Plus, Search } from "lucide-react"
 import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
-import Link from "next/link"
 
 import { useNamespaces } from "../hooks/useNamespaces"
 import { useCatalogs } from "../hooks/useCatalogs"
@@ -25,6 +25,7 @@ export function NamespacesContent() {
     catalogFromUrl || "all"
   )
   const [searchQuery, setSearchQuery] = useState<string>("")
+  const router = useRouter()
 
   const { catalogs, isLoading: isLoadingCatalogs } = useCatalogs()
   // Use useQueries to fetch namespaces for all catalogs in parallel
@@ -136,18 +137,6 @@ export function NamespacesContent() {
                 >
                   Tables
                 </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-                >
-                  Storage Size
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-                >
-                  Last Modified
-                </th>
 
                 <th
                   scope="col"
@@ -159,7 +148,15 @@ export function NamespacesContent() {
             </thead>
             <tbody className="divide-y divide-gray-200 bg-white">
               {filteredNamespaces.map((namespace) => (
-                <tr key={namespace.id} className="hover:bg-gray-50">
+                <tr
+                  key={namespace.id}
+                  className="cursor-pointer hover:bg-gray-50"
+                  onClick={() =>
+                    router.push(
+                      `/data/tables?catalog=${namespace.catalog}&namespace=${namespace.name}`
+                    )
+                  }
+                >
                   <td className="whitespace-nowrap px-6 py-4">
                     <div className="flex items-center">
                       <FolderOpen className="mr-2 h-5 w-5 text-gray-400" />
@@ -180,13 +177,10 @@ export function NamespacesContent() {
                     {namespace.tableCount}
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
-                    <Link
-                      href={`/data/tables?catalog=${namespace.catalog}&namespace=${namespace.name}`}
-                      className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-900"
-                    >
+                    <span className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-900">
                       View Tables
                       <ArrowRight className="h-3 w-3" />
-                    </Link>
+                    </span>
                   </td>
                 </tr>
               ))}
