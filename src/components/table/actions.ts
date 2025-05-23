@@ -16,7 +16,7 @@
 
 "use server"
 
-import { saveTableSummary } from "@/db/db"
+import { saveTableSummary } from "@/db/table-summary"
 import { model, systemPrompt } from "@/lib/agent/utils"
 import { TableMetadata } from "@/lib/api"
 import { DistributionData } from "@/lib/data-loader"

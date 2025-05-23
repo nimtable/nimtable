@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { getLatestTableSummary } from "@/db/db"
+import { getLatestTableSummary } from "@/db/table-summary"
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
