@@ -138,7 +138,9 @@ export function ActivityFeed() {
               </p>
             </div>
             <Button variant="ghost" size="sm" className="text-xs">
-              <Link href={`/data/tables/table?catalog=${activity.catalog}&namespace=${activity.namespace}&table=${activity.table}`}>
+              <Link
+                href={`/data/tables/table?catalog=${activity.catalog}&namespace=${activity.namespace}&table=${activity.table}`}
+              >
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
