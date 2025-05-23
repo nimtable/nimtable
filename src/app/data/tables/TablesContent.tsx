@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter, useSearchParams } from "next/navigation"
-import { Filter, Loader2, Plus, Search } from "lucide-react"
+import { Filter, Loader2, Search } from "lucide-react"
 import { useEffect, useState } from "react"
 import { Choose } from "react-extras"
 
@@ -211,12 +211,6 @@ export function TablesContent() {
               </DropdownMenuCheckboxItem>
             </DropdownMenuContent>
           </DropdownMenu>
-
-          {/* Create Table Button */}
-          <Button className="gap-2">
-            <Plus className="h-4 w-4" />
-            Create Table
-          </Button>
         </div>
       </div>
 

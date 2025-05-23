@@ -19,11 +19,13 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
+import { useAuth } from "@/contexts/auth-context"
 import { cn } from "@/lib/utils"
 
 export function Sidebar() {
   const pathname = usePathname()
   const [dataExpanded, setDataExpanded] = useState(true)
+  const { user } = useAuth()
 
   const mainNavItems = [
     {
@@ -154,13 +156,13 @@ export function Sidebar() {
       <div className="border-t p-4">
         <div className="flex cursor-pointer items-center gap-2 rounded-md p-2 hover:bg-gray-100">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200">
-            <span className="text-sm font-medium">JD</span>
+            <span className="text-sm font-medium">
+              {user?.username.charAt(0)}
+            </span>
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium">John Doe</p>
-            <p className="truncate text-xs text-gray-500">john@example.com</p>
+            <p className="truncate text-sm font-medium">{user?.username}</p>
           </div>
-          <ChevronDown className="h-4 w-4 text-gray-500" />
         </div>
       </div>
     </div>
