@@ -90,12 +90,14 @@ export function TableWatchlist() {
       <div className="divide-y">
         {tablesNeedingCompaction.map((table, index) => (
           <div key={index} className="px-6 py-4">
-            <div className="mb-2 flex items-center justify-between">
-              <h3 className="font-medium">{table.table}</h3>
+            <div className="mb-2 flex flex-col gap-2">
+              <h3 className="font-medium">
+                {table.catalog}.{table.namespace}.{table.table}
+              </h3>
 
               <Badge
                 variant="outline"
-                className="bg-amber-100 text-amber-800 hover:bg-amber-200"
+                className="w-fit bg-amber-100 text-amber-800 hover:bg-amber-200"
               >
                 <span className="flex items-center pt-0.5">
                   Needs Compaction
