@@ -54,6 +54,7 @@ export async function getLatestTableSummary({
       )
     )
     .orderBy(desc(tableSummaries.createdAt))
+    .limit(1)
 
   if (res.length === 0) {
     return null
