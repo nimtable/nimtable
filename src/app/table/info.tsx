@@ -37,6 +37,8 @@ import {
   getFileDistribution,
   type DistributionData,
 } from "@/lib/data-loader"
+import { omit } from "lodash"
+import { useActionState, useState } from "react"
 import {
   Database,
   FileText,
@@ -46,6 +48,7 @@ import {
   Layers,
   Hash,
   Calendar,
+  Loader2,
 } from "lucide-react"
 import {
   Tooltip,
@@ -54,11 +57,15 @@ import {
 } from "@/components/ui/tooltip"
 import { FileDistributionLoading } from "@/components/table/file-distribution-loading"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  useQuery,
+  useQueryClient,
+  UseQueryOptions,
+} from "@tanstack/react-query"
 import { FileDistribution } from "@/components/table/file-distribution"
 import type { LoadTableResult, StructField } from "@/lib/data-loader"
 import { getPropertyDescription } from "@/lib/property-descriptions"
 import { useRefresh } from "@/contexts/refresh-context"
-import { useQuery } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -66,7 +73,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
 import { errorToString } from "@/lib/utils"
 import { cn } from "@/lib/utils"
-import { useState } from "react"
+import { actionGenerateTableSummary } from "@/components/table/actions"
 
 interface InfoTabProps {
   tableData: LoadTableResult
@@ -83,6 +90,21 @@ const isSensitiveProperty = (key: string): boolean => {
   return sensitiveKeys.some((sensitiveKey) =>
     key.toLowerCase().includes(sensitiveKey.toLowerCase())
   )
+}
+
+function fileDistributionQuery(
+  catalog: string,
+  namespace: string,
+  tableId: string,
+  refreshKey?: number
+): UseQueryOptions<DistributionData> {
+  return {
+    queryKey: ["file-distribution", catalog, namespace, tableId, refreshKey],
+    queryFn: async () => {
+      return await getFileDistribution(catalog, namespace, tableId)
+    },
+    enabled: !!(tableId && catalog && namespace),
+  }
 }
 
 function FileDistributionSection({
@@ -102,11 +124,7 @@ function FileDistributionSection({
     isFetching,
     isError,
     refetch,
-  } = useQuery<DistributionData>({
-    queryKey: ["file-distribution", catalog, namespace, tableId, refreshKey],
-    queryFn: () => getFileDistribution(catalog, namespace, tableId),
-    enabled: !!(tableId && catalog && namespace),
-  })
+  } = useQuery(fileDistributionQuery(catalog, namespace, tableId, refreshKey))
 
   if (isPending || isError) {
     return <FileDistributionLoading />
@@ -328,6 +346,24 @@ export function InfoTab({
                 </p>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Table Context */}
+        <Card className="border-muted/70 shadow-sm overflow-hidden">
+          <CardHeader className="pb-2 border-b">
+            <CardTitle className="text-base flex items-center gap-2">
+              <FileText className="h-4 w-4 text-blue-500" />
+              Table Context
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <TableSummary
+              catalog={catalog}
+              namespace={namespace}
+              table={table}
+              tableData={tableData}
+            />
           </CardContent>
         </Card>
 
@@ -573,6 +609,99 @@ export function InfoTab({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  )
+}
+
+export function TableSummary({
+  catalog,
+  namespace,
+  table,
+  tableData,
+}: {
+  catalog: string
+  namespace: string
+  table: string
+  tableData: LoadTableResult
+}) {
+  const queryClient = useQueryClient()
+
+  const [tableSummaryText, generateTableSummary, isLoading] = useActionState(
+    async (_state: string | null, _formData: any) => {
+      // use shared queryClient to fetch cached distribution data
+      const fileDistribution = await queryClient.fetchQuery(
+        fileDistributionQuery(catalog, namespace, table)
+      )
+      // TODO: add more infor, e.g., sample data / snapshot trend
+
+      // Currently we collect table data in frontend,
+      // and just let the backend to generate summary
+      const summary = await actionGenerateTableSummary({
+        qualifiedName: `${catalog}.${namespace}.${table}`,
+        fileDistribution,
+        metadata: omit(
+          tableData.metadata,
+          "snapshots",
+          "refs",
+          "metadata-log",
+          "snapshot-log",
+          "last-updated-ms"
+        ),
+        lastUpdatedTime: tableData.metadata["last-updated-ms"]
+          ? new Date(tableData.metadata["last-updated-ms"]).toLocaleString()
+          : "",
+      })
+      return summary
+    },
+    null
+  )
+
+  return (
+    <div className="px-6 py-3">
+      <div className="flex items-center justify-between mb-1">
+        <h4 className="text-xs font-medium text-muted-foreground">
+          Table Summary
+        </h4>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <form action={generateTableSummary}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "h-6 w-6 rounded-md transition-all duration-200",
+                  "text-muted-foreground"
+                )}
+                type="submit"
+              >
+                <Loader2
+                  className={cn("h-3 w-3", isLoading && "animate-spin")}
+                />
+              </Button>
+            </form>
+          </TooltipTrigger>
+          <TooltipContent side="left">
+            <p>
+              {isLoading
+                ? "Generating..."
+                : tableSummaryText
+                  ? "Regenerate"
+                  : "Generate"}
+            </p>
+          </TooltipContent>
+        </Tooltip>
+      </div>
+      <div className="border border-muted/30 rounded-md p-1.5 bg-muted/30 font-mono">
+        <p
+          className="text-xs text-muted-foreground break-all"
+          dangerouslySetInnerHTML={{
+            __html: isLoading
+              ? "Generating..."
+              : tableSummaryText?.replaceAll("\n", "<br />") ||
+                "Click button on the right to generate",
+          }}
+        ></p>
+      </div>
     </div>
   )
 }
