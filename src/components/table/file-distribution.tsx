@@ -1,5 +1,3 @@
-import { AlertTriangle, RefreshCw, CheckCircle2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -7,8 +5,10 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card"
+import { AlertTriangle, RefreshCw, CheckCircle2 } from "lucide-react"
 import { FileStatistics } from "@/components/table/file-statistics"
 import type { DistributionData } from "@/lib/data-loader"
+import { Button } from "@/components/ui/button"
 
 // Define the order of size ranges
 export const rangeOrder = ["0-8M", "8M-32M", "32M-128M", "128M-512M", "512M+"]
@@ -92,14 +92,14 @@ export const getCompactionRecommendation = (distribution: DistributionData) => {
 
 interface FileDistributionProps {
   distribution: DistributionData
-  isPending: boolean
+  isFetching: boolean
   onRefresh?: () => void
   showRecommendation?: boolean
 }
 
 export function FileDistribution({
   distribution,
-  isPending,
+  isFetching,
   onRefresh,
   showRecommendation = true,
 }: FileDistributionProps) {
@@ -123,7 +123,7 @@ export function FileDistribution({
     getCompactionRecommendation(distribution)
 
   return (
-    <Card className="border-muted/70 shadow-sm h-full">
+    <Card className="h-full border-muted/70 shadow-sm">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <div>
@@ -132,25 +132,27 @@ export function FileDistribution({
               Current distribution of file sizes in the table
             </CardDescription>
           </div>
-          {shouldCompact ? (
-            <div className="flex items-center gap-2 px-3 py-1 bg-yellow-50 dark:bg-yellow-950/30 rounded-md border border-yellow-200 dark:border-yellow-900/50">
-              <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-500" />
-              <span className="text-sm font-medium text-yellow-700 dark:text-yellow-400">
-                Needs Compaction
-              </span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 px-3 py-1 bg-green-50 dark:bg-green-950/30 rounded-md border border-green-200 dark:border-green-900/50">
-              <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-500" />
-              <span className="text-sm font-medium text-green-700 dark:text-green-400">
-                Health
-              </span>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            {shouldCompact ? (
+              <div className="flex items-center gap-2 rounded-md border border-yellow-200 bg-yellow-50 px-3 py-1 dark:border-yellow-900/50 dark:bg-yellow-950/30">
+                <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-500" />
+                <span className="text-sm font-medium text-yellow-700 dark:text-yellow-400">
+                  Needs Compaction
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 rounded-md border border-green-200 bg-green-50 px-3 py-1 dark:border-green-900/50 dark:bg-green-950/30">
+                <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-500" />
+                <span className="text-sm font-medium text-green-700 dark:text-green-400">
+                  Health
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent className="pt-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           {/* Left section - File Statistics */}
           <div className="space-y-6">
             <div className="pt-4">
@@ -160,7 +162,7 @@ export function FileDistribution({
 
           {/* Right section - Distribution Chart, Total Files and Recommendation */}
           <div className="space-y-6">
-            <div className="flex justify-between items-center text-sm">
+            <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-2">
                 <span className="font-medium">Total Files: {totalFiles}</span>
                 {onRefresh && (
@@ -169,10 +171,10 @@ export function FileDistribution({
                     size="icon"
                     className="h-6 w-6"
                     onClick={onRefresh}
-                    disabled={isPending}
+                    disabled={isFetching}
                   >
                     <RefreshCw
-                      className={`h-3 w-3 ${isPending ? "animate-spin" : ""}`}
+                      className={`h-3 w-3 ${isFetching ? "animate-spin" : ""}`}
                     />
                   </Button>
                 )}
@@ -182,7 +184,7 @@ export function FileDistribution({
             <div className="space-y-5">
               {sortedDistributionEntries.map(([range, data]) => (
                 <div key={range} className="space-y-1.5">
-                  <div className="flex justify-between items-center">
+                  <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div
                         className={`h-3 w-3 rounded-full ${
@@ -203,7 +205,7 @@ export function FileDistribution({
                       {data.count} files ({data.percentage}%)
                     </span>
                   </div>
-                  <div className="h-2.5 bg-muted/50 rounded-full w-full overflow-hidden">
+                  <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted/50">
                     <div
                       className={`h-full rounded-full ${
                         range === "0-8M"
@@ -224,7 +226,7 @@ export function FileDistribution({
             </div>
 
             {showRecommendation && (
-              <div className="pt-4 border-t border-muted/50">
+              <div className="border-t border-muted/50 pt-4">
                 <div className="text-sm">
                   <p className="mb-2 font-medium text-foreground">
                     Optimization Recommendation:
@@ -235,7 +237,7 @@ export function FileDistribution({
                         This table would benefit from compaction for the
                         following reasons:
                       </p>
-                      <ul className="list-disc pl-4 space-y-1 text-muted-foreground">
+                      <ul className="list-disc space-y-1 pl-4 text-muted-foreground">
                         {recommendations.map((reason, index) => (
                           <li key={index}>{reason}</li>
                         ))}

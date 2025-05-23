@@ -15,7 +15,6 @@
  */
 "use client"
 
-import { useEffect, useState } from "react"
 import {
   ChevronRight,
   Settings,
@@ -27,9 +26,12 @@ import {
   Cpu,
   GitCommit,
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { errorToString } from "@/lib/utils"
-import { useToast } from "@/hooks/use-toast"
+import {
+  getFileDistribution,
+  runOptimizationOperation,
+  type DistributionData,
+  type OptimizationOperation,
+} from "@/lib/data-loader"
 import {
   Dialog,
   DialogContent,
@@ -38,19 +40,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import { Card, CardContent } from "@/components/ui/card"
-import { Sheet, SheetContent } from "@/components/ui/sheet"
-import Link from "next/link"
-import {
-  getFileDistribution,
-  runOptimizationOperation,
-  type DistributionData,
-  type OptimizationOperation,
-} from "@/lib/data-loader"
-import { FileDistributionLoading } from "@/components/table/file-distribution-loading"
 import {
   Select,
   SelectContent,
@@ -58,9 +47,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { useQuery, useMutation } from "@tanstack/react-query"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { FileDistributionLoading } from "@/components/table/file-distribution-loading"
 import { FileDistribution } from "@/components/table/file-distribution"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { useQuery, useMutation } from "@tanstack/react-query"
+import { Sheet, SheetContent } from "@/components/ui/sheet"
+import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Switch } from "@/components/ui/switch"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { useToast } from "@/hooks/use-toast"
+import { getTableInfo } from "@/lib/client"
+import { errorToString } from "@/lib/utils"
+import { useEffect, useState } from "react"
+import Link from "next/link"
 
 type OptimizationStep = {
   name: string
@@ -101,7 +102,7 @@ function FileDistributionSection({
   return (
     <FileDistribution
       distribution={distribution}
-      isPending={isPending}
+      isFetching={isPending}
       onRefresh={refetch}
     />
   )
@@ -127,15 +128,14 @@ function CompactionHistory({
 }) {
   const { data: tableData } = useQuery({
     queryKey: ["table", catalog, namespace, table],
-    queryFn: async () => {
-      const response = await fetch(
-        `/api/catalog/${catalog}/namespace/${namespace}/table/${table}`
-      )
-      if (!response.ok) {
-        throw new Error("Failed to fetch table data")
-      }
-      return await response.json()
-    },
+    queryFn: () =>
+      getTableInfo({
+        path: {
+          catalog,
+          namespace,
+          table,
+        },
+      }).then((res) => res.data),
   })
 
   // Format timestamp to be more compact
@@ -172,11 +172,11 @@ function CompactionHistory({
 
   if (compactionHistory.length === 0) {
     return (
-      <Card className="border-muted/70 shadow-sm overflow-hidden">
+      <Card className="overflow-hidden border-muted/70 shadow-sm">
         <CardContent className="flex flex-col items-center justify-center py-12">
-          <GitCommit className="h-12 w-12 mb-4 text-muted-foreground/20" />
+          <GitCommit className="mb-4 h-12 w-12 text-muted-foreground/20" />
           <p className="text-sm font-medium">No compaction history</p>
-          <p className="text-xs mt-1 text-muted-foreground">
+          <p className="mt-1 text-xs text-muted-foreground">
             This table doesn&apos;t have any compaction operations yet
           </p>
         </CardContent>
@@ -185,10 +185,10 @@ function CompactionHistory({
   }
 
   return (
-    <Card className="border-muted/70 shadow-sm overflow-hidden">
-      <div className="border rounded-md overflow-hidden bg-background">
+    <Card className="overflow-hidden border-muted/70 shadow-sm">
+      <div className="overflow-hidden rounded-md border bg-background">
         {/* Header row */}
-        <div className="flex items-center py-2 px-3 border-b bg-muted/30 text-xs font-medium text-muted-foreground">
+        <div className="flex items-center border-b bg-muted/30 px-3 py-2 text-xs font-medium text-muted-foreground">
           <div className="w-8 flex-shrink-0">{/* Expand button column */}</div>
           <div className="w-[300px] flex-shrink-0 pl-4">Snapshot ID</div>
           <div className="w-[140px] flex-shrink-0">Date</div>
@@ -200,24 +200,24 @@ function CompactionHistory({
           {compactionHistory.map((item: CompactionHistoryItem) => (
             <div
               key={item.id}
-              className="flex items-center py-2 px-3 border-b last:border-b-0 hover:bg-muted/20 transition-colors"
+              className="flex items-center border-b px-3 py-2 transition-colors last:border-b-0 hover:bg-muted/20"
             >
-              <div className="w-8 flex-shrink-0 flex items-center">
-                <div className="h-2 w-2 rounded-full bg-blue-500 ml-2" />
+              <div className="flex w-8 flex-shrink-0 items-center">
+                <div className="ml-2 h-2 w-2 rounded-full bg-blue-500" />
               </div>
 
               {/* Snapshot ID */}
-              <div className="font-mono text-xs text-muted-foreground w-[300px] flex-shrink-0 pl-4">
+              <div className="w-[300px] flex-shrink-0 pl-4 font-mono text-xs text-muted-foreground">
                 {String(item.id)}
               </div>
 
               {/* Date */}
-              <div className="text-xs text-muted-foreground w-[140px] flex-shrink-0">
+              <div className="w-[140px] flex-shrink-0 text-xs text-muted-foreground">
                 {formatDate(item.timestamp)}
               </div>
 
               {/* Operation type */}
-              <div className="text-xs font-medium w-[100px] flex-shrink-0">
+              <div className="w-[100px] flex-shrink-0 text-xs font-medium">
                 Compaction
               </div>
             </div>
@@ -382,7 +382,7 @@ export function OptimizeSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="w-full sm:max-w-full p-0 flex flex-col h-full"
+        className="flex h-full w-full flex-col p-0 sm:max-w-full"
       >
         {/* Header */}
         <div className="border-b bg-background">
@@ -391,26 +391,26 @@ export function OptimizeSheet({
               <div className="flex items-center gap-2">
                 <Link
                   href={`/table?catalog=${catalog}&namespace=${namespace}&table=${table}`}
-                  className="text-muted-foreground hover:text-foreground font-medium"
+                  className="font-medium text-muted-foreground hover:text-foreground"
                 >
                   {table}
                 </Link>
                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                <span className="text-foreground font-medium">Optimize</span>
+                <span className="font-medium text-foreground">Optimize</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Title Section */}
-        <div className="bg-muted/5 border-b px-6 py-4">
+        <div className="border-b bg-muted/5 px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
+            <div className="rounded-lg bg-blue-50 p-2 dark:bg-blue-950/30">
               <Settings className="h-5 w-5 text-blue-500" />
             </div>
             <div>
               <h1 className="text-xl font-semibold">Table Optimization</h1>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="mt-1 text-sm text-muted-foreground">
                 Configure and run Iceberg optimization operations including
                 compaction, snapshot expiration...
               </p>
@@ -420,10 +420,10 @@ export function OptimizeSheet({
 
         {/* Main Content */}
         <div className="flex-1 overflow-y-auto">
-          <div className="max-w-7xl mx-auto p-6">
+          <div className="mx-auto max-w-7xl p-6">
             {/* Optimization Settings */}
             <div className="mb-8">
-              <h2 className="text-lg font-medium mb-4 flex items-center gap-2">
+              <h2 className="mb-4 flex items-center gap-2 text-lg font-medium">
                 <div className="h-1.5 w-1.5 rounded-full bg-blue-500"></div>
                 Optimization Settings
               </h2>
@@ -480,7 +480,7 @@ export function OptimizeSheet({
                   </div>
 
                   {/* Compaction */}
-                  <div className="space-y-4 pt-2 border-t">
+                  <div className="space-y-4 border-t pt-2">
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
                         <Label className="text-base">Compaction</Label>
@@ -570,8 +570,8 @@ export function OptimizeSheet({
                         </div>
 
                         {/* System Resource Information */}
-                        <div className="mt-4 pt-4 border-t border-muted/50">
-                          <div className="flex items-center gap-2 mb-2">
+                        <div className="mt-4 border-t border-muted/50 pt-4">
+                          <div className="mb-2 flex items-center gap-2">
                             <Cpu className="h-4 w-4 text-blue-500" />
                             <span className="text-sm font-medium">
                               System Resources
@@ -621,7 +621,7 @@ export function OptimizeSheet({
 
             {/* Current File Distribution */}
             <div className="mb-8">
-              <h2 className="text-lg font-medium mb-4 flex items-center gap-2">
+              <h2 className="mb-4 flex items-center gap-2 text-lg font-medium">
                 <div className="h-1.5 w-1.5 rounded-full bg-blue-500"></div>
                 Current File Distribution
               </h2>
@@ -634,7 +634,7 @@ export function OptimizeSheet({
 
             {/* Compaction History */}
             <div>
-              <h2 className="text-lg font-medium mb-4 flex items-center gap-2">
+              <h2 className="mb-4 flex items-center gap-2 text-lg font-medium">
                 <div className="h-1.5 w-1.5 rounded-full bg-blue-500"></div>
                 Compaction History
               </h2>
@@ -648,7 +648,7 @@ export function OptimizeSheet({
         </div>
 
         {/* Footer */}
-        <div className="border-t bg-background py-4 px-6">
+        <div className="border-t bg-background px-6 py-4">
           <div className="flex justify-end gap-3">
             <Button
               variant="outline"

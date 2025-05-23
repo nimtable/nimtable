@@ -14,21 +14,23 @@
  * limitations under the License.
  */
 
-import type React from "react"
 import { Inter } from "next/font/google"
-import "@/styles/globals.css"
+import type React from "react"
+
 import "@/styles/animations.css"
+import "@/styles/globals.css"
+
 import { RefreshProvider } from "@/contexts/refresh-context"
-import { SidebarProvider } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { ThemeProvider } from "@/components/theme-provider"
-import { Toaster } from "@/components/ui/toaster"
-import { Suspense } from "react"
 import { AuthProvider } from "@/contexts/auth-context"
-import { ProtectedRoute } from "@/components/protected-route"
 import type { Metadata } from "next"
+import { Suspense } from "react"
+
 import { ReactQueryProvider } from "@/components/Providers/ReactQuery"
+import { ProtectedRoute } from "@/components/protected-route"
+import { ThemeProvider } from "@/components/theme-provider"
+import { SidebarProvider } from "@/components/ui/sidebar"
 import { TooltipProvider } from "@/components/ui/tooltip"
+import { Toaster } from "@/components/ui/toaster"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -57,7 +59,7 @@ export default function RootLayout({
                   <SidebarProvider>
                     <ProtectedRoute>
                       {/* The AppSidebar should only be rendered when the user is authenticated */}
-                      <AppSidebar />
+                      {/* <AppSidebar /> */}
                       <Suspense fallback={<></>}>{children}</Suspense>
                     </ProtectedRoute>
                     <Toaster />
