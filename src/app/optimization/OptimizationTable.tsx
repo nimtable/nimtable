@@ -1,45 +1,35 @@
 "use client"
 
+import { ArrowUpDown, Check, GitCompare, MoreHorizontal, X } from "lucide-react"
 import { useState } from "react"
-import {
-  ArrowUpDown,
-  Check,
-  GitCompare,
-  LayoutGrid,
-  MoreHorizontal,
-  X,
-} from "lucide-react"
 
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { OptimizeSheet } from "@/components/table/optimize-sheet"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 
 type Table = {
   id: string
   name: string
+  catalog: string
+  namespace: string
   needsCompaction: boolean
   dataFiles: number
   avgFileSize: string
-  partitionSkew: boolean
-  lastOptimized: string
 }
 
 type OptimizationTableProps = {
   tables: Table[]
-  selectedTables: string[]
-  setSelectedTables: (selected: string[]) => void
+  loading: boolean
 }
 
-export function OptimizationTable({
-  tables,
-  selectedTables,
-  setSelectedTables,
-}: OptimizationTableProps) {
+export function OptimizationTable({ tables, loading }: OptimizationTableProps) {
   const [sortConfig, setSortConfig] = useState<{
     key: keyof Table | null
     direction: "ascending" | "descending"
@@ -47,6 +37,11 @@ export function OptimizationTable({
     key: null,
     direction: "ascending",
   })
+
+  const [showOptimizeSheet, setShowOptimizeSheet] = useState(false)
+
+  const [selectedCompactTable, setSelectedCompactTable] =
+    useState<Table | null>(null)
 
   // Handle sorting
   const requestSort = (key: keyof Table) => {
@@ -89,52 +84,39 @@ export function OptimizationTable({
     return 0
   })
 
-  // Handle checkbox selection
-  const toggleSelectAll = () => {
-    if (selectedTables.length === tables.length) {
-      setSelectedTables([])
-    } else {
-      setSelectedTables(tables.map((table) => table.id))
-    }
-  }
-
-  const toggleSelectTable = (tableId: string) => {
-    if (selectedTables.includes(tableId)) {
-      setSelectedTables(selectedTables.filter((id) => id !== tableId))
-    } else {
-      setSelectedTables([...selectedTables, tableId])
-    }
-  }
-
   // Handle optimization action
   const handleOptimize = (tableId: string) => {
-    console.log("Optimizing table:", tableId)
-    // In a real app, this would trigger an optimization job
+    const table = tables.find((table) => table.id === tableId)
+    if (table) {
+      setSelectedCompactTable(table)
+      setShowOptimizeSheet(true)
+    }
   }
 
+  if (loading) {
+    return (
+      <div className="rounded-lg border bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b px-6 py-4">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-5 w-5 rounded-full" />
+            <Skeleton className="h-5 w-20" />
+          </div>
+        </div>
+      </div>
+    )
+  }
   return (
-    <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
+    <div className="overflow-hidden rounded-lg border bg-white shadow-sm">
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th scope="col" className="px-3 py-3.5">
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  checked={
-                    selectedTables.length === tables.length && tables.length > 0
-                  }
-                  onChange={toggleSelectAll}
-                  aria-label="Select all tables"
-                />
-              </th>
               <th
                 scope="col"
-                className="px-3 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="px-3 py-3.5 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
               >
                 <div
-                  className="flex items-center gap-1 cursor-pointer"
+                  className="flex cursor-pointer items-center gap-1"
                   onClick={() => requestSort("name")}
                 >
                   Table Name
@@ -143,10 +125,10 @@ export function OptimizationTable({
               </th>
               <th
                 scope="col"
-                className="px-3 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="px-3 py-3.5 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
               >
                 <div
-                  className="flex items-center gap-1 cursor-pointer"
+                  className="flex cursor-pointer items-center gap-1"
                   onClick={() => requestSort("needsCompaction")}
                 >
                   Needs Compaction
@@ -155,10 +137,10 @@ export function OptimizationTable({
               </th>
               <th
                 scope="col"
-                className="px-3 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="px-3 py-3.5 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
               >
                 <div
-                  className="flex items-center gap-1 cursor-pointer"
+                  className="flex cursor-pointer items-center gap-1"
                   onClick={() => requestSort("dataFiles")}
                 >
                   Data Files
@@ -167,109 +149,57 @@ export function OptimizationTable({
               </th>
               <th
                 scope="col"
-                className="px-3 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="px-3 py-3.5 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
               >
                 Avg File Size
               </th>
               <th
                 scope="col"
-                className="px-3 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                <div
-                  className="flex items-center gap-1 cursor-pointer"
-                  onClick={() => requestSort("partitionSkew")}
-                >
-                  Partition Skew
-                  <ArrowUpDown className="h-3 w-3" />
-                </div>
-              </th>
-              <th
-                scope="col"
-                className="px-3 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                <div
-                  className="flex items-center gap-1 cursor-pointer"
-                  onClick={() => requestSort("lastOptimized")}
-                >
-                  Last Optimized
-                  <ArrowUpDown className="h-3 w-3" />
-                </div>
-              </th>
-              <th
-                scope="col"
-                className="px-3 py-3.5 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="px-3 py-3.5 text-right text-xs font-medium uppercase tracking-wider text-gray-500"
               >
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="divide-y divide-gray-200 bg-white">
             {sortedTables.map((table) => (
               <tr key={table.id} className="hover:bg-gray-50">
-                <td className="px-3 py-4 whitespace-nowrap">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    checked={selectedTables.includes(table.id)}
-                    onChange={() => toggleSelectTable(table.id)}
-                    aria-label={`Select ${table.name}`}
-                  />
-                </td>
-                <td className="px-3 py-4 whitespace-nowrap">
+                <td className="whitespace-nowrap px-3 py-4">
                   <div className="font-medium text-gray-900">{table.name}</div>
                 </td>
-                <td className="px-3 py-4 whitespace-nowrap">
+                <td className="whitespace-nowrap px-3 py-4">
                   {table.needsCompaction ? (
                     <Badge
                       variant="outline"
-                      className="bg-amber-100 text-amber-800 border-amber-200"
+                      className="border-amber-200 bg-amber-100 text-amber-800"
                     >
-                      <Check className="h-3 w-3 mr-1" /> Yes
+                      <Check className="mr-1 h-3 w-3" /> Yes
                     </Badge>
                   ) : (
                     <Badge
                       variant="outline"
-                      className="bg-green-100 text-green-800 border-green-200"
+                      className="border-green-200 bg-green-100 text-green-800"
                     >
-                      <X className="h-3 w-3 mr-1" /> No
+                      <X className="mr-1 h-3 w-3" /> No
                     </Badge>
                   )}
                 </td>
-                <td className="px-3 py-4 whitespace-nowrap text-sm">
+                <td className="whitespace-nowrap px-3 py-4 text-sm">
                   <div
                     className={
                       table.dataFiles > 1000
-                        ? "text-amber-600 font-medium"
+                        ? "font-medium text-amber-600"
                         : "text-gray-500"
                     }
                   >
                     {table.dataFiles.toLocaleString()}
                   </div>
                 </td>
-                <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                   {table.avgFileSize}
                 </td>
-                <td className="px-3 py-4 whitespace-nowrap">
-                  {table.partitionSkew ? (
-                    <Badge
-                      variant="outline"
-                      className="bg-amber-100 text-amber-800 border-amber-200"
-                    >
-                      <Check className="h-3 w-3 mr-1" /> Yes
-                    </Badge>
-                  ) : (
-                    <Badge
-                      variant="outline"
-                      className="bg-green-100 text-green-800 border-green-200"
-                    >
-                      <X className="h-3 w-3 mr-1" /> No
-                    </Badge>
-                  )}
-                </td>
-                <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {table.lastOptimized}
-                </td>
-                <td className="px-3 py-4 whitespace-nowrap text-right text-sm font-medium">
+
+                <td className="whitespace-nowrap px-3 py-4 text-right text-sm font-medium">
                   <div className="flex justify-end gap-2">
                     <Button
                       size="sm"
@@ -292,10 +222,6 @@ export function OptimizationTable({
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <LayoutGrid className="h-4 w-4 mr-2" />
-                          Optimize Layout
-                        </DropdownMenuItem>
                         <DropdownMenuItem>View Details</DropdownMenuItem>
                         <DropdownMenuItem>View History</DropdownMenuItem>
                       </DropdownMenuContent>
@@ -308,9 +234,19 @@ export function OptimizationTable({
         </table>
       </div>
       {tables.length === 0 && (
-        <div className="text-center py-8 text-gray-500">
+        <div className="py-8 text-center text-gray-500">
           No tables match the current filters
         </div>
+      )}
+
+      {selectedCompactTable && (
+        <OptimizeSheet
+          open={showOptimizeSheet}
+          onOpenChange={setShowOptimizeSheet}
+          catalog={selectedCompactTable?.catalog}
+          namespace={selectedCompactTable?.namespace}
+          table={selectedCompactTable?.name}
+        />
       )}
     </div>
   )

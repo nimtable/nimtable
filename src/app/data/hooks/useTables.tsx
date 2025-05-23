@@ -41,9 +41,11 @@ export const useAllTables = () => {
       }) || [],
   })
 
-  const tables = tablesQueries.map((query) => {
-    return query.data
-  })
+  const tables = tablesQueries
+    .map((query) => {
+      return query.data
+    })
+    .filter((table) => table !== undefined)
 
   return {
     tables,

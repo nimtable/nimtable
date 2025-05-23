@@ -58,6 +58,7 @@ import { Switch } from "@/components/ui/switch"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
+import { getTableInfo } from "@/lib/client"
 import { errorToString } from "@/lib/utils"
 import { useEffect, useState } from "react"
 import Link from "next/link"
@@ -127,15 +128,14 @@ function CompactionHistory({
 }) {
   const { data: tableData } = useQuery({
     queryKey: ["table", catalog, namespace, table],
-    queryFn: async () => {
-      const response = await fetch(
-        `/api/catalog/${catalog}/namespace/${namespace}/table/${table}`
-      )
-      if (!response.ok) {
-        throw new Error("Failed to fetch table data")
-      }
-      return await response.json()
-    },
+    queryFn: () =>
+      getTableInfo({
+        path: {
+          catalog,
+          namespace,
+          table,
+        },
+      }).then((res) => res.data),
   })
 
   // Format timestamp to be more compact

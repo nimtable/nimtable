@@ -1,29 +1,24 @@
 "use client"
 
-import { Filter, Play } from "lucide-react"
-
-import { Button } from "@/components/ui/button"
+import { Filter } from "lucide-react"
 
 type FiltersProps = {
-  filters: {
-    compactionStatus: string
-    partitionSkew: string
-    fileCount: string
-    optimizationAge: string
-  }
-  setFilters: (filters: any) => void
-  selectedCount: number
-  onBatchOptimize: () => void
+  compactionStatus: "all" | "needs_compaction" | "optimized"
+  setCompactionStatus: (
+    status: "all" | "needs_compaction" | "optimized"
+  ) => void
+  fileCount: "all" | "high" | "medium" | "low"
+  setFileCount: (count: "all" | "high" | "medium" | "low") => void
 }
 
 export function OptimizationFilters({
-  filters,
-  setFilters,
-  selectedCount,
-  onBatchOptimize,
+  compactionStatus,
+  setCompactionStatus,
+  fileCount,
+  setFileCount,
 }: FiltersProps) {
   return (
-    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-lg border shadow-sm">
+    <div className="flex flex-col items-start justify-between gap-4 rounded-lg border bg-white p-4 shadow-sm sm:flex-row sm:items-center">
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-gray-500" />
@@ -31,11 +26,13 @@ export function OptimizationFilters({
         </div>
 
         <select
-          value={filters.compactionStatus}
+          value={compactionStatus}
           onChange={(e) =>
-            setFilters({ ...filters, compactionStatus: e.target.value })
+            setCompactionStatus(
+              e.target.value as "all" | "needs_compaction" | "optimized"
+            )
           }
-          className="h-8 px-3 py-1 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="h-8 rounded-md border border-gray-300 px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="all">All Compaction Status</option>
           <option value="needs_compaction">Needs Compaction</option>
@@ -43,51 +40,18 @@ export function OptimizationFilters({
         </select>
 
         <select
-          value={filters.partitionSkew}
+          value={fileCount}
           onChange={(e) =>
-            setFilters({ ...filters, partitionSkew: e.target.value })
+            setFileCount(e.target.value as "all" | "high" | "medium" | "low")
           }
-          className="h-8 px-3 py-1 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="all">All Partition Skew</option>
-          <option value="has_skew">Has Skew</option>
-          <option value="no_skew">No Skew</option>
-        </select>
-
-        <select
-          value={filters.fileCount}
-          onChange={(e) =>
-            setFilters({ ...filters, fileCount: e.target.value })
-          }
-          className="h-8 px-3 py-1 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="h-8 rounded-md border border-gray-300 px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="all">All File Counts</option>
           <option value="high">High (1000+)</option>
           <option value="medium">Medium (500-999)</option>
           <option value="low">Low (&lt; 500)</option>
         </select>
-
-        <select
-          value={filters.optimizationAge}
-          onChange={(e) =>
-            setFilters({ ...filters, optimizationAge: e.target.value })
-          }
-          className="h-8 px-3 py-1 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="all">All Ages</option>
-          <option value="old">Old (20+ days)</option>
-          <option value="recent">Recent (&lt; 20 days)</option>
-        </select>
       </div>
-
-      <Button
-        className="gap-2"
-        disabled={selectedCount === 0}
-        onClick={onBatchOptimize}
-      >
-        <Play className="h-4 w-4" />
-        Optimize Selected ({selectedCount})
-      </Button>
     </div>
   )
 }

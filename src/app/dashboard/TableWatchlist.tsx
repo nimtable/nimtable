@@ -1,9 +1,10 @@
 "use client"
 
-import { Eye, Star } from "lucide-react"
-import { useContext } from "react"
+import { Eye, GitCompare, Star } from "lucide-react"
+import { useContext, useState } from "react"
 
 import { getCompactionRecommendation } from "@/components/table/file-distribution"
+import { OptimizeSheet } from "@/components/table/optimize-sheet"
 import { OverviewContext } from "./OverviewProvider"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
@@ -12,6 +13,13 @@ import Link from "next/link"
 
 export function TableWatchlist() {
   const { tables, isFileDistributionLoading } = useContext(OverviewContext)
+  const [selectedCompactTable, setSelectedCompactTable] = useState<{
+    catalog: string
+    namespace: string
+    table: string
+  }>()
+
+  const [showOptimizeSheet, setShowOptimizeSheet] = useState(false)
 
   const tablesNeedingCompaction = tables
     .map((table) => {
@@ -96,10 +104,18 @@ export function TableWatchlist() {
             </div>
 
             <div className="mt-3 flex gap-2">
-              {/* <Button variant="outline" size="sm" className="h-7 gap-1 text-xs">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 gap-1 text-xs"
+                onClick={() => {
+                  setSelectedCompactTable(table)
+                  setShowOptimizeSheet(true)
+                }}
+              >
                 <GitCompare className="h-3 w-3" />
                 Compact
-              </Button> */}
+              </Button>
               <Link
                 href={`/data/tables/table?catalog=${table.catalog}&namespace=${table.namespace}&table=${table.table}`}
               >
@@ -116,6 +132,15 @@ export function TableWatchlist() {
           </div>
         ))}
       </div>
+      {selectedCompactTable && (
+        <OptimizeSheet
+          open={showOptimizeSheet}
+          onOpenChange={setShowOptimizeSheet}
+          catalog={selectedCompactTable?.catalog}
+          namespace={selectedCompactTable?.namespace}
+          table={selectedCompactTable?.table}
+        />
+      )}
     </div>
   )
 }

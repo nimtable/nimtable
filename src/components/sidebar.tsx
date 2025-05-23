@@ -8,6 +8,7 @@ import {
   FolderTree,
   Home,
   Layers,
+  LayoutGrid,
 } from "lucide-react"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
@@ -50,14 +51,13 @@ export function Sidebar() {
     },
   ]
 
-  // const otherNavItems = [
-  //   {
-  //     title: "Optimization",
-  //     href: "/optimization",
-  //     icon: LayoutGrid,
-  //   },
-
-  // ]
+  const otherNavItems = [
+    {
+      title: "Optimization",
+      href: "/optimization",
+      icon: LayoutGrid,
+    },
+  ]
 
   return (
     <div className="flex h-full w-64 flex-col border-r border-gray-200 bg-white">
@@ -129,7 +129,7 @@ export function Sidebar() {
           </Collapsible>
         </div>
 
-        {/* <div className="mt-6">
+        <div className="mt-6">
           <nav className="space-y-1 px-2">
             {otherNavItems.map((item) => (
               <Link
@@ -147,11 +147,11 @@ export function Sidebar() {
               </Link>
             ))}
           </nav>
-        </div> */}
+        </div>
       </div>
 
       {/* User Profile */}
-      {/* <div className="border-t p-4">
+      <div className="border-t p-4">
         <div className="flex cursor-pointer items-center gap-2 rounded-md p-2 hover:bg-gray-100">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200">
             <span className="text-sm font-medium">JD</span>
@@ -162,7 +162,7 @@ export function Sidebar() {
           </div>
           <ChevronDown className="h-4 w-4 text-gray-500" />
         </div>
-      </div> */}
+      </div>
     </div>
   )
 }
