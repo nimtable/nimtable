@@ -2,6 +2,7 @@ services:
   # Frontend application (Next.js)
   nimtable-web:
     image: ghcr.io/nimtable/nimtable-web:nightly
+    restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
@@ -15,13 +16,16 @@ services:
   # Backend application
   nimtable:
     image: ghcr.io/nimtable/nimtable:nightly
+    restart: unless-stopped
     depends_on:
-      - database
+      database:
+        condition: service_healthy
     ports:
       - "8182:8182"
     # Mount configuration files
-    volumes:
-      - ./config.yaml:/nimtable/config.yaml
+    configs:
+      - source: config.yaml
+        target: /nimtable/config.yaml
     environment:
       JAVA_OPTS: -Xmx2g -Xms512m
     networks:
@@ -31,6 +35,7 @@ services:
   # Make sure the setting in config.yaml is consistent with this.
   database:
     image: postgres:17
+    restart: unless-stopped
     ports:
       - "5432:5432"
     volumes:
@@ -39,6 +44,11 @@ services:
       POSTGRES_USER: nimtable_user
       POSTGRES_PASSWORD: password
       POSTGRES_DB: nimtable
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nimtable_user -d nimtable"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     networks:
       - nimtable-network
 
@@ -47,3 +57,20 @@ networks:
     driver: bridge
 volumes:
   nimtable-data-postgres:
+
+configs:
+  config.yaml:
+    content: |
+      # Nimtable config file to be mounted into the Docker containers.
+      # See backend/config.yaml for more complete example
+      server:
+        port: 8182
+        host: 0.0.0.0
+      admin:
+        username: admin
+        password: admin
+      database:
+        # You can also point to your own Postgres database, instead of using the one provided by docker-compose.
+        url: jdbc:postgresql://database:5432/nimtable
+        username: nimtable_user
+        password: password
