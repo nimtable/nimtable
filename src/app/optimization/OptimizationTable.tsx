@@ -13,7 +13,7 @@ import { OptimizeSheet } from "@/components/table/optimize-sheet"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-
+import { useRouter } from "next/navigation"
 type Table = {
   id: string
   name: string
@@ -30,6 +30,7 @@ type OptimizationTableProps = {
 }
 
 export function OptimizationTable({ tables, loading }: OptimizationTableProps) {
+  const router = useRouter()
   const [sortConfig, setSortConfig] = useState<{
     key: keyof Table | null
     direction: "ascending" | "descending"
@@ -222,8 +223,24 @@ export function OptimizationTable({ tables, loading }: OptimizationTableProps) {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>View Details</DropdownMenuItem>
-                        <DropdownMenuItem>View History</DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            router.push(
+                              `/data/tables/table?catalog=${table.catalog}&namespace=${table.namespace}&table=${table.name}`
+                            )
+                          }}
+                        >
+                          View Details
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            router.push(
+                              `/data/tables/table?catalog=${table.catalog}&namespace=${table.namespace}&table=${table.name}&tab=snapshots`
+                            )
+                          }}
+                        >
+                          View History
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>

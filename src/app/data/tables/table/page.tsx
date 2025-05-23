@@ -27,6 +27,7 @@ export default function TablePage() {
   const catalog = params.get("catalog")
   const namespace = params.get("namespace")
   const table = params.get("table")
+  const tab = params.get("tab")
   const isValidParams = catalog && namespace && table
 
   const { data, isFetching, isRefetching, refetch } = useTableData(
@@ -105,7 +106,7 @@ export default function TablePage() {
         </div>
       </div>
 
-      <Tabs defaultValue="info" className="space-y-4">
+      <Tabs defaultValue={tab || "info"} className="space-y-4">
         <TabsList className="mb-6 grid w-full max-w-md grid-cols-3">
           <TabsTrigger value="info" className="flex items-center gap-1.5">
             <FileText className="h-4 w-4" />
