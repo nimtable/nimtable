@@ -32,7 +32,7 @@ export const tableSummaries = pgTable(
   {
     // You can use { mode: "bigint" } if numbers are exceeding js number limitations
     id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity({
-      name: "users_id_seq",
+      name: "table_summaries_id_seq",
       startWith: 1,
       increment: 1,
       minValue: 1,
