@@ -2,6 +2,7 @@ services:
   # Frontend application (Next.js)
   nimtable-web:
     image: ghcr.io/nimtable/nimtable-web:nightly
+    restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
@@ -15,8 +16,10 @@ services:
   # Backend application
   nimtable:
     image: ghcr.io/nimtable/nimtable:nightly
+    restart: unless-stopped
     depends_on:
-      - database
+      database:
+        condition: service_healthy
     ports:
       - "8182:8182"
     # Mount configuration files
@@ -32,6 +35,7 @@ services:
   # Make sure the setting in config.yaml is consistent with this.
   database:
     image: postgres:17
+    restart: unless-stopped
     ports:
       - "5432:5432"
     volumes:
@@ -40,6 +44,11 @@ services:
       POSTGRES_USER: nimtable_user
       POSTGRES_PASSWORD: password
       POSTGRES_DB: nimtable
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nimtable_user -d nimtable"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     networks:
       - nimtable-network
 
