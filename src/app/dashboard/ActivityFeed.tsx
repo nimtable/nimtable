@@ -48,13 +48,15 @@ export function ActivityFeed() {
     .filter((query) => query.data?.data?.metadata?.snapshots)
     .flatMap((query) => {
       const snapshots = query.data?.data?.metadata?.snapshots || []
-      return snapshots.map((snapshot) => ({
-        ...snapshot,
-        table: query.data?.table,
-        catalog: query.data?.catalog,
-        namespace: query.data?.namespace,
-        timestamp: snapshot["timestamp-ms"] || 0,
-      }))
+      return snapshots
+        .filter((snapshot) => snapshot.summary?.operation === "replace")
+        .map((snapshot) => ({
+          ...snapshot,
+          table: query.data?.table,
+          catalog: query.data?.catalog,
+          namespace: query.data?.namespace,
+          timestamp: snapshot["timestamp-ms"] || 0,
+        }))
     })
     .sort((a, b) => b.timestamp - a.timestamp)
     .slice(0, 5)
@@ -120,7 +122,9 @@ export function ActivityFeed() {
             </div>
             <div className="min-w-0 flex-1">
               <p className="font-medium">
-                <span className="text-gray-900">{activity?.table}</span>
+                <span className="text-gray-900">
+                  {activity?.catalog}.{activity?.namespace}.{activity?.table}
+                </span>
                 <span className="text-gray-500">
                   {" "}
                   — Compaction job completed
@@ -134,7 +138,11 @@ export function ActivityFeed() {
               </p>
             </div>
             <Button variant="ghost" size="sm" className="text-xs">
-              <ArrowRight className="h-4 w-4" />
+              <Link
+                href={`/data/tables/table?catalog=${activity.catalog}&namespace=${activity.namespace}&table=${activity.table}`}
+              >
+                <ArrowRight className="h-4 w-4" />
+              </Link>
             </Button>
           </div>
         ))}
