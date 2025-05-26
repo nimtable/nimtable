@@ -69,7 +69,7 @@ Nimtable uses YAML for configuration, supporting both server settings and catalo
 1. **Configuration File**: Configure catalogs via YAML configuration (recommended for experts)
 2. **Web Interface**: Configure catalogs through the Nimtable UI (recommended for new users)
 
-For Docker deployments, you can find a sample configuration file at [docker/config.yaml](./docker/config.yaml).
+To configure the Docker deployment, read the sample configuration file at [docker/docker-compose.yml](./docker/docker-compose.yml).
 
 ### Server Configuration
 
