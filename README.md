@@ -97,73 +97,13 @@ in `config.yaml`.
 
 ### Catalog Configuration Examples
 
-#### REST Catalog
+You can connect catalogs to Nimtable by clicking `CREATE CATALOG` in the UI.
+There are multiple example templates provided to help you get started.
 
-```yaml
-catalogs:
-  - name: rest-catalog
-    type: rest
-    uri: http://localhost:8181
-    warehouse: s3://warehouse/wh/
-    io-impl: org.apache.iceberg.aws.s3.S3FileIO
-    s3.endpoint: http://localhost:9000
-    s3.access-key-id: admin
-    s3.secret-access-key: password
-    s3.region: us-east-1
-    s3.path-style-access: true
-    client.region: us-east-1
-```
+![create-catalog](docs/create-catalog.png)
 
-#### AWS S3 Tables
-
-```yaml
-catalogs:
-  - name: s3-tables-catalog
-    type: rest
-    uri: https://s3tables.us-east-1.amazonaws.com/iceberg
-    warehouse: arn:aws:s3tables:us-east-1:xxxxx:bucket/your-bucket
-    io-impl: org.apache.iceberg.aws.s3.S3FileIO
-    s3.access-key-id: admin
-    s3.secret-access-key: password
-    s3.region: us-east-1
-    s3.path-style-access: true
-    rest.sigv4-enabled: true
-    rest.signing-name: s3tables
-    rest.signing-region: us-east-1
-```
-
-#### JDBC Catalog (e.g. PostgreSQL)
-
-```yaml
-catalogs:
-  - name: jdbc-catalog
-    type: jdbc
-    jdbc.schema-version: V1
-    uri: jdbc:postgresql://localhost:5432/db
-    warehouse: s3://warehouse/wh/
-    jdbc.user: admin
-    jdbc.password: password
-    # S3 Configuration
-    io-impl: org.apache.iceberg.aws.s3.S3FileIO
-    s3.endpoint: http://localhost:9000
-    s3.access-key-id: admin
-    s3.secret-access-key: password
-    s3.region: us-east-1
-    s3.path-style-access: true
-    client.region: us-east-1
-```
-
-#### AWS Glue Catalog
-
-You need to provide AWS credentials for Glue Catalog access. You can do this by either mounting the AWS credentials file or using environment variables. See the section below for details.
-
-
-```yaml
-catalogs:
-  - name: glue-catalog
-    type: glue
-    warehouse: s3://your-bucket/test
-```
+Alternatively, the catalogs can be pre-configured in the `config.yaml` file.
+Refer to [config.yaml](./backend/config.yaml) for examples.
 
 ### AWS Credential Configuration in Docker
 
@@ -210,7 +150,7 @@ For detailed roadmap items and progress tracking, see [Roadmap](https://github.c
 
 ## Contributing
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+We welcome contributions! Please see our [Contributing Guide](docs/HACKING.md) for details.
 
 ## License
 
