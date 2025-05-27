@@ -4,6 +4,9 @@ import { ExternalLink, Plus, Search, Trash2 } from "lucide-react"
 import { useState } from "react"
 import type React from "react"
 import Link from "next/link"
+import { formatDistanceToNow } from "date-fns"
+import { useQueries } from "@tanstack/react-query"
+import { useRouter } from "next/navigation"
 
 import {
   AlertDialog,
@@ -32,9 +35,13 @@ import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 import { deleteCatalog } from "@/lib/client"
 import { errorToString } from "@/lib/utils"
+import { getCatalogConfig } from "@/lib/data-loader"
+import { loadTableData } from "@/lib/data-loader"
 
 import { CreateCatalogModal } from "./CreateCatalogModal"
 import { useCatalogs } from "../hooks/useCatalogs"
+import { useNamespaces } from "../hooks/useNamespaces"
+import { useAllTables } from "../hooks/useTables"
 
 export function CatalogsContent() {
   const {
@@ -42,6 +49,10 @@ export function CatalogsContent() {
     isLoading: isLoadingCatalogs,
     refetch: refetchCatalogs,
   } = useCatalogs()
+  const { namespaces, isLoading: isLoadingNamespaces } = useNamespaces(
+    catalogs || []
+  )
+  const { tables, isLoading: isLoadingTables } = useAllTables()
   const [searchQuery, setSearchQuery] = useState<string>("")
   const [mirrorModalOpen, setMirrorModalOpen] = useState<boolean>(false)
   const [createModalOpen, setCreateModalOpen] = useState<boolean>(false)
@@ -53,6 +64,47 @@ export function CatalogsContent() {
   })
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const { toast } = useToast()
+  const [selectedCatalog, setSelectedCatalog] = useState<string | null>(null)
+  const router = useRouter()
+
+  // Get catalog configurations
+  const catalogConfigs = useQueries({
+    queries: (catalogs || []).map((catalog) => ({
+      queryKey: ["catalog-config", catalog],
+      queryFn: () => getCatalogConfig(catalog),
+      enabled: !!catalog,
+    })),
+  })
+
+  const catalogConfigMap = catalogConfigs.reduce(
+    (acc, query, index) => {
+      if (query.data && catalogs?.[index]) {
+        acc[catalogs[index]] = query.data
+      }
+      return acc
+    },
+    {} as Record<string, any>
+  )
+
+  // Get table metadata for each table
+  const tableMetadataQueries = useQueries({
+    queries: tables.map((table) => ({
+      queryKey: ["table-metadata", table.catalog, table.namespace, table.table],
+      queryFn: () => loadTableData(table.catalog, table.namespace, table.table),
+      enabled: !!table.catalog && !!table.namespace && !!table.table,
+    })),
+  })
+
+  const tableMetadataMap = tableMetadataQueries.reduce(
+    (acc, query, index) => {
+      if (query.data && tables[index]) {
+        const key = `${tables[index].catalog}.${tables[index].namespace}.${tables[index].table}`
+        acc[key] = query.data
+      }
+      return acc
+    },
+    {} as Record<string, any>
+  )
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -149,9 +201,61 @@ export function CatalogsContent() {
       })
   }
 
-  if (isLoadingCatalogs) {
+  const handleInfoClick = (catalog: string) => {
+    router.push(`/catalog?catalog=${catalog}`)
+  }
+
+  if (
+    isLoadingCatalogs ||
+    isLoadingNamespaces ||
+    isLoadingTables ||
+    catalogConfigs.some((q) => q.isLoading) ||
+    tableMetadataQueries.some((q) => q.isLoading)
+  ) {
     return <div>Loading...</div>
   }
+
+  // Calculate catalog stats
+  const catalogStats = catalogs?.reduce(
+    (acc, catalog) => {
+      const catalogNamespaces = namespaces.filter(
+        (ns) => ns.catalog === catalog
+      )
+      const catalogTables = tables.filter((t) => t.catalog === catalog)
+      const totalStorageSize = catalogTables.reduce((sum, table) => {
+        return sum + (table.dataFileSizeInBytes || 0)
+      }, 0)
+
+      acc[catalog] = {
+        namespaceCount: catalogNamespaces.length,
+        tableCount: catalogTables.length,
+        storageSize: totalStorageSize,
+        lastModified:
+          catalogTables.length > 0
+            ? new Date(
+                Math.max(
+                  ...catalogTables.map((t) => {
+                    const key = `${t.catalog}.${t.namespace}.${t.table}`
+                    return (
+                      tableMetadataMap[key]?.metadata?.["last-updated-ms"] || 0
+                    )
+                  })
+                )
+              )
+            : new Date(),
+      }
+      return acc
+    },
+    {} as Record<
+      string,
+      {
+        namespaceCount: number
+        tableCount: number
+        storageSize: number
+        lastModified: Date
+      }
+    >
+  )
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden bg-gray-50">
@@ -207,38 +311,44 @@ export function CatalogsContent() {
                     <div>
                       <div className="flex items-center">
                         <h3 className="text-lg font-medium">{catalog}</h3>
-                        <span className="ml-2 flex items-center text-xs text-gray-500">
-                          {/* {catalog.type}
-                          {getTypeIcon(catalog.type)} */}
-                          catalogType
-                        </span>
+                        <button
+                          onClick={() => handleInfoClick(catalog)}
+                          className="ml-2 flex items-center text-xs text-blue-500 hover:text-blue-700"
+                        >
+                          Info
+                        </button>
                       </div>
                       <div className="mt-2 space-y-1">
                         <div className="flex items-center text-sm text-gray-500">
                           <span className="w-32">Namespaces:</span>
                           <span className="font-medium">
-                            {/* {catalog.namespaceCount} */}
-                            namespaceCount
+                            {catalogStats[catalog]?.namespaceCount || 0}
                           </span>
                         </div>
                         <div className="flex items-center text-sm text-gray-500">
                           <span className="w-32">Tables:</span>
                           <span className="font-medium">
-                            {/* {catalog.tableCount} */}
-                            tableCount
+                            {catalogStats[catalog]?.tableCount || 0}
                           </span>
                         </div>
                         <div className="flex items-center text-sm text-gray-500">
                           <span className="w-32">Storage Size:</span>
                           <span className="font-medium">
-                            {/* {catalog.storageSize} */}
-                            storageSize
+                            {catalogStats[catalog]?.storageSize
+                              ? `${(catalogStats[catalog].storageSize / (1024 * 1024)).toFixed(2)} MB`
+                              : "0 MB"}
                           </span>
                         </div>
                         <div className="flex items-center text-sm text-gray-500">
                           <span className="w-32">Last Modified:</span>
-                          {/* <span>{catalog.lastModified}</span> */}
-                          lastModified
+                          <span>
+                            {catalogStats[catalog]?.lastModified
+                              ? formatDistanceToNow(
+                                  catalogStats[catalog].lastModified,
+                                  { addSuffix: true }
+                                )
+                              : "Never"}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -286,6 +396,73 @@ export function CatalogsContent() {
           </div>
         )}
       </div>
+
+      {/* Catalog Info Dialog */}
+      <Dialog
+        open={!!selectedCatalog}
+        onOpenChange={(open) => !open && setSelectedCatalog(null)}
+      >
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Catalog Information</DialogTitle>
+            <DialogDescription>
+              Detailed information about catalog: {selectedCatalog}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedCatalog && catalogConfigMap[selectedCatalog] && (
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">Type:</span>
+                  <span>
+                    {catalogConfigMap[selectedCatalog].defaults?.type || "N/A"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">Warehouse:</span>
+                  <span>
+                    {catalogConfigMap[selectedCatalog].defaults?.warehouse ||
+                      "N/A"}
+                  </span>
+                </div>
+                {catalogConfigMap[selectedCatalog].defaults?.properties && (
+                  <div className="mt-4">
+                    <h4 className="mb-2 font-medium">Properties:</h4>
+                    <div className="rounded-md bg-gray-50 p-3">
+                      <pre className="text-sm">
+                        {JSON.stringify(
+                          catalogConfigMap[selectedCatalog].defaults.properties,
+                          null,
+                          2
+                        )}
+                      </pre>
+                    </div>
+                  </div>
+                )}
+                {catalogConfigMap[selectedCatalog].overrides &&
+                  Object.keys(catalogConfigMap[selectedCatalog].overrides)
+                    .length > 0 && (
+                    <div className="mt-4">
+                      <h4 className="mb-2 font-medium">Overrides:</h4>
+                      <div className="rounded-md bg-gray-50 p-3">
+                        <pre className="text-sm">
+                          {JSON.stringify(
+                            catalogConfigMap[selectedCatalog].overrides,
+                            null,
+                            2
+                          )}
+                        </pre>
+                      </div>
+                    </div>
+                  )}
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setSelectedCatalog(null)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Mirror External Catalog Modal */}
       <Dialog open={mirrorModalOpen} onOpenChange={setMirrorModalOpen}>
