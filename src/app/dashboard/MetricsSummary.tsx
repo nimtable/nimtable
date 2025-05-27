@@ -30,13 +30,13 @@ export function MetricsSummary() {
             <p className="text-sm font-medium text-gray-500">
               Tables Needing Compaction
             </p>
-            <p className="mt-2 text-3xl font-semibold">
+            <div className="mt-2 text-3xl font-semibold">
               {isFileDistributionLoading ? (
                 <div className="mt-4 h-4 w-16 animate-pulse rounded bg-gray-200" />
               ) : (
                 tablesNeedingCompaction.length
               )}
-            </p>
+            </div>
           </div>
           <div className={`rounded-md bg-amber-500 p-3 text-white`}>
             <GitCompare className="h-6 w-6" />

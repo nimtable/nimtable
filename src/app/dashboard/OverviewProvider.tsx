@@ -10,14 +10,17 @@ export const OverviewContext = createContext<{
   )[]
   isLoading: boolean
   isFileDistributionLoading: boolean
+  refresh: () => void
 }>({
   tables: [],
   isLoading: true,
   isFileDistributionLoading: false,
+  refresh: () => {},
 })
 
 export function DashboardProvider({ children }: { children: React.ReactNode }) {
-  const { tables, isLoading, isFileDistributionLoading } = useAllTables()
+  const { tables, refetchCatalogs, isLoading, isFileDistributionLoading } =
+    useAllTables()
 
   return (
     <OverviewContext.Provider
@@ -25,6 +28,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
         tables,
         isLoading,
         isFileDistributionLoading,
+        refresh: refetchCatalogs,
       }}
     >
       {children}

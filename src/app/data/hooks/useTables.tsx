@@ -4,7 +4,11 @@ import { useNamespaces } from "./useNamespaces"
 import { useCatalogs } from "./useCatalogs"
 
 export const useAllTables = () => {
-  const { catalogs, isLoading: isLoadingCatalogs } = useCatalogs()
+  const {
+    catalogs,
+    isLoading: isLoadingCatalogs,
+    refetch: refetchCatalogs,
+  } = useCatalogs()
 
   const { namespaces, isLoading: isLoadingNamespaces } = useNamespaces(catalogs)
 
@@ -52,5 +56,6 @@ export const useAllTables = () => {
     isLoading: isLoadingCatalogs || isLoadingNamespaces,
     isFileDistributionLoading: tablesQueries.some((query) => query.isLoading),
     error: tablesQueries.some((query) => query.error),
+    refetchCatalogs,
   }
 }

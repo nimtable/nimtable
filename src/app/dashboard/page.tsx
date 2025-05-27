@@ -1,5 +1,6 @@
 "use client"
 
+import { OnboardingTrigger } from "@/components/onboarding/onboarding-trigger"
 import { OverviewContext } from "./OverviewProvider"
 import { MetricsSummary } from "./MetricsSummary"
 import { TableWatchlist } from "./TableWatchlist"
@@ -7,9 +8,19 @@ import { ActivityFeed } from "./ActivityFeed"
 import { useContext } from "react"
 
 export default function DashboardPage() {
-  const { isLoading } = useContext(OverviewContext)
+  const { isLoading, isFileDistributionLoading, tables, refresh } =
+    useContext(OverviewContext)
+
+  const handleOnboardingComplete = () => {
+    refresh()
+  }
+
   if (isLoading) {
-    return <div>Loading...</div>
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="h-16 w-16 animate-spin rounded-full border-b-2 border-t-2 border-gray-900" />
+      </div>
+    )
   }
   return (
     <div className="bg-gray-50">
@@ -30,6 +41,10 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+      <OnboardingTrigger
+        open={!isFileDistributionLoading && tables.length === 0}
+        onComplete={handleOnboardingComplete}
+      />
     </div>
   )
 }
