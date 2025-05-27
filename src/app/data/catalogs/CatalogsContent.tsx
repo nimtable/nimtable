@@ -202,7 +202,7 @@ export function CatalogsContent() {
   }
 
   const handleInfoClick = (catalog: string) => {
-    router.push(`/catalog?catalog=${catalog}`)
+    router.push(`/data/catalog?catalog=${catalog}`)
   }
 
   if (isLoadingCatalogs) {

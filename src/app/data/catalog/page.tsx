@@ -17,22 +17,6 @@
 "use client"
 
 import {
-  Database,
-  FileText,
-  Layers,
-  HardDrive,
-  Settings,
-  Trash2,
-} from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
-import { errorToString } from "@/lib/utils"
-import { notFound, useSearchParams, useRouter } from "next/navigation"
-import { getCatalogConfig } from "@/lib/data-loader"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { TopNavbar } from "@/components/shared/top-navbar"
-import { PageLoader } from "@/components/shared/page-loader"
-import { Button } from "@/components/ui/button"
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -43,8 +27,23 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import {
+  Database,
+  FileText,
+  Layers,
+  HardDrive,
+  Settings,
+  Trash2,
+} from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { notFound, useSearchParams, useRouter } from "next/navigation"
+import { PageLoader } from "@/components/shared/page-loader"
 import { deleteCatalog } from "@/lib/client/sdk.gen"
+import { getCatalogConfig } from "@/lib/data-loader"
 import { useQuery } from "@tanstack/react-query"
+import { Button } from "@/components/ui/button"
+import { useToast } from "@/hooks/use-toast"
+import { errorToString } from "@/lib/utils"
 
 export default function CatalogPage() {
   const router = useRouter()
@@ -92,7 +91,7 @@ export default function CatalogPage() {
   // Loading state
   if (isPending || !config) {
     return (
-      <div className="w-full h-full flex items-center justify-center">
+      <div className="flex h-full w-full items-center justify-center">
         <PageLoader
           icon={Database}
           title="Loading catalog configuration"
@@ -104,15 +103,13 @@ export default function CatalogPage() {
   }
 
   return (
-    <div className="h-full w-full overflow-auto bg-muted/5 flex flex-col">
-      <TopNavbar catalog={catalogParam} />
-
-      <div className="flex-1 flex justify-center">
+    <div className="flex h-full w-full flex-col overflow-auto bg-muted/5">
+      <div className="flex flex-1 justify-center">
         <div className="w-full max-w-5xl px-6 py-8">
           {/* Header */}
-          <div className="flex items-center justify-between gap-3 mb-8">
+          <div className="mb-8 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-lg bg-blue-600/10 border border-blue-600/20 flex items-center justify-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-blue-600/20 bg-blue-600/10">
                 <Database className="h-6 w-6 text-blue-600" />
               </div>
               <div className="flex items-center gap-2">
@@ -122,7 +119,7 @@ export default function CatalogPage() {
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="destructive" size="sm">
-                  <Trash2 className="h-4 w-4 mr-2" />
+                  <Trash2 className="mr-2 h-4 w-4" />
                   Delete Catalog
                 </Button>
               </AlertDialogTrigger>
@@ -145,13 +142,13 @@ export default function CatalogPage() {
           </div>
 
           {/* Key Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-            <Card className="bg-background shadow-sm border-muted/70 overflow-hidden relative group hover:shadow-md transition-shadow duration-200">
-              <div className="absolute top-0 left-0 right-0 h-[2px] bg-blue-500/70"></div>
-              <div className="absolute top-0 left-0 bottom-0 w-[2px] bg-blue-500/10 group-hover:bg-blue-500/30 transition-colors duration-200"></div>
+          <div className="mb-10 grid grid-cols-1 gap-6 md:grid-cols-3">
+            <Card className="group relative overflow-hidden border-muted/70 bg-background shadow-sm transition-shadow duration-200 hover:shadow-md">
+              <div className="absolute left-0 right-0 top-0 h-[2px] bg-blue-500/70"></div>
+              <div className="absolute bottom-0 left-0 top-0 w-[2px] bg-blue-500/10 transition-colors duration-200 group-hover:bg-blue-500/30"></div>
               <CardHeader className="pb-2 pt-5">
-                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <div className="p-1.5 rounded-md bg-blue-50 dark:bg-blue-950/30">
+                <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <div className="rounded-md bg-blue-50 p-1.5 dark:bg-blue-950/30">
                     <FileText className="h-3.5 w-3.5 text-blue-500" />
                   </div>
                   Default Format
@@ -161,18 +158,18 @@ export default function CatalogPage() {
                 <div className="text-2xl font-semibold tracking-tight">
                   {config.defaults?.["write.format.default"] || "parquet"}
                 </div>
-                <p className="text-xs text-muted-foreground mt-1.5">
+                <p className="mt-1.5 text-xs text-muted-foreground">
                   Default file format for new tables
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-background shadow-sm border-muted/70 overflow-hidden relative group hover:shadow-md transition-shadow duration-200">
-              <div className="absolute top-0 left-0 right-0 h-[2px] bg-blue-500/70"></div>
-              <div className="absolute top-0 left-0 bottom-0 w-[2px] bg-blue-500/10 group-hover:bg-blue-500/30 transition-colors duration-200"></div>
+            <Card className="group relative overflow-hidden border-muted/70 bg-background shadow-sm transition-shadow duration-200 hover:shadow-md">
+              <div className="absolute left-0 right-0 top-0 h-[2px] bg-blue-500/70"></div>
+              <div className="absolute bottom-0 left-0 top-0 w-[2px] bg-blue-500/10 transition-colors duration-200 group-hover:bg-blue-500/30"></div>
               <CardHeader className="pb-2 pt-5">
-                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <div className="p-1.5 rounded-md bg-blue-50 dark:bg-blue-950/30">
+                <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <div className="rounded-md bg-blue-50 p-1.5 dark:bg-blue-950/30">
                     <Layers className="h-3.5 w-3.5 text-blue-500" />
                   </div>
                   Compression Codec
@@ -183,18 +180,18 @@ export default function CatalogPage() {
                   {config.defaults?.["write.parquet.compression-codec"] ||
                     "snappy"}
                 </div>
-                <p className="text-xs text-muted-foreground mt-1.5">
+                <p className="mt-1.5 text-xs text-muted-foreground">
                   Default compression algorithm
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-background shadow-sm border-muted/70 overflow-hidden relative group hover:shadow-md transition-shadow duration-200">
-              <div className="absolute top-0 left-0 right-0 h-[2px] bg-blue-500/70"></div>
-              <div className="absolute top-0 left-0 bottom-0 w-[2px] bg-blue-500/10 group-hover:bg-blue-500/30 transition-colors duration-200"></div>
+            <Card className="group relative overflow-hidden border-muted/70 bg-background shadow-sm transition-shadow duration-200 hover:shadow-md">
+              <div className="absolute left-0 right-0 top-0 h-[2px] bg-blue-500/70"></div>
+              <div className="absolute bottom-0 left-0 top-0 w-[2px] bg-blue-500/10 transition-colors duration-200 group-hover:bg-blue-500/30"></div>
               <CardHeader className="pb-2 pt-5">
-                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <div className="p-1.5 rounded-md bg-blue-50 dark:bg-blue-950/30">
+                <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <div className="rounded-md bg-blue-50 p-1.5 dark:bg-blue-950/30">
                     <HardDrive className="h-3.5 w-3.5 text-blue-500" />
                   </div>
                   Target File Size
@@ -209,7 +206,7 @@ export default function CatalogPage() {
                     )
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground mt-1.5">
+                <p className="mt-1.5 text-xs text-muted-foreground">
                   Target size for data files
                 </p>
               </CardContent>
@@ -217,18 +214,18 @@ export default function CatalogPage() {
           </div>
 
           {/* Configuration Settings */}
-          <div className="bg-background rounded-lg border shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b flex items-center gap-3">
-              <div className="p-1.5 rounded-md bg-blue-50 dark:bg-blue-950/30">
+          <div className="overflow-hidden rounded-lg border bg-background shadow-sm">
+            <div className="flex items-center gap-3 border-b px-6 py-4">
+              <div className="rounded-md bg-blue-50 p-1.5 dark:bg-blue-950/30">
                 <Settings className="h-4 w-4 text-blue-500" />
               </div>
               <h2 className="text-xl font-semibold">Configuration Settings</h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x">
+            <div className="grid grid-cols-1 divide-y md:grid-cols-2 md:divide-x md:divide-y-0">
               {/* Default Settings Section */}
               <div className="p-5">
-                <div className="flex items-center gap-2 mb-4">
+                <div className="mb-4 flex items-center gap-2">
                   <h3 className="text-base font-medium">Default Settings</h3>
                 </div>
 
@@ -237,17 +234,17 @@ export default function CatalogPage() {
                     {Object.entries(config.defaults).map(([key, value]) => (
                       <div
                         key={key}
-                        className="flex flex-col gap-1 pb-3 border-b border-dashed border-muted last:border-0 last:pb-0"
+                        className="flex flex-col gap-1 border-b border-dashed border-muted pb-3 last:border-0 last:pb-0"
                       >
                         <div className="text-sm font-medium">{key}</div>
-                        <div className="text-sm text-muted-foreground font-mono bg-muted/30 px-2 py-1 rounded-sm">
+                        <div className="rounded-sm bg-muted/30 px-2 py-1 font-mono text-sm text-muted-foreground">
                           {value}
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-muted-foreground">
+                  <div className="py-8 text-center text-muted-foreground">
                     No default settings configured
                   </div>
                 )}
@@ -255,7 +252,7 @@ export default function CatalogPage() {
 
               {/* Override Settings Section */}
               <div className="p-5">
-                <div className="flex items-center gap-2 mb-4">
+                <div className="mb-4 flex items-center gap-2">
                   <h3 className="text-base font-medium">Override Settings</h3>
                 </div>
 
@@ -265,17 +262,17 @@ export default function CatalogPage() {
                     {Object.entries(config.overrides).map(([key, value]) => (
                       <div
                         key={key}
-                        className="flex flex-col gap-1 pb-3 border-b border-dashed border-muted last:border-0 last:pb-0"
+                        className="flex flex-col gap-1 border-b border-dashed border-muted pb-3 last:border-0 last:pb-0"
                       >
                         <div className="text-sm font-medium">{key}</div>
-                        <div className="text-sm text-muted-foreground font-mono bg-muted/30 px-2 py-1 rounded-sm">
+                        <div className="rounded-sm bg-muted/30 px-2 py-1 font-mono text-sm text-muted-foreground">
                           {value}
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-muted-foreground">
+                  <div className="py-8 text-center text-muted-foreground">
                     No override settings configured
                   </div>
                 )}
