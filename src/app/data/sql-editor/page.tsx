@@ -16,7 +16,6 @@
 
 "use client"
 
-import { useState, useRef, useEffect } from "react"
 import {
   Play,
   Download,
@@ -27,22 +26,23 @@ import {
   Database,
   TableIcon,
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { useToast } from "@/hooks/use-toast"
-import { errorToString } from "@/lib/utils"
-import { DataTable } from "@/components/query/data-table"
-import { createColumns } from "@/components/query/columns"
-import { runQuery } from "@/lib/data-loader"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { highlightSQL } from "@/lib/sql-highlighter"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { SqlEditorNavbar } from "@/components/shared/sql-editor-navbar"
+import { createColumns } from "@/components/query/columns"
+import { DataTable } from "@/components/query/data-table"
 import { SidebarInset } from "@/components/ui/sidebar"
+import { highlightSQL } from "@/lib/sql-highlighter"
+import { useState, useRef, useEffect } from "react"
 import { useSearchParams } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { useToast } from "@/hooks/use-toast"
+import { runQuery } from "@/lib/data-loader"
+import { errorToString } from "@/lib/utils"
 
 export default function SQLEditorPage() {
   const { toast } = useToast()
@@ -195,23 +195,23 @@ export default function SQLEditorPage() {
 
   return (
     <SidebarInset className="bg-muted/5">
-      <div className="flex flex-col h-full">
+      <div className="flex h-full flex-col">
         <SqlEditorNavbar />
 
         <div className="flex-1 overflow-auto p-6">
-          <div className="max-w-6xl mx-auto">
+          <div className="mx-auto max-w-6xl">
             <div className="mb-6">
               <h1 className="text-2xl font-bold">Compose Query</h1>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="mt-1 text-sm text-muted-foreground">
                 Write and execute SQL statements against your data catalogs
               </p>
             </div>
 
             {/* SQL Editor Card */}
-            <Card className="border-muted/70 shadow-sm overflow-hidden mb-6">
+            <Card className="mb-6 overflow-hidden border-muted/70 shadow-sm">
               {/* Editor Toolbar */}
-              <CardHeader className="bg-muted/30 border-b border-muted/50 px-4 py-3 flex flex-row items-center justify-between space-y-0">
-                <CardTitle className="text-base font-medium flex items-center gap-2">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b border-muted/50 bg-muted/30 px-4 py-3">
+                <CardTitle className="flex items-center gap-2 text-base font-medium">
                   <Database className="h-4 w-4 text-blue-500" />
                   SQL Statement
                 </CardTitle>
@@ -222,7 +222,7 @@ export default function SQLEditorPage() {
                         onClick={handleRunQuery}
                         disabled={isLoading}
                         size="sm"
-                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                        className="bg-blue-600 text-white hover:bg-blue-700"
                       >
                         <Play className="mr-1 h-3.5 w-3.5" />
                         Run Query
@@ -261,7 +261,7 @@ export default function SQLEditorPage() {
                     {/* Highlighted code display */}
                     <div
                       ref={highlightedCodeRef}
-                      className="absolute inset-0 p-4 font-mono text-sm pointer-events-none whitespace-pre-wrap break-words sql-editor-container"
+                      className="sql-editor-container pointer-events-none absolute inset-0 whitespace-pre-wrap break-words p-4 font-mono text-sm"
                       dangerouslySetInnerHTML={{ __html: highlightedCode }}
                       aria-hidden="true"
                     ></div>
@@ -273,7 +273,7 @@ export default function SQLEditorPage() {
                       onChange={(e) => {
                         setQuery(e.target.value)
                       }}
-                      className="absolute inset-0 w-full h-full p-4 font-mono text-sm bg-transparent resize-none border-0 focus:outline-none caret-foreground text-transparent [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 [&::-webkit-scrollbar-thumb]:rounded-full"
+                      className="absolute inset-0 h-full w-full resize-none border-0 bg-transparent p-4 font-mono text-sm text-transparent caret-foreground focus:outline-none [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar]:w-2"
                       placeholder="Enter your SQL query here..."
                       spellCheck="false"
                       onKeyDown={(e) => {
@@ -293,7 +293,7 @@ export default function SQLEditorPage() {
                       }}
                     />
                   </div>
-                  <div className="absolute bottom-2 right-2 text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded">
+                  <div className="absolute bottom-2 right-2 rounded bg-background/80 px-2 py-1 text-xs text-muted-foreground">
                     Press Ctrl+Enter to run
                   </div>
                 </div>
@@ -302,29 +302,29 @@ export default function SQLEditorPage() {
 
             {/* Results Area */}
             <Card className="border-muted/70 shadow-sm">
-              <CardHeader className="bg-muted/30 border-b border-muted/50 px-4 py-3 flex flex-row items-center justify-between space-y-0">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b border-muted/50 bg-muted/30 px-4 py-3">
                 <div className="flex items-center gap-2">
-                  <CardTitle className="text-base font-medium flex items-center gap-2">
+                  <CardTitle className="flex items-center gap-2 text-base font-medium">
                     <TableIcon className="h-4 w-4 text-blue-500" />
                     Query Results
                   </CardTitle>
 
                   {isLoading && (
-                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground bg-muted/50 px-2.5 py-1 rounded-md">
-                      <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse"></div>
+                    <div className="flex items-center gap-1.5 rounded-md bg-muted/50 px-2.5 py-1 text-sm text-muted-foreground">
+                      <div className="h-2 w-2 animate-pulse rounded-full bg-blue-500"></div>
                       <span>Running query...</span>
                     </div>
                   )}
 
                   {executionTime !== null && !isLoading && !queryError && (
-                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground bg-muted/50 px-2.5 py-1 rounded-md">
+                    <div className="flex items-center gap-1.5 rounded-md bg-muted/50 px-2.5 py-1 text-sm text-muted-foreground">
                       <Clock className="h-3.5 w-3.5" />
                       <span>{(executionTime / 1000).toFixed(2)}s</span>
                     </div>
                   )}
 
                   {queryError && (
-                    <div className="flex items-center gap-1.5 text-sm text-destructive bg-destructive/10 px-2.5 py-1 rounded-md">
+                    <div className="flex items-center gap-1.5 rounded-md bg-destructive/10 px-2.5 py-1 text-sm text-destructive">
                       <AlertCircle className="h-3.5 w-3.5" />
                       <span>Query failed</span>
                     </div>
@@ -347,21 +347,21 @@ export default function SQLEditorPage() {
               <CardContent className="p-4">
                 {/* Results or Error */}
                 {queryError ? (
-                  <div className="border border-destructive/30 rounded-md overflow-hidden">
-                    <div className="bg-destructive/5 px-4 py-2 border-b border-destructive/30">
-                      <h4 className="font-medium text-destructive flex items-center gap-1.5">
+                  <div className="overflow-hidden rounded-md border border-destructive/30">
+                    <div className="border-b border-destructive/30 bg-destructive/5 px-4 py-2">
+                      <h4 className="flex items-center gap-1.5 font-medium text-destructive">
                         <AlertCircle className="h-4 w-4" />
                         Error executing query
                       </h4>
                     </div>
                     <div className="p-4">
-                      <pre className="bg-destructive/5 p-3 rounded-md text-sm font-mono text-destructive/90 whitespace-pre-wrap">
+                      <pre className="whitespace-pre-wrap rounded-md bg-destructive/5 p-3 font-mono text-sm text-destructive/90">
                         {queryError}
                       </pre>
                     </div>
                   </div>
                 ) : queryResults ? (
-                  <div className="bg-background overflow-hidden">
+                  <div className="overflow-hidden bg-background">
                     <DataTable
                       columns={createColumns(queryResults.columns)}
                       data={queryResults.rows.map((row) => {
@@ -378,13 +378,13 @@ export default function SQLEditorPage() {
                 ) : (
                   <div className="bg-background p-12 text-center">
                     <div className="flex flex-col items-center justify-center text-muted-foreground">
-                      <div className="w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center mb-4">
+                      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted/30">
                         <TableIcon className="h-8 w-8 text-muted-foreground/50" />
                       </div>
-                      <p className="text-sm font-medium mb-1">
+                      <p className="mb-1 text-sm font-medium">
                         No query results to display
                       </p>
-                      <p className="text-xs max-w-md">
+                      <p className="max-w-md text-xs">
                         Run a query using the editor above to see results here.
                         You can use the &quot;Run Query&quot; button or press
                         Ctrl+Enter.

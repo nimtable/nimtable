@@ -44,8 +44,8 @@ export default function TablePage() {
 
   // Build SQL editor URL with appropriate query parameters
   const sqlEditorUrl = catalog
-    ? `/sql-editor?catalog=${catalog}${namespace ? `&namespace=${namespace}` : ""}${table ? `&table=${table}` : ""}`
-    : "/sql-editor"
+    ? `/data/sql-editor?catalog=${catalog}${namespace ? `&namespace=${namespace}` : ""}${table ? `&table=${table}` : ""}`
+    : "/data/sql-editor"
 
   if (isFetching) {
     return (

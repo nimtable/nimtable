@@ -1,12 +1,12 @@
 "use client"
 
 import { ExternalLink, Plus, Search, Trash2 } from "lucide-react"
+import { useQueries } from "@tanstack/react-query"
+import { formatDistanceToNow } from "date-fns"
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 import type React from "react"
 import Link from "next/link"
-import { formatDistanceToNow } from "date-fns"
-import { useQueries } from "@tanstack/react-query"
-import { useRouter } from "next/navigation"
 
 import {
   AlertDialog,
@@ -28,6 +28,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Card, CardContent } from "@/components/ui/card"
+import { getCatalogConfig } from "@/lib/data-loader"
+import { loadTableData } from "@/lib/data-loader"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { Input } from "@/components/ui/input"
@@ -35,12 +37,10 @@ import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 import { deleteCatalog } from "@/lib/client"
 import { errorToString } from "@/lib/utils"
-import { getCatalogConfig } from "@/lib/data-loader"
-import { loadTableData } from "@/lib/data-loader"
 
 import { CreateCatalogModal } from "./CreateCatalogModal"
-import { useCatalogs } from "../hooks/useCatalogs"
 import { useNamespaces } from "../hooks/useNamespaces"
+import { useCatalogs } from "../hooks/useCatalogs"
 import { useAllTables } from "../hooks/useTables"
 
 export function CatalogsContent() {
@@ -205,14 +205,12 @@ export function CatalogsContent() {
     router.push(`/catalog?catalog=${catalog}`)
   }
 
-  if (
-    isLoadingCatalogs ||
-    isLoadingNamespaces ||
-    isLoadingTables ||
-    catalogConfigs.some((q) => q.isLoading) ||
-    tableMetadataQueries.some((q) => q.isLoading)
-  ) {
-    return <div>Loading...</div>
+  if (isLoadingCatalogs) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="h-16 w-16 animate-spin rounded-full border-b-2 border-t-2 border-gray-900" />
+      </div>
+    )
   }
 
   // Calculate catalog stats
@@ -322,32 +320,53 @@ export function CatalogsContent() {
                         <div className="flex items-center text-sm text-gray-500">
                           <span className="w-32">Namespaces:</span>
                           <span className="font-medium">
-                            {catalogStats[catalog]?.namespaceCount || 0}
+                            {isLoadingNamespaces ? (
+                              <div className="h-4 w-16 animate-pulse rounded bg-gray-200" />
+                            ) : (
+                              catalogStats[catalog]?.namespaceCount || 0
+                            )}
                           </span>
                         </div>
                         <div className="flex items-center text-sm text-gray-500">
                           <span className="w-32">Tables:</span>
                           <span className="font-medium">
-                            {catalogStats[catalog]?.tableCount || 0}
+                            {isLoadingTables ||
+                            tableMetadataQueries.some((q) => q.isLoading) ? (
+                              <div className="h-4 w-16 animate-pulse rounded bg-gray-200" />
+                            ) : (
+                              catalogStats[catalog]?.tableCount || 0
+                            )}
                           </span>
                         </div>
                         <div className="flex items-center text-sm text-gray-500">
                           <span className="w-32">Storage Size:</span>
                           <span className="font-medium">
-                            {catalogStats[catalog]?.storageSize
-                              ? `${(catalogStats[catalog].storageSize / (1024 * 1024)).toFixed(2)} MB`
-                              : "0 MB"}
+                            {isLoadingTables ||
+                            catalogConfigs.some((q) => q.isLoading) ||
+                            tableMetadataQueries.some((q) => q.isLoading) ? (
+                              <div className="h-4 w-16 animate-pulse rounded bg-gray-200" />
+                            ) : catalogStats[catalog]?.storageSize ? (
+                              `${(catalogStats[catalog].storageSize / (1024 * 1024)).toFixed(2)} MB`
+                            ) : (
+                              "0 MB"
+                            )}
                           </span>
                         </div>
                         <div className="flex items-center text-sm text-gray-500">
                           <span className="w-32">Last Modified:</span>
                           <span>
-                            {catalogStats[catalog]?.lastModified
-                              ? formatDistanceToNow(
-                                  catalogStats[catalog].lastModified,
-                                  { addSuffix: true }
-                                )
-                              : "Never"}
+                            {isLoadingTables ||
+                            catalogConfigs.some((q) => q.isLoading) ||
+                            tableMetadataQueries.some((q) => q.isLoading) ? (
+                              <div className="h-4 w-16 animate-pulse rounded bg-gray-200" />
+                            ) : catalogStats[catalog]?.lastModified ? (
+                              formatDistanceToNow(
+                                catalogStats[catalog].lastModified,
+                                { addSuffix: true }
+                              )
+                            ) : (
+                              "Never"
+                            )}
                           </span>
                         </div>
                       </div>

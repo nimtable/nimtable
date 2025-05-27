@@ -15,7 +15,6 @@
  */
 
 "use client"
-import { useState, useMemo } from "react"
 import {
   GitBranch,
   Tag,
@@ -28,14 +27,8 @@ import {
   Clock,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useState, useMemo } from "react"
 
-import { Badge } from "@/components/ui/badge"
-import type { LoadTableResult } from "@/lib/data-loader"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent } from "@/components/ui/card"
-import { getManifestList, getManifestDetails } from "@/lib/data-loader"
-import { useToast } from "@/hooks/use-toast"
-import { errorToString } from "@/lib/utils"
 import {
   Dialog,
   DialogContent,
@@ -48,8 +41,15 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { Button } from "@/components/ui/button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { getManifestList, getManifestDetails } from "@/lib/data-loader"
 import { SnapshotTrend } from "@/components/table/snapshot-trend"
+import { Card, CardContent } from "@/components/ui/card"
+import type { LoadTableResult } from "@/lib/data-loader"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { useToast } from "@/hooks/use-toast"
+import { errorToString } from "@/lib/utils"
 
 interface SnapshotsTabProps {
   tableData: LoadTableResult
@@ -158,16 +158,16 @@ function SnapshotItem({
     const query = `-- time travel to snapshot with id ${snapshot.id}\nSELECT * FROM \`${catalog}\`.\`${namespace}\`.\`${table}\` VERSION AS OF ${snapshot.id} LIMIT 100;`
     // Encode the query for URL
     const encodedQuery = encodeURIComponent(query)
-    router.push(`/sql-editor?initialQuery=${encodedQuery}`)
+    router.push(`/data/sql-editor?initialQuery=${encodedQuery}`)
   }
 
   return (
     <div className="flex flex-col">
-      <div className="flex items-center py-2 px-3 border-b last:border-b-0 hover:bg-muted/20 transition-colors">
-        <div className="w-8 flex-shrink-0 flex items-center">
+      <div className="flex items-center border-b px-3 py-2 transition-colors last:border-b-0 hover:bg-muted/20">
+        <div className="flex w-8 flex-shrink-0 items-center">
           <button
             onClick={handleExpand}
-            className="flex items-center justify-center w-4 h-4 rounded hover:bg-muted/40"
+            className="flex h-4 w-4 items-center justify-center rounded hover:bg-muted/40"
           >
             {isExpanded ? (
               <ChevronDown className="h-3 w-3" />
@@ -179,7 +179,7 @@ function SnapshotItem({
         </div>
 
         {/* Snapshot ID - full */}
-        <div className="font-mono text-xs text-muted-foreground w-[300px] flex-shrink-0 pl-4 flex items-center gap-2">
+        <div className="flex w-[300px] flex-shrink-0 items-center gap-2 pl-4 font-mono text-xs text-muted-foreground">
           <span className="flex-1">{String(snapshot.id)}</span>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -199,19 +199,19 @@ function SnapshotItem({
         </div>
 
         {/* Date */}
-        <div className="text-xs text-muted-foreground w-[140px] flex-shrink-0">
+        <div className="w-[140px] flex-shrink-0 text-xs text-muted-foreground">
           {formatDate(snapshot.timestamp)}
         </div>
 
         {/* Operation type */}
-        <div className="text-xs font-medium w-[100px] flex-shrink-0">
+        <div className="w-[100px] flex-shrink-0 text-xs font-medium">
           {operationType}
         </div>
 
         {/* Badges - only show if present */}
-        <div className="flex items-center gap-1 flex-1 min-w-0 overflow-hidden">
+        <div className="flex min-w-0 flex-1 items-center gap-1 overflow-hidden">
           {isLatest && (
-            <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 text-[10px] px-1.5 py-0 hover:bg-blue-100 dark:hover:bg-blue-900/30">
+            <Badge className="bg-blue-100 px-1.5 py-0 text-[10px] text-blue-800 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/30">
               latest
             </Badge>
           )}
@@ -220,7 +220,7 @@ function SnapshotItem({
             snapshot.branches.map((branch) => (
               <Badge
                 key={branch}
-                className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 text-[10px] px-1.5 py-0 flex items-center gap-0.5 hover:bg-green-100 dark:hover:bg-green-900/30"
+                className="flex items-center gap-0.5 bg-green-100 px-1.5 py-0 text-[10px] text-green-800 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/30"
               >
                 <GitBranch className="h-2 w-2" />
                 {branch}
@@ -231,7 +231,7 @@ function SnapshotItem({
             snapshot.tags.map((tag) => (
               <Badge
                 key={tag}
-                className="bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 text-[10px] px-1.5 py-0 flex items-center gap-0.5 hover:bg-amber-100 dark:hover:bg-amber-900/30"
+                className="flex items-center gap-0.5 bg-amber-100 px-1.5 py-0 text-[10px] text-amber-800 hover:bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 dark:hover:bg-amber-900/30"
               >
                 <Tag className="h-2 w-2" />
                 {tag}
@@ -242,13 +242,13 @@ function SnapshotItem({
 
       {/* Manifest list expansion */}
       {isExpanded && (
-        <div className="bg-muted/5 border-b last:border-b-0">
+        <div className="border-b bg-muted/5 last:border-b-0">
           {loadingManifest ? (
             <div className="p-4 text-sm text-muted-foreground">
               Loading manifest list...
             </div>
           ) : manifestList ? (
-            <div className="p-4 space-y-4">
+            <div className="space-y-4 p-4">
               <div className="text-sm font-medium">Manifest List</div>
               <div className="text-xs text-muted-foreground">
                 Location: {manifestList.manifest_list_location}
@@ -346,7 +346,7 @@ function ManifestItem({
       <div className="flex items-center gap-2 text-xs">
         <button
           onClick={handleExpand}
-          className="flex items-center justify-center w-4 h-4 rounded hover:bg-muted/40"
+          className="flex h-4 w-4 items-center justify-center rounded hover:bg-muted/40"
         >
           {isExpanded ? (
             <ChevronDown className="h-3 w-3" />
@@ -354,12 +354,12 @@ function ManifestItem({
             <ChevronRight className="h-3 w-3" />
           )}
         </button>
-        <div className="flex items-center gap-2 flex-1">
-          <FileText className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-          <span className="font-mono flex-1">{manifest.path}</span>
+        <div className="flex flex-1 items-center gap-2">
+          <FileText className="h-3 w-3 flex-shrink-0 text-muted-foreground" />
+          <span className="flex-1 font-mono">{manifest.path}</span>
           <div className="flex items-center gap-2">
             <Badge
-              className={`${getContentBadgeColor(manifest.content)} text-[10px] px-1.5 py-0`}
+              className={`${getContentBadgeColor(manifest.content)} px-1.5 py-0 text-[10px]`}
             >
               {manifest.content}
             </Badge>
@@ -378,7 +378,7 @@ function ManifestItem({
             </div>
             <Dialog>
               <DialogTrigger asChild>
-                <button className="p-1 rounded hover:bg-muted/40">
+                <button className="rounded p-1 hover:bg-muted/40">
                   <Info className="h-3 w-3 text-muted-foreground" />
                 </button>
               </DialogTrigger>
@@ -389,7 +389,7 @@ function ManifestItem({
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <div className="text-sm font-medium">Basic Information</div>
-                    <div className="text-xs text-muted-foreground space-y-1">
+                    <div className="space-y-1 text-xs text-muted-foreground">
                       <div>Path: {manifest.path}</div>
                       <div>Content: {manifest.content}</div>
                       <div>Sequence Number: {manifest.sequence_number}</div>
@@ -400,7 +400,7 @@ function ManifestItem({
 
                   <div className="space-y-2">
                     <div className="text-sm font-medium">Statistics</div>
-                    <div className="text-xs text-muted-foreground space-y-1">
+                    <div className="space-y-1 text-xs text-muted-foreground">
                       {manifest.added_files_count !== undefined && (
                         <div>Added Files: {manifest.added_files_count}</div>
                       )}
@@ -428,11 +428,11 @@ function ManifestItem({
                     <div className="space-y-2">
                       <div className="text-sm font-medium">Files</div>
                       {manifestDetails.files.length > 0 ? (
-                        <div className="space-y-3 max-h-[300px] overflow-y-auto">
+                        <div className="max-h-[300px] space-y-3 overflow-y-auto">
                           {manifestDetails.files.map((file, fileIndex) => (
                             <div
                               key={fileIndex}
-                              className="text-xs font-mono pl-2 space-y-1 border-l-2 border-muted"
+                              className="space-y-1 border-l-2 border-muted pl-2 font-mono text-xs"
                             >
                               <div className="text-muted-foreground">
                                 Path: {file.file_path}
@@ -458,7 +458,7 @@ function ManifestItem({
                           ))}
                         </div>
                       ) : (
-                        <div className="text-xs text-muted-foreground pl-2">
+                        <div className="pl-2 text-xs text-muted-foreground">
                           No files in this manifest
                         </div>
                       )}
@@ -473,7 +473,7 @@ function ManifestItem({
 
       {/* Manifest details expansion */}
       {isExpanded && (
-        <div className="ml-6 mt-2 bg-muted/5 rounded p-4">
+        <div className="ml-6 mt-2 rounded bg-muted/5 p-4">
           {loadingDetails ? (
             <div className="text-xs text-muted-foreground">
               Loading manifest details...
@@ -486,7 +486,7 @@ function ManifestItem({
                   {manifestDetails.files.map((file, fileIndex) => (
                     <div
                       key={fileIndex}
-                      className="text-xs font-mono pl-2 space-y-1"
+                      className="space-y-1 pl-2 font-mono text-xs"
                     >
                       <div className="text-muted-foreground">
                         Path: {file.file_path}
@@ -504,7 +504,7 @@ function ManifestItem({
                   ))}
                 </div>
               ) : (
-                <div className="text-xs text-muted-foreground pl-2">
+                <div className="pl-2 text-xs text-muted-foreground">
                   No files in this manifest
                 </div>
               )}
@@ -593,16 +593,16 @@ function BranchView({
       {branches.map((branch) => (
         <div key={branch} className="space-y-2">
           <div className="flex items-center gap-2">
-            <div className="p-1 rounded-md bg-green-50 dark:bg-green-900/30">
+            <div className="rounded-md bg-green-50 p-1 dark:bg-green-900/30">
               <GitBranch className="h-3.5 w-3.5 text-green-600" />
             </div>
             <h3 className="text-sm font-medium">{branch}</h3>
           </div>
 
           {/* Branch snapshots */}
-          <div className="border rounded-md overflow-hidden bg-background ml-4 shadow-sm">
+          <div className="ml-4 overflow-hidden rounded-md border bg-background shadow-sm">
             {/* Header row */}
-            <div className="flex items-center py-2 px-3 border-b bg-muted/30 text-xs font-medium text-muted-foreground">
+            <div className="flex items-center border-b bg-muted/30 px-3 py-2 text-xs font-medium text-muted-foreground">
               <div className="w-8 flex-shrink-0">
                 {/* Expand button column */}
               </div>
@@ -651,9 +651,9 @@ function TimelineView({
 
   return (
     <div className="p-4">
-      <div className="border rounded-md overflow-hidden bg-background shadow-sm">
+      <div className="overflow-hidden rounded-md border bg-background shadow-sm">
         {/* Header row */}
-        <div className="flex items-center py-2 px-3 border-b bg-muted/30 text-xs font-medium text-muted-foreground">
+        <div className="flex items-center border-b bg-muted/30 px-3 py-2 text-xs font-medium text-muted-foreground">
           <div className="w-8 flex-shrink-0">{/* Expand button column */}</div>
           <div className="w-[300px] flex-shrink-0 pl-4">Snapshot ID</div>
           <div className="w-[140px] flex-shrink-0">Date</div>
@@ -739,17 +739,17 @@ export function SnapshotsTab({
 
   return (
     <div className="space-y-6">
-      <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+      <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold">
         <span className="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
         Version Control
       </h3>
 
       {snapshots.length === 0 ? (
-        <Card className="border-muted/70 shadow-sm overflow-hidden">
+        <Card className="overflow-hidden border-muted/70 shadow-sm">
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <GitCommit className="h-12 w-12 mb-4 text-muted-foreground/20" />
+            <GitCommit className="mb-4 h-12 w-12 text-muted-foreground/20" />
             <p className="text-sm font-medium">No snapshots found</p>
-            <p className="text-xs mt-1 text-muted-foreground">
+            <p className="mt-1 text-xs text-muted-foreground">
               This table doesn&apos;t have any version history yet
             </p>
           </CardContent>
@@ -762,13 +762,13 @@ export function SnapshotsTab({
             table={table}
             snapshots={snapshots}
           />
-          <Card className="border-muted/70 shadow-sm overflow-hidden">
+          <Card className="overflow-hidden border-muted/70 shadow-sm">
             <Tabs
               defaultValue="timeline"
               value={activeView}
               onValueChange={setActiveView}
             >
-              <div className="flex justify-between items-center p-4 border-b">
+              <div className="flex items-center justify-between border-b p-4">
                 <TabsList>
                   <TabsTrigger
                     value="timeline"
