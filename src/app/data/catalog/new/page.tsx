@@ -16,16 +16,6 @@
 
 "use client"
 
-import * as yaml from "js-yaml"
-import { Database, Plus, Trash2 } from "lucide-react"
-import { useRouter } from "next/navigation"
-import { useToast } from "@/hooks/use-toast"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { TopNavbar } from "@/components/shared/top-navbar"
 import {
   Select,
   SelectContent,
@@ -33,8 +23,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { TopNavbar } from "@/components/shared/top-navbar"
 import { useState, useEffect, useCallback } from "react"
+import { Database, Plus, Trash2 } from "lucide-react"
 import { createCatalog } from "@/lib/client/sdk.gen"
+import { Textarea } from "@/components/ui/textarea"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { useToast } from "@/hooks/use-toast"
+import { useRouter } from "next/navigation"
+import * as yaml from "js-yaml"
 
 interface CatalogTemplate {
   name: string
@@ -480,7 +480,7 @@ export default function NewCatalogPage() {
         description: "The catalog has been added to the database.",
       })
 
-      router.push("/catalog?catalog=" + catalogData.name)
+      router.push("/data/catalog?catalog=" + catalogData.name)
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "An unknown error occurred"
@@ -496,13 +496,13 @@ export default function NewCatalogPage() {
   }
 
   return (
-    <div className="h-full w-full overflow-auto bg-muted/5 flex flex-col">
+    <div className="flex h-full w-full flex-col overflow-auto bg-muted/5">
       <TopNavbar />
-      <div className="flex-1 flex justify-center">
+      <div className="flex flex-1 justify-center">
         <div className="w-full max-w-5xl px-6 py-8">
           {/* Header */}
-          <div className="flex items-center gap-3 mb-8">
-            <div className="h-12 w-12 rounded-lg bg-blue-600/10 border border-blue-600/20 flex items-center justify-center">
+          <div className="mb-8 flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-blue-600/20 bg-blue-600/10">
               <Database className="h-6 w-6 text-blue-600" />
             </div>
             <div className="flex items-center gap-2">
@@ -673,7 +673,7 @@ export default function NewCatalogPage() {
                           onClick={addProperty}
                           className="h-8"
                         >
-                          <Plus className="h-4 w-4 mr-2" />
+                          <Plus className="mr-2 h-4 w-4" />
                           Add Property
                         </Button>
                       </div>

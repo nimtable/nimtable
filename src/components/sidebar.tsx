@@ -3,6 +3,7 @@
 import {
   ChevronDown,
   ChevronRight,
+  Code,
   Database,
   FolderOpen,
   FolderTree,
@@ -58,6 +59,11 @@ export function Sidebar() {
       title: "Optimization",
       href: "/optimization",
       icon: LayoutGrid,
+    },
+    {
+      title: "SQL Query",
+      href: "/data/sql-editor",
+      icon: Code,
     },
   ]
 

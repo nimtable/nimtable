@@ -58,8 +58,6 @@ export default function RootLayout({
                 <RefreshProvider>
                   <SidebarProvider>
                     <ProtectedRoute>
-                      {/* The AppSidebar should only be rendered when the user is authenticated */}
-                      {/* <AppSidebar /> */}
                       <Suspense fallback={<></>}>{children}</Suspense>
                     </ProtectedRoute>
                     <Toaster />

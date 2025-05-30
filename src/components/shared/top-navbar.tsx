@@ -15,8 +15,6 @@
  */
 "use client"
 
-import { useState } from "react"
-import Link from "next/link"
 import {
   ChevronRight,
   Code,
@@ -26,14 +24,16 @@ import {
   TableIcon,
   Home,
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { cn } from "@/lib/utils"
 import { OptimizeSheet } from "@/components/table/optimize-sheet"
+import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
+import { useState } from "react"
+import Link from "next/link"
 
 interface TopNavbarProps {
   catalog?: string | null
@@ -51,8 +51,8 @@ export function TopNavbar({ catalog, namespace, table }: TopNavbarProps) {
 
   // Build SQL editor URL with appropriate query parameters
   const sqlEditorUrl = catalog
-    ? `/sql-editor?catalog=${catalog}${namespace ? `&namespace=${namespace}` : ""}${table ? `&table=${table}` : ""}`
-    : "/sql-editor"
+    ? `/data/sql-editor?catalog=${catalog}${namespace ? `&namespace=${namespace}` : ""}${table ? `&table=${table}` : ""}`
+    : "/data/sql-editor"
 
   return (
     <div className="border-b">
@@ -60,7 +60,7 @@ export function TopNavbar({ catalog, namespace, table }: TopNavbarProps) {
         <div className="flex items-center gap-2 text-sm">
           <Link
             href="/"
-            className="text-muted-foreground hover:text-blue-500 hover:underline transition-colors flex items-center gap-1"
+            className="flex items-center gap-1 text-muted-foreground transition-colors hover:text-blue-500 hover:underline"
           >
             <Home className="h-3.5 w-3.5 text-blue-500" />
             <span className="sr-only">Home</span>
@@ -71,8 +71,8 @@ export function TopNavbar({ catalog, namespace, table }: TopNavbarProps) {
               {/* Add a separator only if there's a catalog */}
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
               <Link
-                href={`/catalog?catalog=${catalog}`}
-                className="text-muted-foreground hover:text-blue-500 hover:underline transition-colors flex items-center gap-1"
+                href={`/data/catalog?catalog=${catalog}`}
+                className="flex items-center gap-1 text-muted-foreground transition-colors hover:text-blue-500 hover:underline"
               >
                 <Database className="h-3.5 w-3.5 text-blue-500" />
                 {catalog}
@@ -84,9 +84,9 @@ export function TopNavbar({ catalog, namespace, table }: TopNavbarProps) {
                   <Link
                     href={`/namespace?catalog=${catalog}&namespace=${namespace}`}
                     className={cn(
-                      "hover:text-blue-500 hover:underline transition-colors flex items-center gap-1",
+                      "flex items-center gap-1 transition-colors hover:text-blue-500 hover:underline",
                       isNamespacePage
-                        ? "text-foreground font-medium"
+                        ? "font-medium text-foreground"
                         : "text-muted-foreground"
                     )}
                   >
@@ -99,7 +99,7 @@ export function TopNavbar({ catalog, namespace, table }: TopNavbarProps) {
               {table && (
                 <>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-foreground font-medium flex items-center gap-1">
+                  <span className="flex items-center gap-1 font-medium text-foreground">
                     <TableIcon className="h-3.5 w-3.5 text-blue-500" />
                     {table}
                   </span>
@@ -118,24 +118,24 @@ export function TopNavbar({ catalog, namespace, table }: TopNavbarProps) {
                   className={cn(
                     "group relative overflow-hidden",
                     "bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700",
-                    "text-white shadow-md hover:shadow-lg transition-all duration-300",
-                    "border-0 hover:scale-[1.03] transform"
+                    "text-white shadow-md transition-all duration-300 hover:shadow-lg",
+                    "transform border-0 hover:scale-[1.03]"
                   )}
                   onClick={() => setShowOptimizeSheet(true)}
                 >
                   {/* Animated glow effect */}
-                  <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-purple-400/0 via-purple-400/30 to-purple-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-[length:200%_100%] animate-gradient-x"></div>
+                  <div className="animate-gradient-x absolute inset-0 h-full w-full bg-gradient-to-r from-purple-400/0 via-purple-400/30 to-purple-400/0 bg-[length:200%_100%] opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
 
                   {/* Button content */}
                   <div className="relative flex items-center gap-2 py-2">
-                    <div className="p-1 bg-white/20 rounded-md flex items-center justify-center group-hover:bg-white/30 transition-colors">
+                    <div className="flex items-center justify-center rounded-md bg-white/20 p-1 transition-colors group-hover:bg-white/30">
                       <Settings className="h-3.5 w-3.5 text-white" />
                     </div>
                     <span className="font-medium">Optimize Table</span>
                   </div>
 
                   {/* Subtle pulse effect */}
-                  <span className="absolute -inset-3 block rounded-full bg-purple-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></span>
+                  <span className="absolute -inset-3 block animate-pulse rounded-full bg-purple-400/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></span>
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom">
@@ -150,25 +150,25 @@ export function TopNavbar({ catalog, namespace, table }: TopNavbarProps) {
                 className={cn(
                   "group relative overflow-hidden",
                   "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700",
-                  "text-white shadow-md hover:shadow-lg transition-all duration-300",
-                  "border-0 hover:scale-[1.03] transform"
+                  "text-white shadow-md transition-all duration-300 hover:shadow-lg",
+                  "transform border-0 hover:scale-[1.03]"
                 )}
                 asChild
               >
                 <Link href={sqlEditorUrl}>
                   {/* Animated glow effect */}
-                  <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-400/0 via-blue-400/30 to-blue-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-[length:200%_100%] animate-gradient-x"></div>
+                  <div className="animate-gradient-x absolute inset-0 h-full w-full bg-gradient-to-r from-blue-400/0 via-blue-400/30 to-blue-400/0 bg-[length:200%_100%] opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
 
                   {/* Button content */}
                   <div className="relative flex items-center gap-2 py-2">
-                    <div className="p-1 bg-white/20 rounded-md flex items-center justify-center group-hover:bg-white/30 transition-colors">
+                    <div className="flex items-center justify-center rounded-md bg-white/20 p-1 transition-colors group-hover:bg-white/30">
                       <Code className="h-3.5 w-3.5 text-white" />
                     </div>
                     <span className="font-medium">SQL Query</span>
                   </div>
 
                   {/* Subtle pulse effect */}
-                  <span className="absolute -inset-3 block rounded-full bg-blue-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></span>
+                  <span className="absolute -inset-3 block animate-pulse rounded-full bg-blue-400/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></span>
                 </Link>
               </Button>
             </TooltipTrigger>
