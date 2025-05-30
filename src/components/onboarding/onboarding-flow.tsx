@@ -15,11 +15,7 @@ export function OnboardingFlow({ onComplete, onDismiss }: OnboardingFlowProps) {
   const [currentStep, setCurrentStep] = useState(1)
 
   const goToNextStep = () => {
-    if (currentStep < 3) {
-      setCurrentStep(currentStep + 1)
-    } else {
-      onComplete()
-    }
+    setCurrentStep(currentStep + 1)
   }
 
   return (
