@@ -48,7 +48,7 @@ export default function TablePage() {
   const handleRefresh = () => {
     refetch()
     // Trigger data distribution refresh as well
-    setRefreshKey(prev => prev + 1)
+    setRefreshKey((prev) => prev + 1)
   }
 
   // Build SQL editor URL with appropriate query parameters
@@ -115,7 +115,11 @@ export default function TablePage() {
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-4"
+      >
         <TabsList className="mb-6 grid w-full max-w-md grid-cols-3">
           <TabsTrigger value="info" className="flex items-center gap-1.5">
             <FileText className="h-4 w-4" />
