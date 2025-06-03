@@ -24,13 +24,16 @@ import io.ebean.annotation.WhenModified;
 import jakarta.persistence.*;
 import java.time.Instant;
 
+/**
+ * Entity class representing a user in the system.
+ */
 @Entity
 @Table(name = "users")
 public class User extends Model {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @Column(nullable = false, unique = true)
     private String username;
@@ -71,11 +74,11 @@ public class User extends Model {
 
     // Getters and Setters
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -120,6 +123,14 @@ public class User extends Model {
     // Allow internal setting/getting of passwordHash
     public void setPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
     }
 
     public Instant getCreatedAt() {

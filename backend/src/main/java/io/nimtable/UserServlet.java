@@ -38,12 +38,12 @@ import org.slf4j.LoggerFactory;
  * Path: `/api/users`
  *
  * <p>
- * Endpoints: - GET /api/users: Retrieve a list of all users. - POST /api/users:
- * Create a new
- * user. - GET /api/users/{id}: Retrieve a specific user by their ID. - PUT
- * /api/users/{id}: Update
- * a specific user by their ID. - DELETE /api/users/{id}: Delete a specific user
- * by their ID.
+ * Endpoints:
+ * - GET /api/users: Retrieve a list of all users.
+ * - POST /api/users: Create a new user.
+ * - GET /api/users/{id}: Retrieve a specific user by their ID.
+ * - PUT /api/users/{id}: Update a specific user by their ID.
+ * - DELETE /api/users/{id}: Delete a specific user by their ID.
  */
 public class UserServlet extends HttpServlet {
 
@@ -69,9 +69,9 @@ public class UserServlet extends HttpServlet {
      * Handles GET requests for user resources.
      *
      * <p>
-     * Routes: - `/api/users`: Calls
-     * {@link #handleGetAllUsers(HttpServletResponse)}. -
-     * `/api/users/{id}`: Calls
+     * Routes:
+     * - `/api/users`: Calls {@link #handleGetAllUsers(HttpServletResponse)}.
+     * - `/api/users/{id}`: Calls
      * {@link #handleGetUserById(long, HttpServletResponse)}.
      *
      * @param req  HttpServletRequest object.
@@ -114,14 +114,12 @@ public class UserServlet extends HttpServlet {
 
     /**
      * Retrieves a specific user by ID and writes it to the response as JSON.
-     * Responds with 200 OK
-     * and user data if found, 404 Not Found otherwise. Password hash is always
-     * masked in the
-     * response.
+     * Responds with 200 OK and user data if found, 404 Not Found otherwise.
+     * Password hash is always excluded from the response.
      *
      * @param userId The ID of the user to retrieve.
-     * @param resp   The HttpServletResponse object.
-     * @throws IOException If an I/O error occurs writing the response.
+     * @param resp   The HttpServletResponse object to write the response to.
+     * @throws IOException If an I/O error occurs while writing the response.
      */
     private void handleGetUserById(long userId, HttpServletResponse resp) throws IOException {
         Optional<User> userOptional = userRepository.findUserById(userId);

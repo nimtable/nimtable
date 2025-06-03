@@ -22,13 +22,16 @@ import io.ebean.annotation.WhenModified;
 import jakarta.persistence.*;
 import java.time.Instant;
 
+/**
+ * Entity class representing a user role in the system.
+ */
 @Entity
 @Table(name = "roles")
 public class Role extends Model {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @Column(nullable = false, unique = true)
     private String name;
@@ -42,11 +45,11 @@ public class Role extends Model {
     private Instant updatedAt;
 
     // Getters and Setters
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
