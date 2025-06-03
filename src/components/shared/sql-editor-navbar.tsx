@@ -16,7 +16,7 @@
 "use client"
 
 import Link from "next/link"
-import { Home, FileCode } from "lucide-react"
+import { Home, FileCode, Bot } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Tooltip,
@@ -24,7 +24,22 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
-export function SqlEditorNavbar() {
+interface SqlEditorNavbarProps {
+  title?: string
+  icon?: "sql" | "ai"
+}
+
+export function SqlEditorNavbar({
+  title = "SQL Workspace",
+  icon = "sql",
+}: SqlEditorNavbarProps) {
+  const IconComponent = icon === "ai" ? Bot : FileCode
+  const iconColor = icon === "ai" ? "text-blue-500" : "text-blue-500"
+  const bgColor =
+    icon === "ai"
+      ? "bg-blue-50 dark:bg-blue-950/30"
+      : "bg-blue-50 dark:bg-blue-950/30"
+
   return (
     <div className="border-b">
       <div className="flex items-center justify-between px-6 py-4">
@@ -49,10 +64,10 @@ export function SqlEditorNavbar() {
           </Tooltip>
 
           <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-blue-50 dark:bg-blue-950/30 rounded-md">
-              <FileCode className="h-4 w-4 text-blue-500" />
+            <div className={`p-1.5 ${bgColor} rounded-md`}>
+              <IconComponent className={`h-4 w-4 ${iconColor}`} />
             </div>
-            <span className="font-medium">SQL Workspace</span>
+            <span className="font-medium">{title}</span>
           </div>
         </div>
       </div>

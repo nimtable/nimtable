@@ -12,6 +12,7 @@ import {
   LayoutGrid,
   LogOut,
   Users,
+  Bot,
 } from "lucide-react"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
@@ -67,6 +68,11 @@ export function Sidebar() {
       title: "Optimization",
       href: "/optimization",
       icon: LayoutGrid,
+    },
+    {
+      title: "Ask AI",
+      href: "/data/ask-ai",
+      icon: Bot,
     },
     {
       title: "SQL Query",

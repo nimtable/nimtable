@@ -33,18 +33,48 @@ function catalogApi(catalog: string, inBrowser: boolean = true) {
   })
 }
 
+// Helper function to detect if we're running in browser
+function isBrowser() {
+  return typeof window !== "undefined"
+}
+
+export async function loadCatalogNames(): Promise<string[]> {
+  try {
+    // In browser environment, use the regular SDK client
+    if (isBrowser()) {
+      const response = await getCatalogs()
+      return response.data || []
+    }
+
+    // In server environment, make a direct fetch call with full URL
+    const baseUrl = getApiBaseUrl(false)
+    const response = await fetch(`${baseUrl}/api/catalogs`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch catalogs: ${response.status} ${response.statusText}`
+      )
+    }
+
+    const data = await response.json()
+    return data || []
+  } catch (error) {
+    console.error("Error loading catalog names:", error)
+    throw error
+  }
+}
+
 // Types for the sidebar data structure
 export interface NamespaceTables {
   name: string // full namespace name
   shortName: string // last part of the namespace name
   tables: string[]
   children: NamespaceTables[]
-}
-
-export async function loadCatalogNames(): Promise<string[]> {
-  const response = await getCatalogs()
-
-  return response.data || []
 }
 
 export async function loadNamespacesAndTables(
@@ -102,7 +132,7 @@ export async function loadNamespacesAndTables(
 }
 
 export async function listNamespaces(catalog: string): Promise<string[]> {
-  const api = catalogApi(catalog)
+  const api = catalogApi(catalog, isBrowser())
 
   // Start with root namespaces
   const response = await api.v1.listNamespaces()
@@ -113,7 +143,7 @@ export async function listNamespaces(catalog: string): Promise<string[]> {
 export async function getCatalogConfig(
   catalog: string
 ): Promise<CatalogConfig> {
-  const api = catalogApi(catalog)
+  const api = catalogApi(catalog, isBrowser())
   return await api.v1.getConfig()
 }
 
@@ -122,7 +152,7 @@ export async function loadTableData(
   namespace: string,
   table: string
 ): Promise<LoadTableResult> {
-  const api = catalogApi(catalog)
+  const api = catalogApi(catalog, isBrowser())
   const response = await api.v1.loadTable(namespace, table)
   return response
 }
@@ -158,8 +188,42 @@ export async function renameTable(
 export async function runQuery(
   query: string
 ): Promise<{ columns: string[]; rows: any[][]; error?: string }> {
-  const response = await fetch(`/api/query?query=${encodeURIComponent(query)}`)
-  return await response.json()
+  try {
+    // In browser environment, use relative path
+    if (isBrowser()) {
+      const response = await fetch(
+        `/api/query?query=${encodeURIComponent(query)}`
+      )
+      return await response.json()
+    }
+
+    // In server environment, use full URL
+    const baseUrl = getApiBaseUrl(false)
+    const response = await fetch(
+      `${baseUrl}/api/query?query=${encodeURIComponent(query)}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to execute query: ${response.status} ${response.statusText}`
+      )
+    }
+
+    return await response.json()
+  } catch (error) {
+    console.error("Error executing query:", error)
+    return {
+      columns: [],
+      rows: [],
+      error: error instanceof Error ? error.message : "Unknown error",
+    }
+  }
 }
 
 export async function getManifestList(
