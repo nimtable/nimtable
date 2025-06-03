@@ -322,6 +322,11 @@ public class UserServlet extends HttpServlet {
                         "Role ID must be greater than 0. Valid roles are: 1 (admin), 2 (editor), 3 (viewer)");
             }
 
+            // If roleId is not provided in the update, keep the existing role
+            if (userUpdates.getRoleId() == 0) {
+                userUpdates.setRoleId(existingUser.getRoleId());
+            }
+
             boolean updated = userRepository.updateUser(userUpdates);
 
             if (updated) {

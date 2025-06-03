@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Search, Trash2 } from "lucide-react"
+import { Edit2, Search, Trash2 } from "lucide-react"
 
 import type { User } from "@/lib/client/types.gen"
 import { Input } from "@/components/ui/input"
@@ -25,16 +25,48 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { UserRoleId } from "./type"
 
 interface UserTableProps {
   users: User[]
   refetch: () => void
   onRemove: (id: number) => void
+  onUpdate: (id: number, username: string, roleId: number) => void
 }
 
-export function UserTable({ users, onRemove }: UserTableProps) {
+export function UserTable({ users, onRemove, onUpdate }: UserTableProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [userToDelete, setUserToDelete] = useState<User | null>(null)
+  const [userToEdit, setUserToEdit] = useState<User | null>(null)
+  const [selectedRoleId, setSelectedRoleId] = useState<number>(
+    UserRoleId.VIEWER
+  )
+
+  const getRoleId = (role: string) => {
+    switch (role) {
+      case "admin":
+        return UserRoleId.ADMIN
+      case "editor":
+        return UserRoleId.EDITOR
+      default:
+        return UserRoleId.VIEWER
+    }
+  }
 
   const filteredUsers = users.filter((user) =>
     user.username.toLowerCase().includes(searchTerm.toLowerCase())
@@ -55,10 +87,22 @@ export function UserTable({ users, onRemove }: UserTableProps) {
     setUserToDelete(user)
   }
 
+  const handleEdit = (user: User) => {
+    setUserToEdit(user)
+    setSelectedRoleId(getRoleId(user.role))
+  }
+
   const confirmDelete = () => {
     if (userToDelete) {
       onRemove(userToDelete.id)
       setUserToDelete(null)
+    }
+  }
+
+  const confirmEdit = () => {
+    if (userToEdit) {
+      onUpdate(userToEdit.id, userToEdit.username, selectedRoleId)
+      setUserToEdit(null)
     }
   }
 
@@ -109,6 +153,14 @@ export function UserTable({ users, onRemove }: UserTableProps) {
                       <Button
                         variant="ghost"
                         size="icon"
+                        onClick={() => handleEdit(user)}
+                      >
+                        <Edit2 className="h-4 w-4" />
+                        <span className="sr-only">Edit</span>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => handleDelete(user)}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -149,6 +201,44 @@ export function UserTable({ users, onRemove }: UserTableProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={!!userToEdit} onOpenChange={() => setUserToEdit(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit User Role</DialogTitle>
+            <DialogDescription>
+              Change the role for user {userToEdit?.username}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Select
+              value={selectedRoleId.toString()}
+              onValueChange={(value) => setSelectedRoleId(parseInt(value))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={UserRoleId.ADMIN.toString()}>
+                  Admin
+                </SelectItem>
+                <SelectItem value={UserRoleId.EDITOR.toString()}>
+                  Editor
+                </SelectItem>
+                <SelectItem value={UserRoleId.VIEWER.toString()}>
+                  Viewer
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setUserToEdit(null)}>
+              Cancel
+            </Button>
+            <Button onClick={confirmEdit}>Save changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
