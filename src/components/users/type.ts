@@ -3,5 +3,3 @@ export enum UserRoleId {
   EDITOR = 2,
   VIEWER = 3,
 }
-
-
