@@ -274,9 +274,9 @@ export default function AskAIPage() {
       <div className="flex h-full flex-col">
         <SqlEditorNavbar title="AI Assistant" icon="ai" />
 
-        <div className="flex-1 overflow-auto p-6">
-          <div className="mx-auto max-w-4xl">
-            <div className="mb-6">
+        <div className="flex-1 flex flex-col p-6 min-h-0">
+          <div className="mx-auto max-w-4xl flex flex-col h-full">
+            <div className="mb-6 flex-shrink-0">
               <h1 className="text-2xl font-bold flex items-center gap-2">
                 <Bot className="h-6 w-6 text-blue-500" />
                 Ask AI
@@ -288,12 +288,12 @@ export default function AskAIPage() {
               </p>
             </div>
 
-            {/* Chat Messages */}
-            <Card className="mb-6 border-muted/70 shadow-sm">
-              <CardContent className="p-0">
-                <div className="flex h-[600px] flex-col">
-                  {/* Messages Area */}
-                  <div className="flex-1 overflow-auto p-4 space-y-4">
+            {/* Chat Messages - Now takes full available height */}
+            <Card className="flex-1 border-muted/70 shadow-sm flex flex-col min-h-0">
+              <CardContent className="p-0 flex flex-col h-full">
+                <div className="flex flex-col h-full">
+                  {/* Messages Area - Takes most of the available space */}
+                  <div className="flex-1 overflow-auto p-4 space-y-4 min-h-0">
                     {messages.length === 0 ? (
                       <div className="flex flex-col items-center justify-center h-full text-center">
                         <Bot className="h-12 w-12 text-muted-foreground/50 mb-4" />
@@ -412,8 +412,8 @@ export default function AskAIPage() {
                     <div ref={messagesEndRef} />
                   </div>
 
-                  {/* Input Area */}
-                  <div className="border-t border-muted/50 p-4">
+                  {/* Input Area - Fixed at bottom */}
+                  <div className="border-t border-muted/50 p-4 flex-shrink-0">
                     <form onSubmit={handleSubmit} className="flex gap-2">
                       <Textarea
                         value={input}
