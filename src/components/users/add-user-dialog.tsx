@@ -5,7 +5,6 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 
-import type { UserCreate } from "@/lib/client/types.gen"
 import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import {
@@ -26,6 +25,15 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { errorToString } from "@/lib/utils"
+import { createUser } from "@/lib/client"
 
 const formSchema = z.object({
   name: z.string().min(3, {
@@ -34,12 +42,21 @@ const formSchema = z.object({
   password: z.string().min(6, {
     message: "Password must be at least 6 characters",
   }),
+  roleId: z.number({
+    required_error: "Please select a role",
+  }),
 })
+
+const roles = [
+  { id: 1, name: "Admin" },
+  { id: 2, name: "Editor" },
+  { id: 3, name: "Viewer" },
+]
 
 interface AddUserDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onAddUser: (user: UserCreate) => void
+  onAddUser: () => void
 }
 
 export function AddUserDialog({
@@ -55,26 +72,33 @@ export function AddUserDialog({
     defaultValues: {
       name: "",
       password: "",
+      roleId: undefined,
     },
   })
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
       setIsSubmitting(true)
-      onAddUser({
-        username: values.name,
-        password: values.password,
+      await createUser({
+        body: {
+          username: values.name,
+          password: values.password,
+          roleId: values.roleId,
+        },
       })
-      form.reset()
-      setIsSubmitting(false)
-
+      onAddUser()
       toast({
         title: "User Created Successfully",
         description: `User ${values.name} has been created successfully`,
       })
-    } catch (error) {
-      console.error(error)
+    } catch (error: any) {
+      toast({
+        title: "Error Creating User",
+        description: errorToString(error?.error),
+        variant: "destructive",
+      })
     } finally {
+      form.reset()
       setIsSubmitting(false)
     }
   }
@@ -113,6 +137,35 @@ export function AddUserDialog({
                     <Input type="password" placeholder="••••••••" {...field} />
                   </FormControl>
                   <FormDescription>Minimum 6 characters</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="roleId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Role</FormLabel>
+                  <Select
+                    onValueChange={(value) => field.onChange(Number(value))}
+                    defaultValue={field.value?.toString()}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a role" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {roles.map((role) => (
+                        <SelectItem key={role.id} value={role.id.toString()}>
+                          {role.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>Select the user&apos;s role</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

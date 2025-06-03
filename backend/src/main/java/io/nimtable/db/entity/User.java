@@ -24,27 +24,39 @@ import io.ebean.annotation.WhenModified;
 import jakarta.persistence.*;
 import java.time.Instant;
 
+/** Entity class representing a user in the system. */
 @Entity
 @Table(name = "users")
 public class User extends Model {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @Column(nullable = false, unique = true)
     private String username;
+
+    @Column(name = "role_id", nullable = false)
+    private long roleId;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id", insertable = false, updatable = false)
+    private Role role;
 
     // Field to receive plain text password from request (write-only)
     @Transient private String password;
 
     // Field to store hashed password in DB (read/write internally, ignore in
     // response)
-    private String passwordHash;
+    @JsonIgnore private String passwordHash;
 
-    @WhenCreated private Instant createdAt;
+    @WhenCreated
+    @JsonProperty("createdAt")
+    private Instant createdAt;
 
-    @WhenModified private Instant updatedAt;
+    @WhenModified
+    @JsonProperty("updatedAt")
+    private Instant updatedAt;
 
     // Constructors
     public User() {}
@@ -57,11 +69,11 @@ public class User extends Model {
 
     // Getters and Setters
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -71,6 +83,19 @@ public class User extends Model {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public long getRoleId() {
+        return roleId;
+    }
+
+    public void setRoleId(long roleId) {
+        this.roleId = roleId;
+    }
+
+    @JsonProperty("role")
+    public String getRoleName() {
+        return role != null ? role.getName() : null;
     }
 
     // Allow Jackson to deserialize 'password' field from JSON
@@ -93,5 +118,29 @@ public class User extends Model {
     // Allow internal setting/getting of passwordHash
     public void setPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Instant updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

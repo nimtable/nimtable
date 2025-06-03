@@ -53,24 +53,32 @@ export type _Error = {
 };
 
 export type User = {
-    id?: number;
+    id: number;
     username: string;
     /**
-     * Password hash (never sent in responses)
+     * User's role name
      */
-    passwordHash?: string;
-    createdAt?: string;
-    updatedAt?: string;
+    role: 'admin' | 'editor' | 'viewer';
+    createdAt: string;
+    updatedAt: string;
 };
 
 export type UserCreate = {
     username: string;
     password: string;
+    /**
+     * Role ID (1: admin, 2: editor, 3: viewer)
+     */
+    roleId: number;
 };
 
 export type UserUpdate = {
-    username: string;
+    username?: string;
     password?: string;
+    /**
+     * Role ID (1: admin, 2: editor, 3: viewer)
+     */
+    roleId?: number;
 };
 
 export type TableInfo = {

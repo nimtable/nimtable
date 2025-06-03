@@ -74,7 +74,6 @@ public class UserServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        String pathInfo = req.getPathInfo();
         resp.setContentType("application/json");
         resp.setCharacterEncoding("UTF-8");
 
@@ -107,12 +106,12 @@ public class UserServlet extends HttpServlet {
 
     /**
      * Retrieves a specific user by ID and writes it to the response as JSON. Responds with 200 OK
-     * and user data if found, 404 Not Found otherwise. Password hash is always masked in the
+     * and user data if found, 404 Not Found otherwise. Password hash is always excluded from the
      * response.
      *
      * @param userId The ID of the user to retrieve.
-     * @param resp The HttpServletResponse object.
-     * @throws IOException If an I/O error occurs writing the response.
+     * @param resp The HttpServletResponse object to write the response to.
+     * @throws IOException If an I/O error occurs while writing the response.
      */
     private void handleGetUserById(long userId, HttpServletResponse resp) throws IOException {
         Optional<User> userOptional = userRepository.findUserById(userId);
@@ -138,7 +137,14 @@ public class UserServlet extends HttpServlet {
     private void handleGetAllUsers(HttpServletResponse resp) throws IOException {
         List<User> users = userRepository.getAllUsers();
         // Mask password hash for all users in the list
-        users.forEach(user -> user.setPasswordHash(null));
+        users.forEach(
+                user -> {
+                    user.setPasswordHash(null);
+                    // Ensure updatedAt is returned
+                    if (user.getUpdatedAt() == null) {
+                        user.setUpdatedAt(user.getCreatedAt());
+                    }
+                });
         resp.setStatus(HttpServletResponse.SC_OK);
         objectMapper.writeValue(resp.getWriter(), users);
     }
@@ -187,6 +193,12 @@ public class UserServlet extends HttpServlet {
             // --- Input Validation ---
             if (newUser.getUsername() == null || newUser.getUsername().trim().isEmpty()) {
                 throw new IllegalArgumentException("Username is required.");
+            }
+
+            // --- Role Validation ---
+            if (newUser.getRoleId() <= 0) {
+                throw new IllegalArgumentException(
+                        "Role ID must be greater than 0. Valid roles are: 1 (admin), 2 (editor), 3 (viewer)");
             }
 
             User createdUser = userRepository.createUser(newUser);
@@ -278,8 +290,17 @@ public class UserServlet extends HttpServlet {
             if (userUpdates.getUsername() == null || userUpdates.getUsername().trim().isEmpty()) {
                 throw new IllegalArgumentException("Username cannot be empty.");
             }
-            // Removed email validation
-            // ----------------------
+
+            // --- Role Validation ---
+            if (userUpdates.getRoleId() < 0) {
+                throw new IllegalArgumentException(
+                        "Role ID must be non-negative. Valid roles are: 1 (admin), 2 (editor), 3 (viewer)");
+            }
+
+            // If roleId is not provided in the update, keep the existing role
+            if (userUpdates.getRoleId() == 0) {
+                userUpdates.setRoleId(existingUser.getRoleId());
+            }
 
             boolean updated = userRepository.updateUser(userUpdates);
 
@@ -330,15 +351,38 @@ public class UserServlet extends HttpServlet {
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        handleNotImplemented(resp, "DELETE");
-    }
-
-    private void handleNotImplemented(HttpServletResponse resp, String method) throws IOException {
-        resp.setStatus(HttpServletResponse.SC_NOT_IMPLEMENTED);
         resp.setContentType("application/json");
         resp.setCharacterEncoding("UTF-8");
-        objectMapper.writeValue(
-                resp.getWriter(), new ErrorResponse(method + " method not implemented yet."));
+
+        Matcher matcher = USER_ID_PATTERN.matcher(req.getRequestURI());
+        if (!matcher.matches()) {
+            resp.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+            objectMapper.writeValue(
+                    resp.getWriter(), new ErrorResponse("DELETE expects /api/users/{id}"));
+            return;
+        }
+
+        try {
+            long userId = Long.parseLong(matcher.group(1));
+            boolean deleted = userRepository.deleteUser(userId);
+
+            if (deleted) {
+                resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
+            } else {
+                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                objectMapper.writeValue(
+                        resp.getWriter(), new ErrorResponse("User not found for deletion."));
+            }
+        } catch (NumberFormatException e) {
+            LOG.warn("Invalid user ID format in DELETE URI: {}", req.getRequestURI());
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            objectMapper.writeValue(resp.getWriter(), new ErrorResponse("Invalid user ID format."));
+        } catch (Exception e) {
+            LOG.error("Unexpected error during DELETE request: {}", e.getMessage(), e);
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            objectMapper.writeValue(
+                    resp.getWriter(), new ErrorResponse("An unexpected error occurred."));
+        }
     }
 
     // Simple inner class for error responses
