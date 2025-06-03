@@ -9,7 +9,7 @@ import {
   Settings,
 } from "lucide-react"
 import { useSearchParams } from "next/navigation"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -37,9 +37,18 @@ export default function TablePage() {
   )
 
   const [showOptimizeSheet, setShowOptimizeSheet] = useState(false)
+  const [activeTab, setActiveTab] = useState(tab || "info")
+  const [refreshKey, setRefreshKey] = useState(0)
+
+  // Sync activeTab with URL parameter
+  useEffect(() => {
+    setActiveTab(tab || "info")
+  }, [tab])
 
   const handleRefresh = () => {
     refetch()
+    // Trigger data distribution refresh as well
+    setRefreshKey((prev) => prev + 1)
   }
 
   // Build SQL editor URL with appropriate query parameters
@@ -106,7 +115,11 @@ export default function TablePage() {
         </div>
       </div>
 
-      <Tabs defaultValue={tab || "info"} className="space-y-4">
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-4"
+      >
         <TabsList className="mb-6 grid w-full max-w-md grid-cols-3">
           <TabsTrigger value="info" className="flex items-center gap-1.5">
             <FileText className="h-4 w-4" />
@@ -128,6 +141,7 @@ export default function TablePage() {
             catalog={catalog}
             namespace={namespace}
             table={table}
+            refreshKey={refreshKey}
           />
         </TabsContent>
 
