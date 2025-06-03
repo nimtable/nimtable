@@ -34,7 +34,6 @@ import { cn } from "@/lib/utils"
 export function Sidebar() {
   const pathname = usePathname()
   const [dataExpanded, setDataExpanded] = useState(true)
-  const [userMenuOpen, setUserMenuOpen] = useState(false)
   const { user, logout } = useAuth()
 
   const mainNavItems = [
@@ -184,11 +183,7 @@ export function Sidebar() {
             <div className="w-36 text-left">
               <p className="truncate text-sm font-medium">{user?.username}</p>
             </div>
-            {userMenuOpen ? (
-              <ChevronDown className="h-4 w-4 text-gray-500" />
-            ) : (
-              <ChevronRight className="h-4 w-4 text-gray-500" />
-            )}
+            <ChevronDown className="h-4 w-4 text-gray-500" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuItem className="cursor-pointer" onClick={logout}>
