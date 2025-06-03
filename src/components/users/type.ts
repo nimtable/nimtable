@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 export enum UserRoleId {
   ADMIN = 1,
   EDITOR = 2,
