@@ -78,7 +78,7 @@ export type UserUpdate = {
     /**
      * Role ID (1: admin, 2: editor, 3: viewer)
      */
-    roleId: number;
+    roleId?: number;
 };
 
 export type TableInfo = {

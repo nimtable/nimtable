@@ -317,9 +317,9 @@ public class UserServlet extends HttpServlet {
             }
 
             // --- Role Validation ---
-            if (userUpdates.getRoleId() <= 0) {
+            if (userUpdates.getRoleId() < 0) {
                 throw new IllegalArgumentException(
-                        "Role ID must be greater than 0. Valid roles are: 1 (admin), 2 (editor), 3 (viewer)");
+                        "Role ID must be non-negative. Valid roles are: 1 (admin), 2 (editor), 3 (viewer)");
             }
 
             // If roleId is not provided in the update, keep the existing role

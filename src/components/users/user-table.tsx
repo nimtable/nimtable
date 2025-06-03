@@ -146,7 +146,8 @@ export function UserTable({ users, onRemove, onUpdate }: UserTableProps) {
                     </div>
                   </TableCell>
                   <TableCell>
-                    {user.updatedAt && formatDate(+user.updatedAt * 1000)}
+                    {user.updatedAt &&
+                      formatDate(new Date(user.updatedAt).getTime() * 1000)}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">

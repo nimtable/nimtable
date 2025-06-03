@@ -474,7 +474,6 @@ components:
         roleId:
           type: integer
           description: "Role ID (1: admin, 2: editor, 3: viewer)"
-      required: ["roleId"]
 
     TableInfo:
       type: object

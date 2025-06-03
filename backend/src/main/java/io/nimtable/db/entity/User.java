@@ -35,6 +35,7 @@ public class User extends Model {
     @Column(nullable = false, unique = true)
     private String username;
 
+    @JsonIgnore
     @Column(name = "role_id", nullable = false)
     private long roleId;
 
