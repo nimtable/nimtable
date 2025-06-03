@@ -26,6 +26,8 @@ import {
   Check,
   Table as TableIcon,
   Database,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -37,6 +39,11 @@ import { createColumns } from "@/components/query/columns"
 import { useToast } from "@/hooks/use-toast"
 import { useChat } from "ai/react"
 import { cn } from "@/lib/utils"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
 
 interface Message {
   id: string
@@ -53,6 +60,9 @@ interface Message {
 export default function AskAIPage() {
   const { toast } = useToast()
   const [isCopying, setIsCopying] = useState<string | null>(null)
+  const [expandedTools, setExpandedTools] = useState<Record<string, boolean>>(
+    {}
+  )
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const { messages, input, setInput, handleSubmit, isLoading, error } = useChat(
@@ -199,6 +209,58 @@ export default function AskAIPage() {
     )
   }
 
+  const toggleToolExpansion = (messageId: string) => {
+    setExpandedTools((prev) => ({
+      ...prev,
+      [messageId]: !prev[messageId],
+    }))
+  }
+
+  const renderToolInvocations = (message: any) => {
+    if (!message.toolInvocations || message.toolInvocations.length === 0) {
+      return null
+    }
+
+    const isExpanded = expandedTools[message.id] || false
+    const toolCount = message.toolInvocations.length
+
+    return (
+      <div className="mb-3">
+        <Collapsible
+          open={isExpanded}
+          onOpenChange={() => toggleToolExpansion(message.id)}
+        >
+          <CollapsibleTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-auto p-2 w-full justify-start bg-blue-50/50 hover:bg-blue-100/50 border border-blue-200/50"
+            >
+              <div className="flex items-center gap-2 text-blue-700">
+                {isExpanded ? (
+                  <ChevronDown className="h-3 w-3" />
+                ) : (
+                  <ChevronRight className="h-3 w-3" />
+                )}
+                <Database className="h-3 w-3" />
+                <span className="text-xs font-medium">
+                  {toolCount} tool call{toolCount > 1 ? "s" : ""} executed
+                </span>
+              </div>
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-2">
+            <div className="space-y-2">
+              {message.toolInvocations.map((invocation: any, index: number) => (
+                <div key={index}>{renderToolInvocation(invocation)}</div>
+              ))}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      </div>
+    )
+  }
+
   const exampleQueries = [
     "Show me all available catalogs and their tables",
     "What are the columns in the customer table?",
@@ -287,6 +349,10 @@ export default function AskAIPage() {
                                   : "bg-blue-600 text-white"
                               )}
                             >
+                              {/* Tool Invocations - Now shown BEFORE the content */}
+                              {message.role === "assistant" &&
+                                renderToolInvocations(message)}
+
                               <div className="prose prose-sm max-w-none">
                                 {message.content
                                   .split("\n")
@@ -314,15 +380,6 @@ export default function AskAIPage() {
                                     )}
                                   </Button>
                                 </div>
-                              )}
-
-                              {/* Tool Invocations */}
-                              {message.toolInvocations?.map(
-                                (invocation, index) => (
-                                  <div key={index}>
-                                    {renderToolInvocation(invocation)}
-                                  </div>
-                                )
                               )}
                             </div>
 
