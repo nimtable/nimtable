@@ -274,179 +274,172 @@ export default function AskAIPage() {
       <div className="flex h-full flex-col">
         <SqlEditorNavbar title="AI Assistant" icon="ai" />
 
-        <div className="flex-1 flex flex-col p-6 min-h-0">
-          <div className="mx-auto max-w-4xl flex flex-col h-full">
-            <div className="mb-6 flex-shrink-0">
-              <h1 className="text-2xl font-bold flex items-center gap-2">
-                <Bot className="h-6 w-6 text-blue-500" />
-                Ask AI
-              </h1>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Ask questions about your data in natural language. I can help
-                you explore catalogs, tables, schemas, and generate SQL and
-                execute queries.
-              </p>
-            </div>
+        <div className="mx-auto max-w-4xl max-h-[calc(100vh-64px)] p-6 flex flex-col">
+          <div className="mb-6 flex-shrink-0">
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              <Bot className="h-6 w-6 text-blue-500" />
+              Ask AI
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Ask questions about your data in natural language. I can help you
+              explore catalogs, tables, schemas, and generate SQL and execute
+              queries.
+            </p>
+          </div>
 
-            {/* Chat Messages - Now takes full available height */}
-            <Card className="flex-1 border-muted/70 shadow-sm flex flex-col min-h-0">
-              <CardContent className="p-0 flex flex-col h-full">
-                <div className="flex flex-col h-full">
-                  {/* Messages Area - Takes most of the available space */}
-                  <div className="flex-1 overflow-auto p-4 space-y-4 min-h-0">
-                    {messages.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center h-full text-center">
-                        <Bot className="h-12 w-12 text-muted-foreground/50 mb-4" />
-                        <h3 className="text-lg font-medium text-muted-foreground mb-2">
-                          Welcome to Nimtable AI Assistant
-                        </h3>
-                        <p className="text-sm text-muted-foreground mb-6 max-w-md">
-                          I can help you explore your Iceberg data lake. Ask me
-                          anything about your catalogs, namespaces, tables, or
-                          generate and execute SQL queries.
-                        </p>
+          {/* Chat Messages - Now takes full available height */}
+          <Card className="flex-1 border-muted/70 shadow-sm flex flex-col min-h-0">
+            <CardContent className="p-0 flex flex-col h-full overflow-auto">
+              <div className="flex-1 overflow-auto p-4 space-y-4 min-h-0">
+                {messages.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full text-center">
+                    <Bot className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                    <h3 className="text-lg font-medium text-muted-foreground mb-2">
+                      Welcome to Nimtable AI Assistant
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-6 max-w-md">
+                      I can help you explore your Iceberg data lake. Ask me
+                      anything about your catalogs, namespaces, tables, or
+                      generate and execute SQL queries.
+                    </p>
 
-                        <div className="w-full max-w-lg">
-                          <h4 className="text-sm font-medium text-muted-foreground mb-3">
-                            Try asking:
-                          </h4>
-                          <div className="space-y-2">
-                            {exampleQueries.map((query, index) => (
-                              <button
-                                key={index}
-                                onClick={() => setInput(query)}
-                                className="w-full text-left p-3 rounded-md border border-muted/50 hover:border-blue-300 hover:bg-blue-50/50 transition-colors text-sm"
-                              >
-                                "{query}"
-                              </button>
+                    <div className="w-full max-w-lg">
+                      <h4 className="text-sm font-medium text-muted-foreground mb-3">
+                        Try asking:
+                      </h4>
+                      <div className="space-y-2">
+                        {exampleQueries.map((query, index) => (
+                          <button
+                            key={index}
+                            onClick={() => setInput(query)}
+                            className="w-full text-left p-3 rounded-md border border-muted/50 hover:border-blue-300 hover:bg-blue-50/50 transition-colors text-sm"
+                          >
+                            "{query}"
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {messages.map((message) => (
+                      <div
+                        key={message.id}
+                        className={cn(
+                          "flex gap-3",
+                          message.role === "assistant"
+                            ? "justify-start"
+                            : "justify-end"
+                        )}
+                      >
+                        {message.role === "assistant" && (
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100">
+                            <Bot className="h-4 w-4 text-blue-600" />
+                          </div>
+                        )}
+
+                        <div
+                          className={cn(
+                            "max-w-[80%] rounded-lg px-4 py-2",
+                            message.role === "assistant"
+                              ? "bg-muted/50 text-foreground"
+                              : "bg-blue-600 text-white"
+                          )}
+                        >
+                          {/* Tool Invocations - Now shown BEFORE the content */}
+                          {message.role === "assistant" &&
+                            renderToolInvocations(message)}
+
+                          <div className="prose prose-sm max-w-none">
+                            {message.content.split("\n").map((line, index) => (
+                              <p key={index} className="mb-2 last:mb-0">
+                                {line}
+                              </p>
                             ))}
+                          </div>
+
+                          {message.role === "assistant" && (
+                            <div className="mt-2 flex items-center gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() =>
+                                  handleCopy(message.content, message.id)
+                                }
+                                className="h-6 px-2 text-xs"
+                              >
+                                {isCopying === message.id ? (
+                                  <Check className="h-3 w-3" />
+                                ) : (
+                                  <Copy className="h-3 w-3" />
+                                )}
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+
+                        {message.role === "user" && (
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-600">
+                            <User className="h-4 w-4 text-white" />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+
+                    {isLoading && (
+                      <div className="flex gap-3 justify-start">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100">
+                          <Bot className="h-4 w-4 text-blue-600" />
+                        </div>
+                        <div className="bg-muted/50 rounded-lg px-4 py-2">
+                          <div className="flex items-center gap-2">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span className="text-sm text-muted-foreground">
+                              Thinking...
+                            </span>
                           </div>
                         </div>
                       </div>
-                    ) : (
-                      <>
-                        {messages.map((message) => (
-                          <div
-                            key={message.id}
-                            className={cn(
-                              "flex gap-3",
-                              message.role === "assistant"
-                                ? "justify-start"
-                                : "justify-end"
-                            )}
-                          >
-                            {message.role === "assistant" && (
-                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100">
-                                <Bot className="h-4 w-4 text-blue-600" />
-                              </div>
-                            )}
-
-                            <div
-                              className={cn(
-                                "max-w-[80%] rounded-lg px-4 py-2",
-                                message.role === "assistant"
-                                  ? "bg-muted/50 text-foreground"
-                                  : "bg-blue-600 text-white"
-                              )}
-                            >
-                              {/* Tool Invocations - Now shown BEFORE the content */}
-                              {message.role === "assistant" &&
-                                renderToolInvocations(message)}
-
-                              <div className="prose prose-sm max-w-none">
-                                {message.content
-                                  .split("\n")
-                                  .map((line, index) => (
-                                    <p key={index} className="mb-2 last:mb-0">
-                                      {line}
-                                    </p>
-                                  ))}
-                              </div>
-
-                              {message.role === "assistant" && (
-                                <div className="mt-2 flex items-center gap-2">
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() =>
-                                      handleCopy(message.content, message.id)
-                                    }
-                                    className="h-6 px-2 text-xs"
-                                  >
-                                    {isCopying === message.id ? (
-                                      <Check className="h-3 w-3" />
-                                    ) : (
-                                      <Copy className="h-3 w-3" />
-                                    )}
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
-
-                            {message.role === "user" && (
-                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-600">
-                                <User className="h-4 w-4 text-white" />
-                              </div>
-                            )}
-                          </div>
-                        ))}
-
-                        {isLoading && (
-                          <div className="flex gap-3 justify-start">
-                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100">
-                              <Bot className="h-4 w-4 text-blue-600" />
-                            </div>
-                            <div className="bg-muted/50 rounded-lg px-4 py-2">
-                              <div className="flex items-center gap-2">
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                                <span className="text-sm text-muted-foreground">
-                                  Thinking...
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </>
                     )}
+                  </>
+                )}
 
-                    <div ref={messagesEndRef} />
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Input Area - Fixed at bottom */}
+              <div className="border-t border-muted/50 p-4 flex-shrink-0">
+                <form onSubmit={handleSubmit} className="flex gap-2">
+                  <Textarea
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="Ask me anything about your Iceberg data..."
+                    className="min-h-[44px] max-h-32 resize-none"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault()
+                        handleSubmit(e as any)
+                      }
+                    }}
+                  />
+                  <Button
+                    type="submit"
+                    disabled={!input.trim() || isLoading}
+                    size="sm"
+                    className="shrink-0"
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </form>
+
+                {error && (
+                  <div className="mt-2 text-sm text-destructive">
+                    Error: {error.message}
                   </div>
-
-                  {/* Input Area - Fixed at bottom */}
-                  <div className="border-t border-muted/50 p-4 flex-shrink-0">
-                    <form onSubmit={handleSubmit} className="flex gap-2">
-                      <Textarea
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        placeholder="Ask me anything about your Iceberg data..."
-                        className="min-h-[44px] max-h-32 resize-none"
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" && !e.shiftKey) {
-                            e.preventDefault()
-                            handleSubmit(e as any)
-                          }
-                        }}
-                      />
-                      <Button
-                        type="submit"
-                        disabled={!input.trim() || isLoading}
-                        size="sm"
-                        className="shrink-0"
-                      >
-                        <Send className="h-4 w-4" />
-                      </Button>
-                    </form>
-
-                    {error && (
-                      <div className="mt-2 text-sm text-destructive">
-                        Error: {error.message}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </SidebarInset>
