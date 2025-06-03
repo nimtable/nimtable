@@ -24,9 +24,7 @@ import io.ebean.annotation.WhenModified;
 import jakarta.persistence.*;
 import java.time.Instant;
 
-/**
- * Entity class representing a user in the system.
- */
+/** Entity class representing a user in the system. */
 @Entity
 @Table(name = "users")
 public class User extends Model {
@@ -46,13 +44,11 @@ public class User extends Model {
     private Role role;
 
     // Field to receive plain text password from request (write-only)
-    @Transient
-    private String password;
+    @Transient private String password;
 
     // Field to store hashed password in DB (read/write internally, ignore in
     // response)
-    @JsonIgnore
-    private String passwordHash;
+    @JsonIgnore private String passwordHash;
 
     @WhenCreated
     @JsonProperty("createdAt")
@@ -63,8 +59,7 @@ public class User extends Model {
     private Instant updatedAt;
 
     // Constructors
-    public User() {
-    }
+    public User() {}
 
     public User(long id, String username, String passwordHash) {
         this.id = id;

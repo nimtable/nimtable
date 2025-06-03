@@ -22,9 +22,7 @@ import io.ebean.annotation.WhenModified;
 import jakarta.persistence.*;
 import java.time.Instant;
 
-/**
- * Entity class representing a user role in the system.
- */
+/** Entity class representing a user role in the system. */
 @Entity
 @Table(name = "roles")
 public class Role extends Model {
@@ -38,11 +36,9 @@ public class Role extends Model {
 
     private String description;
 
-    @WhenCreated
-    private Instant createdAt;
+    @WhenCreated private Instant createdAt;
 
-    @WhenModified
-    private Instant updatedAt;
+    @WhenModified private Instant updatedAt;
 
     // Getters and Setters
     public Long getId() {
