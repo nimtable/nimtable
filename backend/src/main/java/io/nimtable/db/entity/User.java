@@ -35,19 +35,33 @@ public class User extends Model {
     @Column(nullable = false, unique = true)
     private String username;
 
+    @Column(name = "role_id", nullable = false)
+    private long roleId;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id", insertable = false, updatable = false)
+    private Role role;
+
     // Field to receive plain text password from request (write-only)
-    @Transient private String password;
+    @Transient
+    private String password;
 
     // Field to store hashed password in DB (read/write internally, ignore in
     // response)
+    @JsonIgnore
     private String passwordHash;
 
-    @WhenCreated private Instant createdAt;
+    @WhenCreated
+    @JsonProperty("createdAt")
+    private Instant createdAt;
 
-    @WhenModified private Instant updatedAt;
+    @WhenModified
+    @JsonProperty("updatedAt")
+    private Instant updatedAt;
 
     // Constructors
-    public User() {}
+    public User() {
+    }
 
     public User(long id, String username, String passwordHash) {
         this.id = id;
@@ -73,6 +87,19 @@ public class User extends Model {
         this.username = username;
     }
 
+    public long getRoleId() {
+        return roleId;
+    }
+
+    public void setRoleId(long roleId) {
+        this.roleId = roleId;
+    }
+
+    @JsonProperty("role")
+    public String getRoleName() {
+        return role != null ? role.getName() : null;
+    }
+
     // Allow Jackson to deserialize 'password' field from JSON
     @JsonProperty("password")
     public void setPassword(String password) {
@@ -93,5 +120,21 @@ public class User extends Model {
     // Allow internal setting/getting of passwordHash
     public void setPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Instant updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

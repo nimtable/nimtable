@@ -438,18 +438,17 @@ components:
           format: int64
         username:
           type: string
-        passwordHash:
+        role:
           type: string
-          format: password
-          description: Password hash (never sent in responses)
+          enum: [admin, editor, viewer]
+          description: "User's role name"
         createdAt:
           type: string
           format: date-time
         updatedAt:
           type: string
           format: date-time
-      required:
-        - username
+      required: ["id", "username", "role", "createdAt", "updatedAt"]
 
     UserCreate:
       type: object
@@ -459,9 +458,10 @@ components:
         password:
           type: string
           format: password
-      required:
-        - username
-        - password
+        roleId:
+          type: integer
+          description: "Role ID (1: admin, 2: editor, 3: viewer)"
+      required: ["username", "password", "roleId"]
 
     UserUpdate:
       type: object
@@ -471,8 +471,10 @@ components:
         password:
           type: string
           format: password
-      required:
-        - username
+        roleId:
+          type: integer
+          description: "Role ID (1: admin, 2: editor, 3: viewer)"
+      required: ["username"]
 
     TableInfo:
       type: object
