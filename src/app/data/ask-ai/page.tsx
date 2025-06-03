@@ -271,10 +271,10 @@ export default function AskAIPage() {
 
   return (
     <SidebarInset className="bg-muted/5">
-      <div className="flex h-full flex-col">
+      <div className="flex flex-col">
         <SqlEditorNavbar title="AI Assistant" icon="ai" />
 
-        <div className="mx-auto max-w-4xl max-h-[calc(100vh-64px)] p-6 flex flex-col">
+        <div className="mx-auto max-w-4xl h-[calc(100vh-64px)] p-6 flex flex-col">
           <div className="mb-6 flex-shrink-0">
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Bot className="h-6 w-6 text-blue-500" />
@@ -409,7 +409,10 @@ export default function AskAIPage() {
 
               {/* Input Area - Fixed at bottom */}
               <div className="border-t border-muted/50 p-4 flex-shrink-0">
-                <form onSubmit={handleSubmit} className="flex gap-2">
+                <form
+                  onSubmit={handleSubmit}
+                  className="flex items-center gap-3"
+                >
                   <Textarea
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
