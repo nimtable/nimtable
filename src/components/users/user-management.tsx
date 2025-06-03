@@ -1,15 +1,15 @@
 "use client"
 
-import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { PlusCircle } from "lucide-react"
+import { useState } from "react"
 
-import { createUser, getUsers } from "@/lib/client/sdk.gen"
-import type { UserCreate } from "@/lib/client/types.gen"
-import { useToast } from "@/hooks/use-toast"
-import { Button } from "@/components/ui/button"
 import { AddUserDialog } from "@/components/users/add-user-dialog"
+import { createUser, getUsers } from "@/lib/client/sdk.gen"
 import { UserTable } from "@/components/users/user-table"
+import type { UserCreate } from "@/lib/client/types.gen"
+import { Button } from "@/components/ui/button"
+import { useToast } from "@/hooks/use-toast"
 
 export function UserManagement() {
   const { toast } = useToast()
@@ -38,8 +38,8 @@ export function UserManagement() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Users</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="mb-2 text-3xl font-semibold">Users</h2>
         <Button
           onClick={() => setOpen(true)}
           className="flex items-center gap-2"

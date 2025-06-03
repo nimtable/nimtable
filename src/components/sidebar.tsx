@@ -10,11 +10,19 @@ import {
   Home,
   Layers,
   LayoutGrid,
+  LogOut,
+  Users,
 } from "lucide-react"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
 import Link from "next/link"
 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import {
   Collapsible,
   CollapsibleContent,
@@ -26,7 +34,8 @@ import { cn } from "@/lib/utils"
 export function Sidebar() {
   const pathname = usePathname()
   const [dataExpanded, setDataExpanded] = useState(true)
-  const { user } = useAuth()
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const { user, logout } = useAuth()
 
   const mainNavItems = [
     {
@@ -64,6 +73,11 @@ export function Sidebar() {
       title: "SQL Query",
       href: "/data/sql-editor",
       icon: Code,
+    },
+    {
+      title: "Users",
+      href: "/users",
+      icon: Users,
     },
   ]
 
@@ -159,17 +173,30 @@ export function Sidebar() {
       </div>
 
       {/* User Profile */}
-      <div className="border-t p-4">
-        <div className="flex cursor-pointer items-center gap-2 rounded-md p-2 hover:bg-gray-100">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200">
-            <span className="text-sm font-medium">
-              {user?.username.charAt(0)}
-            </span>
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium">{user?.username}</p>
-          </div>
-        </div>
+      <div className="relative border-t p-4">
+        <DropdownMenu>
+          <DropdownMenuTrigger className="flex w-full cursor-pointer items-center gap-2 rounded-md p-2 hover:bg-gray-100">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200">
+              <span className="text-sm font-medium">
+                {user?.username.charAt(0)}
+              </span>
+            </div>
+            <div className="w-36 text-left">
+              <p className="truncate text-sm font-medium">{user?.username}</p>
+            </div>
+            {userMenuOpen ? (
+              <ChevronDown className="h-4 w-4 text-gray-500" />
+            ) : (
+              <ChevronRight className="h-4 w-4 text-gray-500" />
+            )}
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuItem className="cursor-pointer" onClick={logout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Sign Out</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   )
