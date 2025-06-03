@@ -17,15 +17,15 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { 
-  Bot, 
-  Send, 
-  User, 
-  Loader2, 
-  Copy, 
-  Check, 
+import {
+  Bot,
+  Send,
+  User,
+  Loader2,
+  Copy,
+  Check,
   Table as TableIcon,
-  Database
+  Database,
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -55,17 +55,12 @@ export default function AskAIPage() {
   const [isCopying, setIsCopying] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  const {
-    messages,
-    input,
-    setInput,
-    handleSubmit,
-    isLoading,
-    error,
-  } = useChat({
-    api: "/api/agent/chat",
-    maxSteps: 5,
-  })
+  const { messages, input, setInput, handleSubmit, isLoading, error } = useChat(
+    {
+      api: "/api/agent/chat",
+      maxSteps: 5,
+    }
+  )
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -164,7 +159,9 @@ export default function AskAIPage() {
           {toolName === "executeSQL" && (
             <div>
               <div className="mb-2">
-                <span className="text-sm font-medium text-muted-foreground">Query:</span>
+                <span className="text-sm font-medium text-muted-foreground">
+                  Query:
+                </span>
                 <div className="mt-1 rounded bg-gray-100 p-2 font-mono text-sm">
                   {args.query}
                 </div>
@@ -172,12 +169,14 @@ export default function AskAIPage() {
               {result && renderQueryResults(result)}
             </div>
           )}
-          
+
           {toolName !== "executeSQL" && (
             <div>
               {args && Object.keys(args).length > 0 && (
                 <div className="mb-2">
-                  <span className="text-sm font-medium text-muted-foreground">Parameters:</span>
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Parameters:
+                  </span>
                   <div className="mt-1 rounded bg-gray-100 p-2 font-mono text-xs">
                     {JSON.stringify(args, null, 2)}
                   </div>
@@ -185,7 +184,9 @@ export default function AskAIPage() {
               )}
               {result && (
                 <div>
-                  <span className="text-sm font-medium text-muted-foreground">Result:</span>
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Result:
+                  </span>
                   <div className="mt-1 rounded bg-gray-100 p-2 font-mono text-xs max-h-40 overflow-auto">
                     {JSON.stringify(result, null, 2)}
                   </div>
@@ -203,14 +204,14 @@ export default function AskAIPage() {
     "What are the columns in the customer table?",
     "Get the top 10 rows from the sales table",
     "Count how many records are in each table",
-    "Show me tables with more than 1 million rows"
+    "Show me tables with more than 1 million rows",
   ]
 
   return (
     <SidebarInset className="bg-muted/5">
       <div className="flex h-full flex-col">
         <SqlEditorNavbar title="AI Assistant" icon="ai" />
-        
+
         <div className="flex-1 overflow-auto p-6">
           <div className="mx-auto max-w-4xl">
             <div className="mb-6">
@@ -219,8 +220,9 @@ export default function AskAIPage() {
                 Ask AI
               </h1>
               <p className="mt-1 text-sm text-muted-foreground">
-                Ask questions about your data in natural language. I can help you explore catalogs, 
-                tables, schemas, and generate SQL and execute queries.
+                Ask questions about your data in natural language. I can help
+                you explore catalogs, tables, schemas, and generate SQL and
+                execute queries.
               </p>
             </div>
 
@@ -237,12 +239,15 @@ export default function AskAIPage() {
                           Welcome to Nimtable AI Assistant
                         </h3>
                         <p className="text-sm text-muted-foreground mb-6 max-w-md">
-                          I can help you explore your Iceberg data lake. Ask me anything about your catalogs, 
-                          namespaces, tables, or generate and execute SQL queries.
+                          I can help you explore your Iceberg data lake. Ask me
+                          anything about your catalogs, namespaces, tables, or
+                          generate and execute SQL queries.
                         </p>
-                        
+
                         <div className="w-full max-w-lg">
-                          <h4 className="text-sm font-medium text-muted-foreground mb-3">Try asking:</h4>
+                          <h4 className="text-sm font-medium text-muted-foreground mb-3">
+                            Try asking:
+                          </h4>
                           <div className="space-y-2">
                             {exampleQueries.map((query, index) => (
                               <button
@@ -263,7 +268,9 @@ export default function AskAIPage() {
                             key={message.id}
                             className={cn(
                               "flex gap-3",
-                              message.role === "assistant" ? "justify-start" : "justify-end"
+                              message.role === "assistant"
+                                ? "justify-start"
+                                : "justify-end"
                             )}
                           >
                             {message.role === "assistant" && (
@@ -271,7 +278,7 @@ export default function AskAIPage() {
                                 <Bot className="h-4 w-4 text-blue-600" />
                               </div>
                             )}
-                            
+
                             <div
                               className={cn(
                                 "max-w-[80%] rounded-lg px-4 py-2",
@@ -281,19 +288,23 @@ export default function AskAIPage() {
                               )}
                             >
                               <div className="prose prose-sm max-w-none">
-                                {message.content.split('\n').map((line, index) => (
-                                  <p key={index} className="mb-2 last:mb-0">
-                                    {line}
-                                  </p>
-                                ))}
+                                {message.content
+                                  .split("\n")
+                                  .map((line, index) => (
+                                    <p key={index} className="mb-2 last:mb-0">
+                                      {line}
+                                    </p>
+                                  ))}
                               </div>
-                              
+
                               {message.role === "assistant" && (
                                 <div className="mt-2 flex items-center gap-2">
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    onClick={() => handleCopy(message.content, message.id)}
+                                    onClick={() =>
+                                      handleCopy(message.content, message.id)
+                                    }
                                     className="h-6 px-2 text-xs"
                                   >
                                     {isCopying === message.id ? (
@@ -304,15 +315,17 @@ export default function AskAIPage() {
                                   </Button>
                                 </div>
                               )}
-                              
+
                               {/* Tool Invocations */}
-                              {message.toolInvocations?.map((invocation, index) => (
-                                <div key={index}>
-                                  {renderToolInvocation(invocation)}
-                                </div>
-                              ))}
+                              {message.toolInvocations?.map(
+                                (invocation, index) => (
+                                  <div key={index}>
+                                    {renderToolInvocation(invocation)}
+                                  </div>
+                                )
+                              )}
                             </div>
-                            
+
                             {message.role === "user" && (
                               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-600">
                                 <User className="h-4 w-4 text-white" />
@@ -320,7 +333,7 @@ export default function AskAIPage() {
                             )}
                           </div>
                         ))}
-                        
+
                         {isLoading && (
                           <div className="flex gap-3 justify-start">
                             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100">
@@ -338,10 +351,10 @@ export default function AskAIPage() {
                         )}
                       </>
                     )}
-                    
+
                     <div ref={messagesEndRef} />
                   </div>
-                  
+
                   {/* Input Area */}
                   <div className="border-t border-muted/50 p-4">
                     <form onSubmit={handleSubmit} className="flex gap-2">
@@ -366,7 +379,7 @@ export default function AskAIPage() {
                         <Send className="h-4 w-4" />
                       </Button>
                     </form>
-                    
+
                     {error && (
                       <div className="mt-2 text-sm text-destructive">
                         Error: {error.message}
@@ -381,4 +394,4 @@ export default function AskAIPage() {
       </div>
     </SidebarInset>
   )
-} 
+}

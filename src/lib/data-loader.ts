@@ -35,7 +35,7 @@ function catalogApi(catalog: string, inBrowser: boolean = true) {
 
 // Helper function to detect if we're running in browser
 function isBrowser() {
-  return typeof window !== 'undefined'
+  return typeof window !== "undefined"
 }
 
 export async function loadCatalogNames(): Promise<string[]> {
@@ -45,24 +45,26 @@ export async function loadCatalogNames(): Promise<string[]> {
       const response = await getCatalogs()
       return response.data || []
     }
-    
+
     // In server environment, make a direct fetch call with full URL
     const baseUrl = getApiBaseUrl(false)
     const response = await fetch(`${baseUrl}/api/catalogs`, {
-      method: 'GET',
+      method: "GET",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     })
-    
+
     if (!response.ok) {
-      throw new Error(`Failed to fetch catalogs: ${response.status} ${response.statusText}`)
+      throw new Error(
+        `Failed to fetch catalogs: ${response.status} ${response.statusText}`
+      )
     }
-    
+
     const data = await response.json()
     return data || []
   } catch (error) {
-    console.error('Error loading catalog names:', error)
+    console.error("Error loading catalog names:", error)
     throw error
   }
 }
@@ -189,30 +191,37 @@ export async function runQuery(
   try {
     // In browser environment, use relative path
     if (isBrowser()) {
-      const response = await fetch(`/api/query?query=${encodeURIComponent(query)}`)
+      const response = await fetch(
+        `/api/query?query=${encodeURIComponent(query)}`
+      )
       return await response.json()
     }
-    
+
     // In server environment, use full URL
     const baseUrl = getApiBaseUrl(false)
-    const response = await fetch(`${baseUrl}/api/query?query=${encodeURIComponent(query)}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-    
+    const response = await fetch(
+      `${baseUrl}/api/query?query=${encodeURIComponent(query)}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    )
+
     if (!response.ok) {
-      throw new Error(`Failed to execute query: ${response.status} ${response.statusText}`)
+      throw new Error(
+        `Failed to execute query: ${response.status} ${response.statusText}`
+      )
     }
-    
+
     return await response.json()
   } catch (error) {
-    console.error('Error executing query:', error)
-    return { 
-      columns: [], 
-      rows: [], 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+    console.error("Error executing query:", error)
+    return {
+      columns: [],
+      rows: [],
+      error: error instanceof Error ? error.message : "Unknown error",
     }
   }
 }

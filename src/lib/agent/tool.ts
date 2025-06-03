@@ -17,12 +17,12 @@
 import { tool } from "ai"
 import { ToolSet } from "ai"
 import { z } from "zod"
-import { 
-  loadNamespacesAndTables, 
-  loadCatalogNames, 
-  listNamespaces, 
-  loadTableData, 
-  runQuery 
+import {
+  loadNamespacesAndTables,
+  loadCatalogNames,
+  listNamespaces,
+  loadTableData,
+  runQuery,
 } from "../data-loader"
 
 export function tools(): ToolSet {
@@ -47,7 +47,9 @@ export function tools(): ToolSet {
   tools.getNamespaces = tool({
     description: "Get list of all namespaces in a specific catalog",
     parameters: z.object({
-      catalog: z.string().describe("The iceberg catalog to list namespaces from"),
+      catalog: z
+        .string()
+        .describe("The iceberg catalog to list namespaces from"),
     }),
     execute: async ({ catalog }) => {
       console.log(`Getting namespaces for catalog: ${catalog}`)
@@ -63,7 +65,8 @@ export function tools(): ToolSet {
   })
 
   tools.getTables = tool({
-    description: "Get list of all tables in a catalog with their structure and metadata",
+    description:
+      "Get list of all tables in a catalog with their structure and metadata",
     parameters: z.object({
       catalog: z.string().describe("The iceberg catalog to list tables from"),
     }),
@@ -81,7 +84,8 @@ export function tools(): ToolSet {
   })
 
   tools.getTableSchema = tool({
-    description: "Get detailed schema information for a specific table including columns, data types, partitions",
+    description:
+      "Get detailed schema information for a specific table including columns, data types, partitions",
     parameters: z.object({
       catalog: z.string().describe("The iceberg catalog name"),
       namespace: z.string().describe("The namespace name"),
@@ -91,11 +95,13 @@ export function tools(): ToolSet {
       console.log(`Getting table schema for: ${catalog}.${namespace}.${table}`)
       try {
         const tableData = await loadTableData(catalog, namespace, table)
-        
+
         // Find the current schema from schemas array using current-schema-id
         const currentSchemaId = tableData.metadata["current-schema-id"]
-        const currentSchema = tableData.metadata.schemas?.find(schema => schema["schema-id"] === currentSchemaId)
-        
+        const currentSchema = tableData.metadata.schemas?.find(
+          (schema) => schema["schema-id"] === currentSchemaId
+        )
+
         const schema = {
           table: `${catalog}.${namespace}.${table}`,
           columns: currentSchema?.fields || [],
@@ -116,7 +122,8 @@ export function tools(): ToolSet {
   })
 
   tools.executeSQL = tool({
-    description: "Execute a Spark SQL query against Iceberg tables and return results. Use proper Spark SQL syntax with backticks for table references like `catalog`.`namespace`.`table`",
+    description:
+      "Execute a Spark SQL query against Iceberg tables and return results. Use proper Spark SQL syntax with backticks for table references like `catalog`.`namespace`.`table`",
     parameters: z.object({
       query: z.string().describe("The Spark SQL query to execute"),
     }),

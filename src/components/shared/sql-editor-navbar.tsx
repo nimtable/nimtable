@@ -29,13 +29,16 @@ interface SqlEditorNavbarProps {
   icon?: "sql" | "ai"
 }
 
-export function SqlEditorNavbar({ 
+export function SqlEditorNavbar({
   title = "SQL Workspace",
-  icon = "sql" 
+  icon = "sql",
 }: SqlEditorNavbarProps) {
   const IconComponent = icon === "ai" ? Bot : FileCode
   const iconColor = icon === "ai" ? "text-blue-500" : "text-blue-500"
-  const bgColor = icon === "ai" ? "bg-blue-50 dark:bg-blue-950/30" : "bg-blue-50 dark:bg-blue-950/30"
+  const bgColor =
+    icon === "ai"
+      ? "bg-blue-50 dark:bg-blue-950/30"
+      : "bg-blue-50 dark:bg-blue-950/30"
 
   return (
     <div className="border-b">

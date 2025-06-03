@@ -64,4 +64,4 @@ Always start by understanding what data is available before writing queries.`,
       }
     )
   }
-} 
+}
