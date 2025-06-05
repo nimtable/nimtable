@@ -21,6 +21,7 @@ const nextConfig = {
     // your project has ESLint errors.
     ignoreDuringBuilds: true,
   },
+  distDir: process.env.NODE_ENV === "development" ? ".next/dev" : ".next/build"
 }
 
 module.exports = nextConfig

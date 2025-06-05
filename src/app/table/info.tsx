@@ -38,7 +38,7 @@ import {
   type DistributionData,
 } from "@/lib/data-loader"
 import { omit } from "lodash"
-import { useActionState, useState, useEffect, useTransition } from "react"
+import { useActionState, useState } from "react"
 import {
   Database,
   FileText,
@@ -48,10 +48,6 @@ import {
   Layers,
   Hash,
   Calendar,
-  Loader2,
-  Edit,
-  Save,
-  X,
 } from "lucide-react"
 import {
   Tooltip,
@@ -72,7 +68,6 @@ import { useRefresh } from "@/contexts/refresh-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
 import { errorToString } from "@/lib/utils"
@@ -80,6 +75,7 @@ import { cn } from "@/lib/utils"
 import { actionGenerateTableSummary } from "@/components/table/actions"
 import { type TableSummary as TableSummaryType } from "@/db/db"
 import { saveTableSummary } from "@/db/table-summary"
+import { AITextInput } from "@/components/ai-text-input"
 
 interface InfoTabProps {
   tableData: LoadTableResult
@@ -238,6 +234,23 @@ export function InfoTab({
           refreshKey={refreshKey}
         />
 
+        <Card className="border-muted/70 shadow-sm overflow-hidden">
+          <CardHeader className="pb-2 border-b">
+            <CardTitle className="text-base flex items-center gap-2">
+              <FileText className="h-4 w-4 text-blue-500" />
+              Table Context
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <TableSummary
+              catalog={catalog}
+              namespace={namespace}
+              table={table}
+              tableData={tableData}
+            />
+          </CardContent>
+        </Card>
+
         <Card className="overflow-hidden border-muted/70 shadow-sm">
           <CardHeader className="border-b py-3 pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
@@ -352,24 +365,6 @@ export function InfoTab({
                 </p>
               </div>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Table Context */}
-        <Card className="border-muted/70 shadow-sm overflow-hidden">
-          <CardHeader className="pb-2 border-b">
-            <CardTitle className="text-base flex items-center gap-2">
-              <FileText className="h-4 w-4 text-blue-500" />
-              Table Context
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <TableSummary
-              catalog={catalog}
-              namespace={namespace}
-              table={table}
-              tableData={tableData}
-            />
           </CardContent>
         </Card>
 
@@ -631,9 +626,6 @@ export function TableSummary({
   tableData: LoadTableResult
 }) {
   const queryClient = useQueryClient()
-  const [isTransitionPending, startTransition] = useTransition()
-  const [isEditing, setIsEditing] = useState(false)
-  const [editText, setEditText] = useState("")
 
   const {
     data: tableSummary,
@@ -662,25 +654,35 @@ export function TableSummary({
           )
           // TODO: add more info, e.g., sample data / snapshot trend
 
+          // Get the additionalPrompt from FormData
+          const additionalPrompt = formData.get("additionalPrompt") as
+            | string
+            | null
+
           // Currently we collect table data in frontend,
-          // and just let the backend to generate summary
-          const summary = await actionGenerateTableSummary({
-            catalog,
-            namespace,
-            table,
-            fileDistribution,
-            metadata: omit(
-              tableData.metadata,
-              "snapshots",
-              "refs",
-              "metadata-log",
-              "snapshot-log",
-              "last-updated-ms"
-            ),
-            lastUpdatedTime: tableData.metadata["last-updated-ms"]
-              ? new Date(tableData.metadata["last-updated-ms"]).toLocaleString()
-              : "",
-          })
+          // and just let the backend to generate summary (and also save it)
+          const summary = await actionGenerateTableSummary(
+            {
+              catalog,
+              namespace,
+              table,
+              fileDistribution,
+              metadata: omit(
+                tableData.metadata,
+                "snapshots",
+                "refs",
+                "metadata-log",
+                "snapshot-log",
+                "last-updated-ms"
+              ),
+              lastUpdatedTime: tableData.metadata["last-updated-ms"]
+                ? new Date(
+                    tableData.metadata["last-updated-ms"]
+                  ).toLocaleString()
+                : "",
+            },
+            additionalPrompt || undefined
+          )
           return summary
         },
 
@@ -698,7 +700,6 @@ export function TableSummary({
             createdBy: "user",
           })
 
-          setIsEditing(false)
           return summary.trim()
         },
       }
@@ -722,164 +723,42 @@ export function TableSummary({
     null
   )
 
-  // Auto-generate summary if no data exists after initial load
-  useEffect(() => {
-    if (
-      !isQueryPending &&
-      !isQueryError &&
-      !tableSummary?.summary &&
-      !isPending &&
-      !isTransitionPending
-    ) {
-      startTransition(() => {
-        const formData = new FormData()
-        formData.append("action", "generate")
-        handleTableSummaryAction(formData)
-      })
+  const handleAIGenerate = async (
+    additionalPrompt?: string,
+    _currentContent?: string
+  ): Promise<void> => {
+    const formData = new FormData()
+    formData.append("action", "generate")
+    if (additionalPrompt) {
+      formData.append("additionalPrompt", additionalPrompt)
     }
-  }, [
-    isQueryPending,
-    isQueryError,
-    tableSummary?.summary,
-    isPending,
-    isTransitionPending,
-    handleTableSummaryAction,
-    startTransition,
-  ])
-
-  // Set edit text when entering edit mode
-  const handleEditClick = () => {
-    setEditText(tableSummary?.summary || "")
-    setIsEditing(true)
+    handleTableSummaryAction(formData)
   }
 
-  const handleCancelEdit = () => {
-    setIsEditing(false)
-    setEditText("")
+  const handleSave = async (content: string): Promise<void> => {
+    const formData = new FormData()
+    formData.append("action", "edit")
+    formData.append("summary", content)
+    handleTableSummaryAction(formData)
   }
-
-  const isGenerating = isPending && !isEditing
-  const isSaving = isPending && isEditing
 
   return (
-    <div className="px-6 py-3">
-      <div className="flex items-center justify-between mb-1">
-        <h4 className="text-xs font-medium text-muted-foreground">
-          Table Summary
-        </h4>
-        <div className="flex items-center gap-1">
-          {!isEditing && tableSummary?.summary && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={cn(
-                    "h-6 w-6 rounded-md transition-all duration-200",
-                    "text-muted-foreground"
-                  )}
-                  onClick={handleEditClick}
-                  disabled={isPending}
-                >
-                  <Edit className="h-3 w-3" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="left">
-                <p>Edit summary</p>
-              </TooltipContent>
-            </Tooltip>
-          )}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <form action={handleTableSummaryAction}>
-                <input type="hidden" name="action" value="generate" />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={cn(
-                    "h-6 w-6 rounded-md transition-all duration-200",
-                    "text-muted-foreground"
-                  )}
-                  type="submit"
-                  disabled={isEditing || isPending}
-                >
-                  <Loader2
-                    className={cn("h-3 w-3", isGenerating && "animate-spin")}
-                  />
-                </Button>
-              </form>
-            </TooltipTrigger>
-            <TooltipContent side="left">
-              <p>
-                {isGenerating
-                  ? "Generating..."
-                  : tableSummary?.summary
-                    ? "Regenerate"
-                    : "Generate"}
-              </p>
-            </TooltipContent>
-          </Tooltip>
-        </div>
-      </div>
-      <div className="border border-muted/30 rounded-md p-1.5 bg-muted/30">
-        {isEditing ? (
-          <div className="space-y-2">
-            <form action={handleTableSummaryAction} className="space-y-2">
-              <input type="hidden" name="action" value="edit" />
-              <Textarea
-                name="summary"
-                value={editText}
-                onChange={(e) => setEditText(e.target.value)}
-                className="min-h-[120px] text-xs text-muted-foreground resize-none border-0 bg-transparent p-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-                placeholder="Enter table summary..."
-                disabled={isSaving}
-              />
-              <div className="flex items-center gap-2">
-                <Button
-                  type="submit"
-                  size="sm"
-                  className="h-6 px-2 text-xs"
-                  disabled={isSaving || !editText.trim()}
-                >
-                  {isSaving ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                  ) : (
-                    <Save className="h-3 w-3" />
-                  )}
-                  {isSaving ? "Saving..." : "Save"}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-6 px-2 text-xs"
-                  onClick={handleCancelEdit}
-                  disabled={isSaving}
-                >
-                  <X className="h-3 w-3" />
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </div>
-        ) : isGenerating ? (
-          <p className="text-xs text-muted-foreground">Generating...</p>
-        ) : tableSummary?.summary ? (
-          <div className="text-xs text-muted-foreground break-all space-y-1">
-            {tableSummary.summary.split("\n").map((line, index) => (
-              <p key={index}>{line || "\u00A0"}</p>
-            ))}
-          </div>
-        ) : (
-          <p className="text-xs text-muted-foreground">
-            Click button on the right to generate
-          </p>
-        )}
-      </div>
+    <div className="px-6 py-3 space-y-2">
+      <AITextInput
+        title="Table Summary"
+        placeholder="Write a summary for this table or click 'AI Generate' to generate one"
+        aiPromptPlaceholder="Additional instructions for AI (optional)"
+        content={tableSummary?.summary || ""}
+        saveAction={handleSave}
+        aiGenerateAction={handleAIGenerate}
+        loading={isPending || isQueryPending || isQueryError}
+        startInEditMode={false}
+      />
+
       {tableSummary?.createdAt && (
-        <div className="mb-2">
+        <div className="mt-2">
           <p className="text-xs text-muted-foreground">
-            Last updated at: {new Date(tableSummary.createdAt).toLocaleString()}
+            Last updated: {new Date(tableSummary.createdAt).toLocaleString()}
           </p>
         </div>
       )}
