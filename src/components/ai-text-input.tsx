@@ -251,7 +251,7 @@ export function AITextInput({
             </Button>
           }
           <Button
-            onClick={() => startTransition(() => handleSave())}
+            onClick={handleSave}
             disabled={!editContent.trim() || loading_}
             className="bg-gray-900 hover:bg-gray-800 text-xs h-7"
           >
