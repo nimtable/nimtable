@@ -20,15 +20,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.nimtable.db.entity.User;
 import io.nimtable.db.repository.UserRepository;
+import io.nimtable.dto.UserDTO;
 import io.nimtable.util.JwtUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.HashMap;
+import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -48,6 +48,7 @@ import org.slf4j.LoggerFactory;
  * a specific user by their ID. - DELETE /api/users/{id}: Delete a specific user
  * by their ID.
  */
+
 public class UserServlet extends HttpServlet {
 
     private static final Logger LOG = LoggerFactory.getLogger(UserServlet.class);
@@ -59,6 +60,8 @@ public class UserServlet extends HttpServlet {
 
     private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
+    private static final Pattern USERNAME_PATTERN = Pattern.compile("^[a-zA-Z0-9_]{3,20}$");
+    private static final Pattern PASSWORD_PATTERN = Pattern.compile("^.{8,}$");
 
     public UserServlet(UserRepository userRepository) {
         this.userRepository = userRepository;
@@ -159,16 +162,12 @@ public class UserServlet extends HttpServlet {
     private void handleGetAllUsers(HttpServletResponse resp) throws IOException {
         List<User> users = userRepository.getAllUsers();
         // Mask password hash for all users in the list
-        users.forEach(
-                user -> {
-                    user.setPasswordHash(null);
-                    // Ensure updatedAt is returned
-                    if (user.getUpdatedAt() == null) {
-                        user.setUpdatedAt(user.getCreatedAt());
-                    }
-                });
+        users.forEach(user -> user.setPasswordHash(null));
+
         resp.setStatus(HttpServletResponse.SC_OK);
-        objectMapper.writeValue(resp.getWriter(), users);
+        objectMapper.writeValue(resp.getWriter(), users.stream()
+                .map(UserDTO::fromUser)
+                .toList());
     }
 
     /**
@@ -205,16 +204,8 @@ public class UserServlet extends HttpServlet {
             User user = userOptional.get();
             user.setPasswordHash(null); // Never send password hash to client
 
-            // Add role information to response
-            Map<String, Object> response = new HashMap<>();
-            response.put("id", user.getId());
-            response.put("username", user.getUsername());
-            response.put("role", user.getRoleId() == 1 ? "admin" : user.getRoleId() == 2 ? "editor" : "viewer");
-            response.put("createdAt", user.getCreatedAt());
-            response.put("updatedAt", user.getUpdatedAt());
-
             resp.setStatus(HttpServletResponse.SC_OK);
-            objectMapper.writeValue(resp.getWriter(), response);
+            objectMapper.writeValue(resp.getWriter(), UserDTO.fromUser(user));
         } else {
             resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
             objectMapper.writeValue(resp.getWriter(), new ErrorResponse("User not found"));
