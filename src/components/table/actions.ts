@@ -65,8 +65,6 @@ Draft a concise, business-oriented summary of the table data supplied below.
     ? `
 
 ## Important User Instructions
-IMPORTANT: strictly follow these instructions.
-If they conflict with previous instructions, prioritize instructions below.
 
 ${additionalPrompt}`
     : ""
