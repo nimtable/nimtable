@@ -24,6 +24,10 @@ export type LoginRequest = {
 
 export type LoginResponse = {
     success: boolean;
+    /**
+     * JWT token for authentication
+     */
+    token: string;
 };
 
 export type CatalogCreate = {
@@ -176,7 +180,7 @@ export type LoginErrors = {
     /**
      * Invalid credentials
      */
-    401: _Error;
+    403: _Error;
 };
 
 export type LoginError = LoginErrors[keyof LoginErrors];
@@ -189,6 +193,35 @@ export type LoginResponses = {
 };
 
 export type LoginResponse2 = LoginResponses[keyof LoginResponses];
+
+export type GetCurrentUserData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/user';
+};
+
+export type GetCurrentUserErrors = {
+    /**
+     * Unauthorized - Invalid or missing token
+     */
+    401: _Error;
+    /**
+     * User not found
+     */
+    404: _Error;
+};
+
+export type GetCurrentUserError = GetCurrentUserErrors[keyof GetCurrentUserErrors];
+
+export type GetCurrentUserResponses = {
+    /**
+     * Successfully retrieved current user
+     */
+    200: User;
+};
+
+export type GetCurrentUserResponse = GetCurrentUserResponses[keyof GetCurrentUserResponses];
 
 export type GetUsersData = {
     body?: never;

@@ -121,6 +121,23 @@ dependencies {
   implementation "org.apache.spark:spark-hive_2.12:${sparkVersion}"
   implementation "org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:${icebergVersion}"
   implementation 'org.scala-lang.modules:scala-collection-compat_2.12:2.12.0'
+
+  implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+  runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+  runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+
+  // Servlet API
+  compileOnly 'jakarta.servlet:jakarta.servlet-api:6.0.0'
+
+  // Logging
+  implementation 'org.slf4j:slf4j-api:2.0.7'
+  implementation 'ch.qos.logback:logback-classic:1.4.11'
+
+  // Database
+  implementation 'org.postgresql:postgresql:42.6.0'
+
+  // Password Hashing
+  implementation 'org.mindrot:jbcrypt:0.4'
 }
 
 jar {

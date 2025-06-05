@@ -19,7 +19,9 @@ package io.nimtable;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.nimtable.db.entity.User;
+import io.nimtable.db.entity.Role;
 import io.nimtable.db.repository.UserRepository;
+import io.nimtable.util.JwtUtil;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -78,7 +80,10 @@ public class LoginServlet extends HttpServlet {
                 LOG.info("Successful database login for user: {}", username);
                 loggedIn = true;
             } else {
-                LOG.warn("Invalid database password attempt for user: {}", username);
+                LOG.warn("Invalid password for user: {}", username);
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                objectMapper.writeValue(response.getWriter(), new ErrorResponse("Invalid username or password"));
+                return;
             }
         }
 
@@ -99,9 +104,31 @@ public class LoginServlet extends HttpServlet {
         if (loggedIn) {
             responseNode.put("success", true);
             response.setStatus(HttpServletResponse.SC_OK);
+
+            // Generate JWT token for both database and config file users
+            if (userOptional.isPresent()) {
+                User user = userOptional.get();
+                String token = JwtUtil.generateToken(user);
+                responseNode.put("token", token);
+            } else {
+                // Create a temporary user object for config file admin
+                User adminUser = new User();
+                adminUser.setId(0L); // Special ID for config admin
+                adminUser.setUsername(username);
+                adminUser.setRoleId(1); // Role ID 1 for admin
+
+                // Create and set role object
+                Role adminRole = new Role();
+                adminRole.setId(1L);
+                adminRole.setName("admin");
+                adminUser.setRole(adminRole);
+
+                String token = JwtUtil.generateToken(adminUser);
+                responseNode.put("token", token);
+            }
         } else {
             sendErrorResponse(
-                    response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid username or password");
+                    response, HttpServletResponse.SC_FORBIDDEN, "Invalid username or password");
         }
 
         if (!response.isCommitted()) {
@@ -117,6 +144,19 @@ public class LoginServlet extends HttpServlet {
             errorNode.put("success", false);
             errorNode.put("message", message);
             objectMapper.writeValue(response.getWriter(), errorNode);
+        }
+    }
+
+    // Simple inner class for error responses
+    private static class ErrorResponse {
+        private String error;
+
+        public ErrorResponse(String error) {
+            this.error = error;
+        }
+
+        public String getError() {
+            return error;
         }
     }
 }
