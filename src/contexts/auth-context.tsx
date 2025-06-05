@@ -45,7 +45,7 @@ const decodeJwtToken = (token: string): User | null => {
     )
     const payload = JSON.parse(jsonPayload)
     return {
-      id: payload.id,
+      id: payload.userId,
       username: payload.username,
       role: payload.role,
       createdAt: payload.createdAt,
