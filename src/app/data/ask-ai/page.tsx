@@ -44,18 +44,8 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-
-interface Message {
-  id: string
-  role: "user" | "assistant"
-  content: string
-  toolInvocations?: Array<{
-    toolName: string
-    toolCallId: string
-    args: any
-    result?: any
-  }>
-}
+import { MemoizedMarkdown } from "@/components/memoized-markdown"
+import { ToolInvocation, UIMessage } from "ai"
 
 export default function AskAIPage() {
   const { toast } = useToast()
@@ -69,6 +59,8 @@ export default function AskAIPage() {
     {
       api: "/api/agent/chat",
       maxSteps: 5,
+      // Throttle the messages and data updates to 50ms for better performance:
+      experimental_throttle: 50,
     }
   )
 
@@ -216,7 +208,7 @@ export default function AskAIPage() {
     }))
   }
 
-  const renderToolInvocations = (message: any) => {
+  const renderToolInvocations = (message: UIMessage) => {
     if (!message.toolInvocations || message.toolInvocations.length === 0) {
       return null
     }
@@ -251,9 +243,11 @@ export default function AskAIPage() {
           </CollapsibleTrigger>
           <CollapsibleContent className="mt-2">
             <div className="space-y-2">
-              {message.toolInvocations.map((invocation: any, index: number) => (
-                <div key={index}>{renderToolInvocation(invocation)}</div>
-              ))}
+              {message.toolInvocations.map(
+                (invocation: ToolInvocation, index: number) => (
+                  <div key={index}>{renderToolInvocation(invocation)}</div>
+                )
+              )}
             </div>
           </CollapsibleContent>
         </Collapsible>
@@ -351,11 +345,13 @@ export default function AskAIPage() {
                             renderToolInvocations(message)}
 
                           <div className="prose prose-sm max-w-none">
-                            {message.content.split("\n").map((line, index) => (
-                              <p key={index} className="mb-2 last:mb-0">
-                                {line}
-                              </p>
-                            ))}
+                            <MemoizedMarkdown
+                              id={message.id}
+                              content={message.content}
+                              variant={
+                                message.role === "user" ? "user" : "default"
+                              }
+                            />
                           </div>
 
                           {message.role === "assistant" && (
