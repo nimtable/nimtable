@@ -133,10 +133,12 @@ export function tools(): ToolSet {
       table: z.string().describe("The table name"),
     }),
     execute: async ({ catalog, namespace, table }) => {
-      console.log(`Getting table metadata for: ${catalog}.${namespace}.${table}`)
+      console.log(
+        `Getting table metadata for: ${catalog}.${namespace}.${table}`
+      )
       try {
         const tableData = await loadTableData(catalog, namespace, table)
-        
+
         const metadata = {
           table: `${catalog}.${namespace}.${table}`,
           formatVersion: tableData.metadata["format-version"],
@@ -180,26 +182,30 @@ export function tools(): ToolSet {
       console.log(`Getting snapshots for: ${catalog}.${namespace}.${table}`)
       try {
         const tableData = await loadTableData(catalog, namespace, table)
-        
-        const snapshots = (tableData.metadata.snapshots || []).map(snapshot => ({
-          snapshotId: snapshot["snapshot-id"],
-          parentSnapshotId: snapshot["parent-snapshot-id"],
-          sequenceNumber: snapshot["sequence-number"],
-          timestampMs: snapshot["timestamp-ms"],
-          operation: snapshot.summary?.operation || "unknown",
-          summary: snapshot.summary || {},
-          manifestList: snapshot["manifest-list"],
-          schemaId: snapshot["schema-id"],
-        }))
 
-        const refs = Object.entries(tableData.metadata.refs || {}).map(([name, ref]) => ({
-          name,
-          type: ref.type,
-          snapshotId: ref["snapshot-id"],
-          maxRefAgeMs: ref["max-ref-age-ms"],
-          maxSnapshotAgeMs: ref["max-snapshot-age-ms"],
-          minSnapshotsToKeep: ref["min-snapshots-to-keep"],
-        }))
+        const snapshots = (tableData.metadata.snapshots || []).map(
+          (snapshot) => ({
+            snapshotId: snapshot["snapshot-id"],
+            parentSnapshotId: snapshot["parent-snapshot-id"],
+            sequenceNumber: snapshot["sequence-number"],
+            timestampMs: snapshot["timestamp-ms"],
+            operation: snapshot.summary?.operation || "unknown",
+            summary: snapshot.summary || {},
+            manifestList: snapshot["manifest-list"],
+            schemaId: snapshot["schema-id"],
+          })
+        )
+
+        const refs = Object.entries(tableData.metadata.refs || {}).map(
+          ([name, ref]) => ({
+            name,
+            type: ref.type,
+            snapshotId: ref["snapshot-id"],
+            maxRefAgeMs: ref["max-ref-age-ms"],
+            maxSnapshotAgeMs: ref["max-snapshot-age-ms"],
+            minSnapshotsToKeep: ref["min-snapshots-to-keep"],
+          })
+        )
 
         const result = {
           table: `${catalog}.${namespace}.${table}`,
@@ -228,10 +234,17 @@ export function tools(): ToolSet {
       snapshotId: z.string().describe("The snapshot ID to get manifests for"),
     }),
     execute: async ({ catalog, namespace, table, snapshotId }) => {
-      console.log(`Getting manifests for snapshot ${snapshotId} in: ${catalog}.${namespace}.${table}`)
+      console.log(
+        `Getting manifests for snapshot ${snapshotId} in: ${catalog}.${namespace}.${table}`
+      )
       try {
-        const manifestList = await getManifestList(catalog, namespace, table, snapshotId)
-        
+        const manifestList = await getManifestList(
+          catalog,
+          namespace,
+          table,
+          snapshotId
+        )
+
         const result = {
           table: `${catalog}.${namespace}.${table}`,
           snapshotId: manifestList.snapshot_id,
@@ -272,19 +285,35 @@ export function tools(): ToolSet {
       namespace: z.string().describe("The namespace name"),
       table: z.string().describe("The table name"),
       snapshotId: z.string().describe("The snapshot ID"),
-      manifestIndex: z.number().describe("The index of the manifest in the manifest list (0-based)"),
+      manifestIndex: z
+        .number()
+        .describe("The index of the manifest in the manifest list (0-based)"),
     }),
-    execute: async ({ catalog, namespace, table, snapshotId, manifestIndex }) => {
-      console.log(`Getting files for manifest ${manifestIndex} in snapshot ${snapshotId} of: ${catalog}.${namespace}.${table}`)
+    execute: async ({
+      catalog,
+      namespace,
+      table,
+      snapshotId,
+      manifestIndex,
+    }) => {
+      console.log(
+        `Getting files for manifest ${manifestIndex} in snapshot ${snapshotId} of: ${catalog}.${namespace}.${table}`
+      )
       try {
-        const manifestDetails = await getManifestDetails(catalog, namespace, table, snapshotId, manifestIndex)
-        
+        const manifestDetails = await getManifestDetails(
+          catalog,
+          namespace,
+          table,
+          snapshotId,
+          manifestIndex
+        )
+
         const result = {
           table: `${catalog}.${namespace}.${table}`,
           snapshotId,
           manifestIndex,
           manifestPath: manifestDetails.manifest_path,
-          files: manifestDetails.files.map(file => ({
+          files: manifestDetails.files.map((file) => ({
             filePath: file.file_path || file.path,
             fileFormat: file.file_format || file.format,
             partitions: file.partition || {},
@@ -321,13 +350,25 @@ export function tools(): ToolSet {
       catalog: z.string().describe("The iceberg catalog name"),
       namespace: z.string().describe("The namespace name"),
       table: z.string().describe("The table name"),
-      snapshotId: z.string().optional().describe("Optional snapshot ID to get distribution for specific snapshot"),
+      snapshotId: z
+        .string()
+        .optional()
+        .describe(
+          "Optional snapshot ID to get distribution for specific snapshot"
+        ),
     }),
     execute: async ({ catalog, namespace, table, snapshotId }) => {
-      console.log(`Getting file distribution for: ${catalog}.${namespace}.${table}${snapshotId ? ` at snapshot ${snapshotId}` : ''}`)
+      console.log(
+        `Getting file distribution for: ${catalog}.${namespace}.${table}${snapshotId ? ` at snapshot ${snapshotId}` : ""}`
+      )
       try {
-        const distribution = await getFileDistribution(catalog, namespace, table, snapshotId)
-        
+        const distribution = await getFileDistribution(
+          catalog,
+          namespace,
+          table,
+          snapshotId
+        )
+
         const result = {
           table: `${catalog}.${namespace}.${table}`,
           snapshotId: snapshotId || "current",
@@ -336,13 +377,21 @@ export function tools(): ToolSet {
           positionDeleteFileCount: distribution.positionDeleteFileCount,
           eqDeleteFileCount: distribution.eqDeleteFileCount,
           dataFileSizeInBytes: distribution.dataFileSizeInBytes,
-          positionDeleteFileSizeInBytes: distribution.positionDeleteFileSizeInBytes,
+          positionDeleteFileSizeInBytes:
+            distribution.positionDeleteFileSizeInBytes,
           eqDeleteFileSizeInBytes: distribution.eqDeleteFileSizeInBytes,
           dataFileRecordCount: distribution.dataFileRecordCount,
-          positionDeleteFileRecordCount: distribution.positionDeleteFileRecordCount,
+          positionDeleteFileRecordCount:
+            distribution.positionDeleteFileRecordCount,
           eqDeleteFileRecordCount: distribution.eqDeleteFileRecordCount,
-          totalFiles: distribution.dataFileCount + distribution.positionDeleteFileCount + distribution.eqDeleteFileCount,
-          totalSizeInBytes: distribution.dataFileSizeInBytes + distribution.positionDeleteFileSizeInBytes + distribution.eqDeleteFileSizeInBytes,
+          totalFiles:
+            distribution.dataFileCount +
+            distribution.positionDeleteFileCount +
+            distribution.eqDeleteFileCount,
+          totalSizeInBytes:
+            distribution.dataFileSizeInBytes +
+            distribution.positionDeleteFileSizeInBytes +
+            distribution.eqDeleteFileSizeInBytes,
         }
         console.log(`file distribution: ${JSON.stringify(result, null, 2)}`)
         return result
