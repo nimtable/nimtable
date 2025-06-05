@@ -8,7 +8,7 @@ import React, {
   useRef,
 } from "react"
 import { Button } from "@/components/ui/button"
-import { AutoResizeTextarea } from "@/components/ui/textarea"
+import { Textarea } from "@/components/ui/textarea"
 import { Sparkles, Save, Loader2, Edit3, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -159,13 +159,19 @@ export function AITextInput({
                   : "max-h-0 opacity-0"
               )}
             >
-              <AutoResizeTextarea
+              <Textarea
                 key="ai-prompt-textarea"
                 placeholder={aiPromptPlaceholder}
                 value={additionalPrompt}
                 onChange={(e) => setAdditionalPrompt(e.target.value)}
-                className="border-dashed border-blue-200 focus:border-blue-400 text-xs min-h-[32px]"
+                className="border-dashed border-blue-200 focus:border-blue-400 text-xs"
                 disabled={loading_}
+                ref={(textarea) => {
+                  if (textarea) {
+                    textarea.style.height = "0px"
+                    textarea.style.height = textarea.scrollHeight + "px"
+                  }
+                }}
               />
             </div>
           </div>
@@ -193,6 +199,10 @@ export function AITextInput({
     useEffect(() => {
       const textarea = textareaRef.current
       if (textarea) {
+        // resize to content height
+        textarea.style.height = "0px"
+        textarea.style.height = textarea.scrollHeight + "px"
+
         // Focus the textarea
         textarea.focus()
         // Move cursor to the end
@@ -218,7 +228,7 @@ export function AITextInput({
         {/* Main Text Area */}
         <div className="prose prose-sm max-w-none">
           <div className="rounded-md border border-muted/30 bg-muted/30 p-1.5 font-mono">
-            <AutoResizeTextarea
+            <Textarea
               ref={textareaRef}
               placeholder={placeholder}
               value={editContent}
