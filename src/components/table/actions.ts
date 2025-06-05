@@ -34,10 +34,19 @@ type TableInfo = {
   lastUpdatedTime: string
 }
 
-export async function actionGenerateTableSummary(tableData: TableInfo) {
+export async function actionGenerateTableSummary(
+  tableData: TableInfo,
+  additionalPrompt?: string
+) {
   const data = JSON.stringify(tableData)
-  console.log("Generating table summary", data)
-  const prompt = `
+  console.log(
+    "Generating table summary",
+    data,
+    "additionalPrompt:",
+    additionalPrompt
+  )
+
+  const basePrompt = `
 Draft a concise, business-oriented summary of the table data supplied below.
 
 ## What to cover
@@ -50,7 +59,17 @@ Draft a concise, business-oriented summary of the table data supplied below.
 ## Style & format
 - Plain text. Split sections into multiple paragraphs when necessary.
 - No headings, disclaimers, apologies, or filenames—return *only* the summary text
-- If critical details are missing in the input, state that briefly (e.g. “Row count not provided”).
+- If critical details are missing in the input, state that briefly (e.g. "Row count not provided").`
+
+  const additionalInstructions = additionalPrompt
+    ? `
+
+## Important User Instructions
+
+${additionalPrompt}`
+    : ""
+
+  const prompt = `${basePrompt}${additionalInstructions}
 
 ## Table Data
 

@@ -65,7 +65,7 @@ const hostedNimtableModel = () => {
   })
   // TODO: remove simulateStreamingMiddleware
   return wrapLanguageModel({
-    model: provider("gpt-4.1-mini"),
+    model: provider("gpt-4.1"),
     middleware: simulateStreamingMiddleware(),
   })
 }

@@ -26,6 +26,9 @@ You excel at:
 - Troubleshooting data issues and optimizing queries
 
 Always be helpful, accurate, and provide clear explanations for your actions.
+
+IMPORTANT: When \`Important User Instructions\` are provided, you should strictly follow these instructions.
+If they conflict with previous instructions, prioritize the important user instructions.
 `
 
 export function systemPrompt(): string {
