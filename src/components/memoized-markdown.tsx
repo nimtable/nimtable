@@ -37,7 +37,7 @@ const MemoizedMarkdownBlock = memo(
         className={cn(
           "prose prose-sm max-w-none prose-pre:px-1 prose-pre:rounded prose-code:px-1 prose-code:rounded",
           variant === "user"
-            ? "prose-invert prose-pre:bg-blue-700/50 prose-code:bg-blue-700/50"
+            ? "text-white prose-headings:text-white prose-p:text-white prose-li:text-white prose-strong:text-white prose-em:text-white prose-code:text-white prose-pre:bg-blue-700/50 prose-code:bg-blue-700/50 prose-a:text-blue-200 hover:prose-a:text-blue-100"
             : "dark:prose-invert prose-pre:bg-muted prose-code:bg-muted"
         )}
       >
