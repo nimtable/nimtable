@@ -135,7 +135,7 @@ export function tools(): ToolSet {
       )
       try {
         const tableData = await loadTableData(catalog, namespace, table)
-        
+
         const metadata = {
           table: `${catalog}.${namespace}.${table}`,
           formatVersion: tableData.metadata["format-version"],
