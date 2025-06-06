@@ -36,20 +36,15 @@ public record Config(
         List<Catalog> catalogs,
         Compactor compactor,
         Jwt jwt) {
-    public record Server(int port, String host) {
-    }
+    public record Server(int port, String host) {}
 
-    public record Admin(String username, String password) {
-    }
+    public record Admin(String username, String password) {}
 
-    public record Database(String url, String username, String password) {
-    }
+    public record Database(String url, String username, String password) {}
 
-    public record Compactor(String ip, int port) {
-    }
+    public record Compactor(String ip, int port) {}
 
-    public record Jwt(String secretKey) {
-    }
+    public record Jwt(String secretKey) {}
 
     @JsonDeserialize(using = CatalogDeserializer.class)
     public record Catalog(String name, Map<String, String> properties) {

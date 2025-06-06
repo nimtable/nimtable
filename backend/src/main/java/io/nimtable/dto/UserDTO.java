@@ -20,15 +20,10 @@ import io.nimtable.db.entity.User;
 import java.time.Instant;
 
 /**
- * Data Transfer Object for User responses.
- * This ensures consistent serialization between backend and client.
+ * Data Transfer Object for User responses. This ensures consistent serialization between backend
+ * and client.
  */
-public record UserDTO(
-        Long id,
-        String username,
-        String role,
-        Instant createdAt,
-        Instant updatedAt) {
+public record UserDTO(Long id, String username, String role, Instant createdAt, Instant updatedAt) {
     public static UserDTO fromUser(User user) {
         return new UserDTO(
                 user.getId(),

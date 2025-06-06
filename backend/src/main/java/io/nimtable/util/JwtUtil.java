@@ -39,7 +39,8 @@ public class JwtUtil {
     public static void initialize(Config config) {
         String secretKey = config.jwt().secretKey();
         if (secretKey == null || secretKey.trim().isEmpty()) {
-            LOG.warn("JWT secret key not configured, generating a random one. This is not recommended for production.");
+            LOG.warn(
+                    "JWT secret key not configured, generating a random one. This is not recommended for production.");
             key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
         } else {
             key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
@@ -101,10 +102,6 @@ public class JwtUtil {
     }
 
     private static Claims getAllClaimsFromToken(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
+        return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
     }
 }

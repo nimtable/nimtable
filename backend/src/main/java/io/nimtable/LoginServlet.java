@@ -18,8 +18,8 @@ package io.nimtable;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.nimtable.db.entity.User;
 import io.nimtable.db.entity.Role;
+import io.nimtable.db.entity.User;
 import io.nimtable.db.repository.UserRepository;
 import io.nimtable.util.JwtUtil;
 import jakarta.servlet.http.HttpServlet;
@@ -82,7 +82,8 @@ public class LoginServlet extends HttpServlet {
             } else {
                 LOG.warn("Invalid password for user: {}", username);
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                objectMapper.writeValue(response.getWriter(), new ErrorResponse("Invalid username or password"));
+                objectMapper.writeValue(
+                        response.getWriter(), new ErrorResponse("Invalid username or password"));
                 return;
             }
         }

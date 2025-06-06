@@ -27,7 +27,6 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -37,18 +36,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Servlet for handling User CRUD operations via RESTful API endpoints. Base
- * Path: `/api/users`
+ * Servlet for handling User CRUD operations via RESTful API endpoints. Base Path: `/api/users`
  *
- * <p>
- * Endpoints: - GET /api/users: Retrieve a list of all users. - POST /api/users:
- * Create a new
- * user. - GET /api/users/{id}: Retrieve a specific user by their ID. - PUT
- * /api/users/{id}: Update
- * a specific user by their ID. - DELETE /api/users/{id}: Delete a specific user
- * by their ID.
+ * <p>Endpoints: - GET /api/users: Retrieve a list of all users. - POST /api/users: Create a new
+ * user. - GET /api/users/{id}: Retrieve a specific user by their ID. - PUT /api/users/{id}: Update
+ * a specific user by their ID. - DELETE /api/users/{id}: Delete a specific user by their ID.
  */
-
 public class UserServlet extends HttpServlet {
 
     private static final Logger LOG = LoggerFactory.getLogger(UserServlet.class);
@@ -75,18 +68,14 @@ public class UserServlet extends HttpServlet {
     /**
      * Handles GET requests for user resources.
      *
-     * <p>
-     * Routes:
-     * - `/api/users`: Calls {@link #handleGetAllUsers(HttpServletResponse)}.
-     * - `/api/users/{id}`: Calls
-     * {@link #handleGetUserById(long, HttpServletResponse)}.
-     * - `/api/user`: Calls
-     * {@link #handleGetCurrentUser(HttpServletRequest, HttpServletResponse)}.
+     * <p>Routes: - `/api/users`: Calls {@link #handleGetAllUsers(HttpServletResponse)}. -
+     * `/api/users/{id}`: Calls {@link #handleGetUserById(long, HttpServletResponse)}. -
+     * `/api/user`: Calls {@link #handleGetCurrentUser(HttpServletRequest, HttpServletResponse)}.
      *
-     * @param req  HttpServletRequest object.
+     * @param req HttpServletRequest object.
      * @param resp HttpServletResponse object for sending the response.
      * @throws ServletException If a servlet-specific error occurs.
-     * @throws IOException      If an input or output error occurs.
+     * @throws IOException If an input or output error occurs.
      */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -127,14 +116,12 @@ public class UserServlet extends HttpServlet {
     }
 
     /**
-     * Retrieves a specific user by ID and writes it to the response as JSON.
-     * Responds with 200 OK
-     * and user data if found, 404 Not Found otherwise. Password hash is always
-     * excluded from the
+     * Retrieves a specific user by ID and writes it to the response as JSON. Responds with 200 OK
+     * and user data if found, 404 Not Found otherwise. Password hash is always excluded from the
      * response.
      *
      * @param userId The ID of the user to retrieve.
-     * @param resp   The HttpServletResponse object to write the response to.
+     * @param resp The HttpServletResponse object to write the response to.
      * @throws IOException If an I/O error occurs while writing the response.
      */
     private void handleGetUserById(long userId, HttpServletResponse resp) throws IOException {
@@ -152,8 +139,7 @@ public class UserServlet extends HttpServlet {
     }
 
     /**
-     * Retrieves all users and writes the list to the response as JSON. Responds
-     * with 200 OK and a
+     * Retrieves all users and writes the list to the response as JSON. Responds with 200 OK and a
      * JSON array of users. Password hashes are always masked in the response.
      *
      * @param resp The HttpServletResponse object.
@@ -165,20 +151,15 @@ public class UserServlet extends HttpServlet {
         users.forEach(user -> user.setPasswordHash(null));
 
         resp.setStatus(HttpServletResponse.SC_OK);
-        objectMapper.writeValue(resp.getWriter(), users.stream()
-                .map(UserDTO::fromUser)
-                .toList());
+        objectMapper.writeValue(resp.getWriter(), users.stream().map(UserDTO::fromUser).toList());
     }
 
     /**
-     * Retrieves the current user's information from the JWT token in the request
-     * header.
-     * Responds with 200 OK and user data if token is valid, 401 Unauthorized if
-     * token is missing
-     * or invalid.
+     * Retrieves the current user's information from the JWT token in the request header. Responds
+     * with 200 OK and user data if token is valid, 401 Unauthorized if token is missing or invalid.
      *
-     * @param req  The HttpServletRequest object containing the JWT token in the
-     *             Authorization header.
+     * @param req The HttpServletRequest object containing the JWT token in the Authorization
+     *     header.
      * @param resp The HttpServletResponse object to write the response to.
      * @throws IOException If an I/O error occurs while writing the response.
      */
@@ -187,14 +168,16 @@ public class UserServlet extends HttpServlet {
         String authHeader = req.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            objectMapper.writeValue(resp.getWriter(), new ErrorResponse("Missing or invalid Authorization header"));
+            objectMapper.writeValue(
+                    resp.getWriter(), new ErrorResponse("Missing or invalid Authorization header"));
             return;
         }
 
         String token = authHeader.substring(7); // Remove "Bearer " prefix
         if (!JwtUtil.validateToken(token)) {
             resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            objectMapper.writeValue(resp.getWriter(), new ErrorResponse("Invalid or expired token"));
+            objectMapper.writeValue(
+                    resp.getWriter(), new ErrorResponse("Invalid or expired token"));
             return;
         }
 
@@ -215,24 +198,18 @@ public class UserServlet extends HttpServlet {
     /**
      * Handles POST requests to create a new user. Path: `/api/users`
      *
-     * <p>
-     * Expects a JSON request body representing the new user, requiring `username`
-     * and `password`
+     * <p>Expects a JSON request body representing the new user, requiring `username` and `password`
      * fields.
      *
-     * <p>
-     * Responses: - 201 Created: User created successfully. Response body contains
-     * the created
-     * user (with password hash masked). - 400 Bad Request: Invalid JSON format or
-     * missing required
-     * fields (username, password). - 409 Conflict: Username already exists. - 500
-     * Internal Server
+     * <p>Responses: - 201 Created: User created successfully. Response body contains the created
+     * user (with password hash masked). - 400 Bad Request: Invalid JSON format or missing required
+     * fields (username, password). - 409 Conflict: Username already exists. - 500 Internal Server
      * Error: Database error or other unexpected error.
      *
-     * @param req  HttpServletRequest object containing the user data in the body.
+     * @param req HttpServletRequest object containing the user data in the body.
      * @param resp HttpServletResponse object for sending the response.
      * @throws ServletException If a servlet-specific error occurs.
-     * @throws IOException      If an input or output error occurs.
+     * @throws IOException If an input or output error occurs.
      */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
@@ -298,30 +275,21 @@ public class UserServlet extends HttpServlet {
     /**
      * Handles PUT requests to update an existing user. Path: `/api/users/{id}`
      *
-     * <p>
-     * Expects a JSON request body representing the user updates. - `username` is
-     * required. - If
-     * `password` field is provided, the user's password will be updated. - Other
-     * fields in the User
+     * <p>Expects a JSON request body representing the user updates. - `username` is required. - If
+     * `password` field is provided, the user's password will be updated. - Other fields in the User
      * object can be updated.
      *
-     * <p>
-     * Responses: - 200 OK: User updated successfully. Response body contains the
-     * updated user
-     * (with password hash masked). - 400 Bad Request: Invalid JSON format or
-     * missing required
-     * fields (username). - 404 Not Found: User with the specified ID does not
-     * exist. - 409
-     * Conflict: Username already exists (if changed to an existing one). - 500
-     * Internal Server
+     * <p>Responses: - 200 OK: User updated successfully. Response body contains the updated user
+     * (with password hash masked). - 400 Bad Request: Invalid JSON format or missing required
+     * fields (username). - 404 Not Found: User with the specified ID does not exist. - 409
+     * Conflict: Username already exists (if changed to an existing one). - 500 Internal Server
      * Error: Database error or other unexpected error.
      *
-     * @param req  HttpServletRequest object containing the user ID in the path and
-     *             updates in the
-     *             body.
+     * @param req HttpServletRequest object containing the user ID in the path and updates in the
+     *     body.
      * @param resp HttpServletResponse object for sending the response.
      * @throws ServletException If a servlet-specific error occurs.
-     * @throws IOException      If an input or output error occurs.
+     * @throws IOException If an input or output error occurs.
      */
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp)
@@ -354,7 +322,8 @@ public class UserServlet extends HttpServlet {
 
             // --- Handle Password Update ---
             if (userUpdates.getPassword() != null && !userUpdates.getPassword().trim().isEmpty()) {
-                String newHashedPassword = BCrypt.hashpw(userUpdates.getPassword(), BCrypt.gensalt());
+                String newHashedPassword =
+                        BCrypt.hashpw(userUpdates.getPassword(), BCrypt.gensalt());
                 userUpdates.setPasswordHash(newHashedPassword);
                 LOG.debug("Updating password hash for user ID: {}", userId);
             } else {
@@ -416,17 +385,14 @@ public class UserServlet extends HttpServlet {
     /**
      * Handles DELETE requests to remove an existing user. Path: `/api/users/{id}`
      *
-     * <p>
-     * Responses: - 204 No Content: User deleted successfully. - 400 Bad Request:
-     * Invalid user ID
-     * format in the path. - 404 Not Found: User with the specified ID does not
-     * exist. - 500
+     * <p>Responses: - 204 No Content: User deleted successfully. - 400 Bad Request: Invalid user ID
+     * format in the path. - 404 Not Found: User with the specified ID does not exist. - 500
      * Internal Server Error: Database error or other unexpected error.
      *
-     * @param req  HttpServletRequest object containing the user ID in the path.
+     * @param req HttpServletRequest object containing the user ID in the path.
      * @param resp HttpServletResponse object for sending the response.
      * @throws ServletException If a servlet-specific error occurs.
-     * @throws IOException      If an input or output error occurs.
+     * @throws IOException If an input or output error occurs.
      */
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp)
