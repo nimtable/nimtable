@@ -121,6 +121,52 @@ export function tools(): ToolSet {
     },
   })
 
+  tools.getTableMetadata = tool({
+    description:
+      "Get complete table metadata including snapshots, history, statistics, and configuration details",
+    parameters: z.object({
+      catalog: z.string().describe("The iceberg catalog name"),
+      namespace: z.string().describe("The namespace name"),
+      table: z.string().describe("The table name"),
+    }),
+    execute: async ({ catalog, namespace, table }) => {
+      console.log(
+        `Getting table metadata for: ${catalog}.${namespace}.${table}`
+      )
+      try {
+        const tableData = await loadTableData(catalog, namespace, table)
+
+        const metadata = {
+          table: `${catalog}.${namespace}.${table}`,
+          formatVersion: tableData.metadata["format-version"],
+          tableUuid: tableData.metadata["table-uuid"],
+          location: tableData.metadata.location,
+          lastUpdated: tableData.metadata["last-updated-ms"],
+          currentSnapshotId: tableData.metadata["current-snapshot-id"],
+          lastSequenceNumber: tableData.metadata["last-sequence-number"],
+          properties: tableData.metadata.properties,
+          schemas: tableData.metadata.schemas || [],
+          currentSchemaId: tableData.metadata["current-schema-id"],
+          partitionSpecs: tableData.metadata["partition-specs"] || [],
+          defaultSpecId: tableData.metadata["default-spec-id"],
+          sortOrders: tableData.metadata["sort-orders"] || [],
+          defaultSortOrderId: tableData.metadata["default-sort-order-id"],
+          snapshots: tableData.metadata.snapshots || [],
+          snapshotLog: tableData.metadata["snapshot-log"] || [],
+          metadataLog: tableData.metadata["metadata-log"] || [],
+          refs: tableData.metadata.refs || {},
+          statistics: tableData.metadata.statistics || [],
+          partitionStatistics: tableData.metadata["partition-statistics"] || [],
+        }
+        console.log(`table metadata: ${JSON.stringify(metadata, null, 2)}`)
+        return metadata
+      } catch (error) {
+        console.error("Error getting table metadata:", error)
+        return { error: JSON.stringify(error) }
+      }
+    },
+  })
+
   tools.executeSQL = tool({
     description:
       "Execute a Spark SQL query against Iceberg tables and return results. Use proper Spark SQL syntax with backticks for table references like `catalog`.`namespace`.`table`",
