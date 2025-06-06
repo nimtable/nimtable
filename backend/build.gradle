@@ -133,9 +133,6 @@ dependencies {
   implementation 'org.slf4j:slf4j-api:2.0.7'
   implementation 'ch.qos.logback:logback-classic:1.4.11'
 
-  // Database
-  implementation 'org.postgresql:postgresql:42.6.0'
-
   // Password Hashing
   implementation 'org.mindrot:jbcrypt:0.4'
 }
