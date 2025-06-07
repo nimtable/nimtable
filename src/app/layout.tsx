@@ -22,6 +22,7 @@ import "@/styles/globals.css"
 
 import { RefreshProvider } from "@/contexts/refresh-context"
 import { AuthProvider } from "@/contexts/auth-context"
+import { AIAgentProvider } from "@/contexts/ai-agent-context"
 import type { Metadata } from "next"
 import { Suspense } from "react"
 
@@ -31,6 +32,8 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Toaster } from "@/components/ui/toaster"
+import { AIAgentSidebar } from "@/components/ai-agent/ai-agent-sidebar"
+import { AIAgentTrigger } from "@/components/ai-agent/ai-agent-trigger"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -56,12 +59,16 @@ export default function RootLayout({
             <ReactQueryProvider>
               <AuthProvider>
                 <RefreshProvider>
-                  <SidebarProvider>
-                    <ProtectedRoute>
-                      <Suspense fallback={<></>}>{children}</Suspense>
-                    </ProtectedRoute>
-                    <Toaster />
-                  </SidebarProvider>
+                  <AIAgentProvider>
+                    <SidebarProvider>
+                      <ProtectedRoute>
+                        <Suspense fallback={<></>}>{children}</Suspense>
+                        <AIAgentTrigger />
+                        <AIAgentSidebar />
+                      </ProtectedRoute>
+                      <Toaster />
+                    </SidebarProvider>
+                  </AIAgentProvider>
                 </RefreshProvider>
               </AuthProvider>
             </ReactQueryProvider>
