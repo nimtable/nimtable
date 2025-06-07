@@ -28,7 +28,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/LoginResponse"
-        "401":
+        "403":
           description: Invalid credentials
           content:
             application/json:
@@ -36,6 +36,35 @@ paths:
                 $ref: "#/components/schemas/Error"
         "400":
           description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/user:
+    get:
+      summary: Get current user
+      description: Returns the current authenticated user's information
+      operationId: getCurrentUser
+      tags:
+        - User
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Successfully retrieved current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized - Invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: User not found
           content:
             application/json:
               schema:
@@ -376,8 +405,12 @@ components:
       properties:
         success:
           type: boolean
+        token:
+          type: string
+          description: JWT token for authentication
       required:
         - success
+        - token
 
     CatalogCreate:
       type: object

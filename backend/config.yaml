@@ -5,6 +5,9 @@ admin:
   username: admin
   password: admin
 
+jwt:
+  secretKey: "nimtable-jwt-secret-key-2025-production-must-be-at-least-32-bytes-long"
+
 # Postgres is used for users, catalogs, etc.
 database:
   url: jdbc:postgresql://localhost:5432/nimtable_db

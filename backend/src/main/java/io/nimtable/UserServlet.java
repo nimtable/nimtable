@@ -20,6 +20,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.nimtable.db.entity.User;
 import io.nimtable.db.repository.UserRepository;
+import io.nimtable.dto.UserDTO;
+import io.nimtable.util.JwtUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -47,9 +49,12 @@ public class UserServlet extends HttpServlet {
     private static final Pattern USER_ID_PATTERN = Pattern.compile("/api/users/(\\d+)");
     // Base path for listing/creating users
     private static final String USERS_BASE_PATH = "/api/users";
+    private static final String CURRENT_USER_PATH = "/api/user";
 
     private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
+    private static final Pattern USERNAME_PATTERN = Pattern.compile("^[a-zA-Z0-9_]{3,20}$");
+    private static final Pattern PASSWORD_PATTERN = Pattern.compile("^.{8,}$");
 
     public UserServlet(UserRepository userRepository) {
         this.userRepository = userRepository;
@@ -64,7 +69,8 @@ public class UserServlet extends HttpServlet {
      * Handles GET requests for user resources.
      *
      * <p>Routes: - `/api/users`: Calls {@link #handleGetAllUsers(HttpServletResponse)}. -
-     * `/api/users/{id}`: Calls {@link #handleGetUserById(long, HttpServletResponse)}.
+     * `/api/users/{id}`: Calls {@link #handleGetUserById(long, HttpServletResponse)}. -
+     * `/api/user`: Calls {@link #handleGetCurrentUser(HttpServletRequest, HttpServletResponse)}.
      *
      * @param req HttpServletRequest object.
      * @param resp HttpServletResponse object for sending the response.
@@ -78,9 +84,14 @@ public class UserServlet extends HttpServlet {
         resp.setCharacterEncoding("UTF-8");
 
         try {
+            // Check if path matches /api/user
+            if (req.getRequestURI().equals(CURRENT_USER_PATH)) {
+                handleGetCurrentUser(req, resp);
+            }
             // Check if path matches /api/users/{id}
-            Matcher matcher = USER_ID_PATTERN.matcher(req.getRequestURI());
-            if (matcher.matches()) {
+            else if (USER_ID_PATTERN.matcher(req.getRequestURI()).matches()) {
+                Matcher matcher = USER_ID_PATTERN.matcher(req.getRequestURI());
+                matcher.matches();
                 long userId = Long.parseLong(matcher.group(1));
                 handleGetUserById(userId, resp);
             }
@@ -137,16 +148,51 @@ public class UserServlet extends HttpServlet {
     private void handleGetAllUsers(HttpServletResponse resp) throws IOException {
         List<User> users = userRepository.getAllUsers();
         // Mask password hash for all users in the list
-        users.forEach(
-                user -> {
-                    user.setPasswordHash(null);
-                    // Ensure updatedAt is returned
-                    if (user.getUpdatedAt() == null) {
-                        user.setUpdatedAt(user.getCreatedAt());
-                    }
-                });
+        users.forEach(user -> user.setPasswordHash(null));
+
         resp.setStatus(HttpServletResponse.SC_OK);
-        objectMapper.writeValue(resp.getWriter(), users);
+        objectMapper.writeValue(resp.getWriter(), users.stream().map(UserDTO::fromUser).toList());
+    }
+
+    /**
+     * Retrieves the current user's information from the JWT token in the request header. Responds
+     * with 200 OK and user data if token is valid, 401 Unauthorized if token is missing or invalid.
+     *
+     * @param req The HttpServletRequest object containing the JWT token in the Authorization
+     *     header.
+     * @param resp The HttpServletResponse object to write the response to.
+     * @throws IOException If an I/O error occurs while writing the response.
+     */
+    private void handleGetCurrentUser(HttpServletRequest req, HttpServletResponse resp)
+            throws IOException {
+        String authHeader = req.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            objectMapper.writeValue(
+                    resp.getWriter(), new ErrorResponse("Missing or invalid Authorization header"));
+            return;
+        }
+
+        String token = authHeader.substring(7); // Remove "Bearer " prefix
+        if (!JwtUtil.validateToken(token)) {
+            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            objectMapper.writeValue(
+                    resp.getWriter(), new ErrorResponse("Invalid or expired token"));
+            return;
+        }
+
+        Long userId = JwtUtil.getUserIdFromToken(token);
+        Optional<User> userOptional = userRepository.findUserById(userId);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            user.setPasswordHash(null); // Never send password hash to client
+
+            resp.setStatus(HttpServletResponse.SC_OK);
+            objectMapper.writeValue(resp.getWriter(), UserDTO.fromUser(user));
+        } else {
+            resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            objectMapper.writeValue(resp.getWriter(), new ErrorResponse("User not found"));
+        }
     }
 
     /**
