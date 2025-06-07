@@ -258,10 +258,8 @@ export function AIAgentSidebar() {
     "Count how many records are in each table"
   ]
 
-  if (!isOpen) return null
-
   return (
-    <div className="fixed inset-y-0 right-0 z-[100] w-96 bg-background border-l border-muted/50 shadow-2xl">
+    <div className="w-full h-full bg-background border-l border-muted/50 shadow-2xl">
       <Card className="h-full rounded-none border-0 flex flex-col">
         <CardHeader className="border-b border-muted/50 px-4 py-3 flex-shrink-0">
           <div className="flex items-center justify-between">

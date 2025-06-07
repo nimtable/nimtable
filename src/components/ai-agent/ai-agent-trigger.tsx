@@ -24,10 +24,12 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { useAIAgent } from "@/contexts/ai-agent-context"
-import { cn } from "@/lib/utils"
 
 export function AIAgentTrigger() {
   const { isOpen, toggleAgent } = useAIAgent()
+
+  // Hide the trigger button when AI agent is open
+  if (isOpen) return null
 
   return (
     <div className="fixed bottom-4 right-4 z-[99]">
@@ -36,19 +38,14 @@ export function AIAgentTrigger() {
           <Button
             onClick={toggleAgent}
             size="lg"
-            className={cn(
-              "h-12 w-12 rounded-full shadow-lg transition-all duration-200 hover:scale-105",
-              isOpen 
-                ? "bg-muted text-muted-foreground hover:bg-muted/80" 
-                : "bg-blue-600 text-white hover:bg-blue-700"
-            )}
+            className="h-12 w-12 rounded-full shadow-lg transition-all duration-200 hover:scale-105 bg-blue-600 text-white hover:bg-blue-700"
           >
             <Bot className="h-6 w-6" />
             <span className="sr-only">Toggle AI Copilot</span>
           </Button>
         </TooltipTrigger>
         <TooltipContent side="left">
-          <p>Toggle AI agent</p>
+          <p>Open AI agent</p>
         </TooltipContent>
       </Tooltip>
     </div>

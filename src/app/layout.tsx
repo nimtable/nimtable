@@ -32,7 +32,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Toaster } from "@/components/ui/toaster"
-import { AIAgentSidebar } from "@/components/ai-agent/ai-agent-sidebar"
+import { AIAgentLayoutWrapper } from "@/components/layouts/ai-agent-layout-wrapper"
 import { AIAgentTrigger } from "@/components/ai-agent/ai-agent-trigger"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -61,11 +61,12 @@ export default function RootLayout({
                 <RefreshProvider>
                   <AIAgentProvider>
                     <SidebarProvider>
-                      <ProtectedRoute>
-                        <Suspense fallback={<></>}>{children}</Suspense>
-                        <AIAgentTrigger />
-                        <AIAgentSidebar />
-                      </ProtectedRoute>
+                      <AIAgentLayoutWrapper>
+                        <ProtectedRoute>
+                          <Suspense fallback={<></>}>{children}</Suspense>
+                          <AIAgentTrigger />
+                        </ProtectedRoute>
+                      </AIAgentLayoutWrapper>
                       <Toaster />
                     </SidebarProvider>
                   </AIAgentProvider>
