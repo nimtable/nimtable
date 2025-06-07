@@ -15,4 +15,4 @@
  */
 
 export { AIAgentSidebar } from "./ai-agent-sidebar"
-export { AIAgentTrigger } from "./ai-agent-trigger" 
+export { AIAgentTrigger } from "./ai-agent-trigger"

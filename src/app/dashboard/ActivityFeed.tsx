@@ -130,11 +130,15 @@ export function ActivityFeed() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <span className="text-gray-900 truncate">
-                      {activity?.catalog}.{activity?.namespace}.{activity?.table}
+                      {activity?.catalog}.{activity?.namespace}.
+                      {activity?.table}
                     </span>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>{activity?.catalog}.{activity?.namespace}.{activity?.table}</p>
+                    <p>
+                      {activity?.catalog}.{activity?.namespace}.
+                      {activity?.table}
+                    </p>
                   </TooltipContent>
                 </Tooltip>
                 <span className="text-gray-500 flex-shrink-0">

@@ -14,18 +14,16 @@ export function AIAgentLayoutWrapper({ children }: AIAgentLayoutWrapperProps) {
   return (
     <div className="flex h-screen w-full">
       {/* Main content area - naturally fills remaining space */}
-      <div className="flex-1 min-w-0">
-        {children}
-      </div>
-      
+      <div className="flex-1 min-w-0">{children}</div>
+
       {/* Right AI sidebar - dynamic width */}
-      <div 
+      <div
         className={`transition-all duration-300 ease-in-out overflow-hidden ${
-          isOpen ? 'w-96' : 'w-0'
+          isOpen ? "w-96" : "w-0"
         }`}
       >
         <AIAgentSidebar />
       </div>
     </div>
   )
-} 
+}

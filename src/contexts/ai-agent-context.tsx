@@ -51,8 +51,10 @@ export function AIAgentProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   return (
-    <AIAgentContext.Provider value={{ isOpen, openAgent, closeAgent, toggleAgent }}>
+    <AIAgentContext.Provider
+      value={{ isOpen, openAgent, closeAgent, toggleAgent }}
+    >
       {children}
     </AIAgentContext.Provider>
   )
-} 
+}

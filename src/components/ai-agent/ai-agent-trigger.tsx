@@ -18,7 +18,7 @@
 
 import { Bot } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { 
+import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
@@ -50,4 +50,4 @@ export function AIAgentTrigger() {
       </Tooltip>
     </div>
   )
-} 
+}

@@ -17,18 +17,18 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { 
-  Bot, 
-  Send, 
-  User, 
-  Loader2, 
-  Copy, 
-  Check, 
+import {
+  Bot,
+  Send,
+  User,
+  Loader2,
+  Copy,
+  Check,
   Table as TableIcon,
   Database,
   ChevronDown,
   ChevronRight,
-  Minimize2
+  Minimize2,
 } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -51,14 +51,18 @@ export function AIAgentSidebar() {
   const { isOpen, closeAgent } = useAIAgent()
   const { toast } = useToast()
   const [isCopying, setIsCopying] = useState<string | null>(null)
-  const [expandedTools, setExpandedTools] = useState<Record<string, boolean>>({})
+  const [expandedTools, setExpandedTools] = useState<Record<string, boolean>>(
+    {}
+  )
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  const { messages, input, setInput, handleSubmit, isLoading, error } = useChat({
-    api: "/api/agent/chat",
-    maxSteps: 5,
-    experimental_throttle: 50,
-  })
+  const { messages, input, setInput, handleSubmit, isLoading, error } = useChat(
+    {
+      api: "/api/agent/chat",
+      maxSteps: 5,
+      experimental_throttle: 50,
+    }
+  )
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -253,9 +257,9 @@ export function AIAgentSidebar() {
 
   const exampleQueries = [
     "Show me all available catalogs and their tables",
-    "What are the columns in the customer table?", 
+    "What are the columns in the customer table?",
     "Get the top 10 rows from the sales table",
-    "Count how many records are in each table"
+    "Count how many records are in each table",
   ]
 
   return (
@@ -287,7 +291,8 @@ export function AIAgentSidebar() {
                   Welcome to Nimtable Copilot
                 </h3>
                 <p className="text-xs text-muted-foreground mb-4 max-w-xs">
-                  I can help you explore your Iceberg data lake. Ask me anything about your catalogs, tables, or data.
+                  I can help you explore your Iceberg data lake. Ask me anything
+                  about your catalogs, tables, or data.
                 </p>
 
                 <div className="w-full max-w-xs">
@@ -314,7 +319,9 @@ export function AIAgentSidebar() {
                     key={message.id}
                     className={cn(
                       "flex gap-2",
-                      message.role === "assistant" ? "justify-start" : "justify-end"
+                      message.role === "assistant"
+                        ? "justify-start"
+                        : "justify-end"
                     )}
                   >
                     {message.role === "assistant" && (
@@ -331,7 +338,8 @@ export function AIAgentSidebar() {
                           : "bg-blue-600 text-white"
                       )}
                     >
-                      {message.role === "assistant" && renderToolInvocations(message)}
+                      {message.role === "assistant" &&
+                        renderToolInvocations(message)}
 
                       <div className="prose prose-sm max-w-none">
                         <MemoizedMarkdown
@@ -346,7 +354,9 @@ export function AIAgentSidebar() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleCopy(message.content, message.id)}
+                            onClick={() =>
+                              handleCopy(message.content, message.id)
+                            }
                             className="h-5 px-1 text-xs"
                           >
                             {isCopying === message.id ? (
@@ -422,4 +432,4 @@ export function AIAgentSidebar() {
       </Card>
     </div>
   )
-} 
+}

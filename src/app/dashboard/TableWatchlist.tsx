@@ -103,7 +103,9 @@ export function TableWatchlist() {
                   </h3>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>{table.catalog}.{table.namespace}.{table.table}</p>
+                  <p>
+                    {table.catalog}.{table.namespace}.{table.table}
+                  </p>
                 </TooltipContent>
               </Tooltip>
 
