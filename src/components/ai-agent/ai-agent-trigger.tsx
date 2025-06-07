@@ -18,6 +18,11 @@
 
 import { Bot } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { useAIAgent } from "@/contexts/ai-agent-context"
 import { cn } from "@/lib/utils"
 
@@ -26,19 +31,26 @@ export function AIAgentTrigger() {
 
   return (
     <div className="fixed bottom-4 right-4 z-[99]">
-      <Button
-        onClick={toggleAgent}
-        size="lg"
-        className={cn(
-          "h-12 w-12 rounded-full shadow-lg transition-all duration-200 hover:scale-105",
-          isOpen 
-            ? "bg-muted text-muted-foreground hover:bg-muted/80" 
-            : "bg-blue-600 text-white hover:bg-blue-700"
-        )}
-      >
-        <Bot className="h-6 w-6" />
-        <span className="sr-only">Toggle AI Copilot</span>
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            onClick={toggleAgent}
+            size="lg"
+            className={cn(
+              "h-12 w-12 rounded-full shadow-lg transition-all duration-200 hover:scale-105",
+              isOpen 
+                ? "bg-muted text-muted-foreground hover:bg-muted/80" 
+                : "bg-blue-600 text-white hover:bg-blue-700"
+            )}
+          >
+            <Bot className="h-6 w-6" />
+            <span className="sr-only">Toggle AI Copilot</span>
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="left">
+          <p>Toggle AI agent</p>
+        </TooltipContent>
+      </Tooltip>
     </div>
   )
 } 
