@@ -10,6 +10,11 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 export function TableWatchlist() {
   const { tables, isFileDistributionLoading } = useContext(OverviewContext)
@@ -91,9 +96,16 @@ export function TableWatchlist() {
         {tablesNeedingCompaction.map((table, index) => (
           <div key={index} className="px-6 py-4">
             <div className="mb-2 flex flex-col gap-2">
-              <h3 className="font-medium">
-                {table.catalog}.{table.namespace}.{table.table}
-              </h3>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <h3 className="font-medium truncate max-w-full">
+                    {table.catalog}.{table.namespace}.{table.table}
+                  </h3>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{table.catalog}.{table.namespace}.{table.table}</p>
+                </TooltipContent>
+              </Tooltip>
 
               <Badge
                 variant="outline"
