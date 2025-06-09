@@ -28,12 +28,11 @@ import {
   Database,
   ChevronDown,
   ChevronRight,
+  Minimize2,
 } from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { SidebarInset } from "@/components/ui/sidebar"
-import { SqlEditorNavbar } from "@/components/shared/sql-editor-navbar"
 import { DataTable } from "@/components/query/data-table"
 import { createColumns } from "@/components/query/columns"
 import { useToast } from "@/hooks/use-toast"
@@ -46,8 +45,10 @@ import {
 } from "@/components/ui/collapsible"
 import { MemoizedMarkdown } from "@/components/memoized-markdown"
 import { ToolInvocation, UIMessage } from "ai"
+import { useAIAgent } from "@/contexts/ai-agent-context"
 
-export default function AskAIPage() {
+export function AIAgentSidebar() {
+  const { isOpen, closeAgent } = useAIAgent()
   const { toast } = useToast()
   const [isCopying, setIsCopying] = useState<string | null>(null)
   const [expandedTools, setExpandedTools] = useState<Record<string, boolean>>(
@@ -59,7 +60,6 @@ export default function AskAIPage() {
     {
       api: "/api/agent/chat",
       maxSteps: 5,
-      // Throttle the messages and data updates to 50ms for better performance:
       experimental_throttle: 50,
     }
   )
@@ -260,187 +260,176 @@ export default function AskAIPage() {
     "What are the columns in the customer table?",
     "Get the top 10 rows from the sales table",
     "Count how many records are in each table",
-    "Show me tables with more than 1 million rows",
   ]
 
   return (
-    <SidebarInset className="bg-muted/5">
-      <div className="flex flex-col">
-        <SqlEditorNavbar title="AI Assistant" icon="ai" />
-
-        <div className="mx-auto max-w-4xl h-[calc(100vh-64px)] p-6 flex flex-col">
-          <div className="mb-6 flex-shrink-0">
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Bot className="h-6 w-6 text-blue-500" />
-              Ask AI
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Ask questions about your data in natural language. I can help you
-              explore catalogs, tables, schemas, and generate SQL and execute
-              queries.
-            </p>
+    <div className="w-full h-full bg-background border-l border-muted/50 shadow-2xl">
+      <Card className="h-full rounded-none border-0 flex flex-col">
+        <CardHeader className="border-b border-muted/50 px-4 py-3 flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Bot className="h-5 w-5 text-blue-500" />
+              <h2 className="font-semibold">Nimtable Copilot</h2>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={closeAgent}
+              className="h-8 w-8 p-0 hover:bg-muted/50"
+            >
+              <Minimize2 className="h-4 w-4" />
+            </Button>
           </div>
+        </CardHeader>
 
-          {/* Chat Messages - Now takes full available height */}
-          <Card className="flex-1 border-muted/70 shadow-sm flex flex-col min-h-0">
-            <CardContent className="p-0 flex flex-col h-full overflow-auto">
-              <div className="flex-1 overflow-auto p-4 space-y-4 min-h-0">
-                {messages.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full text-center">
-                    <Bot className="h-12 w-12 text-muted-foreground/50 mb-4" />
-                    <h3 className="text-lg font-medium text-muted-foreground mb-2">
-                      Welcome to Nimtable AI Assistant
-                    </h3>
-                    <p className="text-sm text-muted-foreground mb-6 max-w-md">
-                      I can help you explore your Iceberg data lake. Ask me
-                      anything about your catalogs, namespaces, tables, or
-                      generate and execute SQL queries.
-                    </p>
+        <CardContent className="p-0 flex flex-col h-full overflow-hidden">
+          <div className="flex-1 overflow-auto p-4 space-y-4 min-h-0">
+            {messages.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-center">
+                <Bot className="h-10 w-10 text-muted-foreground/50 mb-3" />
+                <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                  Welcome to Nimtable Copilot
+                </h3>
+                <p className="text-xs text-muted-foreground mb-4 max-w-xs">
+                  I can help you explore your Iceberg data lake. Ask me anything
+                  about your catalogs, tables, or data.
+                </p>
 
-                    <div className="w-full max-w-lg">
-                      <h4 className="text-sm font-medium text-muted-foreground mb-3">
-                        Try asking:
-                      </h4>
-                      <div className="space-y-2">
-                        {exampleQueries.map((query, index) => (
-                          <button
-                            key={index}
-                            onClick={() => setInput(query)}
-                            className="w-full text-left p-3 rounded-md border border-muted/50 hover:border-blue-300 hover:bg-blue-50/50 transition-colors text-sm"
+                <div className="w-full max-w-xs">
+                  <h4 className="text-xs font-medium text-muted-foreground mb-2">
+                    Try asking:
+                  </h4>
+                  <div className="space-y-1">
+                    {exampleQueries.map((query, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setInput(query)}
+                        className="w-full text-left p-2 rounded-md border border-muted/50 hover:border-blue-300 hover:bg-blue-50/50 transition-colors text-xs"
+                      >
+                        "{query}"
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <>
+                {messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={cn(
+                      "flex gap-2",
+                      message.role === "assistant"
+                        ? "justify-start"
+                        : "justify-end"
+                    )}
+                  >
+                    {message.role === "assistant" && (
+                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-100">
+                        <Bot className="h-3 w-3 text-blue-600" />
+                      </div>
+                    )}
+
+                    <div
+                      className={cn(
+                        "max-w-[85%] rounded-lg px-3 py-2",
+                        message.role === "assistant"
+                          ? "bg-muted/50 text-foreground"
+                          : "bg-blue-600 text-white"
+                      )}
+                    >
+                      {message.role === "assistant" &&
+                        renderToolInvocations(message)}
+
+                      <div className="prose prose-sm max-w-none">
+                        <MemoizedMarkdown
+                          id={message.id}
+                          content={message.content}
+                          variant={message.role === "user" ? "user" : "default"}
+                        />
+                      </div>
+
+                      {message.role === "assistant" && (
+                        <div className="mt-2 flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              handleCopy(message.content, message.id)
+                            }
+                            className="h-5 px-1 text-xs"
                           >
-                            "{query}"
-                          </button>
-                        ))}
+                            {isCopying === message.id ? (
+                              <Check className="h-3 w-3" />
+                            ) : (
+                              <Copy className="h-3 w-3" />
+                            )}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+
+                    {message.role === "user" && (
+                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-600">
+                        <User className="h-3 w-3 text-white" />
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {isLoading && (
+                  <div className="flex gap-2 justify-start">
+                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-100">
+                      <Bot className="h-3 w-3 text-blue-600" />
+                    </div>
+                    <div className="bg-muted/50 rounded-lg px-3 py-2">
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        <span className="text-xs text-muted-foreground">
+                          Thinking...
+                        </span>
                       </div>
                     </div>
                   </div>
-                ) : (
-                  <>
-                    {messages.map((message) => (
-                      <div
-                        key={message.id}
-                        className={cn(
-                          "flex gap-3",
-                          message.role === "assistant"
-                            ? "justify-start"
-                            : "justify-end"
-                        )}
-                      >
-                        {message.role === "assistant" && (
-                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100">
-                            <Bot className="h-4 w-4 text-blue-600" />
-                          </div>
-                        )}
-
-                        <div
-                          className={cn(
-                            "max-w-[80%] rounded-lg px-4 py-2",
-                            message.role === "assistant"
-                              ? "bg-muted/50 text-foreground"
-                              : "bg-blue-600 text-white"
-                          )}
-                        >
-                          {/* Tool Invocations - Now shown BEFORE the content */}
-                          {message.role === "assistant" &&
-                            renderToolInvocations(message)}
-
-                          <div className="prose prose-sm max-w-none">
-                            <MemoizedMarkdown
-                              id={message.id}
-                              content={message.content}
-                              variant={
-                                message.role === "user" ? "user" : "default"
-                              }
-                            />
-                          </div>
-
-                          {message.role === "assistant" && (
-                            <div className="mt-2 flex items-center gap-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() =>
-                                  handleCopy(message.content, message.id)
-                                }
-                                className="h-6 px-2 text-xs"
-                              >
-                                {isCopying === message.id ? (
-                                  <Check className="h-3 w-3" />
-                                ) : (
-                                  <Copy className="h-3 w-3" />
-                                )}
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-
-                        {message.role === "user" && (
-                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-600">
-                            <User className="h-4 w-4 text-white" />
-                          </div>
-                        )}
-                      </div>
-                    ))}
-
-                    {isLoading && (
-                      <div className="flex gap-3 justify-start">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100">
-                          <Bot className="h-4 w-4 text-blue-600" />
-                        </div>
-                        <div className="bg-muted/50 rounded-lg px-4 py-2">
-                          <div className="flex items-center gap-2">
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            <span className="text-sm text-muted-foreground">
-                              Thinking...
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </>
                 )}
+              </>
+            )}
 
-                <div ref={messagesEndRef} />
+            <div ref={messagesEndRef} />
+          </div>
+
+          <div className="border-t border-muted/50 p-3 flex-shrink-0">
+            <form onSubmit={handleSubmit} className="flex items-center gap-2">
+              <Textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Ask me anything about your data..."
+                className="min-h-[36px] max-h-24 resize-none text-sm"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault()
+                    handleSubmit(e as any)
+                  }
+                }}
+              />
+              <Button
+                type="submit"
+                disabled={!input.trim() || isLoading}
+                size="sm"
+                className="shrink-0 h-9 w-9 p-0"
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </form>
+
+            {error && (
+              <div className="mt-2 text-xs text-destructive">
+                Error: {error.message}
               </div>
-
-              {/* Input Area - Fixed at bottom */}
-              <div className="border-t border-muted/50 p-4 flex-shrink-0">
-                <form
-                  onSubmit={handleSubmit}
-                  className="flex items-center gap-3"
-                >
-                  <Textarea
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    placeholder="Ask me anything about your Iceberg data..."
-                    className="min-h-[44px] max-h-32 resize-none"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault()
-                        handleSubmit(e as any)
-                      }
-                    }}
-                  />
-                  <Button
-                    type="submit"
-                    disabled={!input.trim() || isLoading}
-                    size="sm"
-                    className="shrink-0"
-                  >
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </form>
-
-                {error && (
-                  <div className="mt-2 text-sm text-destructive">
-                    Error: {error.message}
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </SidebarInset>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   )
 }

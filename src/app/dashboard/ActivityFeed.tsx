@@ -9,6 +9,11 @@ import { useQueries } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import { getTableInfo } from "@/lib/client"
 import { useContext } from "react"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 export function ActivityFeed() {
   const { tables, isLoading: isLoadingTables } = useContext(OverviewContext)
@@ -121,15 +126,25 @@ export function ActivityFeed() {
               <GitCompare className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="font-medium">
-                <span className="text-gray-900">
-                  {activity?.catalog}.{activity?.namespace}.{activity?.table}
-                </span>
-                <span className="text-gray-500">
-                  {" "}
+              <div className="flex items-center gap-1 font-medium">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="text-gray-900 truncate">
+                      {activity?.catalog}.{activity?.namespace}.
+                      {activity?.table}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>
+                      {activity?.catalog}.{activity?.namespace}.
+                      {activity?.table}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+                <span className="text-gray-500 flex-shrink-0">
                   — Compaction job completed
                 </span>
-              </p>
+              </div>
               <p className="text-sm text-gray-500">
                 {formatDistanceToNow(new Date(activity.timestamp), {
                   addSuffix: true,
