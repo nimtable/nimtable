@@ -9,9 +9,10 @@ import { deleteUser, getUsers, updateUser } from "@/lib/client/sdk.gen"
 import { UserTable } from "@/components/users/user-table"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
-
+import { useAuth } from "@/contexts/auth-context"
 export function UserManagement() {
   const { toast } = useToast()
+  const { user } = useAuth()
 
   const { data: users, refetch } = useQuery({
     queryKey: ["users"],
@@ -73,13 +74,15 @@ export function UserManagement() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="mb-2 text-3xl font-semibold">Users</h2>
-        <Button
-          onClick={() => setOpen(true)}
-          className="flex items-center gap-2"
-        >
-          <PlusCircle className="h-4 w-4" />
-          Add User
-        </Button>
+        {user?.role === "admin" && (
+          <Button
+            onClick={() => setOpen(true)}
+            className="flex items-center gap-2"
+          >
+            <PlusCircle className="h-4 w-4" />
+            Add User
+          </Button>
+        )}
       </div>
 
       <UserTable

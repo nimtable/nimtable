@@ -18,16 +18,19 @@ package io.nimtable;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.nimtable.db.PersistenceManager;
 import io.nimtable.db.entity.Catalog;
 import io.nimtable.db.repository.CatalogRepository;
 import io.nimtable.db.repository.UserRepository;
 import io.nimtable.spark.LocalSpark;
+import io.nimtable.util.JwtUtil;
 import java.io.File;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.iceberg.CatalogUtil;
 import org.apache.iceberg.rest.RESTCatalogAdapter;
@@ -42,42 +45,34 @@ import org.slf4j.LoggerFactory;
 
 public class Server {
     private static final Logger LOG = LoggerFactory.getLogger(Server.class);
+    private static final Map<String, Map<String, String>> CATALOGS = new ConcurrentHashMap<>();
+    private final Config config;
+    private final ObjectMapper objectMapper;
     private static ServletContextHandler apiContext;
 
-    private Server() {}
+    private Server() {
+        this.config = null;
+        this.objectMapper = new ObjectMapper();
+        this.objectMapper.registerModule(new JavaTimeModule());
+    }
+
+    public Server(Config config) {
+        this.config = config;
+        this.objectMapper = new ObjectMapper();
+        this.objectMapper.registerModule(new JavaTimeModule());
+        JwtUtil.initialize(config);
+    }
 
     public static void registerCatalog(String name, Map<String, String> properties) {
-        LOG.info("Dynamically registering catalog: {} with properties: {}", name, properties);
-        try {
-            org.apache.iceberg.catalog.Catalog icebergCatalog =
-                    CatalogUtil.buildIcebergCatalog(name, properties, new Configuration());
+        CATALOGS.put(name, properties);
+    }
 
-            RESTCatalogAdapter adapter = new RESTCatalogAdapter(icebergCatalog);
-            RESTCatalogServlet servlet = new RESTCatalogServlet(adapter);
-            ServletHolder servletHolder = new ServletHolder(servlet);
-            apiContext.addServlet(servletHolder, "/catalog/" + name + "/*");
+    public static Map<String, Map<String, String>> getCatalogs() {
+        return CATALOGS;
+    }
 
-            // Add a listener to clean up the adapter when the servlet is destroyed
-            servletHolder.addEventListener(
-                    new AbstractLifeCycle.AbstractLifeCycleListener() {
-                        @Override
-                        public void lifeCycleStopping(LifeCycle event) {
-                            try {
-                                adapter.close();
-                            } catch (Exception e) {
-                                LOG.error(
-                                        "Error closing RESTCatalogAdapter for catalog: {}",
-                                        name,
-                                        e);
-                            }
-                        }
-                    });
-
-            LOG.info("Successfully registered catalog: {}", name);
-        } catch (Exception e) {
-            LOG.error("Failed to register catalog: {}", name, e);
-            throw new RuntimeException("Failed to register catalog: " + name, e);
-        }
+    public static void clearCatalogs() {
+        CATALOGS.clear();
     }
 
     public static void main(String[] args) throws Exception {
@@ -89,8 +84,13 @@ public class Server {
         // Initialize Persistence Manager
         PersistenceManager.initialize(dbConfig);
 
+        // Initialize repositories
+        UserRepository userRepository = new UserRepository();
+
+        // Initialize JWT
+        JwtUtil.initialize(config);
+
         // --- Instantiate Repositories ---
-        UserRepository userRepository = new UserRepository(); // Instantiate UserRepository
         CatalogRepository catalogRepository = new CatalogRepository(); // Simple instantiation
 
         // init spark
