@@ -16,7 +16,7 @@
 
 "use client"
 
-import React, { createContext, useContext, useState, useCallback } from "react"
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react"
 
 interface AIAgentContextType {
   isOpen: boolean
@@ -37,9 +37,51 @@ export function useAIAgent() {
   return context
 }
 
+// Helper functions for localStorage
+const getStoredState = () => {
+  if (typeof window === 'undefined') return { isOpen: false, isFullscreen: false }
+  
+  try {
+    const stored = localStorage.getItem('ai-agent-state')
+    if (stored) {
+      return JSON.parse(stored)
+    }
+  } catch (error) {
+    console.warn('Failed to parse AI agent state from localStorage:', error)
+  }
+  
+  return { isOpen: false, isFullscreen: false }
+}
+
+const saveState = (isOpen: boolean, isFullscreen: boolean) => {
+  if (typeof window === 'undefined') return
+  
+  try {
+    localStorage.setItem('ai-agent-state', JSON.stringify({ isOpen, isFullscreen }))
+  } catch (error) {
+    console.warn('Failed to save AI agent state to localStorage:', error)
+  }
+}
+
 export function AIAgentProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [isInitialized, setIsInitialized] = useState(false)
+
+  // Initialize state from localStorage on mount
+  useEffect(() => {
+    const stored = getStoredState()
+    setIsOpen(stored.isOpen)
+    setIsFullscreen(stored.isFullscreen)
+    setIsInitialized(true)
+  }, [])
+
+  // Save state to localStorage whenever it changes
+  useEffect(() => {
+    if (isInitialized) {
+      saveState(isOpen, isFullscreen)
+    }
+  }, [isOpen, isFullscreen, isInitialized])
 
   const openAgent = useCallback(() => {
     setIsOpen(true)
