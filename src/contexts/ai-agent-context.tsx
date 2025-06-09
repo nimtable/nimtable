@@ -20,9 +20,11 @@ import React, { createContext, useContext, useState, useCallback } from "react"
 
 interface AIAgentContextType {
   isOpen: boolean
+  isFullscreen: boolean
   openAgent: () => void
   closeAgent: () => void
   toggleAgent: () => void
+  toggleFullscreen: () => void
 }
 
 const AIAgentContext = createContext<AIAgentContextType | null>(null)
@@ -37,6 +39,7 @@ export function useAIAgent() {
 
 export function AIAgentProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
 
   const openAgent = useCallback(() => {
     setIsOpen(true)
@@ -44,15 +47,20 @@ export function AIAgentProvider({ children }: { children: React.ReactNode }) {
 
   const closeAgent = useCallback(() => {
     setIsOpen(false)
+    setIsFullscreen(false)
   }, [])
 
   const toggleAgent = useCallback(() => {
     setIsOpen((prev) => !prev)
   }, [])
 
+  const toggleFullscreen = useCallback(() => {
+    setIsFullscreen((prev) => !prev)
+  }, [])
+
   return (
     <AIAgentContext.Provider
-      value={{ isOpen, openAgent, closeAgent, toggleAgent }}
+      value={{ isOpen, isFullscreen, openAgent, closeAgent, toggleAgent, toggleFullscreen }}
     >
       {children}
     </AIAgentContext.Provider>
