@@ -16,13 +16,27 @@
 
 "use client"
 
-import React, { createContext, useContext, useState, useCallback } from "react"
+import React, {
+  createContext,
+  useContext,
+  useCallback,
+  useEffect,
+  useState,
+} from "react"
+import { useLocalStorage } from "@/hooks/use-local-storage"
 
 interface AIAgentContextType {
   isOpen: boolean
+  isFullscreen: boolean
   openAgent: () => void
   closeAgent: () => void
   toggleAgent: () => void
+  toggleFullscreen: () => void
+}
+
+interface AIAgentState {
+  isOpen: boolean
+  isFullscreen: boolean
 }
 
 const AIAgentContext = createContext<AIAgentContextType | null>(null)
@@ -36,23 +50,54 @@ export function useAIAgent() {
 }
 
 export function AIAgentProvider({ children }: { children: React.ReactNode }) {
-  const [isOpen, setIsOpen] = useState(false)
+  const [agentState, setAgentState] = useLocalStorage<AIAgentState>(
+    "ai-agent-state",
+    { isOpen: false, isFullscreen: false }
+  )
+  const [isInitialized, setIsInitialized] = useState(false)
+
+  // Ensure client-side hydration compatibility
+  useEffect(() => {
+    setIsInitialized(true)
+  }, [])
+
+  // Extract state values
+  const { isOpen, isFullscreen } = agentState
 
   const openAgent = useCallback(() => {
-    setIsOpen(true)
-  }, [])
+    if (isInitialized) {
+      setAgentState((prev) => ({ ...prev, isOpen: true }))
+    }
+  }, [setAgentState, isInitialized])
 
   const closeAgent = useCallback(() => {
-    setIsOpen(false)
-  }, [])
+    if (isInitialized) {
+      setAgentState({ isOpen: false, isFullscreen: false })
+    }
+  }, [setAgentState, isInitialized])
 
   const toggleAgent = useCallback(() => {
-    setIsOpen((prev) => !prev)
-  }, [])
+    if (isInitialized) {
+      setAgentState((prev) => ({ ...prev, isOpen: !prev.isOpen }))
+    }
+  }, [setAgentState, isInitialized])
+
+  const toggleFullscreen = useCallback(() => {
+    if (isInitialized) {
+      setAgentState((prev) => ({ ...prev, isFullscreen: !prev.isFullscreen }))
+    }
+  }, [setAgentState, isInitialized])
 
   return (
     <AIAgentContext.Provider
-      value={{ isOpen, openAgent, closeAgent, toggleAgent }}
+      value={{
+        isOpen: isInitialized ? isOpen : false,
+        isFullscreen: isInitialized ? isFullscreen : false,
+        openAgent,
+        closeAgent,
+        toggleAgent,
+        toggleFullscreen,
+      }}
     >
       {children}
     </AIAgentContext.Provider>

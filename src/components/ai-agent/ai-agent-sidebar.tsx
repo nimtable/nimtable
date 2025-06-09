@@ -28,7 +28,10 @@ import {
   Database,
   ChevronDown,
   ChevronRight,
-  Minimize2,
+  Plus,
+  Maximize2,
+  Minimize,
+  X,
 } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -46,9 +49,15 @@ import {
 import { MemoizedMarkdown } from "@/components/memoized-markdown"
 import { ToolInvocation, UIMessage } from "ai"
 import { useAIAgent } from "@/contexts/ai-agent-context"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 export function AIAgentSidebar() {
-  const { isOpen, closeAgent } = useAIAgent()
+  const { isOpen, isFullscreen, closeAgent, toggleFullscreen } = useAIAgent()
   const { toast } = useToast()
   const [isCopying, setIsCopying] = useState<string | null>(null)
   const [expandedTools, setExpandedTools] = useState<Record<string, boolean>>(
@@ -56,13 +65,19 @@ export function AIAgentSidebar() {
   )
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  const { messages, input, setInput, handleSubmit, isLoading, error } = useChat(
-    {
-      api: "/api/agent/chat",
-      maxSteps: 5,
-      experimental_throttle: 50,
-    }
-  )
+  const {
+    messages,
+    input,
+    setInput,
+    handleSubmit,
+    isLoading,
+    error,
+    setMessages,
+  } = useChat({
+    api: "/api/agent/chat",
+    maxSteps: 5,
+    experimental_throttle: 50,
+  })
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -92,6 +107,11 @@ export function AIAgentSidebar() {
         title: "Failed to copy to clipboard",
       })
     }
+  }
+
+  const handleNewChat = () => {
+    setMessages([])
+    setInput("")
   }
 
   const renderQueryResults = (result: any) => {
@@ -271,14 +291,59 @@ export function AIAgentSidebar() {
               <Bot className="h-5 w-5 text-blue-500" />
               <h2 className="font-semibold">Nimtable Copilot</h2>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={closeAgent}
-              className="h-8 w-8 p-0 hover:bg-muted/50"
-            >
-              <Minimize2 className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-1">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleNewChat}
+                      className="h-8 w-8 p-0 hover:bg-muted/50"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>New Chat</p>
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={toggleFullscreen}
+                      className="h-8 w-8 p-0 hover:bg-muted/50"
+                    >
+                      {isFullscreen ? (
+                        <Minimize className="h-4 w-4" />
+                      ) : (
+                        <Maximize2 className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{isFullscreen ? "Exit Fullscreen" : "Fullscreen"}</p>
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={closeAgent}
+                      className="h-8 w-8 p-0 hover:bg-muted/50"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Close Agent</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
           </div>
         </CardHeader>
 
@@ -351,20 +416,29 @@ export function AIAgentSidebar() {
 
                       {message.role === "assistant" && (
                         <div className="mt-2 flex items-center gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() =>
-                              handleCopy(message.content, message.id)
-                            }
-                            className="h-5 px-1 text-xs"
-                          >
-                            {isCopying === message.id ? (
-                              <Check className="h-3 w-3" />
-                            ) : (
-                              <Copy className="h-3 w-3" />
-                            )}
-                          </Button>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleCopy(message.content, message.id)
+                                  }
+                                  className="h-5 px-1 text-xs"
+                                >
+                                  {isCopying === message.id ? (
+                                    <Check className="h-3 w-3" />
+                                  ) : (
+                                    <Copy className="h-3 w-3" />
+                                  )}
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Copy Content</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         </div>
                       )}
                     </div>
@@ -412,14 +486,23 @@ export function AIAgentSidebar() {
                   }
                 }}
               />
-              <Button
-                type="submit"
-                disabled={!input.trim() || isLoading}
-                size="sm"
-                className="shrink-0 h-9 w-9 p-0"
-              >
-                <Send className="h-4 w-4" />
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      type="submit"
+                      disabled={!input.trim() || isLoading}
+                      size="sm"
+                      className="shrink-0 h-9 w-9 p-0"
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Send Message</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </form>
 
             {error && (
