@@ -65,13 +65,19 @@ export function AIAgentSidebar() {
   )
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  const { messages, input, setInput, handleSubmit, isLoading, error, setMessages } = useChat(
-    {
-      api: "/api/agent/chat",
-      maxSteps: 5,
-      experimental_throttle: 50,
-    }
-  )
+  const {
+    messages,
+    input,
+    setInput,
+    handleSubmit,
+    isLoading,
+    error,
+    setMessages,
+  } = useChat({
+    api: "/api/agent/chat",
+    maxSteps: 5,
+    experimental_throttle: 50,
+  })
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })

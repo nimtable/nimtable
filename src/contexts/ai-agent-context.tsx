@@ -16,7 +16,13 @@
 
 "use client"
 
-import React, { createContext, useContext, useState, useCallback, useEffect } from "react"
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+} from "react"
 
 interface AIAgentContextType {
   isOpen: boolean
@@ -39,27 +45,31 @@ export function useAIAgent() {
 
 // Helper functions for localStorage
 const getStoredState = () => {
-  if (typeof window === 'undefined') return { isOpen: false, isFullscreen: false }
-  
+  if (typeof window === "undefined")
+    return { isOpen: false, isFullscreen: false }
+
   try {
-    const stored = localStorage.getItem('ai-agent-state')
+    const stored = localStorage.getItem("ai-agent-state")
     if (stored) {
       return JSON.parse(stored)
     }
   } catch (error) {
-    console.warn('Failed to parse AI agent state from localStorage:', error)
+    console.warn("Failed to parse AI agent state from localStorage:", error)
   }
-  
+
   return { isOpen: false, isFullscreen: false }
 }
 
 const saveState = (isOpen: boolean, isFullscreen: boolean) => {
-  if (typeof window === 'undefined') return
-  
+  if (typeof window === "undefined") return
+
   try {
-    localStorage.setItem('ai-agent-state', JSON.stringify({ isOpen, isFullscreen }))
+    localStorage.setItem(
+      "ai-agent-state",
+      JSON.stringify({ isOpen, isFullscreen })
+    )
   } catch (error) {
-    console.warn('Failed to save AI agent state to localStorage:', error)
+    console.warn("Failed to save AI agent state to localStorage:", error)
   }
 }
 
@@ -102,7 +112,14 @@ export function AIAgentProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AIAgentContext.Provider
-      value={{ isOpen, isFullscreen, openAgent, closeAgent, toggleAgent, toggleFullscreen }}
+      value={{
+        isOpen,
+        isFullscreen,
+        openAgent,
+        closeAgent,
+        toggleAgent,
+        toggleFullscreen,
+      }}
     >
       {children}
     </AIAgentContext.Provider>
