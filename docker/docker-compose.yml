@@ -69,6 +69,8 @@ configs:
       admin:
         username: admin
         password: admin
+      jwt:
+        secretKey: "nimtable-jwt-secret-key-2025-production-must-be-at-least-32-bytes-long"
       database:
         # You can also point to your own Postgres database, instead of using the one provided by docker-compose.
         url: jdbc:postgresql://database:5432/nimtable
