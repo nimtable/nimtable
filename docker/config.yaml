@@ -1,0 +1,11 @@
+# Nimtable config file
+server:
+  port: 8182
+  host: 0.0.0.0
+admin:
+  username: admin
+  password: admin
+database:
+  url: jdbc:postgresql://database:5432/nimtable
+  username: nimtable_user
+  password: password

@@ -1,10 +1,12 @@
 FROM eclipse-temurin:17-jdk AS build
 
-# Install Node.js 23
+# Install Node.js 23 and pnpm
 RUN apt-get update && \
     apt-get install -y curl && \
     curl -fsSL https://deb.nodesource.com/setup_23.x | bash - && \
     apt-get install -y nodejs && \
+    corepack enable && \
+    corepack prepare pnpm@latest --activate && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -22,16 +24,16 @@ COPY backend/build.gradle /nimtable/backend/
 RUN cd /nimtable/backend && ./gradlew downloadDependencies --no-daemon
 
 
-# Copy package files for npm dependency download
-COPY package.json package-lock.json ./
-# Pre-download npm dependencies
-RUN npm ci
+# Copy package files for pnpm dependency download
+COPY package.json pnpm-lock.yaml ./
+# Pre-download pnpm dependencies
+RUN pnpm install --frozen-lockfile
 
 
 # Copy project files
 COPY . .
 # Build frontend
-RUN npm run build
+RUN pnpm run build
 # Build backend
 RUN cd /nimtable/backend && ./gradlew build --no-daemon
 

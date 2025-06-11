@@ -23,9 +23,8 @@ services:
     ports:
       - "8182:8182"
     # Mount configuration files
-    configs:
-      - source: config.yaml
-        target: /nimtable/config.yaml
+    volumes:
+      - ./config.yaml:/nimtable/config.yaml
     environment:
       JAVA_OPTS: -Xmx2g -Xms512m
     networks:
@@ -57,20 +56,3 @@ networks:
     driver: bridge
 volumes:
   nimtable-data-postgres:
-
-configs:
-  config.yaml:
-    content: |
-      # Nimtable config file to be mounted into the Docker containers.
-      # See backend/config.yaml for more complete example
-      server:
-        port: 8182
-        host: 0.0.0.0
-      admin:
-        username: admin
-        password: admin
-      database:
-        # You can also point to your own Postgres database, instead of using the one provided by docker-compose.
-        url: jdbc:postgresql://database:5432/nimtable
-        username: nimtable_user
-        password: password
