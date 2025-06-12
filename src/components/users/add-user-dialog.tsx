@@ -33,7 +33,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { errorToString } from "@/lib/utils"
-import { createUser } from "@/lib/client"
+import { createUser } from "@/lib/acc-api/client/sdk.gen"
 
 const formSchema = z.object({
   name: z.string().min(3, {

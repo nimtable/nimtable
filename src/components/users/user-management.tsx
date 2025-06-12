@@ -5,7 +5,7 @@ import { PlusCircle } from "lucide-react"
 import { useState } from "react"
 
 import { AddUserDialog } from "@/components/users/add-user-dialog"
-import { deleteUser, getUsers, updateUser } from "@/lib/client/sdk.gen"
+import { deleteUser, getUsers, updateUser } from "@/lib/acc-api/client/sdk.gen"
 import { UserTable } from "@/components/users/user-table"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"

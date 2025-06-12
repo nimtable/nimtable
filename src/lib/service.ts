@@ -15,12 +15,46 @@
  */
 
 import { client } from "./client/client.gen"
+import { client as accClient } from "./acc-api/client/client.gen"
 import { toast } from "@/hooks/use-toast"
 import { getApiBaseUrl } from "./api-config"
+
+// Handle 401 response
+const handleUnauthorized = async () => {
+  try {
+    // Only redirect if not already on login page
+    if (!window.location.pathname.startsWith("/login")) {
+      window.location.href = "/login"
+    }
+  } catch (error) {
+    console.error("Logout failed:", error)
+  }
+}
+
+accClient.setConfig({
+  credentials: "include",
+  throwOnError: true,
+})
+
 client.setConfig({
   baseUrl: getApiBaseUrl(),
   credentials: "include",
   throwOnError: true,
+})
+
+accClient.interceptors.response.use(async (response) => {
+  const ContentType = response.headers.get("Content-Type")
+  if (ContentType?.startsWith("text/plain") && !response.ok) {
+    const message = await response.clone().text()
+    toast({
+      title: "Error",
+      description: message,
+    })
+  }
+  if (response.status === 401) {
+    await handleUnauthorized()
+  }
+  return response
 })
 
 client.interceptors.response.use(async (response) => {
@@ -32,6 +66,10 @@ client.interceptors.response.use(async (response) => {
       description: message,
     })
   }
+  if (response.status === 401) {
+    await handleUnauthorized()
+  }
   return response
 })
+
 export const service = client
