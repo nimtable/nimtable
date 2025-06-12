@@ -101,8 +101,6 @@ JWT_SECRET="your-super-secret-jwt-key-change-this-in-production"
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=admin
 
-# Node environment
-NODE_ENV="development"
 ```
 
 To use these environment variables with Docker, you need to explicitly configure them in your `docker-compose.yml` file under the `environment` section of the relevant service.
