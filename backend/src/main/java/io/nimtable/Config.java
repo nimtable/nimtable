@@ -35,17 +35,13 @@ public record Config(
         Database database,
         List<Catalog> catalogs,
         Compactor compactor) {
-    public record Server(int port, String host) {
-    }
+    public record Server(int port, String host) {}
 
-    public record Admin(String username, String password) {
-    }
+    public record Admin(String username, String password) {}
 
-    public record Database(String url, String username, String password) {
-    }
+    public record Database(String url, String username, String password) {}
 
-    public record Compactor(String ip, int port) {
-    }
+    public record Compactor(String ip, int port) {}
 
     @JsonDeserialize(using = CatalogDeserializer.class)
     public record Catalog(String name, Map<String, String> properties) {

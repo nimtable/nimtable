@@ -16,9 +16,9 @@
 
 package io.nimtable;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import io.nimtable.db.PersistenceManager;
 import io.nimtable.db.entity.Catalog;
 import io.nimtable.db.repository.CatalogRepository;
@@ -95,8 +95,9 @@ public class Server {
         if (config.catalogs() != null) {
             for (Config.Catalog catalog : config.catalogs()) {
                 LOG.info("Creating catalog with properties: {}", catalog.properties());
-                org.apache.iceberg.catalog.Catalog icebergCatalog = CatalogUtil.buildIcebergCatalog(
-                        catalog.name(), catalog.properties(), new Configuration());
+                org.apache.iceberg.catalog.Catalog icebergCatalog =
+                        CatalogUtil.buildIcebergCatalog(
+                                catalog.name(), catalog.properties(), new Configuration());
 
                 try (RESTCatalogAdapter adapter = new RESTCatalogAdapter(icebergCatalog)) {
                     RESTCatalogServlet servlet = new RESTCatalogServlet(adapter);
@@ -115,8 +116,9 @@ public class Server {
             properties.put("warehouse", catalogEntity.getWarehouse());
             properties.put("uri", catalogEntity.getUri());
 
-            org.apache.iceberg.catalog.Catalog icebergCatalog = CatalogUtil.buildIcebergCatalog(
-                    catalogEntity.getName(), properties, new Configuration());
+            org.apache.iceberg.catalog.Catalog icebergCatalog =
+                    CatalogUtil.buildIcebergCatalog(
+                            catalogEntity.getName(), properties, new Configuration());
 
             try (RESTCatalogAdapter adapter = new RESTCatalogAdapter(icebergCatalog)) {
                 RESTCatalogServlet servlet = new RESTCatalogServlet(adapter);
@@ -128,8 +130,9 @@ public class Server {
         // Create handler list with API context
         HandlerList handlers = new HandlerList();
         handlers.addHandler(apiContext);
-        org.eclipse.jetty.server.Server httpServer = new org.eclipse.jetty.server.Server(
-                new InetSocketAddress(config.server().host(), config.server().port()));
+        org.eclipse.jetty.server.Server httpServer =
+                new org.eclipse.jetty.server.Server(
+                        new InetSocketAddress(config.server().host(), config.server().port()));
         httpServer.setHandler(handlers);
 
         // Add listener bean to close PersistenceManager on shutdown
