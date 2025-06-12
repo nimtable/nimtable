@@ -21,20 +21,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log("Attempting to find user:", username)
-
     // Find user in database
     const user = await db.user.findUnique({
       where: { username },
       include: { roles: true },
     })
 
-    console.log("User found:", user)
-
     if (user) {
       // Verify password
       const isValidPassword = await compare(password, user.password_hash)
-      console.log("Password validation result:", isValidPassword)
 
       if (!isValidPassword) {
         return NextResponse.json(
