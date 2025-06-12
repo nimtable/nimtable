@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // rewrites is only for development (npm run dev); it won't affect static export
+  // rewrites is only for development (pnpm run dev); it won't affect static export
   rewrites: () => [
     {
       source: "/api/:path*",
@@ -21,7 +21,7 @@ const nextConfig = {
     // your project has ESLint errors.
     ignoreDuringBuilds: true,
   },
-  distDir: process.env.NODE_ENV === "development" ? ".next/dev" : ".next/build"
+  distDir: process.env.NODE_ENV === "development" ? ".next/dev" : ".next/build",
 }
 
 module.exports = nextConfig

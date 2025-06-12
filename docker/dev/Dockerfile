@@ -31,8 +31,11 @@ FROM node:23-alpine AS nimtable-frontend-runtime
 
 WORKDIR /nimtable-web
 
-COPY package.json package-lock.json ./
-RUN npm ci --only=production
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile --prod
 COPY .next .next
 
-ENTRYPOINT ["npm", "start"]
+ENTRYPOINT ["pnpm", "start"]

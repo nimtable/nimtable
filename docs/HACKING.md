@@ -25,10 +25,10 @@ First start the backend server as mentioned above.
 
 ```bash
 # Install dependencies
-npm install
+pnpm install
 
 # Start development server
-npm run dev
+pnpm run dev
 ```
 
 The UI will be available at http://localhost:3000.
@@ -45,7 +45,7 @@ The frontend API interfaces and types can be automatically generated from the Op
 
 ```bash
 # Generate TypeScript interfaces and API client
-npm run gen-client-api
+pnpm run gen-client-api
 ```
 
 This will generate the API client and types in `sdk.gen.ts` based on the OpenAPI specification in `api.yaml`. After modifying the `api.yaml` file, you should run this command to update the generated code.
@@ -66,8 +66,8 @@ docker exec -it spark-iceberg spark-sql
 
 ```bash
 # Frontend linting
-npm run lint        # Check
-npm run lint --fix  # Fix
+pnpm run lint        # Check
+pnpm run lint --fix  # Fix
 
 # Backend linting
 cd backend
