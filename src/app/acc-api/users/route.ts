@@ -21,6 +21,22 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { hash } from "bcryptjs"
 
+interface User {
+  id: bigint
+  username: string
+  roles: {
+    name: string
+    id: bigint
+    createdAt: Date
+    updatedAt: Date
+    description: string | null
+  }
+  password_hash: string
+  role_id: bigint
+  createdAt: Date
+  updatedAt: Date
+}
+
 // GET /acc-api/users
 export async function GET() {
   try {
@@ -30,7 +46,7 @@ export async function GET() {
       },
     })
     return NextResponse.json(
-      users.map((user) => ({
+      users.map((user: User) => ({
         id: Number(user.id),
         username: user.username,
         role: user.roles.name,
