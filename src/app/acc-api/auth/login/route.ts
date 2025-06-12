@@ -5,9 +5,7 @@ import { db } from "@/lib/db"
 import { LoginResponse } from "@/lib/acc-api/client/types.gen"
 import { AUTH_COOKIE_NAME } from "../../const"
 
-const JWT_SECRET =
-  process.env.JWT_SECRET ||
-  "your-super-secret-jwt-key-change-this-in-production"
+const JWT_SECRET = process.env.JWT_SECRET || ""
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "admin"
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin"
 
