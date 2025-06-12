@@ -2,62 +2,16 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { hash } from "bcryptjs"
 
-// GET /acc-api/users/{userId}
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { userId: string } }
-) {
-  try {
-    const userId = BigInt(params.userId)
-    if (isNaN(Number(userId))) {
-      return NextResponse.json(
-        { error: "Invalid user ID" },
-        { status: 400 }
-      )
-    }
-
-    const user = await db.user.findUnique({
-      where: { id: userId },
-      include: {
-        roles: true,
-      },
-    })
-
-    if (!user) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      )
-    }
-
-    return NextResponse.json({
-      id: Number(user.id),
-      username: user.username,
-      role: user.roles.name,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    })
-  } catch (error) {
-    console.error("Error fetching user:", error)
-    return NextResponse.json(
-      { error: "Failed to fetch user" },
-      { status: 500 }
-    )
-  }
-}
-
 // PUT /acc-api/users/{userId}
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
-    const userId = BigInt(params.userId)
+    const res = await params
+    const userId = BigInt(res.userId)
     if (isNaN(Number(userId))) {
-      return NextResponse.json(
-        { error: "Invalid user ID" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: "Invalid user ID" }, { status: 400 })
     }
 
     const body = await request.json()
@@ -69,10 +23,7 @@ export async function PUT(
     })
 
     if (!existingUser) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
     // Check if new username is already taken by another user
@@ -123,17 +74,15 @@ export async function PUT(
 // DELETE /acc-api/users/{userId}
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
-  console.log("Delete user request received for ID:", params.userId)
+  const res = await params
+  console.log("Delete user request received for ID:", res.userId)
   try {
-    const userId = BigInt(params.userId)
+    const userId = BigInt(res.userId)
     if (isNaN(Number(userId))) {
       console.log("Invalid user ID format")
-      return NextResponse.json(
-        { error: "Invalid user ID" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: "Invalid user ID" }, { status: 400 })
     }
 
     // Check if user exists
@@ -144,10 +93,7 @@ export async function DELETE(
 
     if (!existingUser) {
       console.log("User not found")
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
     // Delete user
@@ -165,4 +111,4 @@ export async function DELETE(
       { status: 500 }
     )
   }
-} 
+}
