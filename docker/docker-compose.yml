@@ -11,7 +11,6 @@ services:
       - JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
       - ADMIN_USERNAME=admin
       - ADMIN_PASSWORD=admin
-      - NODE_ENV=development
     depends_on:
       - nimtable
     networks:

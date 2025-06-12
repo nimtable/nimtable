@@ -3,7 +3,7 @@ import { db } from "@/lib/db"
 import { hash } from "bcryptjs"
 
 // GET /acc-api/users
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const users = await db.user.findMany({
       include: {
