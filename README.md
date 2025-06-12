@@ -86,6 +86,27 @@ database:
   password: password
 ```
 
+### Environment Variables
+
+Nimtable supports configuration through environment variables. You can set the following environment variables in your `.env` file:
+
+```bash
+# Database connection
+DATABASE_URL="postgresql://nimtable_user:password@localhost:5432/nimtable_db?schema=public"
+
+# JWT configuration
+JWT_SECRET="your-super-secret-jwt-key-change-this-in-production"
+
+# Admin credentials
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=admin
+
+# Node environment
+NODE_ENV="development"
+```
+
+To use these environment variables with Docker, you need to explicitly configure them in your `docker-compose.yml` file under the `environment` section of the relevant service.
+
 ### Database Configuration
 
 Nimtable needs a PostgreSQL database to store data.
