@@ -27,8 +27,8 @@ add_license() {
     fi
 }
 
-# process all TypeScript files
-find src/lib/client -name "*.ts" | while read -r file; do
+# process all TypeScript files in both directories
+find src/lib/client src/lib/acc-api/client -name "*.ts" | while read -r file; do
     add_license "$file"
 done
 
