@@ -1,19 +1,3 @@
-/*
- * Copyright 2025 Nimtable
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 import { NextRequest, NextResponse } from "next/server"
 import { sign } from "jsonwebtoken"
 import { compare } from "bcryptjs"
@@ -21,7 +5,9 @@ import { db } from "@/lib/db"
 import { LoginResponse } from "@/lib/acc-api/client/types.gen"
 import { AUTH_COOKIE_NAME } from "../../const"
 
-const JWT_SECRET = process.env.JWT_SECRET || ""
+const JWT_SECRET =
+  process.env.JWT_SECRET ||
+  "your-super-secret-jwt-key-change-this-in-production"
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "admin"
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin"
 
@@ -37,15 +23,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    console.log("Attempting to find user:", username)
+
     // Find user in database
     const user = await db.user.findUnique({
       where: { username },
       include: { roles: true },
     })
 
+    console.log("User found:", user)
+
     if (user) {
       // Verify password
       const isValidPassword = await compare(password, user.password_hash)
+      console.log("Password validation result:", isValidPassword)
 
       if (!isValidPassword) {
         return NextResponse.json(
