@@ -15,13 +15,14 @@
  */
 
 import { NextResponse } from "next/server"
+import { AUTH_COOKIE_NAME } from "../../const"
 
 export async function POST() {
   const response = NextResponse.json({ success: true })
 
   // Clear the token cookie
   response.cookies.set({
-    name: "token",
+    name: AUTH_COOKIE_NAME,
     value: "",
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
