@@ -93,6 +93,9 @@ jobs:
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Generate Prisma Client
+        run: pnpm prisma generate
+
       - name: Build frontend
         run: pnpm run build
 

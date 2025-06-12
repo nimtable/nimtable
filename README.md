@@ -45,6 +45,8 @@ Nimtable acts as a bridge between users and catalog servers, providing both an i
 
 ## Quick Start
 
+### Using Docker (Recommended for Production)
+
 The fastest way to get started is using Docker:
 
 ```bash
@@ -61,6 +63,32 @@ docker compose down
 ```
 
 Access the UI at http://localhost:3000
+
+### Local Development
+
+For local development, follow these steps:
+
+1. Install dependencies:
+```bash
+pnpm install
+```
+
+2. Generate Prisma client:
+```bash
+pnpm prisma generate
+```
+
+3. Start the development server:
+```bash
+pnpm dev
+```
+
+The application will be available at http://localhost:3000
+
+Note: You need to run `pnpm prisma generate` after:
+- First time setup
+- Pulling new changes that include Prisma schema updates
+- Installing new dependencies
 
 ## Configuration
 
