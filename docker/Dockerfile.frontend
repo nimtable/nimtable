@@ -11,6 +11,12 @@ COPY package.json pnpm-lock.yaml ./
 # Install dependencies
 RUN pnpm install --frozen-lockfile
 
+# Copy Prisma schema and related files
+COPY prisma ./prisma/
+
+# Generate Prisma client
+RUN pnpm prisma generate
+
 # Copy source code
 COPY . .
 
