@@ -34,6 +34,24 @@ export type LogoutResponse = {
     success: boolean;
 };
 
+export type PasswordResetRequest = {
+    /**
+     * Current password for verification
+     */
+    currentPassword: string;
+    /**
+     * New password to set
+     */
+    newPassword: string;
+};
+
+export type PasswordResetResponse = {
+    /**
+     * Success message
+     */
+    message: string;
+};
+
 export type _Error = {
     code: string;
     message: string;
@@ -130,6 +148,43 @@ export type LogoutResponses = {
 };
 
 export type LogoutResponse2 = LogoutResponses[keyof LogoutResponses];
+
+export type ResetPasswordData = {
+    body: PasswordResetRequest;
+    path?: never;
+    query?: never;
+    url: '/acc-api/auth/reset-password';
+};
+
+export type ResetPasswordErrors = {
+    /**
+     * Invalid request parameters
+     */
+    400: _Error;
+    /**
+     * Unauthorized or invalid current password
+     */
+    401: _Error;
+    /**
+     * User not found
+     */
+    404: _Error;
+    /**
+     * Internal server error
+     */
+    500: _Error;
+};
+
+export type ResetPasswordError = ResetPasswordErrors[keyof ResetPasswordErrors];
+
+export type ResetPasswordResponses = {
+    /**
+     * Password updated successfully
+     */
+    200: PasswordResetResponse;
+};
+
+export type ResetPasswordResponse = ResetPasswordResponses[keyof ResetPasswordResponses];
 
 export type GetCurrentUserProfileData = {
     body?: never;
