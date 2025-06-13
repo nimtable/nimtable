@@ -32,6 +32,8 @@ RUN pnpm install --frozen-lockfile
 
 # Copy project files
 COPY . .
+# Generate Prisma client for frontend
+RUN pnpm prisma generate
 # Build frontend
 RUN pnpm run build
 # Build backend
