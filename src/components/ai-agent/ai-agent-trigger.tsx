@@ -17,6 +17,7 @@
 "use client"
 
 import { Bot } from "lucide-react"
+import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
   Tooltip,
@@ -27,9 +28,10 @@ import { useAIAgent } from "@/contexts/ai-agent-context"
 
 export function AIAgentTrigger() {
   const { isOpen, toggleAgent } = useAIAgent()
+  const pathname = usePathname()
 
-  // Hide the trigger button when AI agent is open
-  if (isOpen) return null
+  // Hide the trigger button when AI agent is open or on login page
+  if (isOpen || pathname === "/login") return null
 
   return (
     <div className="fixed bottom-4 right-4 z-[99]">
