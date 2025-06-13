@@ -128,8 +128,15 @@ JWT_SECRET="your-super-secret-jwt-key-change-this-in-production"
 # Admin credentials
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=admin
-
 ```
+
+Before starting the application, please copy `.env.example` to `.env` and configure the environment variables according to your needs:
+
+```bash
+cp .env.example .env
+```
+
+Then edit the `.env` file with your specific configuration values.
 
 To use these environment variables with Docker, you need to explicitly configure them in your `docker-compose.yml` file under the `environment` section of the relevant service.
 
