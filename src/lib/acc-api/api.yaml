@@ -64,6 +64,53 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+  /acc-api/auth/reset-password:
+    patch:
+      summary: Reset user password
+      description: Update the current user's password
+      operationId: resetPassword
+      tags:
+        - Authentication
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordResetRequest"
+      responses:
+        "200":
+          description: Password updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PasswordResetResponse"
+        "400":
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized or invalid current password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /acc-api/user-info:
     get:
       summary: Get current user profile
@@ -349,6 +396,30 @@ components:
           type: boolean
       required:
         - success
+
+    PasswordResetRequest:
+      type: object
+      properties:
+        currentPassword:
+          type: string
+          format: password
+          description: Current password for verification
+        newPassword:
+          type: string
+          format: password
+          description: New password to set
+      required:
+        - currentPassword
+        - newPassword
+
+    PasswordResetResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Success message
+      required:
+        - message
 
     Error:
       type: object

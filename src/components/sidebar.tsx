@@ -11,6 +11,7 @@ import {
   Layers,
   LayoutGrid,
   LogOut,
+  Settings,
   Users,
 } from "lucide-react"
 import { usePathname } from "next/navigation"
@@ -186,6 +187,12 @@ export function Sidebar() {
             <ChevronDown className="h-4 w-4 text-gray-500" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuItem className="cursor-pointer" asChild>
+              <Link href="/settings/account">
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Account Settings</span>
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuItem className="cursor-pointer" onClick={logout}>
               <LogOut className="mr-2 h-4 w-4" />
               <span>Sign Out</span>
