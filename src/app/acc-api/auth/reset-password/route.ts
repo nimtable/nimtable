@@ -22,7 +22,6 @@ import { verifyToken } from "@/lib/auth"
 
 // PATCH /acc-api/auth/reset-password
 export async function PATCH(request: NextRequest) {
-  console.log("Password reset request received")
   try {
     // Get token from cookie
     const token = request.cookies.get(AUTH_COOKIE_NAME)?.value
