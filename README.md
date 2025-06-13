@@ -45,6 +45,8 @@ Nimtable acts as a bridge between users and catalog servers, providing both an i
 
 ## Quick Start
 
+### Using Docker (Recommended for Production)
+
 The fastest way to get started is using Docker:
 
 ```bash
@@ -61,6 +63,32 @@ docker compose down
 ```
 
 Access the UI at http://localhost:3000
+
+### Local Development
+
+For local development, follow these steps:
+
+1. Install dependencies:
+```bash
+pnpm install
+```
+
+2. Generate Prisma client:
+```bash
+pnpm prisma generate
+```
+
+3. Start the development server:
+```bash
+pnpm dev
+```
+
+The application will be available at http://localhost:3000
+
+Note: You need to run `pnpm prisma generate` after:
+- First time setup
+- Pulling new changes that include Prisma schema updates
+- Installing new dependencies
 
 ## Configuration
 
@@ -85,6 +113,32 @@ database:
   username: nimtable_user
   password: password
 ```
+
+### Environment Variables
+
+Nimtable supports configuration through environment variables. You can set the following environment variables in your `.env` file:
+
+```bash
+# Database connection
+DATABASE_URL="postgresql://nimtable_user:password@localhost:5432/nimtable_db?schema=public"
+
+# JWT configuration
+JWT_SECRET="your-super-secret-jwt-key-change-this-in-production"
+
+# Admin credentials
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=admin
+```
+
+Before starting the application, please copy `.env.example` to `.env` and configure the environment variables according to your needs:
+
+```bash
+cp .env.example .env
+```
+
+Then edit the `.env` file with your specific configuration values.
+
+To use these environment variables with Docker, you need to explicitly configure them in your `docker-compose.yml` file under the `environment` section of the relevant service.
 
 ### Database Configuration
 

@@ -1,7 +1,4 @@
-#!/bin/bash
-
-# license header
-LICENSE_HEADER='/*
+/*
  * Copyright 2025 Nimtable
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,19 +14,4 @@ LICENSE_HEADER='/*
  * limitations under the License.
  */
 
-'
-
-add_license() {
-    local file="$1"
-    if ! grep -q "Copyright 2025 Nimtable" "$file"; then
-        echo "Adding license header to $file"
-        echo "$LICENSE_HEADER" | cat - "$file" > temp && mv temp "$file"
-    fi
-}
-
-# process all TypeScript files in both directories
-find src/lib/client src/lib/acc-api/client -name "*.ts" | while read -r file; do
-    add_license "$file"
-done
-
-echo "License headers added successfully!" 
+export const AUTH_COOKIE_NAME = "nimtable-auth-token"

@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { Edit2, Search, Trash2 } from "lucide-react"
 
-import type { User } from "@/lib/client/types.gen"
 import { Input } from "@/components/ui/input"
 import {
   Table,
@@ -41,6 +40,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { UserRoleId } from "./type"
+import { User } from "@/lib/acc-api/client"
 
 interface UserTableProps {
   users: User[]

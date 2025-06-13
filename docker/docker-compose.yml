@@ -8,6 +8,9 @@ services:
     environment:
       - JAVA_API_URL=http://nimtable:8182
       - DATABASE_URL=postgresql://nimtable_user:password@database:5432/nimtable
+      - JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+      - ADMIN_USERNAME=admin
+      - ADMIN_PASSWORD=admin
     depends_on:
       - nimtable
     networks:
@@ -69,8 +72,6 @@ configs:
       admin:
         username: admin
         password: admin
-      jwt:
-        secretKey: "nimtable-jwt-secret-key-2025-production-must-be-at-least-32-bytes-long"
       database:
         # You can also point to your own Postgres database, instead of using the one provided by docker-compose.
         url: jdbc:postgresql://database:5432/nimtable

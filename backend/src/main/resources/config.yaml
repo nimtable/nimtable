@@ -1,0 +1,26 @@
+server:
+  port: 8080
+  host: localhost
+
+database:
+  url: jdbc:postgresql://localhost:5432/nimtable
+  username: postgres
+  password: postgres
+  driver: org.postgresql.Driver
+
+spark:
+  master: local[*]
+  appName: NimTable
+  warehouseDir: /tmp/warehouse
+
+iceberg:
+  catalog: nimtable
+  warehouse: /tmp/warehouse
+  type: hadoop
+  io-impl: org.apache.iceberg.aws.s3.S3FileIO
+  s3:
+    endpoint: http://localhost:9000
+    access-key: minioadmin
+    secret-key: minioadmin
+    region: us-east-1
+    path-style-access: true

@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            BigInt   @id @default(autoincrement())
+  username      String   @unique @db.VarChar(255)
+  password_hash String   @db.VarChar(255)
+  role_id       BigInt
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  roles         Role     @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([username], map: "idx_users_username")
+  @@map("users")
+}
+
+model Role {
+  id          BigInt   @id @default(autoincrement())
+  name        String   @unique @db.VarChar(20)
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  users       User[]
+
+  @@map("roles")
+}
+
+model catalogs {
+  id         BigInt   @id @default(autoincrement())
+  name       String   @unique @db.VarChar(255)
+  type       String   @db.VarChar(255)
+  uri        String?  @db.VarChar(1024)
+  warehouse  String?  @db.VarChar(1024)
+  properties Json?
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([name], map: "idx_catalogs_name")
+}
+
+model data_distributions {
+  id                                 BigInt   @id @default(autoincrement())
+  snapshot_id                        String   @db.VarChar(255)
+  catalog_name                       String   @db.VarChar(255)
+  namespace                          String   @db.VarChar(255)
+  table_name                         String   @db.VarChar(255)
+  data_file_count                    Int
+  position_delete_file_count         Int
+  eq_delete_file_count               Int
+  data_file_size_in_bytes            BigInt
+  position_delete_file_size_in_bytes BigInt
+  eq_delete_file_size_in_bytes       BigInt
+  data_file_record_count             BigInt
+  position_delete_file_record_count  BigInt
+  eq_delete_file_record_count        BigInt
+  ranges                             Json?
+  created_at                         DateTime @default(now()) @db.Timestamptz(6)
+  updated_at                         DateTime @default(now()) @db.Timestamptz(6)
+
+  @@unique([snapshot_id, catalog_name, namespace, table_name])
+  @@index([snapshot_id, catalog_name, namespace, table_name], map: "idx_data_distributions_snapshot")
+}
+
+model flyway_schema_history {
+  installed_rank Int      @id(map: "flyway_schema_history_pk")
+  version        String?  @db.VarChar(50)
+  description    String   @db.VarChar(200)
+  type           String   @db.VarChar(20)
+  script         String   @db.VarChar(1000)
+  checksum       Int?
+  installed_by   String   @db.VarChar(100)
+  installed_on   DateTime @default(now()) @db.Timestamp(6)
+  execution_time Int
+  success        Boolean
+
+  @@index([success], map: "flyway_schema_history_s_idx")
+}
+
+model table_summaries {
+  id           BigInt   @id @default(autoincrement())
+  catalog_name String   @db.VarChar(255)
+  namespace    String   @db.VarChar(255)
+  table_name   String   @db.VarChar(255)
+  created_at   DateTime @default(now()) @db.Timestamptz(6)
+  created_by   String   @db.VarChar(255)
+  summary      String
+
+  @@index([catalog_name, namespace, table_name, created_at(sort: Desc)], map: "idx_table_summaries_catalog_name_namespace_table")
+}

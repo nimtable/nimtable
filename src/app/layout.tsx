@@ -27,7 +27,6 @@ import type { Metadata } from "next"
 import { Suspense } from "react"
 
 import { ReactQueryProvider } from "@/components/Providers/ReactQuery"
-import { ProtectedRoute } from "@/components/protected-route"
 import { ThemeProvider } from "@/components/theme-provider"
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { TooltipProvider } from "@/components/ui/tooltip"
@@ -62,10 +61,8 @@ export default function RootLayout({
                   <AIAgentProvider>
                     <SidebarProvider>
                       <AIAgentLayoutWrapper>
-                        <ProtectedRoute>
-                          <Suspense fallback={<></>}>{children}</Suspense>
-                          <AIAgentTrigger />
-                        </ProtectedRoute>
+                        <Suspense fallback={<></>}>{children}</Suspense>
+                        <AIAgentTrigger />
                       </AIAgentLayoutWrapper>
                       <Toaster />
                     </SidebarProvider>

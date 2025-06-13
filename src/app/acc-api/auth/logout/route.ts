@@ -1,7 +1,4 @@
-#!/bin/bash
-
-# license header
-LICENSE_HEADER='/*
+/*
  * Copyright 2025 Nimtable
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,19 +14,21 @@ LICENSE_HEADER='/*
  * limitations under the License.
  */
 
-'
+import { NextResponse } from "next/server"
+import { AUTH_COOKIE_NAME } from "../../const"
 
-add_license() {
-    local file="$1"
-    if ! grep -q "Copyright 2025 Nimtable" "$file"; then
-        echo "Adding license header to $file"
-        echo "$LICENSE_HEADER" | cat - "$file" > temp && mv temp "$file"
-    fi
+export async function POST() {
+  const response = NextResponse.json({ success: true })
+
+  // Clear the token cookie
+  response.cookies.set({
+    name: AUTH_COOKIE_NAME,
+    value: "",
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 0, // Set to 0 to expire immediately
+  })
+
+  return response
 }
-
-# process all TypeScript files in both directories
-find src/lib/client src/lib/acc-api/client -name "*.ts" | while read -r file; do
-    add_license "$file"
-done
-
-echo "License headers added successfully!" 

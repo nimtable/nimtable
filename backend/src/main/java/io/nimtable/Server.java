@@ -16,15 +16,13 @@
 
 package io.nimtable;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.nimtable.db.PersistenceManager;
 import io.nimtable.db.entity.Catalog;
 import io.nimtable.db.repository.CatalogRepository;
-import io.nimtable.db.repository.UserRepository;
 import io.nimtable.spark.LocalSpark;
-import io.nimtable.util.JwtUtil;
 import java.io.File;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
@@ -46,22 +44,7 @@ import org.slf4j.LoggerFactory;
 public class Server {
     private static final Logger LOG = LoggerFactory.getLogger(Server.class);
     private static final Map<String, Map<String, String>> CATALOGS = new ConcurrentHashMap<>();
-    private final Config config;
-    private final ObjectMapper objectMapper;
     private static ServletContextHandler apiContext;
-
-    private Server() {
-        this.config = null;
-        this.objectMapper = new ObjectMapper();
-        this.objectMapper.registerModule(new JavaTimeModule());
-    }
-
-    public Server(Config config) {
-        this.config = config;
-        this.objectMapper = new ObjectMapper();
-        this.objectMapper.registerModule(new JavaTimeModule());
-        JwtUtil.initialize(config);
-    }
 
     public static void registerCatalog(String name, Map<String, String> properties) {
         CATALOGS.put(name, properties);
@@ -78,17 +61,12 @@ public class Server {
     public static void main(String[] args) throws Exception {
         // Read and parse the config.yaml file
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         Config config = mapper.readValue(new File("config.yaml"), Config.class);
         Config.Database dbConfig = config.database(); // Get DB config early
 
         // Initialize Persistence Manager
         PersistenceManager.initialize(dbConfig);
-
-        // Initialize repositories
-        UserRepository userRepository = new UserRepository();
-
-        // Initialize JWT
-        JwtUtil.initialize(config);
 
         // --- Instantiate Repositories ---
         CatalogRepository catalogRepository = new CatalogRepository(); // Simple instantiation
@@ -112,10 +90,6 @@ public class Server {
         apiContext.addServlet(
                 new ServletHolder("distribution", new DistributionServlet(config)),
                 "/distribution/*");
-        apiContext.addServlet(new ServletHolder("login", new LoginServlet(config)), "/login");
-        apiContext.addServlet(new ServletHolder(new LogoutServlet()), "/logout");
-        apiContext.addServlet(
-                new ServletHolder("users", new UserServlet(userRepository)), "/users/*");
 
         // Add route for each `/api/catalog/<catalog-name>/*` endpoints
         if (config.catalogs() != null) {

@@ -1,7 +1,4 @@
-#!/bin/bash
-
-# license header
-LICENSE_HEADER='/*
+/*
  * Copyright 2025 Nimtable
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,19 +14,14 @@ LICENSE_HEADER='/*
  * limitations under the License.
  */
 
-'
+import { PrismaClient } from "@prisma/client"
 
-add_license() {
-    local file="$1"
-    if ! grep -q "Copyright 2025 Nimtable" "$file"; then
-        echo "Adding license header to $file"
-        echo "$LICENSE_HEADER" | cat - "$file" > temp && mv temp "$file"
-    fi
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined
 }
 
-# process all TypeScript files in both directories
-find src/lib/client src/lib/acc-api/client -name "*.ts" | while read -r file; do
-    add_license "$file"
-done
+export const db = globalForPrisma.prisma ?? new PrismaClient()
 
-echo "License headers added successfully!" 
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = db
+}
