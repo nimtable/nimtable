@@ -127,8 +127,6 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json()
     const { firstName, lastName, email } = body
 
-    console.log("body", firstName, lastName)
-
     // Validate request data
     if (!firstName && !lastName && !email) {
       console.log("No update data provided")
