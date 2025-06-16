@@ -20,6 +20,8 @@ import { hash, compare } from "bcryptjs"
 import { AUTH_COOKIE_NAME } from "../../const"
 import { verifyToken } from "@/lib/auth"
 
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || ""
+
 // PATCH /acc-api/auth/reset-password
 export async function PATCH(request: NextRequest) {
   try {
@@ -35,6 +37,15 @@ export async function PATCH(request: NextRequest) {
     if (!payload || !payload.id) {
       console.log("Invalid token")
       return NextResponse.json({ error: "Invalid token" }, { status: 401 })
+    }
+
+    // Check if superadmin user
+    if (String(payload.id) === "0") {
+      console.log("Cannot reset password for superadmin user")
+      return NextResponse.json(
+        { error: "Cannot reset password for superadmin user" },
+        { status: 403 }
+      )
     }
 
     const body = await request.json()
@@ -57,6 +68,15 @@ export async function PATCH(request: NextRequest) {
     if (!user) {
       console.log("User not found")
       return NextResponse.json({ error: "User not found" }, { status: 404 })
+    }
+
+    // Check if admin user
+    if (user.username === ADMIN_USERNAME) {
+      console.log("Cannot reset password for admin user")
+      return NextResponse.json(
+        { error: "Cannot reset password for admin user" },
+        { status: 403 }
+      )
     }
 
     // Verify current password

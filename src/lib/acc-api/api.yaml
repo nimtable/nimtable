@@ -446,6 +446,17 @@ components:
           type: string
           enum: [admin, editor, viewer]
           description: "User's role name"
+        profile:
+          type: object
+          nullable: true
+          properties:
+            firstName:
+              type: string
+            lastName:
+              type: string
+            email:
+              type: string
+              format: email
         createdAt:
           type: string
           format: date-time
@@ -465,6 +476,16 @@ components:
         roleId:
           type: integer
           description: "Role ID (1: admin, 2: editor, 3: viewer)"
+        profile:
+          type: object
+          properties:
+            firstName:
+              type: string
+            lastName:
+              type: string
+            email:
+              type: string
+              format: email
       required: ["username", "password", "roleId"]
 
     UserUpdate:
@@ -478,6 +499,16 @@ components:
         roleId:
           type: integer
           description: "Role ID (1: admin, 2: editor, 3: viewer)"
+        profile:
+          type: object
+          properties:
+            firstName:
+              type: string
+            lastName:
+              type: string
+            email:
+              type: string
+              format: email
 
     UserProfileUpdate:
       type: object
@@ -487,6 +518,13 @@ components:
         password:
           type: string
           format: password
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
       description: "Update current user's profile information"
 
   securitySchemes:
