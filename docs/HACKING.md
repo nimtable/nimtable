@@ -21,17 +21,30 @@ The backend API will be available at http://localhost:8182.
 
 ### Frontend Development
 
-First start the backend server as mentioned above.
+For local development, follow these steps:
 
+1. Install dependencies:
 ```bash
-# Install dependencies
 pnpm install
-
-# Start development server
-pnpm run dev
 ```
 
-The UI will be available at http://localhost:3000.
+2. Generate Prisma client:
+```bash
+pnpm prisma generate
+```
+
+3. Start the development server:
+```bash
+pnpm dev
+```
+
+The application will be available at http://localhost:3000
+
+Note: You need to run `pnpm prisma generate` after:
+- First time setup
+- Pulling new changes that include Prisma schema updates
+- Installing new dependencies
+
 
 ### Docker Development
 
@@ -49,6 +62,33 @@ pnpm run gen-client-api
 ```
 
 This will generate the API client and types in `sdk.gen.ts` based on the OpenAPI specification in `api.yaml`. After modifying the `api.yaml` file, you should run this command to update the generated code.
+
+### Environment Variables
+
+Nimtable supports configuration through environment variables.
+
+```bash
+# Database connection
+DATABASE_URL="postgresql://nimtable_user:password@localhost:5432/nimtable_db?schema=public"
+
+# JWT configuration
+JWT_SECRET="your-super-secret-jwt-key-change-this-in-production"
+
+# Admin credentials
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=admin
+```
+You can set the following environment variables in your `.env` file:
+
+Before starting the application, please copy `.env.example` to `.env` and configure the environment variables according to your needs:
+
+```bash
+cp .env.example .env
+```
+
+Then edit the `.env` file with your specific configuration values.
+
+To use these environment variables with Docker, you need to explicitly configure them in your `docker-compose.yml` file under the `environment` section of the relevant service.
 
 ### Testing with a Catalog
 

@@ -20,7 +20,7 @@
 </div>
 
 
-![Screenshot](./docs/dashboard.png)
+![Screenshot](./docs/nimtable.png)
 
 
 ## Overview
@@ -33,6 +33,8 @@ Nimtable helps you easily manage and explore Apache Iceberg catalogs. With a web
 - 🌟 **Multi-Catalog Support**: Connect to Hive Metastore, PostgreSQL (via JDBC), REST Catalog, AWS Glue, and S3 Tables.
 - 🔍 **Table Exploration**: Inspect table schemas, partitions, and snapshots.
 - ⚡ **Interactive Querying**: Execute SQL queries directly from the platform.
+- 🤖 **AI Copilot**: Intelligent assistant to help with iceberg table exploration.
+- 📄 **AI Summary**: Automatically generate summaries of iceberg tables.
 - 📊 **File Distribution Analysis**: Visualize how data files are distributed across partitions and snapshots.
 - 🔧 **Table Optimization**: Run file compaction and manage snapshot expiration.
 - 🔌 **REST Catalog Compatibility**: Serve as a standard Iceberg REST Catalog, adapting any underlying catalog to a RESTful API.
@@ -64,31 +66,11 @@ docker compose down
 
 Access the UI at http://localhost:3000
 
-### Local Development
 
-For local development, follow these steps:
+## Development
 
-1. Install dependencies:
-```bash
-pnpm install
-```
+See [HACKING.md](docs/HACKING.md) for details on how to hack on Nimtable.
 
-2. Generate Prisma client:
-```bash
-pnpm prisma generate
-```
-
-3. Start the development server:
-```bash
-pnpm dev
-```
-
-The application will be available at http://localhost:3000
-
-Note: You need to run `pnpm prisma generate` after:
-- First time setup
-- Pulling new changes that include Prisma schema updates
-- Installing new dependencies
 
 ## Configuration
 
@@ -103,10 +85,10 @@ To configure the Docker deployment, read the sample configuration file at [docke
 
 ```yaml
 server:
-  port: 8182
+  port: 8182 # port for the backend server
   host: 0.0.0.0
 admin:
-  username: admin
+  username: admin # the initial admin user used to login
   password: admin
 database:
   url: jdbc:postgresql://localhost:5432/nimtable_db
@@ -114,31 +96,6 @@ database:
   password: password
 ```
 
-### Environment Variables
-
-Nimtable supports configuration through environment variables. You can set the following environment variables in your `.env` file:
-
-```bash
-# Database connection
-DATABASE_URL="postgresql://nimtable_user:password@localhost:5432/nimtable_db?schema=public"
-
-# JWT configuration
-JWT_SECRET="your-super-secret-jwt-key-change-this-in-production"
-
-# Admin credentials
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=admin
-```
-
-Before starting the application, please copy `.env.example` to `.env` and configure the environment variables according to your needs:
-
-```bash
-cp .env.example .env
-```
-
-Then edit the `.env` file with your specific configuration values.
-
-To use these environment variables with Docker, you need to explicitly configure them in your `docker-compose.yml` file under the `environment` section of the relevant service.
 
 ### Database Configuration
 
@@ -184,9 +141,6 @@ services:
 ```
 
 
-## Development
-
-See [HACKING.md](docs/HACKING.md) for details on how to hack on Nimtable.
 
 ## Roadmap
 
@@ -198,6 +152,7 @@ See [HACKING.md](docs/HACKING.md) for details on how to hack on Nimtable.
 - 🔐 **Security & Access Control**: RBAC and fine-grained permissions
 - 🔌 **API & Integration**: REST API support and authentication
 - 🔄 **Data Lineage**: Table and column-level lineage tracking
+- 🤖 **Better AI Copilot Support**: Enhanced capabilities for AI agent.
 - 🏢 **Catalog & Warehouse Integration**: Support for various storage backends
 
 For detailed roadmap items and progress tracking, see [Roadmap](https://github.com/nimtable/nimtable/issues/50).
