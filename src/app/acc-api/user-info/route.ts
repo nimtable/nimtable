@@ -64,8 +64,8 @@ export async function GET(request: NextRequest) {
       role: user.roles.name,
       profile: user.userProfile
         ? {
-            first_name: user.userProfile.first_name,
-            last_name: user.userProfile.last_name,
+            firstName: user.userProfile.first_name,
+            lastName: user.userProfile.last_name,
             email: user.userProfile.email,
           }
         : null,
@@ -128,10 +128,10 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { first_name, last_name, email } = body
+    const { firstName, lastName, email } = body
 
     // Validate request data
-    if (!first_name && !last_name && !email) {
+    if (!firstName && !lastName && !email) {
       console.log("No update data provided")
       return NextResponse.json(
         { error: "No update data provided" },
@@ -158,17 +158,17 @@ export async function PATCH(request: NextRequest) {
       where: { id: BigInt(payload.id) },
       data: {
         userProfile:
-          first_name || last_name || email
+          firstName || lastName || email
             ? {
                 upsert: {
                   create: {
-                    first_name: first_name || "",
-                    last_name: last_name || "",
+                    first_name: firstName || "",
+                    last_name: lastName || "",
                     email: email || "",
                   },
                   update: {
-                    ...(first_name && { firstName: first_name }),
-                    ...(last_name && { lastName: last_name }),
+                    ...(firstName && { first_name: firstName }),
+                    ...(lastName && { last_name: lastName }),
                     ...(email && { email }),
                   },
                 },
@@ -188,8 +188,8 @@ export async function PATCH(request: NextRequest) {
       role: updatedUser.roles.name,
       profile: updatedUser.userProfile
         ? {
-            first_name: updatedUser.userProfile.first_name,
-            last_name: updatedUser.userProfile.last_name,
+            firstName: updatedUser.userProfile.first_name,
+            lastName: updatedUser.userProfile.last_name,
             email: updatedUser.userProfile.email,
           }
         : null,
