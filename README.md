@@ -20,7 +20,7 @@
 </div>
 
 
-![Screenshot](./docs/dashboard.png)
+![Screenshot](./docs/nimtable.png)
 
 
 ## Overview
