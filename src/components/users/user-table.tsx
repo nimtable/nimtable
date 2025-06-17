@@ -44,7 +44,7 @@ import { User } from "@/lib/acc-api/client"
 
 interface UserTableProps {
   users: User[]
-  currentUser: User
+  currentUser?: User
   refetch: () => void
   onRemove: (id: number) => void
   onUpdate: (id: number, username: string, roleId: number) => void
