@@ -64,8 +64,8 @@ export async function GET(request: NextRequest) {
       role: user.roles.name,
       profile: user.userProfile
         ? {
-            firstName: user.userProfile.first_name,
-            lastName: user.userProfile.last_name,
+            first_name: user.userProfile.first_name,
+            last_name: user.userProfile.last_name,
             email: user.userProfile.email,
           }
         : null,
@@ -108,6 +108,9 @@ export async function PATCH(request: NextRequest) {
 
     const user = await db.user.findUnique({
       where: { id: BigInt(payload.id) },
+      include: {
+        roles: true,
+      },
     })
 
     if (!user) {
@@ -125,10 +128,10 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { firstName, lastName, email } = body
+    const { first_name, last_name, email } = body
 
     // Validate request data
-    if (!firstName && !lastName && !email) {
+    if (!first_name && !last_name && !email) {
       console.log("No update data provided")
       return NextResponse.json(
         { error: "No update data provided" },
@@ -141,7 +144,7 @@ export async function PATCH(request: NextRequest) {
       const existingProfile = await db.userProfile.findUnique({
         where: { email },
       })
-      if (existingProfile && existingProfile.user_id !== BigInt(payload.id)) {
+      if (existingProfile && existingProfile.userId !== BigInt(payload.id)) {
         console.log("Email already exists")
         return NextResponse.json(
           { error: "Email already exists" },
@@ -155,17 +158,17 @@ export async function PATCH(request: NextRequest) {
       where: { id: BigInt(payload.id) },
       data: {
         userProfile:
-          firstName || lastName || email
+          first_name || last_name || email
             ? {
                 upsert: {
                   create: {
-                    first_name: firstName || "",
-                    last_name: lastName || "",
+                    first_name: first_name || "",
+                    last_name: last_name || "",
                     email: email || "",
                   },
                   update: {
-                    ...(firstName && { first_name: firstName }),
-                    ...(lastName && { last_name: lastName }),
+                    ...(first_name && { firstName: first_name }),
+                    ...(last_name && { lastName: last_name }),
                     ...(email && { email }),
                   },
                 },
@@ -185,8 +188,8 @@ export async function PATCH(request: NextRequest) {
       role: updatedUser.roles.name,
       profile: updatedUser.userProfile
         ? {
-            firstName: updatedUser.userProfile.first_name,
-            lastName: updatedUser.userProfile.last_name,
+            first_name: updatedUser.userProfile.first_name,
+            last_name: updatedUser.userProfile.last_name,
             email: updatedUser.userProfile.email,
           }
         : null,

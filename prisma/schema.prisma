@@ -26,8 +26,8 @@ model UserProfile {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   userId    BigInt   @unique @map("user_id")
-  firstName String   @map("first_name")
-  lastName  String   @map("last_name")
+  first_name String   @map("first_name")
+  last_name  String   @map("last_name")
   email     String   @unique
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
