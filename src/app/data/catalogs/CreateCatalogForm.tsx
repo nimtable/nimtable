@@ -624,8 +624,9 @@ export function CreateCatalogForm({
             </div>
           )}
 
-          {(selectedTemplateKey === "s3-tables" || 
-            (formData.type === "rest" && formData.uri.includes("s3tables"))) && (
+          {(selectedTemplateKey === "s3-tables" ||
+            (formData.type === "rest" &&
+              formData.uri.includes("s3tables"))) && (
             <div className="rounded-md bg-blue-50 p-4">
               <div className="flex">
                 <div className="flex-shrink-0">
@@ -647,11 +648,12 @@ export function CreateCatalogForm({
                   </h3>
                   <div className="mt-2 text-sm text-blue-700">
                     <p>
-                      S3 Tables uses the Iceberg REST endpoint with SigV4 authentication. 
-                      Ensure your warehouse ARN and region are correctly configured.
+                      S3 Tables uses the Iceberg REST endpoint with SigV4
+                      authentication. Ensure your warehouse ARN and region are
+                      correctly configured.
                     </p>
                     <p className="mt-2">
-                      <a 
+                      <a
                         href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-tables-integrating-open-source.html"
                         target="_blank"
                         rel="noopener noreferrer"
