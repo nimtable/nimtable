@@ -16,7 +16,6 @@
 
 package io.nimtable;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.nimtable.db.PersistenceManager;
@@ -28,7 +27,6 @@ import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.iceberg.CatalogUtil;
 import org.apache.iceberg.rest.RESTCatalogAdapter;
@@ -43,25 +41,48 @@ import org.slf4j.LoggerFactory;
 
 public class Server {
     private static final Logger LOG = LoggerFactory.getLogger(Server.class);
-    private static final Map<String, Map<String, String>> CATALOGS = new ConcurrentHashMap<>();
     private static ServletContextHandler apiContext;
 
+    private Server() {
+    }
+
     public static void registerCatalog(String name, Map<String, String> properties) {
-        CATALOGS.put(name, properties);
-    }
+        LOG.info("Dynamically registering catalog: {} with properties: {}", name, properties);
+        try {
+            org.apache.iceberg.catalog.Catalog icebergCatalog = CatalogUtil.buildIcebergCatalog(name, properties,
+                    new Configuration());
 
-    public static Map<String, Map<String, String>> getCatalogs() {
-        return CATALOGS;
-    }
+            RESTCatalogAdapter adapter = new RESTCatalogAdapter(icebergCatalog);
+            RESTCatalogServlet servlet = new RESTCatalogServlet(adapter);
+            ServletHolder servletHolder = new ServletHolder(servlet);
+            apiContext.addServlet(servletHolder, "/catalog/" + name + "/*");
 
-    public static void clearCatalogs() {
-        CATALOGS.clear();
+            // Add a listener to clean up the adapter when the servlet is destroyed
+            servletHolder.addEventListener(
+                    new AbstractLifeCycle.AbstractLifeCycleListener() {
+                        @Override
+                        public void lifeCycleStopping(LifeCycle event) {
+                            try {
+                                adapter.close();
+                            } catch (Exception e) {
+                                LOG.error(
+                                        "Error closing RESTCatalogAdapter for catalog: {}",
+                                        name,
+                                        e);
+                            }
+                        }
+                    });
+
+            LOG.info("Successfully registered catalog: {}", name);
+        } catch (Exception e) {
+            LOG.error("Failed to register catalog: {}", name, e);
+            throw new RuntimeException("Failed to register catalog: " + name, e);
+        }
     }
 
     public static void main(String[] args) throws Exception {
         // Read and parse the config.yaml file
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         Config config = mapper.readValue(new File("config.yaml"), Config.class);
         Config.Database dbConfig = config.database(); // Get DB config early
 
@@ -95,9 +116,8 @@ public class Server {
         if (config.catalogs() != null) {
             for (Config.Catalog catalog : config.catalogs()) {
                 LOG.info("Creating catalog with properties: {}", catalog.properties());
-                org.apache.iceberg.catalog.Catalog icebergCatalog =
-                        CatalogUtil.buildIcebergCatalog(
-                                catalog.name(), catalog.properties(), new Configuration());
+                org.apache.iceberg.catalog.Catalog icebergCatalog = CatalogUtil.buildIcebergCatalog(
+                        catalog.name(), catalog.properties(), new Configuration());
 
                 try (RESTCatalogAdapter adapter = new RESTCatalogAdapter(icebergCatalog)) {
                     RESTCatalogServlet servlet = new RESTCatalogServlet(adapter);
@@ -116,9 +136,8 @@ public class Server {
             properties.put("warehouse", catalogEntity.getWarehouse());
             properties.put("uri", catalogEntity.getUri());
 
-            org.apache.iceberg.catalog.Catalog icebergCatalog =
-                    CatalogUtil.buildIcebergCatalog(
-                            catalogEntity.getName(), properties, new Configuration());
+            org.apache.iceberg.catalog.Catalog icebergCatalog = CatalogUtil.buildIcebergCatalog(
+                    catalogEntity.getName(), properties, new Configuration());
 
             try (RESTCatalogAdapter adapter = new RESTCatalogAdapter(icebergCatalog)) {
                 RESTCatalogServlet servlet = new RESTCatalogServlet(adapter);
@@ -130,9 +149,8 @@ public class Server {
         // Create handler list with API context
         HandlerList handlers = new HandlerList();
         handlers.addHandler(apiContext);
-        org.eclipse.jetty.server.Server httpServer =
-                new org.eclipse.jetty.server.Server(
-                        new InetSocketAddress(config.server().host(), config.server().port()));
+        org.eclipse.jetty.server.Server httpServer = new org.eclipse.jetty.server.Server(
+                new InetSocketAddress(config.server().host(), config.server().port()));
         httpServer.setHandler(handlers);
 
         // Add listener bean to close PersistenceManager on shutdown
