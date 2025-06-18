@@ -50,6 +50,23 @@ public class Server {
         CATALOGS.put(name, properties);
     }
 
+    public static void registerCatalogServlet(String name, Map<String, String> properties) {
+        try {
+            LOG.info("Registering servlet for catalog: {}", name);
+            org.apache.iceberg.catalog.Catalog icebergCatalog = CatalogUtil.buildIcebergCatalog(name, properties,
+                    new Configuration());
+
+            try (RESTCatalogAdapter adapter = new RESTCatalogAdapter(icebergCatalog)) {
+                RESTCatalogServlet servlet = new RESTCatalogServlet(adapter);
+                ServletHolder servletHolder = new ServletHolder(servlet);
+                apiContext.addServlet(servletHolder, "/catalog/" + name + "/*");
+            }
+        } catch (Exception e) {
+            LOG.error("Failed to register servlet for catalog: " + name, e);
+            throw new RuntimeException("Failed to register servlet for catalog: " + name, e);
+        }
+    }
+
     public static Map<String, Map<String, String>> getCatalogs() {
         return CATALOGS;
     }
@@ -95,9 +112,8 @@ public class Server {
         if (config.catalogs() != null) {
             for (Config.Catalog catalog : config.catalogs()) {
                 LOG.info("Creating catalog with properties: {}", catalog.properties());
-                org.apache.iceberg.catalog.Catalog icebergCatalog =
-                        CatalogUtil.buildIcebergCatalog(
-                                catalog.name(), catalog.properties(), new Configuration());
+                org.apache.iceberg.catalog.Catalog icebergCatalog = CatalogUtil.buildIcebergCatalog(
+                        catalog.name(), catalog.properties(), new Configuration());
 
                 try (RESTCatalogAdapter adapter = new RESTCatalogAdapter(icebergCatalog)) {
                     RESTCatalogServlet servlet = new RESTCatalogServlet(adapter);
@@ -116,9 +132,8 @@ public class Server {
             properties.put("warehouse", catalogEntity.getWarehouse());
             properties.put("uri", catalogEntity.getUri());
 
-            org.apache.iceberg.catalog.Catalog icebergCatalog =
-                    CatalogUtil.buildIcebergCatalog(
-                            catalogEntity.getName(), properties, new Configuration());
+            org.apache.iceberg.catalog.Catalog icebergCatalog = CatalogUtil.buildIcebergCatalog(
+                    catalogEntity.getName(), properties, new Configuration());
 
             try (RESTCatalogAdapter adapter = new RESTCatalogAdapter(icebergCatalog)) {
                 RESTCatalogServlet servlet = new RESTCatalogServlet(adapter);
@@ -130,9 +145,8 @@ public class Server {
         // Create handler list with API context
         HandlerList handlers = new HandlerList();
         handlers.addHandler(apiContext);
-        org.eclipse.jetty.server.Server httpServer =
-                new org.eclipse.jetty.server.Server(
-                        new InetSocketAddress(config.server().host(), config.server().port()));
+        org.eclipse.jetty.server.Server httpServer = new org.eclipse.jetty.server.Server(
+                new InetSocketAddress(config.server().host(), config.server().port()));
         httpServer.setHandler(handlers);
 
         // Add listener bean to close PersistenceManager on shutdown

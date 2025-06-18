@@ -54,16 +54,14 @@ public class CatalogsServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         // Get catalogs from both config and database
-        List<String> configCatalogs =
-                config.catalogs() != null
-                        ? config.catalogs().stream()
-                                .map(Config.Catalog::name)
-                                .collect(Collectors.toList())
-                        : new ArrayList<>();
-        List<String> dbCatalogs =
-                catalogRepository.findAll().stream()
-                        .map(Catalog::getName)
-                        .collect(Collectors.toList());
+        List<String> configCatalogs = config.catalogs() != null
+                ? config.catalogs().stream()
+                        .map(Config.Catalog::name)
+                        .collect(Collectors.toList())
+                : new ArrayList<>();
+        List<String> dbCatalogs = catalogRepository.findAll().stream()
+                .map(Catalog::getName)
+                .collect(Collectors.toList());
 
         // Combine both lists
         List<String> allCatalogs = new ArrayList<>(configCatalogs);
@@ -132,8 +130,8 @@ public class CatalogsServlet extends HttpServlet {
 
             // Validate catalog configuration by attempting to build it
             try {
-                org.apache.iceberg.catalog.Catalog icebergCatalog =
-                        CatalogUtil.buildIcebergCatalog(name, properties, new Configuration());
+                org.apache.iceberg.catalog.Catalog icebergCatalog = CatalogUtil.buildIcebergCatalog(name, properties,
+                        new Configuration());
                 if (icebergCatalog instanceof Closeable) {
                     ((Closeable) icebergCatalog).close();
                 }
@@ -163,6 +161,9 @@ public class CatalogsServlet extends HttpServlet {
 
             // Register the catalog dynamically
             Server.registerCatalog(catalog.getName(), properties);
+
+            // Register the catalog servlet
+            Server.registerCatalogServlet(catalog.getName(), properties);
 
             // Update LocalSpark instance with new catalog configuration
             LocalSpark.updateInstance(config);
