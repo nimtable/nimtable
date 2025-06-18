@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/collapsible"
 import { useAuth } from "@/contexts/auth-context"
 import { cn } from "@/lib/utils"
+import { FeedbackButton } from "@/components/feedback-button"
 
 export function Sidebar() {
   const pathname = usePathname()
@@ -174,6 +175,11 @@ export function Sidebar() {
             ))}
           </nav>
         </div>
+      </div>
+
+      {/* Feedback Button */}
+      <div className="px-2 pb-2">
+        <FeedbackButton />
       </div>
 
       {/* User Profile */}
