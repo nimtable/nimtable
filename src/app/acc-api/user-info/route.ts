@@ -16,30 +16,62 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { hash } from "bcryptjs"
 import { verifyToken } from "@/lib/auth"
 import { AUTH_COOKIE_NAME } from "../const"
+
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || ""
 
 // GET /acc-api/user-info
 export async function GET(request: NextRequest) {
   console.log("Get user profile request received")
   try {
-    // Get token from cookie
     const token = request.cookies.get(AUTH_COOKIE_NAME)?.value
     if (!token) {
       console.log("No token provided")
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
-
-    // Verify token and get user info
     const payload = await verifyToken(token)
     if (!payload) {
       console.log("Invalid token")
       return NextResponse.json({ error: "Invalid token" }, { status: 401 })
     }
-
+    if (String(payload.id) === "0") {
+      // Superadmin user
+      return NextResponse.json({
+        id: 0,
+        username: ADMIN_USERNAME,
+        role: "admin",
+        profile: null,
+        createdAt: null,
+        updatedAt: null,
+      })
+    }
+    const user = await db.user.findUnique({
+      where: { id: BigInt(payload.id) },
+      include: {
+        roles: true,
+        userProfile: true,
+      },
+    })
+    if (!user) {
+      console.log("User not found")
+      return NextResponse.json({ error: "User not found" }, { status: 404 })
+    }
     console.log("User profile retrieved successfully")
-    return NextResponse.json(payload)
+    return NextResponse.json({
+      id: Number(user.id),
+      username: user.username,
+      role: user.roles.name,
+      profile: user.userProfile
+        ? {
+            firstName: user.userProfile.first_name,
+            lastName: user.userProfile.last_name,
+            email: user.userProfile.email,
+          }
+        : null,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    })
   } catch (error) {
     console.error("Error fetching user profile:", error)
     return NextResponse.json(
@@ -53,25 +85,53 @@ export async function GET(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   console.log("Update user profile request received")
   try {
-    // Get token from cookie
     const token = request.cookies.get(AUTH_COOKIE_NAME)?.value
     if (!token) {
       console.log("No token provided")
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Verify token and get user info
     const payload = await verifyToken(token)
     if (!payload || !payload.id) {
       console.log("Invalid token")
       return NextResponse.json({ error: "Invalid token" }, { status: 401 })
     }
 
+    // Check if superadmin user
+    if (String(payload.id) === "0") {
+      console.log("Cannot modify superadmin user")
+      return NextResponse.json(
+        { error: "Cannot modify superadmin user" },
+        { status: 403 }
+      )
+    }
+
+    const user = await db.user.findUnique({
+      where: { id: BigInt(payload.id) },
+      include: {
+        roles: true,
+      },
+    })
+
+    if (!user) {
+      console.log("User not found")
+      return NextResponse.json({ error: "User not found" }, { status: 404 })
+    }
+
+    // Check if admin user
+    if (user.username === ADMIN_USERNAME) {
+      console.log("Cannot modify admin user")
+      return NextResponse.json(
+        { error: "Cannot modify admin user" },
+        { status: 403 }
+      )
+    }
+
     const body = await request.json()
-    const { username, password } = body
+    const { firstName, lastName, email } = body
 
     // Validate request data
-    if (!username && !password) {
+    if (!firstName && !lastName && !email) {
       console.log("No update data provided")
       return NextResponse.json(
         { error: "No update data provided" },
@@ -79,31 +139,45 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    // Check username uniqueness if updating username
-    if (username) {
-      const existingUser = await db.user.findUnique({
-        where: { username },
+    // Check email uniqueness if updating email
+    if (email) {
+      const existingProfile = await db.userProfile.findUnique({
+        where: { email },
       })
-      if (existingUser && existingUser.id !== BigInt(payload.id)) {
-        console.log("Username already exists")
+      if (existingProfile && existingProfile.userId !== BigInt(payload.id)) {
+        console.log("Email already exists")
         return NextResponse.json(
-          { error: "Username already exists" },
+          { error: "Email already exists" },
           { status: 409 }
         )
       }
     }
 
-    // Prepare update data
-    const updateData: any = {}
-    if (username) updateData.username = username
-    if (password) updateData.password_hash = await hash(password, 10)
-
     // Update user info
     const updatedUser = await db.user.update({
       where: { id: BigInt(payload.id) },
-      data: updateData,
+      data: {
+        userProfile:
+          firstName || lastName || email
+            ? {
+                upsert: {
+                  create: {
+                    first_name: firstName || "",
+                    last_name: lastName || "",
+                    email: email || "",
+                  },
+                  update: {
+                    ...(firstName && { first_name: firstName }),
+                    ...(lastName && { last_name: lastName }),
+                    ...(email && { email }),
+                  },
+                },
+              }
+            : undefined,
+      },
       include: {
         roles: true,
+        userProfile: true,
       },
     })
 
@@ -112,6 +186,13 @@ export async function PATCH(request: NextRequest) {
       id: Number(updatedUser.id),
       username: updatedUser.username,
       role: updatedUser.roles.name,
+      profile: updatedUser.userProfile
+        ? {
+            firstName: updatedUser.userProfile.first_name,
+            lastName: updatedUser.userProfile.last_name,
+            email: updatedUser.userProfile.email,
+          }
+        : null,
       createdAt: updatedUser.createdAt,
       updatedAt: updatedUser.updatedAt,
     })

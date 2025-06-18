@@ -15,9 +15,24 @@ model User {
   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt     DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   roles         Role     @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userProfile   UserProfile?
 
   @@index([username], map: "idx_users_username")
   @@map("users")
+}
+
+model UserProfile {
+  id        BigInt   @id @default(autoincrement())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  userId    BigInt   @unique @map("user_id")
+  first_name String   @map("first_name")
+  last_name  String   @map("last_name")
+  email     String   @unique
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
 }
 
 model Role {

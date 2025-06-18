@@ -65,6 +65,11 @@ export type User = {
      * User's role name
      */
     role: 'admin' | 'editor' | 'viewer';
+    profile?: {
+        firstName?: string;
+        lastName?: string;
+        email?: string;
+    } | null;
     createdAt: string;
     updatedAt: string;
 };
@@ -76,6 +81,11 @@ export type UserCreate = {
      * Role ID (1: admin, 2: editor, 3: viewer)
      */
     roleId: number;
+    profile?: {
+        firstName?: string;
+        lastName?: string;
+        email?: string;
+    };
 };
 
 export type UserUpdate = {
@@ -85,6 +95,11 @@ export type UserUpdate = {
      * Role ID (1: admin, 2: editor, 3: viewer)
      */
     roleId?: number;
+    profile?: {
+        firstName?: string;
+        lastName?: string;
+        email?: string;
+    };
 };
 
 /**
@@ -93,6 +108,9 @@ export type UserUpdate = {
 export type UserProfileUpdate = {
     username?: string;
     password?: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
 };
 
 export type LoginData = {

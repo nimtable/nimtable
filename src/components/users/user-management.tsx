@@ -86,6 +86,7 @@ export function UserManagement() {
       </div>
 
       <UserTable
+        currentUser={user}
         users={users ?? []}
         refetch={refetch}
         onRemove={removeUser}

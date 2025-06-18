@@ -43,6 +43,27 @@ CREATE TABLE users (
         TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Create the user_profiles table
+CREATE TABLE user_profiles (
+    id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    user_id bigint NOT NULL REFERENCES users (id),
+    first_name VARCHAR(255) NOT NULL,
+    last_name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP
+    WITH
+        TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP
+    WITH
+        TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE UNIQUE INDEX idx_user_profiles_email ON user_profiles (email);
+
+CREATE INDEX idx_user_profiles_name ON user_profiles (first_name, last_name);
+
+CREATE UNIQUE INDEX idx_user_profiles_user_id ON user_profiles (user_id);
+
 -- Create the catalogs table
 CREATE TABLE catalogs (
     id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,

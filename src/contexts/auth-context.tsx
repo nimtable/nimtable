@@ -29,6 +29,7 @@ interface AuthContextType {
   user: User | undefined
   login: (username: string, password: string) => Promise<boolean>
   logout: () => void
+  refreshUser: () => Promise<void>
 }
 
 const AuthContext = React.createContext<AuthContextType | undefined>(undefined)
@@ -69,12 +70,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [router])
 
+  const refreshUser = React.useCallback(async () => {
+    await refetchUserInfo()
+  }, [refetchUserInfo])
+
   return (
     <AuthContext.Provider
       value={{
         user: userInfo,
         login,
         logout,
+        refreshUser,
       }}
     >
       {children}

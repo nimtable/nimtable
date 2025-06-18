@@ -44,12 +44,18 @@ import { User } from "@/lib/acc-api/client"
 
 interface UserTableProps {
   users: User[]
+  currentUser?: User
   refetch: () => void
   onRemove: (id: number) => void
   onUpdate: (id: number, username: string, roleId: number) => void
 }
 
-export function UserTable({ users, onRemove, onUpdate }: UserTableProps) {
+export function UserTable({
+  users,
+  currentUser,
+  onRemove,
+  onUpdate,
+}: UserTableProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [userToDelete, setUserToDelete] = useState<User | null>(null)
   const [userToEdit, setUserToEdit] = useState<User | null>(null)
@@ -149,26 +155,28 @@ export function UserTable({ users, onRemove, onUpdate }: UserTableProps) {
                     {user.updatedAt &&
                       formatDate(new Date(user.updatedAt).getTime() * 1000)}
                   </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(user)}
-                      >
-                        <Edit2 className="h-4 w-4" />
-                        <span className="sr-only">Edit</span>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(user)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Remove</span>
-                      </Button>
-                    </div>
-                  </TableCell>
+                  {currentUser?.role === "admin" && (
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(user)}
+                        >
+                          <Edit2 className="h-4 w-4" />
+                          <span className="sr-only">Edit</span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(user)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          <span className="sr-only">Remove</span>
+                        </Button>
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))
             ) : (

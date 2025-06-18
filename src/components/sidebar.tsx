@@ -81,6 +81,10 @@ export function Sidebar() {
     },
   ]
 
+  const username = user?.profile?.firstName
+    ? `${user.profile.firstName} ${user.profile.lastName}`
+    : user?.username || ""
+
   return (
     <div className="flex h-full w-64 flex-col border-r border-gray-200 bg-white">
       {/* Sidebar Header */}
@@ -177,12 +181,10 @@ export function Sidebar() {
         <DropdownMenu>
           <DropdownMenuTrigger className="flex w-full cursor-pointer items-center gap-2 rounded-md p-2 hover:bg-gray-100">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200">
-              <span className="text-sm font-medium">
-                {user?.username.charAt(0)}
-              </span>
+              <span className="text-sm font-medium">{username.charAt(0)}</span>
             </div>
             <div className="w-36 text-left">
-              <p className="truncate text-sm font-medium">{user?.username}</p>
+              <p className="truncate text-sm font-medium">{username}</p>
             </div>
             <ChevronDown className="h-4 w-4 text-gray-500" />
           </DropdownMenuTrigger>
