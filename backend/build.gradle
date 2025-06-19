@@ -111,10 +111,6 @@ dependencies {
   implementation "org.eclipse.jetty:jetty-util:${jettyVersion}"
   implementation "org.eclipse.jetty:jetty-util-ajax:${jettyVersion}"
 
-  implementation 'org.slf4j:slf4j-api:2.0.12'
-  implementation 'org.slf4j:slf4j-log4j12:2.0.12'
-  implementation 'log4j:log4j:1.2.17'
-
   // Spark dependencies
   implementation "org.apache.spark:spark-core_2.12:${sparkVersion}"
   implementation "org.apache.spark:spark-sql_2.12:${sparkVersion}"
@@ -125,9 +121,9 @@ dependencies {
   // Servlet API
   compileOnly 'jakarta.servlet:jakarta.servlet-api:6.0.0'
 
-  // Logging
-  implementation 'org.slf4j:slf4j-api:2.0.7'
-  implementation 'ch.qos.logback:logback-classic:1.4.11'
+  // Logging - unified configuration using Logback
+  implementation 'org.slf4j:slf4j-api:2.0.12'
+  implementation 'ch.qos.logback:logback-classic:1.5.8'
 
   // Password Hashing
   implementation 'org.mindrot:jbcrypt:0.4'
