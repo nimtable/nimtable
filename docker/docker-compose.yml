@@ -30,7 +30,7 @@ services:
       - source: config.yaml
         target: /nimtable/config.yaml
     environment:
-      JAVA_OPTS: -Xmx2g -Xms512m
+      JAVA_OPTS: -Xmx32g -Xms512m
     networks:
       - nimtable-network
 
