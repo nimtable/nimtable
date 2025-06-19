@@ -399,7 +399,7 @@ export function AIAgentSidebar() {
                       className={cn(
                         "max-w-[85%] rounded-lg px-3 py-2",
                         message.role === "assistant"
-                          ? "bg-muted/50 text-foreground"
+                          ? "bg-muted/50 text-gray-900 dark:text-gray-100"
                           : "bg-blue-600 text-white"
                       )}
                     >
