@@ -30,15 +30,32 @@ Nimtable helps you easily manage and explore Apache Iceberg catalogs. With a web
 
 ### Key Features
 
-- 🌟 **Multi-Catalog Support**: Connect to REST Catalog, AWS Glue, AWS S3 Tables and PostgreSQL (via JDBC).
-- 🗄️ **Object Store Support**: Seamlessly integrate with S3 and S3-compatible object stores like Cloudflare R2, Minio, and more.
-- 🔍 **Table Exploration**: Inspect table schemas, partitions, and snapshots.
-- ⚡ **Interactive Querying**: Execute SQL queries directly from the platform.
-- 🤖 **AI Copilot**: Intelligent assistant to help with iceberg table exploration.
-- 📄 **AI Summary**: Automatically generate summaries of iceberg tables.
-- 📊 **File Distribution Analysis**: Visualize how data files are distributed across partitions and snapshots.
-- 🔧 **Table Optimization**: Run file compaction and manage snapshot expiration.
-- 🔌 **REST Catalog Compatibility**: Serve as a standard Iceberg REST Catalog, adapting any underlying catalog to a RESTful API.
+- 🌟 **Multi-Catalog Support**  
+  Connect to REST Catalog, AWS Glue, AWS S3 Tables, and PostgreSQL (via JDBC).
+
+- 🗄️ **Object Store Integration**  
+  Seamlessly work with S3 and S3-compatible stores like Cloudflare R2, Minio, and more.
+
+- 🔍 **Table Exploration**  
+  Inspect table schemas, partitions, and snapshots with ease.
+
+- ⚡ **Interactive Querying**  
+  Run SQL queries directly from the platform.
+
+- 🤖 **AI Copilot**  
+  Get intelligent assistance for Iceberg table exploration.
+
+- 📄 **AI Summary**  
+  Automatically generate summaries of your Iceberg tables.
+
+- 📊 **File Distribution Analysis**  
+  Visualize how data files are distributed across partitions and snapshots.
+
+- 🔧 **Table Optimization**  
+  Run file compaction and manage snapshot expiration.
+
+- 🔌 **REST Catalog Compatibility**  
+  Serve as a standard Iceberg REST Catalog, adapting any underlying catalog to a RESTful API.
 
 ## Architecture
 
@@ -48,48 +65,58 @@ Nimtable acts as a bridge between users and catalog servers, providing both an i
 
 ## Quick Start
 
-### Using Docker (Recommended for Production)
-
 The fastest way to get started is using Docker:
 
 ```bash
 cd docker
-
-# Start the service
 docker compose up -d
-
-# View logs
-docker compose logs -f
-
-# Stop the service
-docker compose down
 ```
 
-Access the UI at http://localhost:3000
+Access the UI at [http://localhost:3000](http://localhost:3000).
 
+#### Default Admin Login
+
+- **Username:** `admin`
+- **Password:** `admin`
+
+---
+
+## Managing the Service (Optional)
+
+- **View logs:**
+  ```bash
+  docker compose logs -f
+  ```
+- **Stop the service:**
+  ```bash
+  docker compose down
+  ```
 
 ## Development
 
 See [HACKING.md](docs/HACKING.md) for details on how to hack on Nimtable.
 
-
 ## Configuration
 
-Nimtable uses YAML for configuration, supporting both server settings and catalog connections. The configuration format is compatible with Spark's Iceberg catalog configuration. You can configure catalogs in two ways:
+Nimtable can be configured in two ways:
 
-1. **Configuration File**: Configure catalogs via YAML configuration (recommended for experts)
-2. **Web Interface**: Configure catalogs through the Nimtable UI (recommended for new users)
+- **Web UI:** Easiest for new users - just log in and click "Create Catalog."
+- **YAML Configuration File:** Recommended for advanced users or automated deployments.
 
-To configure the Docker deployment, read the sample configuration file at [docker/docker-compose.yml](./docker/docker-compose.yml).
+### 1. Configuration File Location
 
-### Server Configuration
+- By default, Nimtable looks for `config.yaml` in the working directory.
+- **Docker:** Mount your config file to `/app/config.yaml` inside the container.
+- See [docker/docker-compose.yml](./docker/docker-compose.yml) for an example of mounting configuration.
+
+### 2. Minimal Configuration Example
 
 ```yaml
 server:
-  port: 8182 # port for the backend server
+  port: 8182
   host: 0.0.0.0
 admin:
-  username: admin # the initial admin user used to login
+  username: admin
   password: admin
 database:
   url: jdbc:postgresql://localhost:5432/nimtable_db
@@ -97,51 +124,50 @@ database:
   password: password
 ```
 
+> **Important:** Change the default admin password after your first login for security.
 
-### Database Configuration
+### 3. Catalog Configuration
 
-Nimtable needs a PostgreSQL database to store data.
-If you deploy with the `docker-compose.yml` file,
-a Postgres container is included.
+You can add catalogs in two ways:
 
-You can also use your own Postgres database by setting the `url`, `username`, and `password`
-in `config.yaml`.
+- **Web UI:**  
+  After logging in, click "Create Catalog" and follow the prompts. Catalogs added via the UI are stored in the internal database and do not modify `config.yaml`.
 
-### Catalog Configuration Examples
+- **YAML File:**  
+  Pre-configure catalogs by adding them to your `config.yaml`.  
+  See [backend/config.yaml](./backend/config.yaml) for full examples and templates.
 
-You can connect catalogs to Nimtable by clicking `CREATE CATALOG` in the UI.
-There are multiple example templates provided to help you get started.
+**Supported Catalog Types:**  
+- REST
+- AWS Glue
+- S3 Tables
+- PostgreSQL (via JDBC)
 
-![create-catalog](docs/create-catalog.png)
+Each catalog type may require specific fields. Refer to the sample config for details.
 
-Alternatively, the catalogs can be pre-configured in the `config.yaml` file.
-Refer to [config.yaml](./backend/config.yaml) for examples.
+### 4. AWS Credential Configuration
 
-### AWS Credential Configuration in Docker
+If you use AWS Glue or S3, you can provide credentials in two ways:
 
-There are two ways to configure AWS credentials in Docker:
+- **Environment Variables:**
+  ```yaml
+  # docker-compose.yml
+  services:
+    nimtable:
+      environment:
+        - AWS_REGION=us-east-1
+        - AWS_ACCESS_KEY_ID=your-access-key
+        - AWS_SECRET_ACCESS_KEY=your-secret-key
+  ```
 
-1. Using Environment Variables:
-```yaml
-# docker-compose.yml
-services:
-  nimtable:
-    environment:
-      - AWS_REGION=us-east-1
-      - AWS_ACCESS_KEY_ID=your-access-key
-      - AWS_SECRET_ACCESS_KEY=your-secret-key
-```
-
-2. Mounting AWS Credentials File (Read-only):
-```yaml
-# docker-compose.yml
-services:
-  nimtable:
-    volumes:
-      - ~/.aws/credentials:/root/.aws/credentials:ro
-```
-
-
+- **Mounting AWS Credentials File:**
+  ```yaml
+  # docker-compose.yml
+  services:
+    nimtable:
+      volumes:
+        - ~/.aws/credentials:/root/.aws/credentials:ro
+  ```
 
 ## Roadmap
 
