@@ -30,7 +30,7 @@ Nimtable helps you easily manage and explore Apache Iceberg catalogs. With a web
 
 ### Key Features
 
-- 🌟 **Multi-Catalog Support**: Connect to REST Catalog, AWS Glue S3 Tables and PostgreSQL (via JDBC).
+- 🌟 **Multi-Catalog Support**: Connect to REST Catalog, AWS Glue, AWS S3 Tables and PostgreSQL (via JDBC).
 - 🗄️ **Object Store Support**: Seamlessly integrate with S3 and S3-compatible object stores like Cloudflare R2, Minio, and more.
 - 🔍 **Table Exploration**: Inspect table schemas, partitions, and snapshots.
 - ⚡ **Interactive Querying**: Execute SQL queries directly from the platform.
