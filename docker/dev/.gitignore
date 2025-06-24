@@ -1,3 +1,5 @@
 package-lock.json
 package.json
 .next
+pnpm-lock.yaml
+warehouse
