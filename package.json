@@ -14,7 +14,14 @@
     "check": "pnpm run format:check && pnpm run lint",
     "fix": "pnpm run format:write && pnpm run lint:fix",
     "gen-client-api": "./scripts/generate-client.sh",
-    "gen-acc-client-api": "./scripts/generate-acc-client.sh"
+    "gen-acc-client-api": "./scripts/generate-acc-client.sh",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:debug": "playwright test --debug",
+    "test:catalog": "./scripts/test-catalog-e2e.sh run",
+    "test:catalog:debug": "./scripts/test-catalog-e2e.sh debug",
+    "test:catalog:headed": "./scripts/test-catalog-e2e.sh headed"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^0.2.14",
@@ -75,6 +82,7 @@
   "devDependencies": {
     "@eslint/js": "^9.27.0",
     "@hey-api/openapi-ts": "^0.67.5",
+    "@playwright/test": "^1.48.2",
     "@tailwindcss/typography": "^0.5.16",
     "@types/bcryptjs": "^3.0.0",
     "@types/jsonwebtoken": "^9.0.9",
@@ -94,6 +102,7 @@
     "prettier-plugin-sort-imports": "^1.8.5",
     "prettier-plugin-tailwindcss": "^0.5.14",
     "prisma": "^6.9.0",
+    "testcontainers": "^10.28.0",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.32.1"

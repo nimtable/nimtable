@@ -87,7 +87,7 @@ export default function LoginPage() {
         }
       }
     } catch (err) {
-      setError("An error occurred during login")
+      setError(`An error occurred during login: ${err}`)
       console.error(err)
     }
   }
