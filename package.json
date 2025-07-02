@@ -15,13 +15,7 @@
     "fix": "pnpm run format:write && pnpm run lint:fix",
     "gen-client-api": "./scripts/generate-client.sh",
     "gen-acc-client-api": "./scripts/generate-acc-client.sh",
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui",
-    "test:e2e:headed": "playwright test --headed",
-    "test:e2e:debug": "playwright test --debug",
-    "test:catalog": "./scripts/test-catalog-e2e.sh run",
-    "test:catalog:debug": "./scripts/test-catalog-e2e.sh debug",
-    "test:catalog:headed": "./scripts/test-catalog-e2e.sh headed"
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^0.2.14",

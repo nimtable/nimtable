@@ -1,8 +1,4 @@
 import { test as base, expect, Page } from "@playwright/test"
-import {
-  IcebergTestContainer,
-  type IcebergCatalogContainer,
-} from "./iceberg-testcontainer"
 
 /* eslint-disable no-empty-pattern */
 
@@ -31,16 +27,25 @@ export const TEST_CONFIG = {
     LONG: 30000,
   },
 
+  // Service URLs from Docker dev environment
+  REST_CATALOG_URL: process.env.E2E_REST_CATALOG_URL || "http://rest:8181",
+  MINIO_URL: process.env.E2E_MINIO_URL || "http://minio:9000",
+  MINIO_CONSOLE_URL: process.env.E2E_MINIO_CONSOLE_URL || "http://minio:9001",
+
   // Test catalog configurations
   TEST_CATALOGS: {
-    // Simple REST catalog configuration (use environment variable for port)
+    // REST catalog configuration using Docker dev environment
     getRestCatalog: () => ({
       name: `test-rest-catalog-${Date.now()}`,
       type: "rest",
-      uri: process.env.ICEBERG_REST_URL || "http://localhost:8181",
-      warehouse: "file:///tmp/warehouse",
+      uri: process.env.E2E_REST_CATALOG_URL || "http://rest:8181",
+      warehouse: "s3://warehouse/",
       properties: [
-        { key: "io-impl", value: "org.apache.iceberg.hadoop.HadoopFileIO" },
+        { key: "io-impl", value: "org.apache.iceberg.aws.s3.S3FileIO" },
+        { key: "s3.endpoint", value: process.env.E2E_MINIO_URL || "http://minio:9000" },
+        // { key: "s3.access-key-id", value: "admin" },
+        // { key: "s3.secret-access-key", value: "password" },
+        // { key: "s3.path-style-access", value: "true" },
       ],
     }),
     // Invalid catalog for error testing
@@ -75,7 +80,6 @@ interface TestFixtures {
   ) => Promise<void>
   deleteTestUser: (page: Page, username: string) => Promise<void>
   waitForPageLoad: (page: Page) => Promise<void>
-  icebergContainer: IcebergCatalogContainer
 }
 
 // Helper types for better testing
@@ -94,29 +98,8 @@ export interface TestCatalogResult {
 }
 
 export const test = base.extend<TestFixtures>({
-  // Iceberg container instance (already started in global setup)
-  icebergContainer: async ({ }, use) => {
-    // Use environment variable set by global setup
-    const restUrl = process.env.ICEBERG_REST_URL
-    if (restUrl) {
-      await use({
-        container: null as any, // We don't need the actual container instance
-        restUrl,
-        warehouse: "file:///tmp/warehouse"
-      })
-      return
-    }
-
-    // Fallback to static instance method
-    const container = IcebergTestContainer.getInstance()
-    if (!container) {
-      throw new Error("Iceberg container not started. Check global setup.")
-    }
-    await use(container)
-  },
-
   // Login as admin user
-  loginAsAdmin: async ({ icebergContainer: _icebergContainer }, use) => {
+  loginAsAdmin: async ({ }, use) => {
     await use(async (page: Page) => {
       await page.goto("/login")
 
@@ -135,10 +118,7 @@ export const test = base.extend<TestFixtures>({
           response.url().includes("/login") ||
           response.url().includes("/auth")
         ) {
-          const _loginResponse = {
-            status: response.status(),
-            url: response.url(),
-          }
+          console.log(`Login response: ${response.status()} ${response.url()}`)
 
           if (response.status() >= 400) {
             try {
@@ -263,7 +243,7 @@ export const test = base.extend<TestFixtures>({
   },
 
   // Create a test catalog
-  createTestCatalog: async ({ icebergContainer: _icebergContainer }, use) => {
+  createTestCatalog: async ({ }, use) => {
     await use(
       async (page: Page, catalogName = `test-catalog-${Date.now()}`) => {
         await page.goto("/data/catalogs")
@@ -335,7 +315,7 @@ export const test = base.extend<TestFixtures>({
   },
 
   // Create a test catalog with specific configuration
-  createTestCatalogWithConfig: async ({ icebergContainer: _icebergContainer }, use) => {
+  createTestCatalogWithConfig: async ({ }, use) => {
     await use(
       async (
         page: Page,

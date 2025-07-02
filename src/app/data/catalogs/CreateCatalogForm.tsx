@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 import { Plus, Trash2 } from "lucide-react"
 import * as yaml from "js-yaml"
+import { extractErrorMessage } from "@/lib/error-handler"
 
 interface CatalogTemplate {
   name: string
@@ -425,8 +426,7 @@ export function CreateCatalogForm({
       })
       onSuccess?.()
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "An unknown error occurred"
+      const errorMessage = extractErrorMessage(error)
       console.error("Submission Error:", error)
       toast({
         variant: "destructive",
@@ -466,8 +466,7 @@ export function CreateCatalogForm({
         setIsInputPhase(false)
       }
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "An unknown error occurred"
+      const errorMessage = extractErrorMessage(error)
       console.error("Input Parsing Error:", error)
       toast({
         variant: "destructive",

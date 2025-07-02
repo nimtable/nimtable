@@ -9,35 +9,8 @@ jobs:
   e2e-tests:
     timeout-minutes: 60
     runs-on: ubuntu-latest
-    
-    services:
-      postgres:
-        image: postgres:17
-        env:
-          POSTGRES_USER: nimtable_user
-          POSTGRES_PASSWORD: password
-          POSTGRES_DB: nimtable
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
 
     env:
-      # Environment variables for E2E tests
-      DATABASE_URL: postgresql://nimtable_user:password@localhost:5432/nimtable
-      JWT_SECRET: test-jwt-secret-for-e2e-tests
-      ADMIN_USERNAME: admin
-      ADMIN_PASSWORD: admin
-      NODE_ENV: test
-      
-      # E2E specific environment variables
-      E2E_ADMIN_USERNAME: admin
-      E2E_ADMIN_PASSWORD: admin
-      E2E_DATABASE_URL: postgresql://nimtable_user:password@localhost:5432/nimtable
-      E2E_API_URL: http://localhost:8182
       BASE_URL: http://localhost:3000
 
     steps:
@@ -54,60 +27,78 @@ jobs:
       with:
         version: latest
 
-    - name: Setup Java
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'temurin'
-        java-version: '17'
-
-    - name: Cache Gradle dependencies
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.gradle/caches
-          ~/.gradle/wrapper
-        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-        restore-keys: |
-          ${{ runner.os }}-gradle-
-
     - name: Install frontend dependencies
       run: pnpm install
-
-    - name: Generate Prisma client
-      run: pnpm prisma generate
-
-    - name: Build frontend
-      run: pnpm run build
-
-    - name: Build backend
-      run: |
-        cd backend
-        ./gradlew build -x test
 
     - name: Install Playwright Browsers
       run: pnpm exec playwright install --with-deps
 
-    - name: Start backend server
+    - name: Start Docker development environment
       run: |
-        cd backend
-        nohup ./gradlew run > backend.log 2>&1 &
-        echo $! > backend.pid
-        # Wait for backend to be ready
-        timeout 120 bash -c 'until curl -f http://localhost:8182/health || curl -f http://localhost:8182; do sleep 2; done'
-      env:
-        JAVA_OPTS: -Xmx1g
+        cd docker/dev
+        docker-compose up -d
+        
+    - name: Wait for services to be ready
+      run: |
+        echo "🕐 Waiting for services to start..."
+        
+        # Wait for frontend (Next.js)
+        echo "Waiting for frontend..."
+        timeout 180 bash -c 'until curl -f http://localhost:3000 >/dev/null 2>&1; do echo -n .; sleep 2; done'
+        echo "✅ Frontend ready"
+        
+        # Wait for backend API
+        echo "Waiting for backend..."
+        timeout 180 bash -c 'until curl -f http://localhost:8182/health >/dev/null 2>&1 || curl -f http://localhost:8182 >/dev/null 2>&1; do echo -n .; sleep 2; done'
+        echo "✅ Backend ready"
+        
+        # Wait for REST catalog
+        echo "Waiting for REST catalog..."
+        timeout 180 bash -c 'until curl -f http://localhost:8181/v1/config >/dev/null 2>&1; do echo -n .; sleep 2; done'
+        echo "✅ REST catalog ready"
+        
+        # Wait for MinIO
+        echo "Waiting for MinIO..."
+        timeout 60 bash -c 'until curl -f http://localhost:9000 >/dev/null 2>&1; do echo -n .; sleep 2; done'
+        echo "✅ MinIO ready"
+        
+        echo "🎉 All services are ready!"
 
-    - name: Start frontend server
+    - name: Show environment status
       run: |
-        nohup pnpm start > frontend.log 2>&1 &
-        echo $! > frontend.pid
-        # Wait for frontend to be ready
-        timeout 60 bash -c 'until curl -f http://localhost:3000; do sleep 2; done'
+        echo "🔍 Environment Status:"
+        cd docker/dev
+        docker-compose ps
+        
+        echo "🌐 Service Health Check:"
+        curl -I http://localhost:3000 || echo "Frontend check failed"
+        curl -I http://localhost:8182 || echo "Backend check failed"
+        curl -I http://localhost:8181/v1/config || echo "REST catalog check failed"
+        curl -I http://localhost:9000 || echo "MinIO check failed"
 
     - name: Run Playwright tests
       run: pnpm run test:e2e
       env:
         CI: true
+
+    - name: Show logs on failure
+      if: failure()
+      run: |
+        echo "=== Docker Compose Services ==="
+        cd docker/dev
+        docker-compose ps
+        
+        echo "=== Frontend logs ==="
+        docker-compose logs nimtable-web | tail -100
+        
+        echo "=== Backend logs ==="
+        docker-compose logs nimtable | tail -100
+        
+        echo "=== Database logs ==="
+        docker-compose logs database | tail -50
+        
+        echo "=== REST catalog logs ==="
+        docker-compose logs rest | tail -50
 
     - name: Upload test results
       uses: actions/upload-artifact@v4
@@ -125,26 +116,22 @@ jobs:
         path: test-results/
         retention-days: 7
 
-    - name: Show logs on failure
+    - name: Upload Docker logs
+      uses: actions/upload-artifact@v4
       if: failure()
-      run: |
-        echo "=== Backend logs ==="
-        cat backend.log || echo "No backend logs found"
-        echo "=== Frontend logs ==="
-        cat frontend.log || echo "No frontend logs found"
+      with:
+        name: docker-logs
+        path: docker/dev/logs/
+        retention-days: 7
 
-    - name: Cleanup
+    - name: Cleanup Docker environment
       if: always()
       run: |
-        # Kill background processes
-        if [ -f backend.pid ]; then
-          kill $(cat backend.pid) || true
-        fi
-        if [ -f frontend.pid ]; then
-          kill $(cat frontend.pid) || true
-        fi
+        cd docker/dev
+        docker-compose down -v
+        docker system prune -f
 
-  # Separate job for different browsers
+  # Cross-browser testing for main branch
   e2e-tests-cross-browser:
     timeout-minutes: 60
     runs-on: ubuntu-latest
@@ -154,29 +141,8 @@ jobs:
       fail-fast: false
       matrix:
         project: [chromium, firefox, webkit]
-    
-    services:
-      postgres:
-        image: postgres:17
-        env:
-          POSTGRES_USER: nimtable_user
-          POSTGRES_PASSWORD: password
-          POSTGRES_DB: nimtable
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
 
     env:
-      DATABASE_URL: postgresql://nimtable_user:password@localhost:5432/nimtable
-      JWT_SECRET: test-jwt-secret-for-e2e-tests
-      ADMIN_USERNAME: admin
-      ADMIN_PASSWORD: admin
-      E2E_ADMIN_USERNAME: admin
-      E2E_ADMIN_PASSWORD: admin
       BASE_URL: http://localhost:3000
 
     steps:
@@ -193,47 +159,40 @@ jobs:
       with:
         version: latest
 
-    - name: Setup Java
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'temurin'
-        java-version: '17'
-
     - name: Install dependencies
       run: pnpm install
 
-    - name: Generate Prisma client
-      run: pnpm prisma generate
-
-    - name: Build frontend
-      run: pnpm run build
-
-    - name: Build backend
-      run: |
-        cd backend
-        ./gradlew build -x test
-
-    - name: Install Playwright Browsers
+    - name: Install Playwright Browser for ${{ matrix.project }}
       run: pnpm exec playwright install --with-deps ${{ matrix.project }}
 
-    - name: Start servers
+    - name: Start Docker development environment
       run: |
-        cd backend
-        nohup ./gradlew run > ../backend.log 2>&1 &
-        cd ..
-        timeout 120 bash -c 'until curl -f http://localhost:8182/health || curl -f http://localhost:8182; do sleep 2; done'
-        nohup pnpm start > frontend.log 2>&1 &
-        timeout 60 bash -c 'until curl -f http://localhost:3000; do sleep 2; done'
+        cd docker/dev
+        docker-compose up -d
+
+    - name: Wait for services to be ready
+      run: |
+        echo "🕐 Waiting for services..."
+        timeout 180 bash -c 'until curl -f http://localhost:3000 >/dev/null 2>&1; do sleep 2; done'
+        timeout 180 bash -c 'until curl -f http://localhost:8182 >/dev/null 2>&1; do sleep 2; done'
+        timeout 180 bash -c 'until curl -f http://localhost:8181/v1/config >/dev/null 2>&1; do sleep 2; done'
+        echo "✅ Services ready"
 
     - name: Run Playwright tests on ${{ matrix.project }}
       run: pnpm exec playwright test --project=${{ matrix.project }}
       env:
         CI: true
 
-    - name: Upload test results
+    - name: Upload test results for ${{ matrix.project }}
       uses: actions/upload-artifact@v4
       if: always()
       with:
         name: playwright-report-${{ matrix.project }}
         path: playwright-report/
         retention-days: 30
+
+    - name: Cleanup
+      if: always()
+      run: |
+        cd docker/dev
+        docker-compose down -v

@@ -7,9 +7,9 @@ admin:
 
 # Postgres is used for users, catalogs, etc.
 database:
-  url: jdbc:postgresql://localhost:5432/nimtable_db
-  username: nimtable_user
-  password: password
+  url: jdbc:postgresql://ep-bitter-truth-a1bey6tx-pooler.ap-southeast-1.aws.neon.tech/nimtable_shared?sslmode=require
+  username: nimtable_shared_owner
+  password: npg_3ukT8LsDcSiF
 
 catalogs:
 #  - name: rest-catalog-demo
