@@ -69,9 +69,6 @@ configs:
       server:
         port: 8182
         host: 0.0.0.0
-      admin:
-        username: admin
-        password: admin
       database:
         # You can also point to your own Postgres database, instead of using the one provided by docker-compose.
         url: jdbc:postgresql://database:5432/nimtable

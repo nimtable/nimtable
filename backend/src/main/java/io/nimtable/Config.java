@@ -30,14 +30,8 @@ import org.apache.iceberg.CatalogProperties;
 import org.apache.iceberg.CatalogUtil;
 
 public record Config(
-        Server server,
-        Admin admin,
-        Database database,
-        List<Catalog> catalogs,
-        Compactor compactor) {
+        Server server, Database database, List<Catalog> catalogs, Compactor compactor) {
     public record Server(int port, String host) {}
-
-    public record Admin(String username, String password) {}
 
     public record Database(String url, String username, String password) {}
 
@@ -82,9 +76,5 @@ public record Config(
         return catalogs != null
                 ? catalogs.stream().filter(c -> c.name().equals(name)).findFirst().orElse(null)
                 : null;
-    }
-
-    public Admin admin() {
-        return admin;
     }
 }
