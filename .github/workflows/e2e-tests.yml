@@ -1,0 +1,198 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  e2e-tests:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+
+    env:
+      BASE_URL: http://localhost:3000
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '23'
+        cache: 'pnpm'
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: latest
+
+    - name: Install frontend dependencies
+      run: pnpm install
+
+    - name: Install Playwright Browsers
+      run: pnpm exec playwright install --with-deps
+
+    - name: Start Docker development environment
+      run: |
+        cd docker/dev
+        docker-compose up -d
+        
+    - name: Wait for services to be ready
+      run: |
+        echo "🕐 Waiting for services to start..."
+        
+        # Wait for frontend (Next.js)
+        echo "Waiting for frontend..."
+        timeout 180 bash -c 'until curl -f http://localhost:3000 >/dev/null 2>&1; do echo -n .; sleep 2; done'
+        echo "✅ Frontend ready"
+        
+        # Wait for backend API
+        echo "Waiting for backend..."
+        timeout 180 bash -c 'until curl -f http://localhost:8182/health >/dev/null 2>&1 || curl -f http://localhost:8182 >/dev/null 2>&1; do echo -n .; sleep 2; done'
+        echo "✅ Backend ready"
+        
+        # Wait for REST catalog
+        echo "Waiting for REST catalog..."
+        timeout 180 bash -c 'until curl -f http://localhost:8181/v1/config >/dev/null 2>&1; do echo -n .; sleep 2; done'
+        echo "✅ REST catalog ready"
+        
+        # Wait for MinIO
+        echo "Waiting for MinIO..."
+        timeout 60 bash -c 'until curl -f http://localhost:9000 >/dev/null 2>&1; do echo -n .; sleep 2; done'
+        echo "✅ MinIO ready"
+        
+        echo "🎉 All services are ready!"
+
+    - name: Show environment status
+      run: |
+        echo "🔍 Environment Status:"
+        cd docker/dev
+        docker-compose ps
+        
+        echo "🌐 Service Health Check:"
+        curl -I http://localhost:3000 || echo "Frontend check failed"
+        curl -I http://localhost:8182 || echo "Backend check failed"
+        curl -I http://localhost:8181/v1/config || echo "REST catalog check failed"
+        curl -I http://localhost:9000 || echo "MinIO check failed"
+
+    - name: Run Playwright tests
+      run: pnpm run test:e2e
+      env:
+        CI: true
+
+    - name: Show logs on failure
+      if: failure()
+      run: |
+        echo "=== Docker Compose Services ==="
+        cd docker/dev
+        docker-compose ps
+        
+        echo "=== Frontend logs ==="
+        docker-compose logs nimtable-web | tail -100
+        
+        echo "=== Backend logs ==="
+        docker-compose logs nimtable | tail -100
+        
+        echo "=== Database logs ==="
+        docker-compose logs database | tail -50
+        
+        echo "=== REST catalog logs ==="
+        docker-compose logs rest | tail -50
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: playwright-report
+        path: playwright-report/
+        retention-days: 30
+
+    - name: Upload test videos
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: test-videos
+        path: test-results/
+        retention-days: 7
+
+    - name: Upload Docker logs
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: docker-logs
+        path: docker/dev/logs/
+        retention-days: 7
+
+    - name: Cleanup Docker environment
+      if: always()
+      run: |
+        cd docker/dev
+        docker-compose down -v
+        docker system prune -f
+
+  # Cross-browser testing for main branch
+  e2e-tests-cross-browser:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [chromium, firefox, webkit]
+
+    env:
+      BASE_URL: http://localhost:3000
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '23'
+        cache: 'pnpm'
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: latest
+
+    - name: Install dependencies
+      run: pnpm install
+
+    - name: Install Playwright Browser for ${{ matrix.project }}
+      run: pnpm exec playwright install --with-deps ${{ matrix.project }}
+
+    - name: Start Docker development environment
+      run: |
+        cd docker/dev
+        docker-compose up -d
+
+    - name: Wait for services to be ready
+      run: |
+        echo "🕐 Waiting for services..."
+        timeout 180 bash -c 'until curl -f http://localhost:3000 >/dev/null 2>&1; do sleep 2; done'
+        timeout 180 bash -c 'until curl -f http://localhost:8182 >/dev/null 2>&1; do sleep 2; done'
+        timeout 180 bash -c 'until curl -f http://localhost:8181/v1/config >/dev/null 2>&1; do sleep 2; done'
+        echo "✅ Services ready"
+
+    - name: Run Playwright tests on ${{ matrix.project }}
+      run: pnpm exec playwright test --project=${{ matrix.project }}
+      env:
+        CI: true
+
+    - name: Upload test results for ${{ matrix.project }}
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: playwright-report-${{ matrix.project }}
+        path: playwright-report/
+        retention-days: 30
+
+    - name: Cleanup
+      if: always()
+      run: |
+        cd docker/dev
+        docker-compose down -v

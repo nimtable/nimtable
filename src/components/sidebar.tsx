@@ -183,7 +183,7 @@ export function Sidebar() {
       </div>
 
       {/* User Profile */}
-      <div className="relative border-t p-4">
+      <div className="relative border-t p-4" data-testid="user-menu">
         <DropdownMenu>
           <DropdownMenuTrigger className="flex w-full cursor-pointer items-center gap-2 rounded-md p-2 hover:bg-gray-100">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200">

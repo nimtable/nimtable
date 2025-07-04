@@ -34,6 +34,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
+import { extractErrorMessage, isNetworkError } from "@/lib/error-handler"
 import * as yaml from "js-yaml"
 
 interface CatalogTemplate {
@@ -429,8 +430,7 @@ export default function NewCatalogPage() {
         setIsInputPhase(false)
       }
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "An unknown error occurred"
+      const errorMessage = extractErrorMessage(error)
       console.error("Input Parsing Error:", error)
       toast({
         variant: "destructive",
@@ -482,12 +482,17 @@ export default function NewCatalogPage() {
 
       router.push("/data/catalog?catalog=" + catalogData.name)
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "An unknown error occurred"
+      const errorMessage = extractErrorMessage(error)
       console.error("Submission Error:", error)
+
+      // Provide more specific error messages based on error type
+      const title = isNetworkError(error)
+        ? "Connection Failed"
+        : "Failed to create catalog"
+
       toast({
         variant: "destructive",
-        title: "Failed to create catalog",
+        title,
         description: errorMessage,
       })
     } finally {
