@@ -429,7 +429,9 @@ function ManifestItem({
                       <div className="text-sm font-medium">Files</div>
                       {manifest.deleted_files_count > 0 && (
                         <div className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded border">
-                          ⚠️ Note: Only non-deleted entries are displayed. {manifest.deleted_files_count} deleted entries in the manifest are not shown.
+                          ⚠️ Note: Only non-deleted entries are displayed.{" "}
+                          {manifest.deleted_files_count} deleted entries in the
+                          manifest are not shown.
                         </div>
                       )}
                       {manifestDetails.files.length > 0 ? (
@@ -488,7 +490,9 @@ function ManifestItem({
               <div className="text-sm font-medium">Files</div>
               {manifest.deleted_files_count > 0 && (
                 <div className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded border">
-                  ⚠️ Note: Only non-deleted entries are displayed. {manifest.deleted_files_count} deleted entries in the manifest are not shown.
+                  ⚠️ Note: Only non-deleted entries are displayed.{" "}
+                  {manifest.deleted_files_count} deleted entries in the manifest
+                  are not shown.
                 </div>
               )}
               {manifestDetails.files.length > 0 ? (
