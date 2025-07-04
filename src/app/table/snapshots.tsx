@@ -427,6 +427,13 @@ function ManifestItem({
                   {manifestDetails && (
                     <div className="space-y-2">
                       <div className="text-sm font-medium">Files</div>
+                      {manifest.deleted_files_count > 0 && (
+                        <div className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded border">
+                          ⚠️ Note: Only non-deleted entries are displayed.{" "}
+                          {manifest.deleted_files_count} deleted entries in the
+                          manifest are not shown.
+                        </div>
+                      )}
                       {manifestDetails.files.length > 0 ? (
                         <div className="max-h-[300px] space-y-3 overflow-y-auto">
                           {manifestDetails.files.map((file, fileIndex) => (
@@ -481,12 +488,19 @@ function ManifestItem({
           ) : manifestDetails ? (
             <div className="space-y-4">
               <div className="text-sm font-medium">Files</div>
+              {manifest.deleted_files_count > 0 && (
+                <div className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded border">
+                  ⚠️ Note: Only non-deleted entries are displayed.{" "}
+                  {manifest.deleted_files_count} deleted entries in the manifest
+                  are not shown.
+                </div>
+              )}
               {manifestDetails.files.length > 0 ? (
-                <div className="space-y-3">
+                <div className="max-h-[300px] space-y-3 overflow-y-auto">
                   {manifestDetails.files.map((file, fileIndex) => (
                     <div
                       key={fileIndex}
-                      className="space-y-1 pl-2 font-mono text-xs"
+                      className="space-y-1 border-l-2 border-muted pl-2 font-mono text-xs"
                     >
                       <div className="text-muted-foreground">
                         Path: {file.file_path}

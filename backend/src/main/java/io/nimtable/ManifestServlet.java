@@ -149,6 +149,9 @@ public class ManifestServlet extends HttpServlet {
                 rootNode.put("content", manifest.content().name());
                 var filesNode = objectMapper.createArrayNode();
 
+                // Note: ManifestFiles.read() and ManifestFiles.readDeleteManifest() only return
+                // non-deleted entries. Deleted entries in the manifest will not be included in the
+                // response.
                 switch (manifest.content()) {
                     case DATA:
                         for (DataFile file : ManifestFiles.read(manifest, fileIO, table.specs())) {
