@@ -1,9 +1,6 @@
 server:
   port: 8182
   host: 0.0.0.0
-admin:
-  username: admin
-  password: admin
 
 # Postgres is used for users, catalogs, etc.
 database:

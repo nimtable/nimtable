@@ -79,6 +79,16 @@ Access the UI at [http://localhost:3000](http://localhost:3000).
 - **Username:** `admin`
 - **Password:** `admin`
 
+You can customize the admin credentials by setting environment variables in your `docker-compose.yml`:
+
+```yaml
+services:
+  nimtable-web:
+    environment:
+      - ADMIN_USERNAME=your-admin-username
+      - ADMIN_PASSWORD=your-secure-password
+```
+
 ---
 
 ## Managing the Service (Optional)
@@ -115,9 +125,6 @@ Nimtable can be configured in two ways:
 server:
   port: 8182
   host: 0.0.0.0
-admin:
-  username: admin
-  password: admin
 database:
   url: jdbc:postgresql://localhost:5432/nimtable_db
   username: nimtable_user
