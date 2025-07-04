@@ -21,6 +21,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.nimtable.db.PersistenceManager;
 import io.nimtable.db.entity.Catalog;
 import io.nimtable.db.repository.CatalogRepository;
+import io.nimtable.schedule.ScheduleManager;
 import io.nimtable.spark.LocalSpark;
 import java.io.File;
 import java.net.InetSocketAddress;
@@ -94,6 +95,10 @@ public class Server {
         // init spark
         LocalSpark.getInstance(config);
 
+        // Initialize and start the schedule manager
+        ScheduleManager scheduleManager = ScheduleManager.getInstance(config);
+        scheduleManager.start();
+
         // Add Servlets to handle API endpoints
         apiContext = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
         apiContext.setContextPath("/api");
@@ -155,12 +160,13 @@ public class Server {
                         new InetSocketAddress(config.server().host(), config.server().port()));
         httpServer.setHandler(handlers);
 
-        // Add listener bean to close PersistenceManager on shutdown
+        // Add listener bean to close PersistenceManager and ScheduleManager on shutdown
         httpServer.addBean(
                 new AbstractLifeCycle.AbstractLifeCycleListener() {
                     @Override
                     public void lifeCycleStopping(LifeCycle event) {
-                        LOG.info("Shutting down server, closing PersistenceManager.");
+                        LOG.info("Shutting down server, closing ScheduleManager and PersistenceManager.");
+                        scheduleManager.stop();
                         PersistenceManager.close();
                     }
                 });

@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { OptimizeSheet } from "@/components/table/optimize-sheet"
+import { ScheduleSheet } from "@/components/table/schedule-sheet"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
