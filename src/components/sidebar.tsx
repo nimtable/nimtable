@@ -13,6 +13,7 @@ import {
   LogOut,
   Settings,
   Users,
+  Calendar,
 } from "lucide-react"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
@@ -69,6 +70,11 @@ export function Sidebar() {
       title: "Optimization",
       href: "/optimization",
       icon: LayoutGrid,
+    },
+    {
+      title: "Jobs",
+      href: "/jobs",
+      icon: Calendar,
     },
     {
       title: "SQL Query",

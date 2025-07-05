@@ -13,14 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export const formatDate = (timestamp: number) => {
-  // If timestamp is in seconds (less than 1e12), convert to milliseconds
-  const timestampMs = timestamp < 1e12 ? timestamp * 1000 : timestamp
-  const date = new Date(timestampMs)
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(date)
-}
+
+export async function GET() {
+  try {
+    const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:8080'}/optimize/scheduled-tasks`)
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch scheduled tasks')
+    }
+    
+    const data = await response.json()
+    return Response.json(data)
+  } catch (error) {
+    console.error('Error fetching scheduled tasks:', error)
+    return Response.json(
+      { error: 'Failed to fetch scheduled tasks' },
+      { status: 500 }
+    )
+  }
+} 

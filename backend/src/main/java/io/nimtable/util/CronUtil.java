@@ -80,44 +80,178 @@ public class CronUtil {
         
         String[] parts = cronExpression.trim().split("\\s+");
         
-        LocalDateTime next = from.plusMinutes(1).truncatedTo(ChronoUnit.MINUTES);
+        // Start from the next second to avoid returning the current time
+        LocalDateTime next = from.plusSeconds(1).withNano(0);
         
-        // Simple implementation for common cases
-        // For production, consider using a more robust cron library like Quartz
-        
-        int targetSecond = parseField(parts[0], 0);
-        int targetMinute = parseField(parts[1], next.getMinute());
-        int targetHour = parseField(parts[2], next.getHour());
-        
-        next = next.withSecond(targetSecond);
-        
-        if (!parts[1].equals("*")) {
-            next = next.withMinute(targetMinute);
-        }
-        
-        if (!parts[2].equals("*")) {
-            next = next.withHour(targetHour);
-        }
-        
-        // Handle daily execution
-        if (parts[0].equals("0") && parts[1].equals("0") && !parts[2].equals("*") && 
-            parts[3].equals("*") && parts[4].equals("*") && parts[5].equals("*")) {
-            // Daily at specific hour
-            if (next.isBefore(from) || next.equals(from)) {
-                next = next.plusDays(1);
+        // Try to find the next execution time within a reasonable timeframe
+        for (int attempts = 0; attempts < 60 * 24 * 40; attempts++) { // Up to 40 days
+            if (matchesTimeSlot(next, parts)) {
+                return next;
+            }
+            
+            // Increment more intelligently based on the cron expression
+            next = getNextIncrement(next, parts);
+            
+            // Safety check to prevent infinite loops
+            if (next.isAfter(from.plusDays(40))) {
+                break;
             }
         }
         
-        // Handle hourly execution
-        if (parts[0].equals("0") && !parts[1].equals("*") && parts[2].equals("*") && 
-            parts[3].equals("*") && parts[4].equals("*") && parts[5].equals("*")) {
-            // Hourly at specific minute
-            if (next.isBefore(from) || next.equals(from)) {
-                next = next.plusHours(1);
+        throw new IllegalArgumentException("Unable to find next execution time for: " + cronExpression);
+    }
+    
+    private static LocalDateTime getNextIncrement(LocalDateTime current, String[] cronParts) {
+        // Analyze the cron expression to determine the best increment strategy
+        
+        // If it's a daily pattern (specific hour, minute, second)
+        if (!cronParts[2].equals("*") && !cronParts[2].contains("/") && !cronParts[2].contains("-") && 
+            !cronParts[1].equals("*") && !cronParts[1].contains("/") && !cronParts[1].contains("-") &&
+            !cronParts[0].equals("*") && !cronParts[0].contains("/") && !cronParts[0].contains("-") &&
+            cronParts[3].equals("*") && cronParts[4].equals("*") && cronParts[5].equals("*")) {
+            
+            // Daily pattern - jump to the next day at the specified time
+            int targetHour = Integer.parseInt(cronParts[2]);
+            int targetMinute = Integer.parseInt(cronParts[1]);
+            int targetSecond = Integer.parseInt(cronParts[0]);
+            
+            LocalDateTime todayTarget = current.toLocalDate().atTime(targetHour, targetMinute, targetSecond);
+            
+            if (todayTarget.isAfter(current)) {
+                return todayTarget;
+            } else {
+                return todayTarget.plusDays(1);
             }
         }
         
-        return next;
+        // If it's a weekly pattern (with day-of-week specification)
+        if (!cronParts[2].equals("*") && !cronParts[2].contains("/") && !cronParts[2].contains("-") && 
+            !cronParts[1].equals("*") && !cronParts[1].contains("/") && !cronParts[1].contains("-") &&
+            !cronParts[0].equals("*") && !cronParts[0].contains("/") && !cronParts[0].contains("-") &&
+            cronParts[3].equals("*") && cronParts[4].equals("*") && !cronParts[5].equals("*")) {
+            
+            // Weekly pattern - jump to the next day to find the right day of week
+            int targetHour = Integer.parseInt(cronParts[2]);
+            int targetMinute = Integer.parseInt(cronParts[1]);
+            int targetSecond = Integer.parseInt(cronParts[0]);
+            
+            // Try today first
+            LocalDateTime todayTarget = current.toLocalDate().atTime(targetHour, targetMinute, targetSecond);
+            if (todayTarget.isAfter(current) && matchesField(current.getDayOfWeek().getValue() % 7, cronParts[5], 0, 6)) {
+                return todayTarget;
+            }
+            
+            // Search for the next matching day within the next 7 days
+            for (int i = 1; i <= 7; i++) {
+                LocalDateTime nextDay = current.plusDays(i).toLocalDate().atTime(targetHour, targetMinute, targetSecond);
+                if (matchesField(nextDay.getDayOfWeek().getValue() % 7, cronParts[5], 0, 6)) {
+                    return nextDay;
+                }
+            }
+            
+            // Fallback - should not happen
+            return current.plusDays(1).withHour(0).withMinute(0).withSecond(0);
+        }
+        
+        // If it's an hourly pattern (specific minute and second)
+        if (!cronParts[1].equals("*") && !cronParts[1].contains("/") && !cronParts[1].contains("-") &&
+            !cronParts[0].equals("*") && !cronParts[0].contains("/") && !cronParts[0].contains("-") &&
+            cronParts[2].equals("*") && cronParts[3].equals("*") && cronParts[4].equals("*") && cronParts[5].equals("*")) {
+            
+            // Hourly pattern - jump to the next hour at the specified minute
+            int targetMinute = Integer.parseInt(cronParts[1]);
+            int targetSecond = Integer.parseInt(cronParts[0]);
+            
+            LocalDateTime thisHourTarget = current.withMinute(targetMinute).withSecond(targetSecond);
+            
+            if (thisHourTarget.isAfter(current)) {
+                return thisHourTarget;
+            } else {
+                return thisHourTarget.plusHours(1);
+            }
+        }
+        
+        // If minutes has a step pattern, jump to the next step
+        if (cronParts[1].startsWith("*/")) {
+            int step = Integer.parseInt(cronParts[1].substring(2));
+            int currentMinute = current.getMinute();
+            int nextMinute = ((currentMinute / step) + 1) * step;
+            
+            if (nextMinute >= 60) {
+                return current.plusHours(1).withMinute(0).withSecond(0);
+            } else {
+                return current.withMinute(nextMinute).withSecond(0);
+            }
+        }
+        
+        // If hours has a step pattern, jump to the next step
+        if (cronParts[2].startsWith("*/")) {
+            int step = Integer.parseInt(cronParts[2].substring(2));
+            int currentHour = current.getHour();
+            int nextHour = ((currentHour / step) + 1) * step;
+            
+            if (nextHour >= 24) {
+                return current.plusDays(1).withHour(0).withMinute(0).withSecond(0);
+            } else {
+                return current.withHour(nextHour).withMinute(0).withSecond(0);
+            }
+        }
+        
+        // If it's a monthly pattern
+        if (!cronParts[3].equals("*") && !cronParts[3].contains("/") && !cronParts[3].contains("-")) {
+            // Jump to the next day to find the right day of month
+            return current.plusDays(1).withHour(0).withMinute(0).withSecond(0);
+        }
+        
+        // Default increment by 1 minute for complex patterns
+        return current.plusMinutes(1);
+    }
+    
+    private static boolean matchesTimeSlot(LocalDateTime dateTime, String[] cronParts) {
+        return matchesField(dateTime.getSecond(), cronParts[0], 0, 59) &&
+               matchesField(dateTime.getMinute(), cronParts[1], 0, 59) &&
+               matchesField(dateTime.getHour(), cronParts[2], 0, 23) &&
+               matchesField(dateTime.getDayOfMonth(), cronParts[3], 1, 31) &&
+               matchesField(dateTime.getMonthValue(), cronParts[4], 1, 12) &&
+               matchesField(dateTime.getDayOfWeek().getValue() % 7, cronParts[5], 0, 6); // Convert to Sunday=0
+    }
+    
+    private static boolean matchesField(int value, String cronField, int min, int max) {
+        if (cronField.equals("*")) {
+            return true;
+        }
+        
+        if (cronField.contains("/")) {
+            String[] parts = cronField.split("/");
+            String base = parts[0];
+            int step = Integer.parseInt(parts[1]);
+            
+            if (base.equals("*")) {
+                return (value - min) % step == 0;
+            } else {
+                int baseValue = Integer.parseInt(base);
+                return value >= baseValue && (value - baseValue) % step == 0;
+            }
+        }
+        
+        if (cronField.contains("-")) {
+            String[] parts = cronField.split("-");
+            int start = Integer.parseInt(parts[0]);
+            int end = Integer.parseInt(parts[1]);
+            return value >= start && value <= end;
+        }
+        
+        if (cronField.contains(",")) {
+            String[] parts = cronField.split(",");
+            for (String part : parts) {
+                if (matchesField(value, part.trim(), min, max)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        return value == Integer.parseInt(cronField);
     }
 
     /**
@@ -130,25 +264,54 @@ public class CronUtil {
         
         String[] parts = cronExpression.trim().split("\\s+");
         
-        // Handle common patterns
+        // Handle step expressions
+        if (parts[1].startsWith("*/")) {
+            int minutes = Integer.parseInt(parts[1].substring(2));
+            if (parts[0].equals("0") && parts[2].equals("*") && parts[3].equals("*") && 
+                parts[4].equals("*") && parts[5].equals("*")) {
+                if (minutes == 1) {
+                    return "Every minute";
+                } else if (minutes < 60) {
+                    return "Every " + minutes + " minutes";
+                } else {
+                    return "Every " + (minutes / 60) + " hour(s)";
+                }
+            }
+        }
+        
+        if (parts[2].startsWith("*/")) {
+            int hours = Integer.parseInt(parts[2].substring(2));
+            if (parts[0].equals("0") && parts[1].equals("0") && parts[3].equals("*") && 
+                parts[4].equals("*") && parts[5].equals("*")) {
+                return "Every " + hours + " hour(s)";
+            }
+        }
+        
+        // Handle daily patterns
         if (parts[0].equals("0") && parts[1].equals("0") && !parts[2].equals("*") && 
             parts[3].equals("*") && parts[4].equals("*") && parts[5].equals("*")) {
-            return "Daily at " + parts[2] + ":00";
+            int hour = Integer.parseInt(parts[2]);
+            return "Daily at " + String.format("%02d:00", hour);
         }
         
+        // Handle hourly patterns
         if (parts[0].equals("0") && !parts[1].equals("*") && parts[2].equals("*") && 
             parts[3].equals("*") && parts[4].equals("*") && parts[5].equals("*")) {
-            return "Hourly at minute " + parts[1];
+            int minute = Integer.parseInt(parts[1]);
+            return "Hourly at minute " + minute;
         }
         
+        // Handle weekly patterns
+        if (parts[0].equals("0") && parts[1].equals("0") && !parts[2].equals("*") && 
+            parts[3].equals("*") && parts[4].equals("*") && !parts[5].equals("*")) {
+            int hour = Integer.parseInt(parts[2]);
+            return "Weekly on " + getDayOfWeekName(parts[5]) + " at " + String.format("%02d:00", hour);
+        }
+        
+        // Handle monthly patterns
         if (parts[0].equals("0") && parts[1].equals("0") && parts[2].equals("0") && 
             !parts[3].equals("*") && parts[4].equals("*") && parts[5].equals("*")) {
             return "Monthly on day " + parts[3];
-        }
-        
-        if (parts[0].equals("0") && parts[1].equals("0") && !parts[2].equals("*") && 
-            parts[3].equals("*") && parts[4].equals("*") && !parts[5].equals("*")) {
-            return "Weekly on " + getDayOfWeekName(parts[5]) + " at " + parts[2] + ":00";
         }
         
         return "Custom: " + cronExpression;
@@ -164,7 +327,15 @@ public class CronUtil {
             if (stepParts.length != 2) {
                 throw new IllegalArgumentException("Invalid step format: " + field);
             }
-            validateField(stepParts[0], min, max);
+            
+            String base = stepParts[0];
+            if (!base.equals("*")) {
+                int baseValue = Integer.parseInt(base);
+                if (baseValue < min || baseValue > max) {
+                    throw new IllegalArgumentException("Base value out of range: " + baseValue);
+                }
+            }
+            
             int step = Integer.parseInt(stepParts[1]);
             if (step <= 0) {
                 throw new IllegalArgumentException("Step must be positive: " + step);
@@ -179,6 +350,11 @@ public class CronUtil {
             if (start < min || start > max || end < min || end > max || start > end) {
                 throw new IllegalArgumentException("Invalid range: " + field);
             }
+        } else if (field.contains(",")) {
+            String[] commaParts = field.split(",");
+            for (String part : commaParts) {
+                validateField(part.trim(), min, max);
+            }
         } else {
             int value = Integer.parseInt(field);
             if (value < min || value > max) {
@@ -191,6 +367,14 @@ public class CronUtil {
         if (field.equals("*")) {
             return defaultValue;
         }
+        
+        // Handle step expressions like "*/10"
+        if (field.startsWith("*/")) {
+            // For step expressions, we can't return a single value
+            // This method is deprecated in favor of matchesField
+            return defaultValue;
+        }
+        
         return Integer.parseInt(field);
     }
 

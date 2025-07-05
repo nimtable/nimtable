@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowUpDown, Check, GitCompare, MoreHorizontal, X } from "lucide-react"
+import { ArrowUpDown, Check, GitCompare, MoreHorizontal, X, Calendar } from "lucide-react"
 import { useState } from "react"
 
 import {
@@ -41,6 +41,7 @@ export function OptimizationTable({ tables, loading }: OptimizationTableProps) {
   })
 
   const [showOptimizeSheet, setShowOptimizeSheet] = useState(false)
+  const [showScheduleSheet, setShowScheduleSheet] = useState(false)
 
   const [selectedCompactTable, setSelectedCompactTable] =
     useState<Table | null>(null)
@@ -213,6 +214,21 @@ export function OptimizationTable({ tables, loading }: OptimizationTableProps) {
                       <GitCompare className="h-3.5 w-3.5" />
                       Compact
                     </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 gap-1"
+                      onClick={() => {
+                        const selectedTable = tables.find((t) => t.id === table.id)
+                        if (selectedTable) {
+                          setSelectedCompactTable(selectedTable)
+                          setShowScheduleSheet(true)
+                        }
+                      }}
+                    >
+                      <Calendar className="h-3.5 w-3.5" />
+                      Schedule
+                    </Button>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button
@@ -258,13 +274,22 @@ export function OptimizationTable({ tables, loading }: OptimizationTableProps) {
       )}
 
       {selectedCompactTable && (
-        <OptimizeSheet
-          open={showOptimizeSheet}
-          onOpenChange={setShowOptimizeSheet}
-          catalog={selectedCompactTable?.catalog}
-          namespace={selectedCompactTable?.namespace}
-          table={selectedCompactTable?.name}
-        />
+        <>
+          <OptimizeSheet
+            open={showOptimizeSheet}
+            onOpenChange={setShowOptimizeSheet}
+            catalog={selectedCompactTable?.catalog}
+            namespace={selectedCompactTable?.namespace}
+            table={selectedCompactTable?.name}
+          />
+          <ScheduleSheet
+            open={showScheduleSheet}
+            onOpenChange={setShowScheduleSheet}
+            catalog={selectedCompactTable?.catalog}
+            namespace={selectedCompactTable?.namespace}
+            table={selectedCompactTable?.name}
+          />
+        </>
       )}
     </div>
   )

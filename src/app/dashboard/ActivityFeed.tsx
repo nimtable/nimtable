@@ -146,7 +146,7 @@ export function ActivityFeed() {
                 </span>
               </div>
               <p className="text-sm text-gray-500">
-                {formatDistanceToNow(new Date(activity.timestamp), {
+                {formatDistanceToNow(new Date(activity.timestamp < 1e12 ? activity.timestamp * 1000 : activity.timestamp), {
                   addSuffix: true,
                   locale: enUS,
                 })}

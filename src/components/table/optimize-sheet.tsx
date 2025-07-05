@@ -25,6 +25,7 @@ import {
   HardDrive,
   Cpu,
   GitCommit,
+  Calendar,
 } from "lucide-react"
 import {
   getFileDistribution,
@@ -62,6 +63,7 @@ import { getTableInfo } from "@/lib/client"
 import { errorToString } from "@/lib/utils"
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import { ScheduleSheet } from "@/components/table/schedule-sheet"
 
 type OptimizationStep = {
   name: string
@@ -140,7 +142,9 @@ function CompactionHistory({
 
   // Format timestamp to be more compact
   const formatDate = (timestamp: number) => {
-    const date = new Date(timestamp)
+    // If timestamp is in seconds (less than 1e12), convert to milliseconds
+    const timestampMs = timestamp < 1e12 ? timestamp * 1000 : timestamp
+    const date = new Date(timestampMs)
     return new Intl.DateTimeFormat("en-US", {
       month: "short",
       day: "numeric",
@@ -245,6 +249,7 @@ export function OptimizeSheet({
 }: OptimizeSheetProps) {
   const { toast } = useToast()
   const [showProgressDialog, setShowProgressDialog] = useState(false)
+  const [showScheduleSheet, setShowScheduleSheet] = useState(false)
   const [optimizationSteps, setOptimizationSteps] = useState<
     OptimizationStep[]
   >([])
@@ -399,6 +404,14 @@ export function OptimizeSheet({
                 <span className="font-medium text-foreground">Optimize</span>
               </div>
             </div>
+            <Button
+              variant="outline"
+              onClick={() => setShowScheduleSheet(true)}
+              className="gap-2"
+            >
+              <Calendar className="h-4 w-4" />
+              Schedule
+            </Button>
           </div>
         </div>
 
@@ -739,6 +752,15 @@ export function OptimizeSheet({
           </DialogContent>
         </Dialog>
       </SheetContent>
+      
+      {/* Schedule Sheet */}
+      <ScheduleSheet
+        open={showScheduleSheet}
+        onOpenChange={setShowScheduleSheet}
+        catalog={catalog}
+        namespace={namespace}
+        table={table}
+      />
     </Sheet>
   )
 }

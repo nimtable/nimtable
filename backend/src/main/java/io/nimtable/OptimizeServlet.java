@@ -73,6 +73,7 @@ public class OptimizeServlet extends HttpServlet {
     public OptimizeServlet(Config config) {
         this.config = config;
         this.objectMapper = new ObjectMapper();
+        this.objectMapper.findAndRegisterModules();
         this.catalogRepository = new CatalogRepository();
         this.scheduledTaskRepository = new ScheduledTaskRepository();
     }
@@ -667,6 +668,100 @@ public class OptimizeServlet extends HttpServlet {
             logger.error("Failed to get scheduled task", e);
             response.sendError(
                     HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to get scheduled task");
+        }
+    }
+
+    @Override
+    protected void doDelete(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        String pathInfo = request.getPathInfo();
+        if (pathInfo == null) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing path info");
+            return;
+        }
+
+        String[] pathParts = pathInfo.split("/");
+        if (pathParts.length < 3 || !"scheduled-task".equals(pathParts[1])) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid path");
+            return;
+        }
+
+        try {
+            Long taskId = Long.parseLong(pathParts[2]);
+            ScheduledTask task = scheduledTaskRepository.findById(taskId);
+            
+            if (task == null) {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Task not found");
+                return;
+            }
+            
+            scheduledTaskRepository.deleteById(taskId);
+            
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            Map<String, Object> result = new HashMap<>();
+            result.put("success", true);
+            result.put("message", "Task deleted successfully");
+            objectMapper.writeValue(response.getOutputStream(), result);
+            
+        } catch (NumberFormatException e) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid task ID");
+        } catch (Exception e) {
+            logger.error("Failed to delete scheduled task", e);
+            response.sendError(
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to delete scheduled task");
+        }
+    }
+    
+    @Override
+    protected void doPut(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        String pathInfo = request.getPathInfo();
+        if (pathInfo == null) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing path info");
+            return;
+        }
+
+        String[] pathParts = pathInfo.split("/");
+        if (pathParts.length < 4 || !"scheduled-task".equals(pathParts[1]) || !"toggle".equals(pathParts[3])) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid path");
+            return;
+        }
+
+        try {
+            Long taskId = Long.parseLong(pathParts[2]);
+            ScheduledTask task = scheduledTaskRepository.findById(taskId);
+            
+            if (task == null) {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Task not found");
+                return;
+            }
+            
+            Map<String, Object> requestBody = objectMapper.readValue(
+                    request.getReader(), new TypeReference<Map<String, Object>>() {});
+                    
+            boolean enabled = Boolean.parseBoolean(requestBody.get("enabled").toString());
+            
+            if (enabled) {
+                scheduledTaskRepository.enableTask(taskId);
+            } else {
+                scheduledTaskRepository.disableTask(taskId);
+            }
+            
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            Map<String, Object> result = new HashMap<>();
+            result.put("success", true);
+            result.put("message", "Task status updated successfully");
+            result.put("enabled", enabled);
+            objectMapper.writeValue(response.getOutputStream(), result);
+            
+        } catch (NumberFormatException e) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid task ID");
+        } catch (Exception e) {
+            logger.error("Failed to toggle scheduled task", e);
+            response.sendError(
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to toggle scheduled task");
         }
     }
 }
