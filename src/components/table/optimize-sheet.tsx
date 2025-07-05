@@ -123,8 +123,6 @@ interface ScheduledTask {
   }
 }
 
-
-
 interface CompactionHistoryItem {
   id: string | number
   timestamp: number
@@ -194,9 +192,9 @@ function CompactionHistory({
       <Card className="overflow-hidden border-muted/70 shadow-sm">
         <CardContent className="flex flex-col items-center justify-center py-12">
           <GitCommit className="mb-4 h-12 w-12 text-muted-foreground/20" />
-          <p className="text-sm font-medium">No compaction history</p>
+          <p className="text-sm font-medium">No optimization history</p>
           <p className="mt-1 text-xs text-muted-foreground">
-            This table doesn&apos;t have any compaction operations yet
+            This table doesn&apos;t have any optimization operations yet
           </p>
         </CardContent>
       </Card>
@@ -237,7 +235,7 @@ function CompactionHistory({
 
               {/* Operation type */}
               <div className="w-[100px] flex-shrink-0 text-xs font-medium">
-                Compaction
+                Optimization
               </div>
             </div>
           ))}
@@ -341,7 +339,7 @@ export function OptimizeSheet({
     }
 
     if (compaction) {
-      steps.push({ name: "Compaction", status: "pending" })
+      steps.push({ name: "Optimization", status: "pending" })
     }
 
     setOptimizationSteps(steps)
@@ -624,7 +622,7 @@ export function OptimizeSheet({
               </SheetTitle>
               <SheetDescription className="mt-1 text-sm text-muted-foreground">
                 Configure and run Iceberg optimization operations including
-                compaction, snapshot expiration...
+                optimization, snapshot expiration...
               </SheetDescription>
             </div>
           </div>
@@ -912,11 +910,11 @@ export function OptimizeSheet({
                     )}
                   </div>
 
-                  {/* Compaction */}
+                  {/* Optimization */}
                   <div className="space-y-4 border-t pt-2">
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label className="text-base">Compaction</Label>
+                        <Label className="text-base">Optimization</Label>
                         <p className="text-sm text-muted-foreground">
                           Combine small data files into larger files.
                         </p>
@@ -1045,9 +1043,9 @@ export function OptimizeSheet({
                           <Alert variant="warning" className="mt-4">
                             <AlertTriangle className="h-4 w-4" />
                             <AlertDescription className="ml-2">
-                              Compaction is performed using Embedded Spark with
-                              the above system resources. Please ensure these
-                              resources are sufficient for your data size.
+                              Optimization is performed using Embedded Spark
+                              with the above system resources. Please ensure
+                              these resources are sufficient for your data size.
                             </AlertDescription>
                           </Alert>
                         </div>
@@ -1058,14 +1056,12 @@ export function OptimizeSheet({
               </Card>
             </div>
 
-
-
-            {/* Compaction History - Only show in run-once mode */}
+            {/* Optimization History - Only show in run-once mode */}
             {executionMode === "run-once" && (
               <div>
                 <h2 className="mb-4 flex items-center gap-2 text-lg font-medium">
                   <div className="h-1.5 w-1.5 rounded-full bg-blue-500"></div>
-                  Compaction History
+                  Optimization History
                 </h2>
                 <CompactionHistory
                   catalog={catalog}
@@ -1137,7 +1133,7 @@ export function OptimizeSheet({
                     )}
                     {step.status === "done" && step.result && (
                       <div className="text-sm text-muted-foreground">
-                        {step.name === "Compaction" &&
+                        {step.name === "Optimization" &&
                           step.result?.rewrittenDataFilesCount != null &&
                           step.result?.addedDataFilesCount != null && (
                             <>

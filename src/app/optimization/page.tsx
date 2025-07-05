@@ -1,6 +1,6 @@
 "use client"
 
-import { getCompactionRecommendation } from "@/components/table/file-distribution"
+import { getOptimizationRecommendation } from "@/components/table/file-distribution"
 import { OptimizationFilters } from "./OptimizationFilters"
 import { OptimizationTable } from "./OptimizationTable"
 import { useAllTables } from "../data/hooks/useTables"
@@ -8,8 +8,8 @@ import { useState } from "react"
 export default function OptimizationPage() {
   const { tables, isLoading, isFileDistributionLoading } = useAllTables()
 
-  const [compactionStatus, setCompactionStatus] = useState<
-    "all" | "needs_compaction" | "optimized"
+  const [optimizationStatus, setOptimizationStatus] = useState<
+    "all" | "needs_optimization" | "optimized"
   >("all")
   const [fileCount, setFileCount] = useState<"all" | "high" | "medium" | "low">(
     "all"
@@ -18,13 +18,13 @@ export default function OptimizationPage() {
   const formattedTables = tables
     .map((table) => {
       if (table) {
-        const recommendation = getCompactionRecommendation(table)
+        const recommendation = getOptimizationRecommendation(table)
         return {
           id: `${table.catalog}.${table.namespace}.${table.table}`,
           name: table.table,
           catalog: table.catalog,
           namespace: table.namespace,
-          needsCompaction: recommendation.shouldCompact,
+          needsOptimization: recommendation.shouldOptimize,
           dataFiles: table.dataFileCount,
           avgFileSize: `${(table.dataFileSizeInBytes / (1024 * 1024)).toFixed(2)} MB`,
         }
@@ -33,10 +33,13 @@ export default function OptimizationPage() {
     })
     .filter((item) => {
       if (!item) return false
-      if (compactionStatus === "needs_compaction" && !item.needsCompaction) {
+      if (
+        optimizationStatus === "needs_optimization" &&
+        !item.needsOptimization
+      ) {
         return false
       }
-      if (compactionStatus === "optimized" && item.needsCompaction) {
+      if (optimizationStatus === "optimized" && item.needsOptimization) {
         return false
       }
       if (fileCount === "high" && item.dataFiles < 1000) {
@@ -52,14 +55,14 @@ export default function OptimizationPage() {
     })
     .filter((item) => item !== null)
     .sort((a, b) => {
-      // Priority sort: tables needing compaction first
-      if (a.needsCompaction && !b.needsCompaction) {
+      // Priority sort: tables needing optimization first
+      if (a.needsOptimization && !b.needsOptimization) {
         return -1
       }
-      if (!a.needsCompaction && b.needsCompaction) {
+      if (!a.needsOptimization && b.needsOptimization) {
         return 1
       }
-      // If both have same compaction status, sort by table name
+      // If both have same optimization status, sort by table name
       return a.name.localeCompare(b.name)
     })
 
@@ -74,8 +77,8 @@ export default function OptimizationPage() {
 
       <div className="mt-8">
         <OptimizationFilters
-          compactionStatus={compactionStatus}
-          setCompactionStatus={setCompactionStatus}
+          optimizationStatus={optimizationStatus}
+          setOptimizationStatus={setOptimizationStatus}
           fileCount={fileCount}
           setFileCount={setFileCount}
         />

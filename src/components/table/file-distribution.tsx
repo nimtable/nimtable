@@ -13,20 +13,22 @@ import { Button } from "@/components/ui/button"
 // Define the order of size ranges
 export const rangeOrder = ["0-8M", "8M-32M", "32M-128M", "128M-512M", "512M+"]
 
-// Shared compaction recommendation logic
-export const getCompactionRecommendation = (distribution: DistributionData) => {
+// Shared optimization recommendation logic
+export const getOptimizationRecommendation = (
+  distribution: DistributionData
+) => {
   const ranges = distribution.ranges
   const totalFiles = Object.values(ranges).reduce(
     (sum, item) => sum + item.count,
     0
   )
 
-  // Check if there are enough files to warrant compaction
+  // Check if there are enough files to warrant optimization
   if (totalFiles < 10) {
     return {
-      shouldCompact: false,
+      shouldOptimize: false,
       recommendations: [
-        `Total file count (${totalFiles}) is too low to warrant compaction. At least 10 files are recommended.`,
+        `Total file count (${totalFiles}) is too low to warrant optimization. At least 10 files are recommended.`,
       ],
     }
   }
@@ -85,7 +87,7 @@ export const getCompactionRecommendation = (distribution: DistributionData) => {
   }
 
   return {
-    shouldCompact: recommendations.length > 0,
+    shouldOptimize: recommendations.length > 0,
     recommendations,
   }
 }
@@ -118,9 +120,9 @@ export function FileDistribution({
     0
   )
 
-  // Get compaction recommendation
-  const { shouldCompact, recommendations } =
-    getCompactionRecommendation(distribution)
+  // Get optimization recommendation
+  const { shouldOptimize, recommendations } =
+    getOptimizationRecommendation(distribution)
 
   return (
     <Card className="h-full border-muted/70 shadow-sm">
@@ -133,11 +135,11 @@ export function FileDistribution({
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
-            {shouldCompact ? (
+            {shouldOptimize ? (
               <div className="flex items-center gap-2 rounded-md border border-yellow-200 bg-yellow-50 px-3 py-1 dark:border-yellow-900/50 dark:bg-yellow-950/30">
                 <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-500" />
                 <span className="text-sm font-medium text-yellow-700 dark:text-yellow-400">
-                  Needs Compaction
+                  Needs Optimization
                 </span>
               </div>
             ) : (
@@ -231,22 +233,24 @@ export function FileDistribution({
                   <p className="mb-2 font-medium text-foreground">
                     Optimization Recommendation:
                   </p>
-                  {shouldCompact ? (
+                  {shouldOptimize ? (
                     <div className="space-y-2">
                       <p className="text-muted-foreground">
-                        This table would benefit from compaction for the
+                        This table would benefit from optimization for the
                         following reasons:
                       </p>
                       <ul className="list-disc space-y-1 pl-4 text-muted-foreground">
-                        {recommendations.map((reason, index) => (
-                          <li key={index}>{reason}</li>
-                        ))}
+                        {recommendations.map(
+                          (reason: string, index: number) => (
+                            <li key={index}>{reason}</li>
+                          )
+                        )}
                       </ul>
                     </div>
                   ) : (
                     <p className="text-muted-foreground">
                       This table's file distribution is optimal and does not
-                      require compaction at this time.
+                      require optimization at this time.
                     </p>
                   )}
                 </div>

@@ -41,10 +41,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import {
-  Collapsible,
-  CollapsibleContent,
-} from "@/components/ui/collapsible"
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible"
 import { useToast } from "@/hooks/use-toast"
 import { errorToString } from "@/lib/utils"
 import { useState } from "react"
@@ -176,7 +173,7 @@ export default function JobsPage() {
   })
 
   const toggleTaskExpansion = (taskId: number) => {
-    setExpandedTasks(prev => {
+    setExpandedTasks((prev) => {
       const newSet = new Set(prev)
       if (newSet.has(taskId)) {
         newSet.delete(taskId)
@@ -195,14 +192,16 @@ export default function JobsPage() {
 
   const formatDuration = (milliseconds: number) => {
     const days = Math.floor(milliseconds / (24 * 60 * 60 * 1000))
-    const hours = Math.floor((milliseconds % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000))
-    
+    const hours = Math.floor(
+      (milliseconds % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000)
+    )
+
     if (days > 0) {
-      return `${days} day${days > 1 ? 's' : ''}`
+      return `${days} day${days > 1 ? "s" : ""}`
     } else if (hours > 0) {
-      return `${hours} hour${hours > 1 ? 's' : ''}`
+      return `${hours} hour${hours > 1 ? "s" : ""}`
     } else {
-      return `${Math.floor(milliseconds / (60 * 1000))} minute${Math.floor(milliseconds / (60 * 1000)) > 1 ? 's' : ''}`
+      return `${Math.floor(milliseconds / (60 * 1000))} minute${Math.floor(milliseconds / (60 * 1000)) > 1 ? "s" : ""}`
     }
   }
 
@@ -491,8 +490,8 @@ export default function JobsPage() {
                   </div>
 
                   {/* Collapsible Details Section */}
-                  <Collapsible 
-                    open={expandedTasks.has(task.id)} 
+                  <Collapsible
+                    open={expandedTasks.has(task.id)}
                     onOpenChange={() => toggleTaskExpansion(task.id)}
                   >
                     <CollapsibleContent className="mt-4 pt-4 border-t">
@@ -504,20 +503,37 @@ export default function JobsPage() {
                             Optimization Configuration
                           </h4>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                            
                             {/* Snapshot Retention */}
                             <div className="space-y-2">
                               <div className="flex items-center gap-2">
                                 <Timer className="h-4 w-4 text-green-500" />
-                                <span className="font-medium">Snapshot Retention</span>
-                                <Badge variant={task.parameters.snapshotRetention ? "default" : "secondary"}>
-                                  {task.parameters.snapshotRetention ? "Enabled" : "Disabled"}
+                                <span className="font-medium">
+                                  Snapshot Retention
+                                </span>
+                                <Badge
+                                  variant={
+                                    task.parameters.snapshotRetention
+                                      ? "default"
+                                      : "secondary"
+                                  }
+                                >
+                                  {task.parameters.snapshotRetention
+                                    ? "Enabled"
+                                    : "Disabled"}
                                 </Badge>
                               </div>
                               {task.parameters.snapshotRetention && (
                                 <div className="pl-6 space-y-1 text-muted-foreground">
-                                  <div>Retention Period: {formatDuration(task.parameters.retentionPeriod)}</div>
-                                  <div>Min Snapshots: {task.parameters.minSnapshotsToKeep}</div>
+                                  <div>
+                                    Retention Period:{" "}
+                                    {formatDuration(
+                                      task.parameters.retentionPeriod
+                                    )}
+                                  </div>
+                                  <div>
+                                    Min Snapshots:{" "}
+                                    {task.parameters.minSnapshotsToKeep}
+                                  </div>
                                 </div>
                               )}
                             </div>
@@ -527,21 +543,41 @@ export default function JobsPage() {
                               <div className="flex items-center gap-2">
                                 <Database className="h-4 w-4 text-purple-500" />
                                 <span className="font-medium">Compaction</span>
-                                <Badge variant={task.parameters.compaction ? "default" : "secondary"}>
-                                  {task.parameters.compaction ? "Enabled" : "Disabled"}
+                                <Badge
+                                  variant={
+                                    task.parameters.compaction
+                                      ? "default"
+                                      : "secondary"
+                                  }
+                                >
+                                  {task.parameters.compaction
+                                    ? "Enabled"
+                                    : "Disabled"}
                                 </Badge>
                               </div>
                               {task.parameters.compaction && (
                                 <div className="pl-6 space-y-1 text-muted-foreground">
-                                  <div>Target File Size: {formatBytes(task.parameters.targetFileSizeBytes)}</div>
+                                  <div>
+                                    Target File Size:{" "}
+                                    {formatBytes(
+                                      task.parameters.targetFileSizeBytes
+                                    )}
+                                  </div>
                                   {task.parameters.strategy && (
-                                    <div>Strategy: {task.parameters.strategy}</div>
+                                    <div>
+                                      Strategy: {task.parameters.strategy}
+                                    </div>
                                   )}
                                   {task.parameters.sortOrder && (
-                                    <div>Sort Order: {task.parameters.sortOrder}</div>
+                                    <div>
+                                      Sort Order: {task.parameters.sortOrder}
+                                    </div>
                                   )}
                                   {task.parameters.whereClause && (
-                                    <div>Where Clause: {task.parameters.whereClause}</div>
+                                    <div>
+                                      Where Clause:{" "}
+                                      {task.parameters.whereClause}
+                                    </div>
                                   )}
                                 </div>
                               )}
@@ -551,14 +587,29 @@ export default function JobsPage() {
                             <div className="space-y-2">
                               <div className="flex items-center gap-2">
                                 <HardDrive className="h-4 w-4 text-orange-500" />
-                                <span className="font-medium">Orphan File Deletion</span>
-                                <Badge variant={task.parameters.orphanFileDeletion ? "default" : "secondary"}>
-                                  {task.parameters.orphanFileDeletion ? "Enabled" : "Disabled"}
+                                <span className="font-medium">
+                                  Orphan File Deletion
+                                </span>
+                                <Badge
+                                  variant={
+                                    task.parameters.orphanFileDeletion
+                                      ? "default"
+                                      : "secondary"
+                                  }
+                                >
+                                  {task.parameters.orphanFileDeletion
+                                    ? "Enabled"
+                                    : "Disabled"}
                                 </Badge>
                               </div>
                               {task.parameters.orphanFileDeletion && (
                                 <div className="pl-6 space-y-1 text-muted-foreground">
-                                  <div>Retention: {formatDuration(task.parameters.orphanFileRetention)}</div>
+                                  <div>
+                                    Retention:{" "}
+                                    {formatDuration(
+                                      task.parameters.orphanFileRetention
+                                    )}
+                                  </div>
                                 </div>
                               )}
                             </div>
@@ -567,7 +618,9 @@ export default function JobsPage() {
                             <div className="space-y-2">
                               <div className="flex items-center gap-2">
                                 <Calendar className="h-4 w-4 text-gray-500" />
-                                <span className="font-medium">Task Details</span>
+                                <span className="font-medium">
+                                  Task Details
+                                </span>
                               </div>
                               <div className="pl-6 space-y-1 text-muted-foreground">
                                 <div>Task ID: {task.id}</div>
@@ -581,9 +634,13 @@ export default function JobsPage() {
 
                         {/* Raw Configuration */}
                         <div>
-                          <h4 className="font-medium text-sm mb-3">Raw Configuration</h4>
+                          <h4 className="font-medium text-sm mb-3">
+                            Raw Configuration
+                          </h4>
                           <div className="bg-muted/50 rounded-lg p-3 font-mono text-xs overflow-x-auto">
-                            <pre>{JSON.stringify(task.parameters, null, 2)}</pre>
+                            <pre>
+                              {JSON.stringify(task.parameters, null, 2)}
+                            </pre>
                           </div>
                         </div>
                       </div>
