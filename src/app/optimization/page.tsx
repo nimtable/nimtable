@@ -51,6 +51,17 @@ export default function OptimizationPage() {
       return item
     })
     .filter((item) => item !== null)
+    .sort((a, b) => {
+      // Priority sort: tables needing compaction first
+      if (a.needsCompaction && !b.needsCompaction) {
+        return -1
+      }
+      if (!a.needsCompaction && b.needsCompaction) {
+        return 1
+      }
+      // If both have same compaction status, sort by table name
+      return a.name.localeCompare(b.name)
+    })
 
   console.log("formattedTables", formattedTables)
 
