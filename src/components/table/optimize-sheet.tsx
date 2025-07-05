@@ -32,9 +32,7 @@ import {
   XCircle,
 } from "lucide-react"
 import {
-  getFileDistribution,
   runOptimizationOperation,
-  type DistributionData,
   type OptimizationOperation,
 } from "@/lib/data-loader"
 import {
@@ -62,8 +60,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { FileDistributionLoading } from "@/components/table/file-distribution-loading"
-import { FileDistribution } from "@/components/table/file-distribution"
+
 import { CrontabGenerator } from "@/components/table/crontab-generator"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
@@ -126,43 +123,7 @@ interface ScheduledTask {
   }
 }
 
-function FileDistributionSection({
-  tableId,
-  catalog,
-  namespace,
-}: {
-  tableId: string
-  catalog: string
-  namespace: string
-}) {
-  const {
-    data: distribution,
-    isPending,
-    isError,
-    refetch,
-  } = useQuery<DistributionData>({
-    queryKey: ["file-distribution", catalog, namespace, tableId],
-    queryFn: async () => {
-      return await getFileDistribution(catalog, namespace, tableId)
-    },
-    enabled: !!(tableId && catalog && namespace),
-    meta: {
-      errorMessage: "Failed to fetch file distribution data for the table.",
-    },
-  })
 
-  if (isPending || isError) {
-    return <FileDistributionLoading />
-  }
-
-  return (
-    <FileDistribution
-      distribution={distribution}
-      isFetching={isPending}
-      onRefresh={refetch}
-    />
-  )
-}
 
 interface CompactionHistoryItem {
   id: string | number
@@ -1097,20 +1058,7 @@ export function OptimizeSheet({
               </Card>
             </div>
 
-            {/* Current File Distribution - Only show in run-once mode */}
-            {executionMode === "run-once" && (
-              <div className="mb-8">
-                <h2 className="mb-4 flex items-center gap-2 text-lg font-medium">
-                  <div className="h-1.5 w-1.5 rounded-full bg-blue-500"></div>
-                  Current File Distribution
-                </h2>
-                <FileDistributionSection
-                  tableId={table}
-                  catalog={catalog}
-                  namespace={namespace}
-                />
-              </div>
-            )}
+
 
             {/* Compaction History - Only show in run-once mode */}
             {executionMode === "run-once" && (
