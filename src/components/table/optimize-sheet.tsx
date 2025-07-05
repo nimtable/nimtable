@@ -67,7 +67,13 @@ import { FileDistribution } from "@/components/table/file-distribution"
 import { CrontabGenerator } from "@/components/table/crontab-generator"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
@@ -300,11 +306,13 @@ export function OptimizeSheet({
   const [showProgressDialog, setShowProgressDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [selectedTask, setSelectedTask] = useState<ScheduledTask | null>(null)
-  const [optimizationSteps, setOptimizationSteps] = useState<OptimizationStep[]>([])
-  
+  const [optimizationSteps, setOptimizationSteps] = useState<
+    OptimizationStep[]
+  >([])
+
   // Execution mode state
   const [executionMode, setExecutionMode] = useState<ExecutionMode>("run-once")
-  
+
   // Schedule settings
   const [taskName, setTaskName] = useState("")
   const [cronExpression, setCronExpression] = useState("0 0 2 * * *") // Daily at 2 AM
@@ -315,7 +323,8 @@ export function OptimizeSheet({
   const [retentionPeriod, setRetentionPeriod] = useState("5")
   const [minSnapshotsToKeep, setMinSnapshotsToKeep] = useState("1")
   const [compaction, setCompaction] = useState(true)
-  const [targetFileSizeBytes, setTargetFileSizeBytes] = useState<number>(536870912) // 512MB in bytes
+  const [targetFileSizeBytes, setTargetFileSizeBytes] =
+    useState<number>(536870912) // 512MB in bytes
   const [strategy, setStrategy] = useState("binpack")
   const [sortOrder, setSortOrder] = useState("")
   const [whereClause, setWhereClause] = useState("")
@@ -338,12 +347,13 @@ export function OptimizeSheet({
   })
 
   // Filter tasks for current table
-  const tableTasks = scheduledTasks?.filter(
-    (task) =>
-      task.catalogName === catalog &&
-      task.namespace === namespace &&
-      task.tableName === table
-  ) || []
+  const tableTasks =
+    scheduledTasks?.filter(
+      (task) =>
+        task.catalogName === catalog &&
+        task.namespace === namespace &&
+        task.tableName === table
+    ) || []
 
   // Get system information
   const { data: systemInfo } = useQuery<{
@@ -513,14 +523,23 @@ export function OptimizeSheet({
 
   // Toggle task enabled state
   const toggleTaskMutation = useMutation({
-    mutationFn: async ({ taskId, enabled }: { taskId: number; enabled: boolean }) => {
-      const response = await fetch(`/api/optimize/scheduled-task/${taskId}/toggle`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ enabled }),
-      })
+    mutationFn: async ({
+      taskId,
+      enabled,
+    }: {
+      taskId: number
+      enabled: boolean
+    }) => {
+      const response = await fetch(
+        `/api/optimize/scheduled-task/${taskId}/toggle`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ enabled }),
+        }
+      )
       if (!response.ok) {
         throw new Error("Failed to toggle task")
       }
@@ -585,7 +604,8 @@ export function OptimizeSheet({
   const formatDate = (dateString?: string) => {
     if (!dateString) return "Never"
     // Convert timestamp to number and handle both seconds and milliseconds
-    const timestamp = typeof dateString === 'string' ? parseFloat(dateString) : dateString
+    const timestamp =
+      typeof dateString === "string" ? parseFloat(dateString) : dateString
     // If timestamp is in seconds (less than 1e12), convert to milliseconds
     const timestampMs = timestamp < 1e12 ? timestamp * 1000 : timestamp
     return new Intl.DateTimeFormat("en-US", {
@@ -638,7 +658,9 @@ export function OptimizeSheet({
               <Settings className="h-5 w-5 text-blue-500" />
             </div>
             <div>
-              <SheetTitle className="text-xl font-semibold">Table Optimization</SheetTitle>
+              <SheetTitle className="text-xl font-semibold">
+                Table Optimization
+              </SheetTitle>
               <SheetDescription className="mt-1 text-sm text-muted-foreground">
                 Configure and run Iceberg optimization operations including
                 compaction, snapshot expiration...
@@ -720,7 +742,9 @@ export function OptimizeSheet({
                     ) : tableTasks.length === 0 ? (
                       <div className="text-center py-8">
                         <Calendar className="h-12 w-12 text-muted-foreground/20 mx-auto mb-4" />
-                        <p className="text-sm font-medium">No scheduled tasks</p>
+                        <p className="text-sm font-medium">
+                          No scheduled tasks
+                        </p>
                         <p className="text-xs text-muted-foreground mt-1">
                           Create a task to automate table optimization
                         </p>
@@ -735,7 +759,11 @@ export function OptimizeSheet({
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-3">
                                 <h3 className="font-medium">{task.taskName}</h3>
-                                <Badge variant={task.enabled ? "default" : "secondary"}>
+                                <Badge
+                                  variant={
+                                    task.enabled ? "default" : "secondary"
+                                  }
+                                >
                                   {task.enabled ? "Enabled" : "Disabled"}
                                 </Badge>
                                 {task.lastRunStatus && (
@@ -772,11 +800,17 @@ export function OptimizeSheet({
 
                             <div className="grid grid-cols-2 gap-4 text-sm">
                               <div>
-                                <span className="text-muted-foreground">Schedule:</span>
-                                <div className="font-mono text-xs">{task.cronExpression}</div>
+                                <span className="text-muted-foreground">
+                                  Schedule:
+                                </span>
+                                <div className="font-mono text-xs">
+                                  {task.cronExpression}
+                                </div>
                               </div>
                               <div>
-                                <span className="text-muted-foreground">Next Run:</span>
+                                <span className="text-muted-foreground">
+                                  Next Run:
+                                </span>
                                 <div className="flex items-center gap-1 text-xs">
                                   <Clock className="h-3 w-3" />
                                   {formatDate(task.nextRunAt)}
@@ -787,13 +821,21 @@ export function OptimizeSheet({
                             {task.lastRunAt && (
                               <div className="grid grid-cols-2 gap-4 text-sm">
                                 <div>
-                                  <span className="text-muted-foreground">Last Run:</span>
-                                  <div className="text-xs">{formatDate(task.lastRunAt)}</div>
+                                  <span className="text-muted-foreground">
+                                    Last Run:
+                                  </span>
+                                  <div className="text-xs">
+                                    {formatDate(task.lastRunAt)}
+                                  </div>
                                 </div>
                                 {task.lastRunMessage && (
                                   <div>
-                                    <span className="text-muted-foreground">Message:</span>
-                                    <div className="text-xs">{task.lastRunMessage}</div>
+                                    <span className="text-muted-foreground">
+                                      Message:
+                                    </span>
+                                    <div className="text-xs">
+                                      {task.lastRunMessage}
+                                    </div>
                                   </div>
                                 )}
                               </div>
@@ -981,10 +1023,12 @@ export function OptimizeSheet({
                             <Alert>
                               <AlertTriangle className="h-4 w-4" />
                               <AlertDescription>
-                                Sort strategy will reorder data according to the specified columns. 
-                                Use zorder format (e.g., zorder(c1,c2)) for multi-dimensional clustering 
-                                or standard sort format (e.g., id DESC NULLS LAST,name ASC NULLS FIRST) 
-                                for traditional sorting.
+                                Sort strategy will reorder data according to the
+                                specified columns. Use zorder format (e.g.,
+                                zorder(c1,c2)) for multi-dimensional clustering
+                                or standard sort format (e.g., id DESC NULLS
+                                LAST,name ASC NULLS FIRST) for traditional
+                                sorting.
                               </AlertDescription>
                             </Alert>
                           </div>
@@ -1097,13 +1141,17 @@ export function OptimizeSheet({
             </Button>
             <Button
               onClick={() => handleOptimize()}
-              disabled={optimizeMutation.isPending || createTaskMutation.isPending}
+              disabled={
+                optimizeMutation.isPending || createTaskMutation.isPending
+              }
               className="gap-2 bg-blue-600 hover:bg-blue-700"
             >
               {(optimizeMutation.isPending || createTaskMutation.isPending) && (
                 <Loader2 className="h-4 w-4 animate-spin" />
               )}
-              {executionMode === "run-once" ? "Run Optimization" : "Create Schedule"}
+              {executionMode === "run-once"
+                ? "Run Optimization"
+                : "Create Schedule"}
             </Button>
           </div>
         </div>
@@ -1183,8 +1231,8 @@ export function OptimizeSheet({
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Scheduled Task</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete the task "{selectedTask?.taskName}"? 
-                This action cannot be undone.
+                Are you sure you want to delete the task "
+                {selectedTask?.taskName}"? This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

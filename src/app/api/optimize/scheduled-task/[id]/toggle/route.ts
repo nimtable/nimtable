@@ -20,35 +20,35 @@ export async function PUT(
 ) {
   try {
     const { enabled } = await request.json()
-    
+
     const response = await fetch(
-      `${process.env.BACKEND_URL || 'http://localhost:8080'}/optimize/scheduled-task/${params.id}/toggle`,
+      `${process.env.BACKEND_URL || "http://localhost:8080"}/optimize/scheduled-task/${params.id}/toggle`,
       {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ enabled }),
       }
     )
-    
+
     if (!response.ok) {
       if (response.status === 404) {
         return Response.json(
-          { error: 'Scheduled task not found' },
+          { error: "Scheduled task not found" },
           { status: 404 }
         )
       }
-      throw new Error('Failed to toggle scheduled task')
+      throw new Error("Failed to toggle scheduled task")
     }
-    
+
     const data = await response.json()
     return Response.json(data)
   } catch (error) {
-    console.error('Error toggling scheduled task:', error)
+    console.error("Error toggling scheduled task:", error)
     return Response.json(
-      { error: 'Failed to toggle scheduled task' },
+      { error: "Failed to toggle scheduled task" },
       { status: 500 }
     )
   }
-} 
+}

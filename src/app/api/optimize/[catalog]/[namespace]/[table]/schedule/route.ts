@@ -20,33 +20,33 @@ export async function POST(
 ) {
   try {
     const body = await request.json()
-    
+
     const response = await fetch(
-      `${process.env.BACKEND_URL || 'http://localhost:8080'}/optimize/${params.catalog}/${params.namespace}/${params.table}/schedule`,
+      `${process.env.BACKEND_URL || "http://localhost:8080"}/optimize/${params.catalog}/${params.namespace}/${params.table}/schedule`,
       {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(body),
       }
     )
-    
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
       return Response.json(
-        { error: errorData.message || 'Failed to create scheduled task' },
+        { error: errorData.message || "Failed to create scheduled task" },
         { status: response.status }
       )
     }
-    
+
     const data = await response.json()
     return Response.json(data)
   } catch (error) {
-    console.error('Error creating scheduled task:', error)
+    console.error("Error creating scheduled task:", error)
     return Response.json(
-      { error: 'Failed to create scheduled task' },
+      { error: "Failed to create scheduled task" },
       { status: 500 }
     )
   }
-} 
+}

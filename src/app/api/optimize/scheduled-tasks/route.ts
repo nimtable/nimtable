@@ -16,19 +16,21 @@
 
 export async function GET() {
   try {
-    const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:8080'}/optimize/scheduled-tasks`)
-    
+    const response = await fetch(
+      `${process.env.BACKEND_URL || "http://localhost:8080"}/optimize/scheduled-tasks`
+    )
+
     if (!response.ok) {
-      throw new Error('Failed to fetch scheduled tasks')
+      throw new Error("Failed to fetch scheduled tasks")
     }
-    
+
     const data = await response.json()
     return Response.json(data)
   } catch (error) {
-    console.error('Error fetching scheduled tasks:', error)
+    console.error("Error fetching scheduled tasks:", error)
     return Response.json(
-      { error: 'Failed to fetch scheduled tasks' },
+      { error: "Failed to fetch scheduled tasks" },
       { status: 500 }
     )
   }
-} 
+}

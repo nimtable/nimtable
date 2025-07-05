@@ -106,4 +106,4 @@ public class ScheduledTaskRepository {
             LOG.info("Disabled task: {}", task.getTaskName());
         }
     }
-} 
+}

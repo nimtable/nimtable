@@ -1,6 +1,13 @@
 "use client"
 
-import { ArrowUpDown, Check, GitCompare, MoreHorizontal, X, Calendar } from "lucide-react"
+import {
+  ArrowUpDown,
+  Check,
+  GitCompare,
+  MoreHorizontal,
+  X,
+  Calendar,
+} from "lucide-react"
 import { useState } from "react"
 
 import {
@@ -219,7 +226,9 @@ export function OptimizationTable({ tables, loading }: OptimizationTableProps) {
                       variant="outline"
                       className="h-8 gap-1"
                       onClick={() => {
-                        const selectedTable = tables.find((t) => t.id === table.id)
+                        const selectedTable = tables.find(
+                          (t) => t.id === table.id
+                        )
                         if (selectedTable) {
                           setSelectedCompactTable(selectedTable)
                           setShowScheduleSheet(true)

@@ -90,11 +90,9 @@ public class ScheduledTask extends Model {
 
     private String createdBy;
 
-    @WhenCreated
-    private Instant createdAt;
+    @WhenCreated private Instant createdAt;
 
-    @WhenModified
-    private Instant updatedAt;
+    @WhenModified private Instant updatedAt;
 
     // Getters and Setters
     public Long getId() {
@@ -296,4 +294,4 @@ public class ScheduledTask extends Model {
     public void setUpdatedAt(Instant updatedAt) {
         this.updatedAt = updatedAt;
     }
-} 
+}

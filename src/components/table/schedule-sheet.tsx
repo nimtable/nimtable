@@ -92,7 +92,7 @@ export function ScheduleSheet({
 }: ScheduleSheetProps) {
   const { toast } = useToast()
   const queryClient = useQueryClient()
-  
+
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [showEditDialog, setShowEditDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
@@ -131,12 +131,13 @@ export function ScheduleSheet({
   })
 
   // Filter tasks for current table
-  const tableTasks = scheduledTasks?.filter(
-    (task) =>
-      task.catalogName === catalog &&
-      task.namespace === namespace &&
-      task.tableName === table
-  ) || []
+  const tableTasks =
+    scheduledTasks?.filter(
+      (task) =>
+        task.catalogName === catalog &&
+        task.namespace === namespace &&
+        task.tableName === table
+    ) || []
 
   // Create task mutation
   const createTaskMutation = useMutation({
@@ -242,7 +243,8 @@ export function ScheduleSheet({
   const formatDate = (dateString?: string) => {
     if (!dateString) return "Never"
     // Convert timestamp to number and handle both seconds and milliseconds
-    const timestamp = typeof dateString === 'string' ? parseFloat(dateString) : dateString
+    const timestamp =
+      typeof dateString === "string" ? parseFloat(dateString) : dateString
     // If timestamp is in seconds (less than 1e12), convert to milliseconds
     const timestampMs = timestamp < 1e12 ? timestamp * 1000 : timestamp
     return new Intl.DateTimeFormat("en-US", {
@@ -326,7 +328,9 @@ export function ScheduleSheet({
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <h3 className="font-medium">{task.taskName}</h3>
-                            <Badge variant={task.enabled ? "default" : "secondary"}>
+                            <Badge
+                              variant={task.enabled ? "default" : "secondary"}
+                            >
                               {task.enabled ? "Enabled" : "Disabled"}
                             </Badge>
                             {task.lastRunStatus && (
@@ -364,14 +368,20 @@ export function ScheduleSheet({
 
                         <div className="grid grid-cols-2 gap-4 text-sm">
                           <div>
-                            <span className="text-muted-foreground">Schedule:</span>
-                            <div className="font-mono">{task.cronExpression}</div>
+                            <span className="text-muted-foreground">
+                              Schedule:
+                            </span>
+                            <div className="font-mono">
+                              {task.cronExpression}
+                            </div>
                             <div className="text-xs text-muted-foreground">
                               {task.cronDescription}
                             </div>
                           </div>
                           <div>
-                            <span className="text-muted-foreground">Next Run:</span>
+                            <span className="text-muted-foreground">
+                              Next Run:
+                            </span>
                             <div className="flex items-center gap-1">
                               <Clock className="h-3 w-3" />
                               {formatDate(task.nextRunAt)}
@@ -382,13 +392,19 @@ export function ScheduleSheet({
                         {task.lastRunAt && (
                           <div className="grid grid-cols-2 gap-4 text-sm">
                             <div>
-                              <span className="text-muted-foreground">Last Run:</span>
+                              <span className="text-muted-foreground">
+                                Last Run:
+                              </span>
                               <div>{formatDate(task.lastRunAt)}</div>
                             </div>
                             {task.lastRunMessage && (
                               <div>
-                                <span className="text-muted-foreground">Message:</span>
-                                <div className="text-xs">{task.lastRunMessage}</div>
+                                <span className="text-muted-foreground">
+                                  Message:
+                                </span>
+                                <div className="text-xs">
+                                  {task.lastRunMessage}
+                                </div>
                               </div>
                             )}
                           </div>
@@ -455,7 +471,10 @@ export function ScheduleSheet({
                         Rewrite data files to improve query performance
                       </p>
                     </div>
-                    <Switch checked={compaction} onCheckedChange={setCompaction} />
+                    <Switch
+                      checked={compaction}
+                      onCheckedChange={setCompaction}
+                    />
                   </div>
 
                   {compaction && (
@@ -464,9 +483,13 @@ export function ScheduleSheet({
                         <Label>Target File Size (MB)</Label>
                         <Input
                           type="number"
-                          value={Math.round(targetFileSizeBytes / (1024 * 1024))}
+                          value={Math.round(
+                            targetFileSizeBytes / (1024 * 1024)
+                          )}
                           onChange={(e) =>
-                            setTargetFileSizeBytes(parseInt(e.target.value) * 1024 * 1024)
+                            setTargetFileSizeBytes(
+                              parseInt(e.target.value) * 1024 * 1024
+                            )
                           }
                         />
                       </div>
@@ -501,9 +524,19 @@ export function ScheduleSheet({
                         <Label>Retention Period (days)</Label>
                         <Input
                           type="number"
-                          value={Math.round(parseInt(retentionPeriod) / (1000 * 60 * 60 * 24))}
+                          value={Math.round(
+                            parseInt(retentionPeriod) / (1000 * 60 * 60 * 24)
+                          )}
                           onChange={(e) =>
-                            setRetentionPeriod((parseInt(e.target.value) * 1000 * 60 * 60 * 24).toString())
+                            setRetentionPeriod(
+                              (
+                                parseInt(e.target.value) *
+                                1000 *
+                                60 *
+                                60 *
+                                24
+                              ).toString()
+                            )
                           }
                         />
                       </div>
@@ -512,7 +545,9 @@ export function ScheduleSheet({
                         <Input
                           type="number"
                           value={minSnapshotsToKeep}
-                          onChange={(e) => setMinSnapshotsToKeep(e.target.value)}
+                          onChange={(e) =>
+                            setMinSnapshotsToKeep(e.target.value)
+                          }
                         />
                       </div>
                     </div>
@@ -538,9 +573,20 @@ export function ScheduleSheet({
                         <Label>Orphan File Retention (days)</Label>
                         <Input
                           type="number"
-                          value={Math.round(parseInt(orphanFileRetention) / (1000 * 60 * 60 * 24))}
+                          value={Math.round(
+                            parseInt(orphanFileRetention) /
+                              (1000 * 60 * 60 * 24)
+                          )}
                           onChange={(e) =>
-                            setOrphanFileRetention((parseInt(e.target.value) * 1000 * 60 * 60 * 24).toString())
+                            setOrphanFileRetention(
+                              (
+                                parseInt(e.target.value) *
+                                1000 *
+                                60 *
+                                60 *
+                                24
+                              ).toString()
+                            )
                           }
                         />
                       </div>
@@ -551,7 +597,10 @@ export function ScheduleSheet({
             </div>
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setShowCreateDialog(false)}
+              >
                 Cancel
               </Button>
               <Button
@@ -573,8 +622,8 @@ export function ScheduleSheet({
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Scheduled Task</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete the task "{selectedTask?.taskName}"? 
-                This action cannot be undone.
+                Are you sure you want to delete the task "
+                {selectedTask?.taskName}"? This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

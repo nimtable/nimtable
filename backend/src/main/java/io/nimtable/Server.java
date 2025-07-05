@@ -165,7 +165,8 @@ public class Server {
                 new AbstractLifeCycle.AbstractLifeCycleListener() {
                     @Override
                     public void lifeCycleStopping(LifeCycle event) {
-                        LOG.info("Shutting down server, closing ScheduleManager and PersistenceManager.");
+                        LOG.info(
+                                "Shutting down server, closing ScheduleManager and PersistenceManager.");
                         scheduleManager.stop();
                         PersistenceManager.close();
                     }

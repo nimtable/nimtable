@@ -376,17 +376,21 @@ public class OptimizeServlet extends HttpServlet {
 
             case "schedule":
                 // Get cron expression from request
-                String cronExpression = requestBody.get("cronExpression") != null 
-                    ? requestBody.get("cronExpression").toString() 
-                    : null;
-                String taskName = requestBody.get("taskName") != null 
-                    ? requestBody.get("taskName").toString() 
-                    : String.format("%s_%s_%s_compaction", catalogName, namespace, tableName);
-                boolean enabled = Boolean.parseBoolean(
-                    requestBody.getOrDefault("enabled", true).toString());
-                String createdBy = requestBody.get("createdBy") != null 
-                    ? requestBody.get("createdBy").toString() 
-                    : "system";
+                String cronExpression =
+                        requestBody.get("cronExpression") != null
+                                ? requestBody.get("cronExpression").toString()
+                                : null;
+                String taskName =
+                        requestBody.get("taskName") != null
+                                ? requestBody.get("taskName").toString()
+                                : String.format(
+                                        "%s_%s_%s_compaction", catalogName, namespace, tableName);
+                boolean enabled =
+                        Boolean.parseBoolean(requestBody.getOrDefault("enabled", true).toString());
+                String createdBy =
+                        requestBody.get("createdBy") != null
+                                ? requestBody.get("createdBy").toString()
+                                : "system";
 
                 // Validate cron expression
                 if (cronExpression == null || cronExpression.trim().isEmpty()) {
@@ -414,7 +418,7 @@ public class OptimizeServlet extends HttpServlet {
                 try {
                     // Check if task already exists
                     ScheduledTask existingTask = scheduledTaskRepository.findByTaskName(taskName);
-                    
+
                     if (existingTask != null) {
                         // Update existing task
                         existingTask.setCronExpression(cronExpression);
@@ -429,12 +433,13 @@ public class OptimizeServlet extends HttpServlet {
                         existingTask.setStrategy(strategy);
                         existingTask.setSortOrder(sortOrder);
                         existingTask.setWhereClause(whereClause);
-                        
+
                         // Calculate next run time
-                        LocalDateTime nextRun = CronUtil.getNextExecutionTime(
-                            cronExpression, LocalDateTime.now());
-                        existingTask.setNextRunAt(nextRun.atZone(ZoneId.systemDefault()).toInstant());
-                        
+                        LocalDateTime nextRun =
+                                CronUtil.getNextExecutionTime(cronExpression, LocalDateTime.now());
+                        existingTask.setNextRunAt(
+                                nextRun.atZone(ZoneId.systemDefault()).toInstant());
+
                         scheduledTaskRepository.save(existingTask);
                         result.put("taskId", existingTask.getId());
                         result.put("updated", true);
@@ -458,25 +463,28 @@ public class OptimizeServlet extends HttpServlet {
                         newTask.setSortOrder(sortOrder);
                         newTask.setWhereClause(whereClause);
                         newTask.setCreatedBy(createdBy);
-                        
+
                         // Calculate next run time
-                        LocalDateTime nextRun = CronUtil.getNextExecutionTime(
-                            cronExpression, LocalDateTime.now());
+                        LocalDateTime nextRun =
+                                CronUtil.getNextExecutionTime(cronExpression, LocalDateTime.now());
                         newTask.setNextRunAt(nextRun.atZone(ZoneId.systemDefault()).toInstant());
-                        
+
                         scheduledTaskRepository.save(newTask);
                         result.put("taskId", newTask.getId());
                         result.put("created", true);
                     }
-                    
+
                     result.put("taskName", taskName);
                     result.put("cronExpression", cronExpression);
                     result.put("cronDescription", CronUtil.getCronDescription(cronExpression));
                     result.put("enabled", enabled);
-                    
+
                 } catch (Exception e) {
                     logger.error(
-                            "Failed to create/update scheduled task: {}.{}", namespace, tableName, e);
+                            "Failed to create/update scheduled task: {}.{}",
+                            namespace,
+                            tableName,
+                            e);
                     response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                     response.setContentType("application/json");
                     response.setCharacterEncoding("UTF-8");
@@ -572,42 +580,57 @@ public class OptimizeServlet extends HttpServlet {
     private void handleGetScheduledTasks(HttpServletResponse response) throws IOException {
         try {
             List<ScheduledTask> tasks = scheduledTaskRepository.findAll();
-            
-            List<Map<String, Object>> tasksData = tasks.stream().map(task -> {
-                Map<String, Object> taskData = new HashMap<>();
-                taskData.put("id", task.getId());
-                taskData.put("taskName", task.getTaskName());
-                taskData.put("catalogName", task.getCatalogName());
-                taskData.put("namespace", task.getNamespace());
-                taskData.put("tableName", task.getTableName());
-                taskData.put("cronExpression", task.getCronExpression());
-                taskData.put("cronDescription", CronUtil.getCronDescription(task.getCronExpression()));
-                taskData.put("taskType", task.getTaskType());
-                taskData.put("enabled", task.isEnabled());
-                taskData.put("lastRunAt", task.getLastRunAt());
-                taskData.put("lastRunStatus", task.getLastRunStatus());
-                taskData.put("lastRunMessage", task.getLastRunMessage());
-                taskData.put("nextRunAt", task.getNextRunAt());
-                taskData.put("createdBy", task.getCreatedBy());
-                taskData.put("createdAt", task.getCreatedAt());
-                taskData.put("updatedAt", task.getUpdatedAt());
-                
-                // Add task parameters
-                Map<String, Object> parameters = new HashMap<>();
-                parameters.put("snapshotRetention", task.isSnapshotRetention());
-                parameters.put("retentionPeriod", task.getRetentionPeriod());
-                parameters.put("minSnapshotsToKeep", task.getMinSnapshotsToKeep());
-                parameters.put("orphanFileDeletion", task.isOrphanFileDeletion());
-                parameters.put("orphanFileRetention", task.getOrphanFileRetention());
-                parameters.put("compaction", task.isCompaction());
-                parameters.put("targetFileSizeBytes", task.getTargetFileSizeBytes());
-                parameters.put("strategy", task.getStrategy());
-                parameters.put("sortOrder", task.getSortOrder());
-                parameters.put("whereClause", task.getWhereClause());
-                taskData.put("parameters", parameters);
-                
-                return taskData;
-            }).collect(Collectors.toList());
+
+            List<Map<String, Object>> tasksData =
+                    tasks.stream()
+                            .map(
+                                    task -> {
+                                        Map<String, Object> taskData = new HashMap<>();
+                                        taskData.put("id", task.getId());
+                                        taskData.put("taskName", task.getTaskName());
+                                        taskData.put("catalogName", task.getCatalogName());
+                                        taskData.put("namespace", task.getNamespace());
+                                        taskData.put("tableName", task.getTableName());
+                                        taskData.put("cronExpression", task.getCronExpression());
+                                        taskData.put(
+                                                "cronDescription",
+                                                CronUtil.getCronDescription(
+                                                        task.getCronExpression()));
+                                        taskData.put("taskType", task.getTaskType());
+                                        taskData.put("enabled", task.isEnabled());
+                                        taskData.put("lastRunAt", task.getLastRunAt());
+                                        taskData.put("lastRunStatus", task.getLastRunStatus());
+                                        taskData.put("lastRunMessage", task.getLastRunMessage());
+                                        taskData.put("nextRunAt", task.getNextRunAt());
+                                        taskData.put("createdBy", task.getCreatedBy());
+                                        taskData.put("createdAt", task.getCreatedAt());
+                                        taskData.put("updatedAt", task.getUpdatedAt());
+
+                                        // Add task parameters
+                                        Map<String, Object> parameters = new HashMap<>();
+                                        parameters.put(
+                                                "snapshotRetention", task.isSnapshotRetention());
+                                        parameters.put(
+                                                "retentionPeriod", task.getRetentionPeriod());
+                                        parameters.put(
+                                                "minSnapshotsToKeep", task.getMinSnapshotsToKeep());
+                                        parameters.put(
+                                                "orphanFileDeletion", task.isOrphanFileDeletion());
+                                        parameters.put(
+                                                "orphanFileRetention",
+                                                task.getOrphanFileRetention());
+                                        parameters.put("compaction", task.isCompaction());
+                                        parameters.put(
+                                                "targetFileSizeBytes",
+                                                task.getTargetFileSizeBytes());
+                                        parameters.put("strategy", task.getStrategy());
+                                        parameters.put("sortOrder", task.getSortOrder());
+                                        parameters.put("whereClause", task.getWhereClause());
+                                        taskData.put("parameters", parameters);
+
+                                        return taskData;
+                                    })
+                            .collect(Collectors.toList());
 
             response.setContentType("application/json");
             objectMapper.writeValue(response.getOutputStream(), tasksData);
@@ -618,11 +641,12 @@ public class OptimizeServlet extends HttpServlet {
         }
     }
 
-    private void handleGetScheduledTask(HttpServletResponse response, String taskId) throws IOException {
+    private void handleGetScheduledTask(HttpServletResponse response, String taskId)
+            throws IOException {
         try {
             Long id = Long.parseLong(taskId);
             ScheduledTask task = scheduledTaskRepository.findById(id);
-            
+
             if (task == null) {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "Task not found");
                 return;
@@ -645,7 +669,7 @@ public class OptimizeServlet extends HttpServlet {
             taskData.put("createdBy", task.getCreatedBy());
             taskData.put("createdAt", task.getCreatedAt());
             taskData.put("updatedAt", task.getUpdatedAt());
-            
+
             // Add task parameters
             Map<String, Object> parameters = new HashMap<>();
             parameters.put("snapshotRetention", task.isSnapshotRetention());
@@ -689,30 +713,31 @@ public class OptimizeServlet extends HttpServlet {
         try {
             Long taskId = Long.parseLong(pathParts[2]);
             ScheduledTask task = scheduledTaskRepository.findById(taskId);
-            
+
             if (task == null) {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "Task not found");
                 return;
             }
-            
+
             scheduledTaskRepository.deleteById(taskId);
-            
+
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
             Map<String, Object> result = new HashMap<>();
             result.put("success", true);
             result.put("message", "Task deleted successfully");
             objectMapper.writeValue(response.getOutputStream(), result);
-            
+
         } catch (NumberFormatException e) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid task ID");
         } catch (Exception e) {
             logger.error("Failed to delete scheduled task", e);
             response.sendError(
-                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to delete scheduled task");
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "Failed to delete scheduled task");
         }
     }
-    
+
     @Override
     protected void doPut(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
@@ -723,7 +748,9 @@ public class OptimizeServlet extends HttpServlet {
         }
 
         String[] pathParts = pathInfo.split("/");
-        if (pathParts.length < 4 || !"scheduled-task".equals(pathParts[1]) || !"toggle".equals(pathParts[3])) {
+        if (pathParts.length < 4
+                || !"scheduled-task".equals(pathParts[1])
+                || !"toggle".equals(pathParts[3])) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid path");
             return;
         }
@@ -731,23 +758,24 @@ public class OptimizeServlet extends HttpServlet {
         try {
             Long taskId = Long.parseLong(pathParts[2]);
             ScheduledTask task = scheduledTaskRepository.findById(taskId);
-            
+
             if (task == null) {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "Task not found");
                 return;
             }
-            
-            Map<String, Object> requestBody = objectMapper.readValue(
-                    request.getReader(), new TypeReference<Map<String, Object>>() {});
-                    
+
+            Map<String, Object> requestBody =
+                    objectMapper.readValue(
+                            request.getReader(), new TypeReference<Map<String, Object>>() {});
+
             boolean enabled = Boolean.parseBoolean(requestBody.get("enabled").toString());
-            
+
             if (enabled) {
                 scheduledTaskRepository.enableTask(taskId);
             } else {
                 scheduledTaskRepository.disableTask(taskId);
             }
-            
+
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
             Map<String, Object> result = new HashMap<>();
@@ -755,13 +783,14 @@ public class OptimizeServlet extends HttpServlet {
             result.put("message", "Task status updated successfully");
             result.put("enabled", enabled);
             objectMapper.writeValue(response.getOutputStream(), result);
-            
+
         } catch (NumberFormatException e) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid task ID");
         } catch (Exception e) {
             logger.error("Failed to toggle scheduled task", e);
             response.sendError(
-                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to toggle scheduled task");
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "Failed to toggle scheduled task");
         }
     }
 }

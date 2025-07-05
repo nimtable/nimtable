@@ -143,7 +143,8 @@ export function SnapshotTrend({
     const grouped = new Map<string, TrendDataPoint>()
     data.forEach((item) => {
       // If timestamp is in seconds (less than 1e12), convert to milliseconds
-      const timestampMs = item.timestamp < 1e12 ? item.timestamp * 1000 : item.timestamp
+      const timestampMs =
+        item.timestamp < 1e12 ? item.timestamp * 1000 : item.timestamp
       const date = new Date(timestampMs)
       let key: string
 

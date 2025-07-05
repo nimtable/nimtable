@@ -146,10 +146,17 @@ export function ActivityFeed() {
                 </span>
               </div>
               <p className="text-sm text-gray-500">
-                {formatDistanceToNow(new Date(activity.timestamp < 1e12 ? activity.timestamp * 1000 : activity.timestamp), {
-                  addSuffix: true,
-                  locale: enUS,
-                })}
+                {formatDistanceToNow(
+                  new Date(
+                    activity.timestamp < 1e12
+                      ? activity.timestamp * 1000
+                      : activity.timestamp
+                  ),
+                  {
+                    addSuffix: true,
+                    locale: enUS,
+                  }
+                )}
               </p>
             </div>
             <Button variant="ghost" size="sm" className="text-xs">

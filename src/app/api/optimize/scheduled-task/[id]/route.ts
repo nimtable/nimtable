@@ -20,25 +20,25 @@ export async function GET(
 ) {
   try {
     const response = await fetch(
-      `${process.env.BACKEND_URL || 'http://localhost:8080'}/optimize/scheduled-task/${params.id}`
+      `${process.env.BACKEND_URL || "http://localhost:8080"}/optimize/scheduled-task/${params.id}`
     )
-    
+
     if (!response.ok) {
       if (response.status === 404) {
         return Response.json(
-          { error: 'Scheduled task not found' },
+          { error: "Scheduled task not found" },
           { status: 404 }
         )
       }
-      throw new Error('Failed to fetch scheduled task')
+      throw new Error("Failed to fetch scheduled task")
     }
-    
+
     const data = await response.json()
     return Response.json(data)
   } catch (error) {
-    console.error('Error fetching scheduled task:', error)
+    console.error("Error fetching scheduled task:", error)
     return Response.json(
-      { error: 'Failed to fetch scheduled task' },
+      { error: "Failed to fetch scheduled task" },
       { status: 500 }
     )
   }
@@ -50,27 +50,27 @@ export async function DELETE(
 ) {
   try {
     const response = await fetch(
-      `${process.env.BACKEND_URL || 'http://localhost:8080'}/optimize/scheduled-task/${params.id}`,
+      `${process.env.BACKEND_URL || "http://localhost:8080"}/optimize/scheduled-task/${params.id}`,
       {
-        method: 'DELETE',
+        method: "DELETE",
       }
     )
-    
+
     if (!response.ok) {
       if (response.status === 404) {
         return Response.json(
-          { error: 'Scheduled task not found' },
+          { error: "Scheduled task not found" },
           { status: 404 }
         )
       }
-      throw new Error('Failed to delete scheduled task')
+      throw new Error("Failed to delete scheduled task")
     }
-    
+
     return Response.json({ success: true })
   } catch (error) {
-    console.error('Error deleting scheduled task:', error)
+    console.error("Error deleting scheduled task:", error)
     return Response.json(
-      { error: 'Failed to delete scheduled task' },
+      { error: "Failed to delete scheduled task" },
       { status: 500 }
     )
   }

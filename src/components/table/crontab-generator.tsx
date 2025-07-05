@@ -23,7 +23,7 @@ type ScheduleType = "hourly" | "daily" | "weekly" | "monthly" | "custom"
 
 const commonExpressions = {
   "0 */10 * * * *": "Every 10 minutes",
-  "0 */30 * * * *": "Every 30 minutes", 
+  "0 */30 * * * *": "Every 30 minutes",
   "0 0 * * * *": "Every hour",
   "0 0 */6 * * *": "Every 6 hours",
   "0 0 0 * * *": "Daily at midnight",
@@ -34,8 +34,6 @@ const commonExpressions = {
   "0 0 9 * * 1-5": "Weekdays at 9:00 AM",
 }
 
-
-
 export function CrontabGenerator({ value, onChange }: CrontabGeneratorProps) {
   const [scheduleType, setScheduleType] = useState<ScheduleType>("daily")
   const [minute, setMinute] = useState("0")
@@ -44,15 +42,14 @@ export function CrontabGenerator({ value, onChange }: CrontabGeneratorProps) {
   const [dayOfMonth, setDayOfMonth] = useState("1")
   const [customExpression, setCustomExpression] = useState("")
 
-
   // Update cron expression when settings change
   useEffect(() => {
     let cronExpression = ""
-    
+
     // Use default values if empty
     const safeMinute = minute || "0"
     const safeHour = hour || "0"
-    
+
     switch (scheduleType) {
       case "hourly":
         cronExpression = `0 ${safeMinute} * * * *`
@@ -70,15 +67,24 @@ export function CrontabGenerator({ value, onChange }: CrontabGeneratorProps) {
         cronExpression = customExpression
         break
     }
-    
+
     onChange(cronExpression)
-  }, [scheduleType, minute, hour, dayOfWeek, dayOfMonth, customExpression, onChange])
+  }, [
+    scheduleType,
+    minute,
+    hour,
+    dayOfWeek,
+    dayOfMonth,
+    customExpression,
+    onChange,
+  ])
 
   // Parse existing cron expression when value changes from outside
   useEffect(() => {
     if (value && value !== getGeneratedExpression()) {
       // Check if it's a common expression
-      const commonDesc = commonExpressions[value as keyof typeof commonExpressions]
+      const commonDesc =
+        commonExpressions[value as keyof typeof commonExpressions]
       if (commonDesc) {
         parseCronExpression(value)
       } else {
@@ -92,7 +98,7 @@ export function CrontabGenerator({ value, onChange }: CrontabGeneratorProps) {
     // Use default values if empty
     const safeMinute = minute || "0"
     const safeHour = hour || "0"
-    
+
     switch (scheduleType) {
       case "hourly":
         return `0 ${safeMinute} * * * *`
@@ -115,19 +121,47 @@ export function CrontabGenerator({ value, onChange }: CrontabGeneratorProps) {
 
     const [sec, min, hr, day, month, dow] = parts
 
-    if (sec === "0" && min !== "*" && hr === "*" && day === "*" && month === "*" && dow === "*") {
+    if (
+      sec === "0" &&
+      min !== "*" &&
+      hr === "*" &&
+      day === "*" &&
+      month === "*" &&
+      dow === "*"
+    ) {
       setScheduleType("hourly")
       setMinute(min)
-    } else if (sec === "0" && min !== "*" && hr !== "*" && day === "*" && month === "*" && dow === "*") {
+    } else if (
+      sec === "0" &&
+      min !== "*" &&
+      hr !== "*" &&
+      day === "*" &&
+      month === "*" &&
+      dow === "*"
+    ) {
       setScheduleType("daily")
       setMinute(min)
       setHour(hr)
-    } else if (sec === "0" && min !== "*" && hr !== "*" && day === "*" && month === "*" && dow !== "*") {
+    } else if (
+      sec === "0" &&
+      min !== "*" &&
+      hr !== "*" &&
+      day === "*" &&
+      month === "*" &&
+      dow !== "*"
+    ) {
       setScheduleType("weekly")
       setMinute(min)
       setHour(hr)
       setDayOfWeek(dow)
-    } else if (sec === "0" && min !== "*" && hr !== "*" && day !== "*" && month === "*" && dow === "*") {
+    } else if (
+      sec === "0" &&
+      min !== "*" &&
+      hr !== "*" &&
+      day !== "*" &&
+      month === "*" &&
+      dow === "*"
+    ) {
       setScheduleType("monthly")
       setMinute(min)
       setHour(hr)
@@ -140,22 +174,30 @@ export function CrontabGenerator({ value, onChange }: CrontabGeneratorProps) {
     if (commonExpressions[expression as keyof typeof commonExpressions]) {
       return commonExpressions[expression as keyof typeof commonExpressions]
     }
-    
+
     // Use default values if empty
     const safeMinute = minute || "0"
     const safeHour = hour || "0"
-    
+
     switch (scheduleType) {
       case "hourly":
         return `Every hour at minute ${safeMinute}`
       case "daily":
-        return `Daily at ${safeHour.padStart(2, '0')}:${safeMinute.padStart(2, '0')}`
+        return `Daily at ${safeHour.padStart(2, "0")}:${safeMinute.padStart(2, "0")}`
       case "weekly": {
-        const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-        return `Weekly on ${dayNames[parseInt(dayOfWeek)]} at ${safeHour.padStart(2, '0')}:${safeMinute.padStart(2, '0')}`
+        const dayNames = [
+          "Sunday",
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+        ]
+        return `Weekly on ${dayNames[parseInt(dayOfWeek)]} at ${safeHour.padStart(2, "0")}:${safeMinute.padStart(2, "0")}`
       }
       case "monthly":
-        return `Monthly on day ${dayOfMonth} at ${safeHour.padStart(2, '0')}:${safeMinute.padStart(2, '0')}`
+        return `Monthly on day ${dayOfMonth} at ${safeHour.padStart(2, "0")}:${safeMinute.padStart(2, "0")}`
       case "custom":
         return "Custom cron expression"
       default:
@@ -166,42 +208,43 @@ export function CrontabGenerator({ value, onChange }: CrontabGeneratorProps) {
   const isValidCronExpression = (expr: string) => {
     const parts = expr.split(" ")
     if (parts.length !== 6) return false
-    
+
     // Basic validation for each part
     try {
       const [sec, min, hr, day, month, dow] = parts
-      
+
       // Validate ranges (basic check)
       if (sec !== "*" && (parseInt(sec) < 0 || parseInt(sec) > 59)) return false
       if (min !== "*" && (parseInt(min) < 0 || parseInt(min) > 59)) return false
       if (hr !== "*" && (parseInt(hr) < 0 || parseInt(hr) > 23)) return false
       if (day !== "*" && (parseInt(day) < 1 || parseInt(day) > 31)) return false
-      if (month !== "*" && (parseInt(month) < 1 || parseInt(month) > 12)) return false
+      if (month !== "*" && (parseInt(month) < 1 || parseInt(month) > 12))
+        return false
       if (dow !== "*" && (parseInt(dow) < 0 || parseInt(dow) > 6)) return false
-      
+
       return true
     } catch {
       return false
     }
   }
 
-  const handleTimeInput = (type: 'hour' | 'minute', value: string) => {
+  const handleTimeInput = (type: "hour" | "minute", value: string) => {
     // Allow direct input of time values
     if (value === "") {
       // Allow empty values for user input
-      if (type === 'hour') {
+      if (type === "hour") {
         setHour("")
-      } else if (type === 'minute') {
+      } else if (type === "minute") {
         setMinute("")
       }
       return
     }
-    
+
     const numValue = parseInt(value)
     if (!isNaN(numValue)) {
-      if (type === 'hour' && numValue >= 0 && numValue <= 23) {
+      if (type === "hour" && numValue >= 0 && numValue <= 23) {
         setHour(value)
-      } else if (type === 'minute' && numValue >= 0 && numValue <= 59) {
+      } else if (type === "minute" && numValue >= 0 && numValue <= 59) {
         setMinute(value)
       }
     }
@@ -219,7 +262,10 @@ export function CrontabGenerator({ value, onChange }: CrontabGeneratorProps) {
         {/* Schedule Type */}
         <div className="space-y-2">
           <Label>Schedule Type</Label>
-          <Select value={scheduleType} onValueChange={(value: ScheduleType) => setScheduleType(value)}>
+          <Select
+            value={scheduleType}
+            onValueChange={(value: ScheduleType) => setScheduleType(value)}
+          >
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -262,7 +308,7 @@ export function CrontabGenerator({ value, onChange }: CrontabGeneratorProps) {
                   min="0"
                   max="59"
                   value={minute}
-                  onChange={(e) => handleTimeInput('minute', e.target.value)}
+                  onChange={(e) => handleTimeInput("minute", e.target.value)}
                   placeholder="0-59"
                 />
               </div>
@@ -276,7 +322,7 @@ export function CrontabGenerator({ value, onChange }: CrontabGeneratorProps) {
                     min="0"
                     max="23"
                     value={hour}
-                    onChange={(e) => handleTimeInput('hour', e.target.value)}
+                    onChange={(e) => handleTimeInput("hour", e.target.value)}
                     placeholder="0-23"
                   />
                 </div>
@@ -333,7 +379,11 @@ export function CrontabGenerator({ value, onChange }: CrontabGeneratorProps) {
               value={customExpression}
               onChange={(e) => setCustomExpression(e.target.value)}
               placeholder="0 0 2 * * * (second minute hour day month dayOfWeek)"
-              className={!isValidCronExpression(customExpression) && customExpression ? "border-red-500" : ""}
+              className={
+                !isValidCronExpression(customExpression) && customExpression
+                  ? "border-red-500"
+                  : ""
+              }
             />
             <p className="text-xs text-muted-foreground">
               Format: second minute hour day-of-month month day-of-week
@@ -351,7 +401,9 @@ export function CrontabGenerator({ value, onChange }: CrontabGeneratorProps) {
         <div className="space-y-2">
           <Label>Generated Expression</Label>
           <div className="rounded-md bg-muted p-3">
-            <code className="text-sm font-mono">{getGeneratedExpression()}</code>
+            <code className="text-sm font-mono">
+              {getGeneratedExpression()}
+            </code>
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <CalendarDays className="h-4 w-4" />
@@ -361,4 +413,4 @@ export function CrontabGenerator({ value, onChange }: CrontabGeneratorProps) {
       </CardContent>
     </Card>
   )
-} 
+}

@@ -18,12 +18,12 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select"
 import {
   AlertDialog,
@@ -74,7 +74,7 @@ interface ScheduledTask {
 export default function JobsPage() {
   const { toast } = useToast()
   const queryClient = useQueryClient()
-  
+
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [selectedTask, setSelectedTask] = useState<ScheduledTask | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
@@ -127,14 +127,23 @@ export default function JobsPage() {
 
   // Toggle task enabled status
   const toggleTaskMutation = useMutation({
-    mutationFn: async ({ taskId, enabled }: { taskId: number; enabled: boolean }) => {
-      const response = await fetch(`/api/optimize/scheduled-task/${taskId}/toggle`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ enabled }),
-      })
+    mutationFn: async ({
+      taskId,
+      enabled,
+    }: {
+      taskId: number
+      enabled: boolean
+    }) => {
+      const response = await fetch(
+        `/api/optimize/scheduled-task/${taskId}/toggle`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ enabled }),
+        }
+      )
       if (!response.ok) {
         throw new Error("Failed to toggle task")
       }
@@ -156,25 +165,29 @@ export default function JobsPage() {
   })
 
   // Filter tasks based on search and filters
-  const filteredTasks = scheduledTasks?.filter((task) => {
-    const matchesSearch = 
-      task.taskName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      task.catalogName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      task.namespace.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      task.tableName.toLowerCase().includes(searchTerm.toLowerCase())
-    
-    const matchesStatus = statusFilter === "all" || task.lastRunStatus === statusFilter
-    const matchesEnabled = enabledFilter === "all" || 
-      (enabledFilter === "enabled" && task.enabled) ||
-      (enabledFilter === "disabled" && !task.enabled)
+  const filteredTasks =
+    scheduledTasks?.filter((task) => {
+      const matchesSearch =
+        task.taskName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        task.catalogName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        task.namespace.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        task.tableName.toLowerCase().includes(searchTerm.toLowerCase())
 
-    return matchesSearch && matchesStatus && matchesEnabled
-  }) || []
+      const matchesStatus =
+        statusFilter === "all" || task.lastRunStatus === statusFilter
+      const matchesEnabled =
+        enabledFilter === "all" ||
+        (enabledFilter === "enabled" && task.enabled) ||
+        (enabledFilter === "disabled" && !task.enabled)
+
+      return matchesSearch && matchesStatus && matchesEnabled
+    }) || []
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return "Never"
     // Convert timestamp to number and handle both seconds and milliseconds
-    const timestamp = typeof dateString === 'string' ? parseFloat(dateString) : dateString
+    const timestamp =
+      typeof dateString === "string" ? parseFloat(dateString) : dateString
     // If timestamp is in seconds (less than 1e12), convert to milliseconds
     const timestampMs = timestamp < 1e12 ? timestamp * 1000 : timestamp
     return new Intl.DateTimeFormat("en-US", {
@@ -303,10 +316,9 @@ export default function JobsPage() {
               <Calendar className="h-12 w-12 text-muted-foreground/20 mx-auto mb-4" />
               <p className="text-sm font-medium">No scheduled tasks found</p>
               <p className="text-xs text-muted-foreground mt-1">
-                {scheduledTasks?.length === 0 
+                {scheduledTasks?.length === 0
                   ? "Create your first scheduled task from the table optimization page"
-                  : "Try adjusting your filters to find tasks"
-                }
+                  : "Try adjusting your filters to find tasks"}
               </p>
             </div>
           ) : (
@@ -329,8 +341,8 @@ export default function JobsPage() {
                           {task.enabled ? "Enabled" : "Disabled"}
                         </Badge>
                         {task.lastRunStatus && (
-                          <Badge 
-                            variant="outline" 
+                          <Badge
+                            variant="outline"
                             className={getStatusColor(task.lastRunStatus)}
                           >
                             <div className="flex items-center gap-1">
@@ -345,10 +357,10 @@ export default function JobsPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => 
-                          toggleTaskMutation.mutate({ 
-                            taskId: task.id, 
-                            enabled: !task.enabled 
+                        onClick={() =>
+                          toggleTaskMutation.mutate({
+                            taskId: task.id,
+                            enabled: !task.enabled,
                           })
                         }
                         disabled={toggleTaskMutation.isPending}
@@ -375,7 +387,9 @@ export default function JobsPage() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                     <div>
                       <span className="text-muted-foreground">Schedule:</span>
-                      <div className="font-mono text-xs mt-1">{task.cronExpression}</div>
+                      <div className="font-mono text-xs mt-1">
+                        {task.cronExpression}
+                      </div>
                       <div className="text-xs text-muted-foreground mt-1">
                         {task.cronDescription}
                       </div>
@@ -433,8 +447,9 @@ export default function JobsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Scheduled Task</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete the task "{selectedTask?.taskName}"? 
-              This action cannot be undone and will stop all future scheduled runs.
+              Are you sure you want to delete the task "{selectedTask?.taskName}
+              "? This action cannot be undone and will stop all future scheduled
+              runs.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -454,4 +469,4 @@ export default function JobsPage() {
       </AlertDialog>
     </div>
   )
-} 
+}
