@@ -11,6 +11,12 @@ import {
   Pause,
   Trash2,
   Filter,
+  ChevronDown,
+  ChevronRight,
+  Settings,
+  Database,
+  Timer,
+  HardDrive,
 } from "lucide-react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -35,6 +41,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import {
+  Collapsible,
+  CollapsibleContent,
+} from "@/components/ui/collapsible"
 import { useToast } from "@/hooks/use-toast"
 import { errorToString } from "@/lib/utils"
 import { useState } from "react"
@@ -80,6 +90,7 @@ export default function JobsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [enabledFilter, setEnabledFilter] = useState<string>("all")
+  const [expandedTasks, setExpandedTasks] = useState<Set<number>>(new Set())
 
   // Get all scheduled tasks
   const {
@@ -163,6 +174,37 @@ export default function JobsPage() {
       })
     },
   })
+
+  const toggleTaskExpansion = (taskId: number) => {
+    setExpandedTasks(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(taskId)) {
+        newSet.delete(taskId)
+      } else {
+        newSet.add(taskId)
+      }
+      return newSet
+    })
+  }
+
+  const formatBytes = (bytes: number) => {
+    const mb = bytes / (1024 * 1024)
+    const gb = mb / 1024
+    return gb >= 1 ? `${gb.toFixed(1)} GB` : `${mb.toFixed(0)} MB`
+  }
+
+  const formatDuration = (milliseconds: number) => {
+    const days = Math.floor(milliseconds / (24 * 60 * 60 * 1000))
+    const hours = Math.floor((milliseconds % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000))
+    
+    if (days > 0) {
+      return `${days} day${days > 1 ? 's' : ''}`
+    } else if (hours > 0) {
+      return `${hours} hour${hours > 1 ? 's' : ''}`
+    } else {
+      return `${Math.floor(milliseconds / (60 * 1000))} minute${Math.floor(milliseconds / (60 * 1000)) > 1 ? 's' : ''}`
+    }
+  }
 
   // Filter tasks based on search and filters
   const filteredTasks =
@@ -357,6 +399,19 @@ export default function JobsPage() {
                       <Button
                         variant="ghost"
                         size="sm"
+                        onClick={() => toggleTaskExpansion(task.id)}
+                        className="text-muted-foreground hover:text-foreground"
+                      >
+                        {expandedTasks.has(task.id) ? (
+                          <ChevronDown className="h-4 w-4" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4" />
+                        )}
+                        Details
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() =>
                           toggleTaskMutation.mutate({
                             taskId: task.id,
@@ -434,6 +489,106 @@ export default function JobsPage() {
                       View Table
                     </Link>
                   </div>
+
+                  {/* Collapsible Details Section */}
+                  <Collapsible 
+                    open={expandedTasks.has(task.id)} 
+                    onOpenChange={() => toggleTaskExpansion(task.id)}
+                  >
+                    <CollapsibleContent className="mt-4 pt-4 border-t">
+                      <div className="space-y-6">
+                        {/* Optimization Settings */}
+                        <div>
+                          <h4 className="flex items-center gap-2 font-medium text-sm mb-3">
+                            <Settings className="h-4 w-4 text-blue-500" />
+                            Optimization Configuration
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                            
+                            {/* Snapshot Retention */}
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2">
+                                <Timer className="h-4 w-4 text-green-500" />
+                                <span className="font-medium">Snapshot Retention</span>
+                                <Badge variant={task.parameters.snapshotRetention ? "default" : "secondary"}>
+                                  {task.parameters.snapshotRetention ? "Enabled" : "Disabled"}
+                                </Badge>
+                              </div>
+                              {task.parameters.snapshotRetention && (
+                                <div className="pl-6 space-y-1 text-muted-foreground">
+                                  <div>Retention Period: {formatDuration(task.parameters.retentionPeriod)}</div>
+                                  <div>Min Snapshots: {task.parameters.minSnapshotsToKeep}</div>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Compaction */}
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2">
+                                <Database className="h-4 w-4 text-purple-500" />
+                                <span className="font-medium">Compaction</span>
+                                <Badge variant={task.parameters.compaction ? "default" : "secondary"}>
+                                  {task.parameters.compaction ? "Enabled" : "Disabled"}
+                                </Badge>
+                              </div>
+                              {task.parameters.compaction && (
+                                <div className="pl-6 space-y-1 text-muted-foreground">
+                                  <div>Target File Size: {formatBytes(task.parameters.targetFileSizeBytes)}</div>
+                                  {task.parameters.strategy && (
+                                    <div>Strategy: {task.parameters.strategy}</div>
+                                  )}
+                                  {task.parameters.sortOrder && (
+                                    <div>Sort Order: {task.parameters.sortOrder}</div>
+                                  )}
+                                  {task.parameters.whereClause && (
+                                    <div>Where Clause: {task.parameters.whereClause}</div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Orphan File Deletion */}
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2">
+                                <HardDrive className="h-4 w-4 text-orange-500" />
+                                <span className="font-medium">Orphan File Deletion</span>
+                                <Badge variant={task.parameters.orphanFileDeletion ? "default" : "secondary"}>
+                                  {task.parameters.orphanFileDeletion ? "Enabled" : "Disabled"}
+                                </Badge>
+                              </div>
+                              {task.parameters.orphanFileDeletion && (
+                                <div className="pl-6 space-y-1 text-muted-foreground">
+                                  <div>Retention: {formatDuration(task.parameters.orphanFileRetention)}</div>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Task Metadata */}
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2">
+                                <Calendar className="h-4 w-4 text-gray-500" />
+                                <span className="font-medium">Task Details</span>
+                              </div>
+                              <div className="pl-6 space-y-1 text-muted-foreground">
+                                <div>Task ID: {task.id}</div>
+                                <div>Type: {task.taskType}</div>
+                                <div>Created: {formatDate(task.createdAt)}</div>
+                                <div>Updated: {formatDate(task.updatedAt)}</div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Raw Configuration */}
+                        <div>
+                          <h4 className="font-medium text-sm mb-3">Raw Configuration</h4>
+                          <div className="bg-muted/50 rounded-lg p-3 font-mono text-xs overflow-x-auto">
+                            <pre>{JSON.stringify(task.parameters, null, 2)}</pre>
+                          </div>
+                        </div>
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
                 </div>
               ))}
             </div>
