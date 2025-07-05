@@ -228,7 +228,7 @@ export default function JobsPage() {
   return (
     <div className="mx-auto w-full max-w-7xl px-6 py-8">
       <div className="mb-8">
-        <h1 className="mb-2 text-3xl font-semibold">Scheduled Jobs</h1>
+        <h1 className="mb-2 text-3xl font-semibold">Scheduled Tasks</h1>
         <p className="text-muted-foreground">
           Manage your automated table optimization tasks
         </p>

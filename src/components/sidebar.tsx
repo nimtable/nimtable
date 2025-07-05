@@ -72,7 +72,7 @@ export function Sidebar() {
       icon: LayoutGrid,
     },
     {
-      title: "Jobs",
+      title: "Tasks",
       href: "/jobs",
       icon: Calendar,
     },
