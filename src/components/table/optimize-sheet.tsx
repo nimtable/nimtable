@@ -26,6 +26,10 @@ import {
   Cpu,
   GitCommit,
   Calendar,
+  Clock,
+  Play,
+  Trash2,
+  XCircle,
 } from "lucide-react"
 import {
   getFileDistribution,
@@ -42,6 +46,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -50,26 +64,60 @@ import {
 } from "@/components/ui/select"
 import { FileDistributionLoading } from "@/components/table/file-distribution-loading"
 import { FileDistribution } from "@/components/table/file-distribution"
+import { CrontabGenerator } from "@/components/table/crontab-generator"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { useQuery, useMutation } from "@tanstack/react-query"
-import { Sheet, SheetContent } from "@/components/ui/sheet"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
 import { getTableInfo } from "@/lib/client"
 import { errorToString } from "@/lib/utils"
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { ScheduleSheet } from "@/components/table/schedule-sheet"
 
 type OptimizationStep = {
   name: string
   status: "pending" | "running" | "done" | "error"
   error?: string
   result?: any
+}
+
+type ExecutionMode = "run-once" | "schedule"
+
+interface ScheduledTask {
+  id: number
+  taskName: string
+  catalogName: string
+  namespace: string
+  tableName: string
+  cronExpression: string
+  cronDescription: string
+  taskType: string
+  enabled: boolean
+  lastRunAt?: string
+  lastRunStatus?: string
+  lastRunMessage?: string
+  nextRunAt?: string
+  createdBy?: string
+  createdAt: string
+  updatedAt: string
+  parameters: {
+    snapshotRetention: boolean
+    retentionPeriod: number
+    minSnapshotsToKeep: number
+    orphanFileDeletion: boolean
+    orphanFileRetention: number
+    compaction: boolean
+    targetFileSizeBytes: number
+    strategy?: string
+    sortOrder?: string
+    whereClause?: string
+  }
 }
 
 function FileDistributionSection({
@@ -248,22 +296,54 @@ export function OptimizeSheet({
   table,
 }: OptimizeSheetProps) {
   const { toast } = useToast()
+  const queryClient = useQueryClient()
   const [showProgressDialog, setShowProgressDialog] = useState(false)
-  const [showScheduleSheet, setShowScheduleSheet] = useState(false)
-  const [optimizationSteps, setOptimizationSteps] = useState<
-    OptimizationStep[]
-  >([])
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [selectedTask, setSelectedTask] = useState<ScheduledTask | null>(null)
+  const [optimizationSteps, setOptimizationSteps] = useState<OptimizationStep[]>([])
+  
+  // Execution mode state
+  const [executionMode, setExecutionMode] = useState<ExecutionMode>("run-once")
+  
+  // Schedule settings
+  const [taskName, setTaskName] = useState("")
+  const [cronExpression, setCronExpression] = useState("0 0 2 * * *") // Daily at 2 AM
+  const [scheduleEnabled, setScheduleEnabled] = useState(true)
 
   // Optimization settings
   const [snapshotRetention, setSnapshotRetention] = useState(true)
   const [retentionPeriod, setRetentionPeriod] = useState("5")
   const [minSnapshotsToKeep, setMinSnapshotsToKeep] = useState("1")
   const [compaction, setCompaction] = useState(true)
-  const [targetFileSizeBytes, setTargetFileSizeBytes] =
-    useState<number>(536870912) // 512MB in bytes
+  const [targetFileSizeBytes, setTargetFileSizeBytes] = useState<number>(536870912) // 512MB in bytes
   const [strategy, setStrategy] = useState("binpack")
   const [sortOrder, setSortOrder] = useState("")
   const [whereClause, setWhereClause] = useState("")
+
+  // Get scheduled tasks
+  const {
+    data: scheduledTasks,
+    isLoading: isLoadingTasks,
+    refetch: refetchTasks,
+  } = useQuery<ScheduledTask[]>({
+    queryKey: ["scheduled-tasks"],
+    queryFn: async () => {
+      const response = await fetch("/api/optimize/scheduled-tasks")
+      if (!response.ok) {
+        throw new Error("Failed to fetch scheduled tasks")
+      }
+      return response.json()
+    },
+    enabled: open,
+  })
+
+  // Filter tasks for current table
+  const tableTasks = scheduledTasks?.filter(
+    (task) =>
+      task.catalogName === catalog &&
+      task.namespace === namespace &&
+      task.tableName === table
+  ) || []
 
   // Get system information
   const { data: systemInfo } = useQuery<{
@@ -295,6 +375,13 @@ export function OptimizeSheet({
 
     setOptimizationSteps(steps)
   }, [snapshotRetention, compaction])
+
+  // Update task name when mode changes
+  useEffect(() => {
+    if (executionMode === "schedule" && !taskName) {
+      setTaskName(`${catalog}_${namespace}_${table}_optimization`)
+    }
+  }, [executionMode, catalog, namespace, table, taskName])
 
   // Define the optimization mutation
   const optimizeMutation = useMutation({
@@ -361,26 +448,163 @@ export function OptimizeSheet({
     },
   })
 
-  const handleOptimize = async () => {
-    setShowProgressDialog(true)
-    setOptimizationSteps((steps) =>
-      steps.map((step) => ({ ...step, status: "pending" }))
-    )
-
-    // Run steps sequentially
-    for (let i = 0; i < optimizationSteps.length; i++) {
-      const step = optimizationSteps[i]
-      try {
-        await optimizeMutation.mutateAsync({ step, index: i })
-      } catch (_error) {
-        return // Stop on first error
+  // Create task mutation
+  const createTaskMutation = useMutation({
+    mutationFn: async (taskData: any) => {
+      const response = await fetch(
+        `/api/optimize/${catalog}/${namespace}/${table}/schedule`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(taskData),
+        }
+      )
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.message || "Failed to create scheduled task")
       }
-    }
+      return response.json()
+    },
+    onSuccess: () => {
+      toast({
+        title: "Task scheduled",
+        description: "Optimization task has been scheduled successfully.",
+      })
+      refetchTasks()
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Failed to schedule task",
+        description: errorToString(error),
+      })
+    },
+  })
 
-    toast({
-      title: "Optimization completed",
-      description: "All optimization steps have been completed successfully.",
-    })
+  // Delete task mutation
+  const deleteTaskMutation = useMutation({
+    mutationFn: async (taskId: number) => {
+      const response = await fetch(`/api/optimize/scheduled-task/${taskId}`, {
+        method: "DELETE",
+      })
+      if (!response.ok) {
+        throw new Error("Failed to delete task")
+      }
+    },
+    onSuccess: () => {
+      toast({
+        title: "Task deleted",
+        description: "Scheduled task has been deleted successfully.",
+      })
+      setShowDeleteDialog(false)
+      setSelectedTask(null)
+      refetchTasks()
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Failed to delete task",
+        description: errorToString(error),
+      })
+    },
+  })
+
+  // Toggle task enabled state
+  const toggleTaskMutation = useMutation({
+    mutationFn: async ({ taskId, enabled }: { taskId: number; enabled: boolean }) => {
+      const response = await fetch(`/api/optimize/scheduled-task/${taskId}/toggle`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ enabled }),
+      })
+      if (!response.ok) {
+        throw new Error("Failed to toggle task")
+      }
+      return response.json()
+    },
+    onSuccess: () => {
+      refetchTasks()
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Failed to toggle task",
+        description: errorToString(error),
+      })
+    },
+  })
+
+  const handleOptimize = async () => {
+    if (executionMode === "schedule") {
+      // Create scheduled task
+      const taskData = {
+        taskName: taskName || `${catalog}_${namespace}_${table}_optimization`,
+        cronExpression,
+        enabled: scheduleEnabled,
+        snapshotRetention,
+        retentionPeriod: parseInt(retentionPeriod) * 24 * 60 * 60 * 1000, // Convert days to milliseconds
+        minSnapshotsToKeep: parseInt(minSnapshotsToKeep),
+        orphanFileDeletion: false, // Not implemented in current UI
+        orphanFileRetention: 86400000, // 1 day default
+        compaction,
+        targetFileSizeBytes,
+        strategy: strategy || undefined,
+        sortOrder: sortOrder || undefined,
+        whereClause: whereClause || undefined,
+        createdBy: "user", // TODO: Get from auth context
+      }
+      createTaskMutation.mutate(taskData)
+    } else {
+      // Run optimization once
+      setShowProgressDialog(true)
+      setOptimizationSteps((steps) =>
+        steps.map((step) => ({ ...step, status: "pending" }))
+      )
+
+      // Run steps sequentially
+      for (let i = 0; i < optimizationSteps.length; i++) {
+        const step = optimizationSteps[i]
+        try {
+          await optimizeMutation.mutateAsync({ step, index: i })
+        } catch (_error) {
+          return // Stop on first error
+        }
+      }
+
+      toast({
+        title: "Optimization completed",
+        description: "All optimization steps have been completed successfully.",
+      })
+    }
+  }
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "Never"
+    // Convert timestamp to number and handle both seconds and milliseconds
+    const timestamp = typeof dateString === 'string' ? parseFloat(dateString) : dateString
+    // If timestamp is in seconds (less than 1e12), convert to milliseconds
+    const timestampMs = timestamp < 1e12 ? timestamp * 1000 : timestamp
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(new Date(timestampMs))
+  }
+
+  const getStatusIcon = (status?: string) => {
+    switch (status) {
+      case "SUCCESS":
+        return <CheckCircle2 className="h-4 w-4 text-green-600" />
+      case "FAILED":
+        return <XCircle className="h-4 w-4 text-red-600" />
+      default:
+        return <AlertTriangle className="h-4 w-4 text-yellow-600" />
+    }
   }
 
   return (
@@ -390,8 +614,8 @@ export function OptimizeSheet({
         className="flex h-full w-full flex-col p-0 sm:max-w-full"
       >
         {/* Header */}
-        <div className="border-b bg-background">
-          <div className="flex items-center justify-between px-6 py-4">
+        <SheetHeader className="border-b bg-background px-6 py-4">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
                 <Link
@@ -404,16 +628,8 @@ export function OptimizeSheet({
                 <span className="font-medium text-foreground">Optimize</span>
               </div>
             </div>
-            <Button
-              variant="outline"
-              onClick={() => setShowScheduleSheet(true)}
-              className="gap-2"
-            >
-              <Calendar className="h-4 w-4" />
-              Schedule
-            </Button>
           </div>
-        </div>
+        </SheetHeader>
 
         {/* Title Section */}
         <div className="border-b bg-muted/5 px-6 py-4">
@@ -422,11 +638,11 @@ export function OptimizeSheet({
               <Settings className="h-5 w-5 text-blue-500" />
             </div>
             <div>
-              <h1 className="text-xl font-semibold">Table Optimization</h1>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <SheetTitle className="text-xl font-semibold">Table Optimization</SheetTitle>
+              <SheetDescription className="mt-1 text-sm text-muted-foreground">
                 Configure and run Iceberg optimization operations including
                 compaction, snapshot expiration...
-              </p>
+              </SheetDescription>
             </div>
           </div>
         </div>
@@ -434,6 +650,207 @@ export function OptimizeSheet({
         {/* Main Content */}
         <div className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-7xl p-6">
+            {/* Execution Mode Selection */}
+            <div className="mb-8">
+              <h2 className="mb-4 flex items-center gap-2 text-lg font-medium">
+                <div className="h-1.5 w-1.5 rounded-full bg-blue-500"></div>
+                Execution Mode
+              </h2>
+              <Card className="border-muted/70 shadow-sm">
+                <CardContent className="space-y-4 pt-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div
+                      className={`cursor-pointer rounded-lg border-2 p-4 transition-all ${
+                        executionMode === "run-once"
+                          ? "border-blue-500 bg-blue-50 dark:bg-blue-950/30"
+                          : "border-muted hover:border-muted-foreground/50"
+                      }`}
+                      onClick={() => setExecutionMode("run-once")}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-lg bg-green-50 p-2 dark:bg-green-950/30">
+                          <Play className="h-5 w-5 text-green-600" />
+                        </div>
+                        <div>
+                          <h3 className="font-medium">Run Once</h3>
+                          <p className="text-sm text-muted-foreground">
+                            Execute optimization immediately
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      className={`cursor-pointer rounded-lg border-2 p-4 transition-all ${
+                        executionMode === "schedule"
+                          ? "border-blue-500 bg-blue-50 dark:bg-blue-950/30"
+                          : "border-muted hover:border-muted-foreground/50"
+                      }`}
+                      onClick={() => setExecutionMode("schedule")}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-lg bg-purple-50 p-2 dark:bg-purple-950/30">
+                          <Calendar className="h-5 w-5 text-purple-600" />
+                        </div>
+                        <div>
+                          <h3 className="font-medium">Schedule</h3>
+                          <p className="text-sm text-muted-foreground">
+                            Set up automated optimization
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Current Scheduled Tasks - Only show in schedule mode */}
+            {executionMode === "schedule" && (
+              <div className="mb-8">
+                <h2 className="mb-4 flex items-center gap-2 text-lg font-medium">
+                  <div className="h-1.5 w-1.5 rounded-full bg-blue-500"></div>
+                  Current Scheduled Tasks
+                </h2>
+                <Card className="border-muted/70 shadow-sm">
+                  <CardContent className="pt-6">
+                    {isLoadingTasks ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="h-6 w-6 animate-spin" />
+                      </div>
+                    ) : tableTasks.length === 0 ? (
+                      <div className="text-center py-8">
+                        <Calendar className="h-12 w-12 text-muted-foreground/20 mx-auto mb-4" />
+                        <p className="text-sm font-medium">No scheduled tasks</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Create a task to automate table optimization
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {tableTasks.map((task) => (
+                          <div
+                            key={task.id}
+                            className="border rounded-lg p-4 space-y-3"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <h3 className="font-medium">{task.taskName}</h3>
+                                <Badge variant={task.enabled ? "default" : "secondary"}>
+                                  {task.enabled ? "Enabled" : "Disabled"}
+                                </Badge>
+                                {task.lastRunStatus && (
+                                  <div className="flex items-center gap-1">
+                                    {getStatusIcon(task.lastRunStatus)}
+                                    <span className="text-xs text-muted-foreground">
+                                      {task.lastRunStatus}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Switch
+                                  checked={task.enabled}
+                                  onCheckedChange={(checked) =>
+                                    toggleTaskMutation.mutate({
+                                      taskId: task.id,
+                                      enabled: checked,
+                                    })
+                                  }
+                                />
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedTask(task)
+                                    setShowDeleteDialog(true)
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                              <div>
+                                <span className="text-muted-foreground">Schedule:</span>
+                                <div className="font-mono text-xs">{task.cronExpression}</div>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Next Run:</span>
+                                <div className="flex items-center gap-1 text-xs">
+                                  <Clock className="h-3 w-3" />
+                                  {formatDate(task.nextRunAt)}
+                                </div>
+                              </div>
+                            </div>
+
+                            {task.lastRunAt && (
+                              <div className="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                  <span className="text-muted-foreground">Last Run:</span>
+                                  <div className="text-xs">{formatDate(task.lastRunAt)}</div>
+                                </div>
+                                {task.lastRunMessage && (
+                                  <div>
+                                    <span className="text-muted-foreground">Message:</span>
+                                    <div className="text-xs">{task.lastRunMessage}</div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Schedule Configuration - Only show in schedule mode */}
+            {executionMode === "schedule" && (
+              <div className="mb-8">
+                <h2 className="mb-4 flex items-center gap-2 text-lg font-medium">
+                  <div className="h-1.5 w-1.5 rounded-full bg-blue-500"></div>
+                  Schedule Configuration
+                </h2>
+                <Card className="border-muted/70 shadow-sm">
+                  <CardContent className="space-y-6 pt-6">
+                    {/* Task Name */}
+                    <div className="space-y-2">
+                      <Label htmlFor="taskName">Task Name</Label>
+                      <Input
+                        id="taskName"
+                        value={taskName}
+                        onChange={(e) => setTaskName(e.target.value)}
+                        placeholder={`${catalog}_${namespace}_${table}_optimization`}
+                      />
+                    </div>
+
+                    {/* Task Enabled */}
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label className="text-base">Enable Task</Label>
+                        <p className="text-sm text-muted-foreground">
+                          Whether this task should run automatically
+                        </p>
+                      </div>
+                      <Switch
+                        checked={scheduleEnabled}
+                        onCheckedChange={setScheduleEnabled}
+                      />
+                    </div>
+
+                    {/* Cron Expression */}
+                    <CrontabGenerator
+                      value={cronExpression}
+                      onChange={setCronExpression}
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
             {/* Optimization Settings */}
             <div className="mb-8">
               <h2 className="mb-4 flex items-center gap-2 text-lg font-medium">
@@ -561,11 +978,15 @@ export function OptimizeSheet({
                               onChange={(e) => setSortOrder(e.target.value)}
                               placeholder="e.g., zorder(c1,c2) or id DESC NULLS LAST,name ASC NULLS FIRST"
                             />
-                            <p className="text-sm text-muted-foreground">
-                              Specify sort order using zorder format (e.g.,
-                              zorder(c1,c2)) or sort format (e.g., id DESC NULLS
-                              LAST,name ASC NULLS FIRST)
-                            </p>
+                            <Alert>
+                              <AlertTriangle className="h-4 w-4" />
+                              <AlertDescription>
+                                Sort strategy will reorder data according to the specified columns. 
+                                Use zorder format (e.g., zorder(c1,c2)) for multi-dimensional clustering 
+                                or standard sort format (e.g., id DESC NULLS LAST,name ASC NULLS FIRST) 
+                                for traditional sorting.
+                              </AlertDescription>
+                            </Alert>
                           </div>
                         )}
 
@@ -632,31 +1053,35 @@ export function OptimizeSheet({
               </Card>
             </div>
 
-            {/* Current File Distribution */}
-            <div className="mb-8">
-              <h2 className="mb-4 flex items-center gap-2 text-lg font-medium">
-                <div className="h-1.5 w-1.5 rounded-full bg-blue-500"></div>
-                Current File Distribution
-              </h2>
-              <FileDistributionSection
-                tableId={table}
-                catalog={catalog}
-                namespace={namespace}
-              />
-            </div>
+            {/* Current File Distribution - Only show in run-once mode */}
+            {executionMode === "run-once" && (
+              <div className="mb-8">
+                <h2 className="mb-4 flex items-center gap-2 text-lg font-medium">
+                  <div className="h-1.5 w-1.5 rounded-full bg-blue-500"></div>
+                  Current File Distribution
+                </h2>
+                <FileDistributionSection
+                  tableId={table}
+                  catalog={catalog}
+                  namespace={namespace}
+                />
+              </div>
+            )}
 
-            {/* Compaction History */}
-            <div>
-              <h2 className="mb-4 flex items-center gap-2 text-lg font-medium">
-                <div className="h-1.5 w-1.5 rounded-full bg-blue-500"></div>
-                Compaction History
-              </h2>
-              <CompactionHistory
-                catalog={catalog}
-                namespace={namespace}
-                table={table}
-              />
-            </div>
+            {/* Compaction History - Only show in run-once mode */}
+            {executionMode === "run-once" && (
+              <div>
+                <h2 className="mb-4 flex items-center gap-2 text-lg font-medium">
+                  <div className="h-1.5 w-1.5 rounded-full bg-blue-500"></div>
+                  Compaction History
+                </h2>
+                <CompactionHistory
+                  catalog={catalog}
+                  namespace={namespace}
+                  table={table}
+                />
+              </div>
+            )}
           </div>
         </div>
 
@@ -672,13 +1097,13 @@ export function OptimizeSheet({
             </Button>
             <Button
               onClick={() => handleOptimize()}
-              disabled={optimizeMutation.isPending}
+              disabled={optimizeMutation.isPending || createTaskMutation.isPending}
               className="gap-2 bg-blue-600 hover:bg-blue-700"
             >
-              {optimizeMutation.isPending && (
+              {(optimizeMutation.isPending || createTaskMutation.isPending) && (
                 <Loader2 className="h-4 w-4 animate-spin" />
               )}
-              Run Optimization
+              {executionMode === "run-once" ? "Run Optimization" : "Create Schedule"}
             </Button>
           </div>
         </div>
@@ -751,16 +1176,33 @@ export function OptimizeSheet({
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Delete Task Dialog */}
+        <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Scheduled Task</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete the task "{selectedTask?.taskName}"? 
+                This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  if (selectedTask) {
+                    deleteTaskMutation.mutate(selectedTask.id)
+                  }
+                }}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </SheetContent>
-      
-      {/* Schedule Sheet */}
-      <ScheduleSheet
-        open={showScheduleSheet}
-        onOpenChange={setShowScheduleSheet}
-        catalog={catalog}
-        namespace={namespace}
-        table={table}
-      />
     </Sheet>
   )
 }

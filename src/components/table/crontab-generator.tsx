@@ -34,6 +34,8 @@ const commonExpressions = {
   "0 0 9 * * 1-5": "Weekdays at 9:00 AM",
 }
 
+
+
 export function CrontabGenerator({ value, onChange }: CrontabGeneratorProps) {
   const [scheduleType, setScheduleType] = useState<ScheduleType>("daily")
   const [minute, setMinute] = useState("0")
@@ -42,22 +44,27 @@ export function CrontabGenerator({ value, onChange }: CrontabGeneratorProps) {
   const [dayOfMonth, setDayOfMonth] = useState("1")
   const [customExpression, setCustomExpression] = useState("")
 
+
   // Update cron expression when settings change
   useEffect(() => {
     let cronExpression = ""
     
+    // Use default values if empty
+    const safeMinute = minute || "0"
+    const safeHour = hour || "0"
+    
     switch (scheduleType) {
       case "hourly":
-        cronExpression = `0 ${minute} * * * *`
+        cronExpression = `0 ${safeMinute} * * * *`
         break
       case "daily":
-        cronExpression = `0 ${minute} ${hour} * * *`
+        cronExpression = `0 ${safeMinute} ${safeHour} * * *`
         break
       case "weekly":
-        cronExpression = `0 ${minute} ${hour} * * ${dayOfWeek}`
+        cronExpression = `0 ${safeMinute} ${safeHour} * * ${dayOfWeek}`
         break
       case "monthly":
-        cronExpression = `0 ${minute} ${hour} ${dayOfMonth} * *`
+        cronExpression = `0 ${safeMinute} ${safeHour} ${dayOfMonth} * *`
         break
       case "custom":
         cronExpression = customExpression
@@ -82,15 +89,19 @@ export function CrontabGenerator({ value, onChange }: CrontabGeneratorProps) {
   }, [value])
 
   const getGeneratedExpression = () => {
+    // Use default values if empty
+    const safeMinute = minute || "0"
+    const safeHour = hour || "0"
+    
     switch (scheduleType) {
       case "hourly":
-        return `0 ${minute} * * * *`
+        return `0 ${safeMinute} * * * *`
       case "daily":
-        return `0 ${minute} ${hour} * * *`
+        return `0 ${safeMinute} ${safeHour} * * *`
       case "weekly":
-        return `0 ${minute} ${hour} * * ${dayOfWeek}`
+        return `0 ${safeMinute} ${safeHour} * * ${dayOfWeek}`
       case "monthly":
-        return `0 ${minute} ${hour} ${dayOfMonth} * *`
+        return `0 ${safeMinute} ${safeHour} ${dayOfMonth} * *`
       case "custom":
         return customExpression
       default:
@@ -130,17 +141,21 @@ export function CrontabGenerator({ value, onChange }: CrontabGeneratorProps) {
       return commonExpressions[expression as keyof typeof commonExpressions]
     }
     
+    // Use default values if empty
+    const safeMinute = minute || "0"
+    const safeHour = hour || "0"
+    
     switch (scheduleType) {
       case "hourly":
-        return `Every hour at minute ${minute}`
+        return `Every hour at minute ${safeMinute}`
       case "daily":
-        return `Daily at ${hour.padStart(2, '0')}:${minute.padStart(2, '0')}`
+        return `Daily at ${safeHour.padStart(2, '0')}:${safeMinute.padStart(2, '0')}`
       case "weekly": {
         const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-        return `Weekly on ${dayNames[parseInt(dayOfWeek)]} at ${hour.padStart(2, '0')}:${minute.padStart(2, '0')}`
+        return `Weekly on ${dayNames[parseInt(dayOfWeek)]} at ${safeHour.padStart(2, '0')}:${safeMinute.padStart(2, '0')}`
       }
       case "monthly":
-        return `Monthly on day ${dayOfMonth} at ${hour.padStart(2, '0')}:${minute.padStart(2, '0')}`
+        return `Monthly on day ${dayOfMonth} at ${safeHour.padStart(2, '0')}:${safeMinute.padStart(2, '0')}`
       case "custom":
         return "Custom cron expression"
       default:
@@ -167,6 +182,28 @@ export function CrontabGenerator({ value, onChange }: CrontabGeneratorProps) {
       return true
     } catch {
       return false
+    }
+  }
+
+  const handleTimeInput = (type: 'hour' | 'minute', value: string) => {
+    // Allow direct input of time values
+    if (value === "") {
+      // Allow empty values for user input
+      if (type === 'hour') {
+        setHour("")
+      } else if (type === 'minute') {
+        setMinute("")
+      }
+      return
+    }
+    
+    const numValue = parseInt(value)
+    if (!isNaN(numValue)) {
+      if (type === 'hour' && numValue >= 0 && numValue <= 23) {
+        setHour(value)
+      } else if (type === 'minute' && numValue >= 0 && numValue <= 59) {
+        setMinute(value)
+      }
     }
   }
 
@@ -215,46 +252,40 @@ export function CrontabGenerator({ value, onChange }: CrontabGeneratorProps) {
 
         {/* Schedule Configuration */}
         {scheduleType !== "custom" && (
-          <div className="grid grid-cols-2 gap-4">
-            {/* Minute */}
-            <div className="space-y-2">
-              <Label>Minute</Label>
-              <Select value={minute} onValueChange={setMinute}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Array.from({ length: 60 }, (_, i) => (
-                    <SelectItem key={i} value={i.toString()}>
-                      {i.toString().padStart(2, '0')}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Hour */}
-            {scheduleType !== "hourly" && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              {/* Minute */}
               <div className="space-y-2">
-                <Label>Hour</Label>
-                <Select value={hour} onValueChange={setHour}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Array.from({ length: 24 }, (_, i) => (
-                      <SelectItem key={i} value={i.toString()}>
-                        {i.toString().padStart(2, '0')}:00
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label>Minute (0-59)</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  max="59"
+                  value={minute}
+                  onChange={(e) => handleTimeInput('minute', e.target.value)}
+                  placeholder="0-59"
+                />
               </div>
-            )}
+
+              {/* Hour */}
+              {scheduleType !== "hourly" && (
+                <div className="space-y-2">
+                  <Label>Hour (0-23)</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="23"
+                    value={hour}
+                    onChange={(e) => handleTimeInput('hour', e.target.value)}
+                    placeholder="0-23"
+                  />
+                </div>
+              )}
+            </div>
 
             {/* Day of Week */}
             {scheduleType === "weekly" && (
-              <div className="space-y-2 col-span-2">
+              <div className="space-y-2">
                 <Label>Day of Week</Label>
                 <Select value={dayOfWeek} onValueChange={setDayOfWeek}>
                   <SelectTrigger>
@@ -275,16 +306,16 @@ export function CrontabGenerator({ value, onChange }: CrontabGeneratorProps) {
 
             {/* Day of Month */}
             {scheduleType === "monthly" && (
-              <div className="space-y-2 col-span-2">
+              <div className="space-y-2">
                 <Label>Day of Month</Label>
                 <Select value={dayOfMonth} onValueChange={setDayOfMonth}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="max-h-[200px]">
                     {Array.from({ length: 31 }, (_, i) => (
                       <SelectItem key={i + 1} value={(i + 1).toString()}>
-                        {i + 1}
+                        Day {i + 1}
                       </SelectItem>
                     ))}
                   </SelectContent>
