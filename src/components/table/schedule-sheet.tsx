@@ -12,6 +12,7 @@ import {
   AlertTriangle,
   Loader2,
 } from "lucide-react"
+import { getScheduledTasks, createScheduledTask, deleteScheduledTask, type ScheduledTask } from "@/lib/client"
 import {
   Dialog,
   DialogContent,
@@ -44,36 +45,7 @@ import { errorToString } from "@/lib/utils"
 import { useState } from "react"
 import Link from "next/link"
 
-interface ScheduledTask {
-  id: number
-  taskName: string
-  catalogName: string
-  namespace: string
-  tableName: string
-  cronExpression: string
-  cronDescription: string
-  taskType: string
-  enabled: boolean
-  lastRunAt?: string
-  lastRunStatus?: string
-  lastRunMessage?: string
-  nextRunAt?: string
-  createdBy?: string
-  createdAt: string
-  updatedAt: string
-  parameters: {
-    snapshotRetention: boolean
-    retentionPeriod: number
-    minSnapshotsToKeep: number
-    orphanFileDeletion: boolean
-    orphanFileRetention: number
-    compaction: boolean
-    targetFileSizeBytes: number
-    strategy?: string
-    sortOrder?: string
-    whereClause?: string
-  }
-}
+// Using ScheduledTask type from generated SDK
 
 interface ScheduleSheetProps {
   open: boolean
@@ -121,11 +93,11 @@ export function ScheduleSheet({
   } = useQuery<ScheduledTask[]>({
     queryKey: ["scheduled-tasks"],
     queryFn: async () => {
-      const response = await fetch("/api/optimize/scheduled-tasks")
-      if (!response.ok) {
+      const response = await getScheduledTasks()
+      if (response.error) {
         throw new Error("Failed to fetch scheduled tasks")
       }
-      return response.json()
+      return response.data || []
     },
     enabled: open,
   })
@@ -142,21 +114,14 @@ export function ScheduleSheet({
   // Create task mutation
   const createTaskMutation = useMutation({
     mutationFn: async (taskData: any) => {
-      const response = await fetch(
-        `/api/optimize/${catalog}/${namespace}/${table}/schedule`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(taskData),
-        }
-      )
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || "Failed to create scheduled task")
+      const response = await createScheduledTask({
+        path: { catalog, namespace, table },
+        body: taskData
+      })
+      if (response.error) {
+        throw new Error(response.error.message || "Failed to create scheduled task")
       }
-      return response.json()
+      return response.data
     },
     onSuccess: () => {
       toast({
@@ -179,10 +144,10 @@ export function ScheduleSheet({
   // Delete task mutation
   const deleteTaskMutation = useMutation({
     mutationFn: async (taskId: number) => {
-      const response = await fetch(`/api/optimize/scheduled-task/${taskId}`, {
-        method: "DELETE",
+      const response = await deleteScheduledTask({
+        path: { id: taskId }
       })
-      if (!response.ok) {
+      if (response.error) {
         throw new Error("Failed to delete task")
       }
     },

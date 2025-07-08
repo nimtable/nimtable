@@ -35,6 +35,7 @@ import {
   runOptimizationOperation,
   type OptimizationOperation,
 } from "@/lib/data-loader"
+import { getSystemInfo, getScheduledTasks, deleteScheduledTask, createScheduledTask, toggleScheduledTask, type ScheduledTask } from "@/lib/client"
 import {
   Dialog,
   DialogContent,
@@ -92,36 +93,7 @@ type OptimizationStep = {
 
 type ExecutionMode = "run-once" | "schedule"
 
-interface ScheduledTask {
-  id: number
-  taskName: string
-  catalogName: string
-  namespace: string
-  tableName: string
-  cronExpression: string
-  cronDescription: string
-  taskType: string
-  enabled: boolean
-  lastRunAt?: string
-  lastRunStatus?: string
-  lastRunMessage?: string
-  nextRunAt?: string
-  createdBy?: string
-  createdAt: string
-  updatedAt: string
-  parameters: {
-    snapshotRetention: boolean
-    retentionPeriod: number
-    minSnapshotsToKeep: number
-    orphanFileDeletion: boolean
-    orphanFileRetention: number
-    compaction: boolean
-    targetFileSizeBytes: number
-    strategy?: string
-    sortOrder?: string
-    whereClause?: string
-  }
-}
+// Using ScheduledTask type from generated SDK
 
 interface CompactionHistoryItem {
   id: string | number
@@ -296,11 +268,11 @@ export function OptimizeSheet({
   } = useQuery<ScheduledTask[]>({
     queryKey: ["scheduled-tasks"],
     queryFn: async () => {
-      const response = await fetch("/api/optimize/scheduled-tasks")
-      if (!response.ok) {
+      const response = await getScheduledTasks()
+      if (response.error) {
         throw new Error("Failed to fetch scheduled tasks")
       }
-      return response.json()
+      return response.data || []
     },
     enabled: open,
   })
@@ -315,18 +287,14 @@ export function OptimizeSheet({
     ) || []
 
   // Get system information
-  const { data: systemInfo } = useQuery<{
-    cpuCount: number
-    maxMemory: number
-  }>({
+  const { data: systemInfo } = useQuery({
     queryKey: ["system-info"],
     queryFn: async () => {
-      const response = await fetch("/api/optimize/system-info")
-      if (response.ok) {
-        const data = await response.json()
-        return data
+      const response = await getSystemInfo()
+      if (response.error) {
+        return undefined
       }
-      return undefined
+      return response.data
     },
   })
 
@@ -420,21 +388,14 @@ export function OptimizeSheet({
   // Create task mutation
   const createTaskMutation = useMutation({
     mutationFn: async (taskData: any) => {
-      const response = await fetch(
-        `/api/optimize/${catalog}/${namespace}/${table}/schedule`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(taskData),
-        }
-      )
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || "Failed to create scheduled task")
+      const response = await createScheduledTask({
+        path: { catalog, namespace, table },
+        body: taskData
+      })
+      if (response.error) {
+        throw new Error(response.error.message || "Failed to create scheduled task")
       }
-      return response.json()
+      return response.data
     },
     onSuccess: () => {
       toast({
@@ -455,10 +416,10 @@ export function OptimizeSheet({
   // Delete task mutation
   const deleteTaskMutation = useMutation({
     mutationFn: async (taskId: number) => {
-      const response = await fetch(`/api/optimize/scheduled-task/${taskId}`, {
-        method: "DELETE",
+      const response = await deleteScheduledTask({
+        path: { id: taskId }
       })
-      if (!response.ok) {
+      if (response.error) {
         throw new Error("Failed to delete task")
       }
     },
@@ -489,20 +450,14 @@ export function OptimizeSheet({
       taskId: number
       enabled: boolean
     }) => {
-      const response = await fetch(
-        `/api/optimize/scheduled-task/${taskId}/toggle`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ enabled }),
-        }
-      )
-      if (!response.ok) {
+      const response = await toggleScheduledTask({
+        path: { id: taskId },
+        body: { enabled }
+      })
+      if (response.error) {
         throw new Error("Failed to toggle task")
       }
-      return response.json()
+      return response.data
     },
     onSuccess: () => {
       refetchTasks()

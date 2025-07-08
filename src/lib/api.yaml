@@ -146,6 +146,230 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+  # Optimization/Scheduling APIs
+  /api/optimize/{catalog}/{namespace}/{table}/schedule:
+    post:
+      summary: Create or update scheduled task
+      description: Creates a new scheduled task or updates an existing one for table optimization
+      operationId: createScheduledTask
+      tags:
+        - Optimization
+      parameters:
+        - name: catalog
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The catalog name
+        - name: namespace
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The namespace name
+        - name: table
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The table name
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScheduledTaskCreate"
+      responses:
+        "200":
+          description: Scheduled task created/updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScheduledTaskResponse"
+        "400":
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/optimize/scheduled-tasks:
+    get:
+      summary: Get all scheduled tasks
+      description: Returns a list of all scheduled optimization tasks
+      operationId: getScheduledTasks
+      tags:
+        - Optimization
+      responses:
+        "200":
+          description: Successfully retrieved scheduled tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ScheduledTask"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/optimize/scheduled-task/{id}:
+    get:
+      summary: Get scheduled task by ID
+      description: Returns details of a specific scheduled task
+      operationId: getScheduledTask
+      tags:
+        - Optimization
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: The scheduled task ID
+      responses:
+        "200":
+          description: Successfully retrieved scheduled task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScheduledTask"
+        "404":
+          description: Scheduled task not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "400":
+          description: Invalid task ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      summary: Delete scheduled task
+      description: Deletes a specific scheduled task
+      operationId: deleteScheduledTask
+      tags:
+        - Optimization
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: The scheduled task ID
+      responses:
+        "200":
+          description: Scheduled task deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "404":
+          description: Scheduled task not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "400":
+          description: Invalid task ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/optimize/scheduled-task/{id}/toggle:
+    put:
+      summary: Toggle scheduled task
+      description: Enable or disable a scheduled task
+      operationId: toggleScheduledTask
+      tags:
+        - Optimization
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: The scheduled task ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ToggleTaskRequest"
+      responses:
+        "200":
+          description: Scheduled task toggled successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToggleTaskResponse"
+        "404":
+          description: Scheduled task not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "400":
+          description: Invalid task ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/optimize/system-info:
+    get:
+      summary: Get system information
+      description: Returns system information including CPU count and memory details
+      operationId: getSystemInfo
+      tags:
+        - Optimization
+      responses:
+        "200":
+          description: Successfully retrieved system information
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SystemInfo"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
 components:
   schemas:
     CatalogCreate:
@@ -198,6 +422,260 @@ components:
       required:
         - code
         - message
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required:
+        - success
+        - message
+
+    # Optimization/Scheduling Schemas
+    ScheduledTaskCreate:
+      type: object
+      properties:
+        taskName:
+          type: string
+          description: Name of the scheduled task
+        cronExpression:
+          type: string
+          description: Cron expression for scheduling
+        enabled:
+          type: boolean
+          description: Whether the task is enabled
+          default: true
+        snapshotRetention:
+          type: boolean
+          description: Enable snapshot retention cleanup
+          default: false
+        retentionPeriod:
+          type: integer
+          format: int64
+          description: Retention period in milliseconds
+          default: 432000000
+        minSnapshotsToKeep:
+          type: integer
+          description: Minimum number of snapshots to keep
+          default: 1
+        orphanFileDeletion:
+          type: boolean
+          description: Enable orphan file deletion
+          default: false
+        orphanFileRetention:
+          type: integer
+          format: int64
+          description: Orphan file retention period in milliseconds
+          default: 86400000
+        compaction:
+          type: boolean
+          description: Enable table compaction
+          default: true
+        targetFileSizeBytes:
+          type: integer
+          format: int64
+          description: Target file size for compaction in bytes
+          default: 536870912
+        strategy:
+          type: string
+          description: Compaction strategy (e.g., binpack, sort)
+        sortOrder:
+          type: string
+          description: Sort order for compaction
+        whereClause:
+          type: string
+          description: WHERE clause to filter data during compaction
+        createdBy:
+          type: string
+          description: User who created the task
+      required:
+        - cronExpression
+
+    ScheduledTaskResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        taskId:
+          type: integer
+          format: int64
+        taskName:
+          type: string
+        cronExpression:
+          type: string
+        cronDescription:
+          type: string
+        enabled:
+          type: boolean
+        created:
+          type: boolean
+          description: Whether this was a create operation
+        updated:
+          type: boolean
+          description: Whether this was an update operation
+      required:
+        - success
+        - message
+
+    ScheduledTask:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique task ID
+        taskName:
+          type: string
+          description: Name of the scheduled task
+        catalogName:
+          type: string
+          description: Catalog name
+        namespace:
+          type: string
+          description: Namespace name
+        tableName:
+          type: string
+          description: Table name
+        cronExpression:
+          type: string
+          description: Cron expression for scheduling
+        cronDescription:
+          type: string
+          description: Human-readable cron description
+        taskType:
+          type: string
+          description: Type of task
+          default: "COMPACTION"
+        enabled:
+          type: boolean
+          description: Whether the task is enabled
+        lastRunAt:
+          type: string
+          format: date-time
+          description: Timestamp of last execution
+        lastRunStatus:
+          type: string
+          description: Status of last execution
+        lastRunMessage:
+          type: string
+          description: Message from last execution
+        nextRunAt:
+          type: string
+          format: date-time
+          description: Timestamp of next scheduled execution
+        createdBy:
+          type: string
+          description: User who created the task
+        createdAt:
+          type: string
+          format: date-time
+          description: Task creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Task last update timestamp
+        parameters:
+          $ref: "#/components/schemas/TaskParameters"
+      required:
+        - id
+        - taskName
+        - catalogName
+        - namespace
+        - tableName
+        - cronExpression
+        - taskType
+        - enabled
+        - createdAt
+        - updatedAt
+        - parameters
+
+    TaskParameters:
+      type: object
+      properties:
+        snapshotRetention:
+          type: boolean
+          description: Enable snapshot retention cleanup
+        retentionPeriod:
+          type: integer
+          format: int64
+          description: Retention period in milliseconds
+        minSnapshotsToKeep:
+          type: integer
+          description: Minimum number of snapshots to keep
+        orphanFileDeletion:
+          type: boolean
+          description: Enable orphan file deletion
+        orphanFileRetention:
+          type: integer
+          format: int64
+          description: Orphan file retention period in milliseconds
+        compaction:
+          type: boolean
+          description: Enable table compaction
+        targetFileSizeBytes:
+          type: integer
+          format: int64
+          description: Target file size for compaction in bytes
+        strategy:
+          type: string
+          description: Compaction strategy
+        sortOrder:
+          type: string
+          description: Sort order for compaction
+        whereClause:
+          type: string
+          description: WHERE clause to filter data during compaction
+      required:
+        - snapshotRetention
+        - retentionPeriod
+        - minSnapshotsToKeep
+        - orphanFileDeletion
+        - orphanFileRetention
+        - compaction
+        - targetFileSizeBytes
+
+    ToggleTaskRequest:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          description: Whether to enable or disable the task
+      required:
+        - enabled
+
+    ToggleTaskResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        enabled:
+          type: boolean
+          description: Current enabled status of the task
+      required:
+        - success
+        - message
+        - enabled
+
+    SystemInfo:
+      type: object
+      properties:
+        cpuCount:
+          type: integer
+          description: Number of available CPU cores
+        maxMemory:
+          type: integer
+          format: int64
+          description: Maximum available memory in bytes
+      required:
+        - cpuCount
+        - maxMemory
 
     TableInfo:
       type: object

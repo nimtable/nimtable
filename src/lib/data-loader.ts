@@ -16,8 +16,8 @@
 import { Api } from "@/lib/api"
 
 import { CatalogConfig, LoadTableResult, PartitionSpec } from "./api"
-import { getCatalogs } from "./client/sdk.gen"
-import { getApiBaseUrl } from "./api-config"
+import { getCatalogs } from "./client"
+import { getApiBaseUrl, getJavaApiBaseUrl } from "./api-config"
 
 // Re-export types from api.ts, ensuring application code don't need to access the api directly.
 export type {
@@ -40,29 +40,11 @@ function isBrowser() {
 
 export async function loadCatalogNames(): Promise<string[]> {
   try {
-    // In browser environment, use the regular SDK client
-    if (isBrowser()) {
-      const response = await getCatalogs()
-      return response.data || []
+    const response = await getCatalogs()
+    if (response.error) {
+      throw new Error(`Failed to fetch catalogs: ${response.error.message}`)
     }
-
-    // In server environment, make a direct fetch call with full URL
-    const baseUrl = getApiBaseUrl(false)
-    const response = await fetch(`${baseUrl}/api/catalogs`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
-
-    if (!response.ok) {
-      throw new Error(
-        `Failed to fetch catalogs: ${response.status} ${response.statusText}`
-      )
-    }
-
-    const data = await response.json()
-    return data || []
+    return response.data || []
   } catch (error) {
     console.error("Error loading catalog names:", error)
     throw error
@@ -387,8 +369,9 @@ export async function runOptimizationOperation(
         ? "expire-snapshots"
         : "clean-orphan-files"
 
+  const javaApiBaseUrl = getJavaApiBaseUrl()
   const response = await fetch(
-    `/api/optimize/${catalog}/${namespace}/${table}/${operation}`,
+    `${javaApiBaseUrl}/optimize/${catalog}/${namespace}/${table}/${operation}`,
     {
       method: "POST",
       headers: {
@@ -416,37 +399,7 @@ export async function runOptimizationOperation(
   return await response.json()
 }
 
-/**
- * Schedule optimization operations for a table
- */
-export async function scheduleOptimization(
-  catalog: string,
-  namespace: string,
-  table: string,
-  settings: OptimizationSettings
-): Promise<void> {
-  const response = await fetch(
-    `/api/optimize/${catalog}/${namespace}/${table}/schedule`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        snapshotRetention: settings.snapshotRetention,
-        retentionPeriod:
-          parseInt(settings.retentionPeriod) * 24 * 60 * 60 * 1000,
-        minSnapshotsToKeep: parseInt(settings.minSnapshotsToKeep),
-        compaction: settings.compaction,
-      }),
-    }
-  )
 
-  if (!response.ok) {
-    const error = await response.json()
-    throw new Error(error.message || "Failed to schedule optimization")
-  }
-}
 
 export interface PaginationParams {
   page: number

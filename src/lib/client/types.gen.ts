@@ -43,6 +43,226 @@ export type _Error = {
     details?: string;
 };
 
+export type SuccessResponse = {
+    success: boolean;
+    message: string;
+};
+
+export type ScheduledTaskCreate = {
+    /**
+     * Name of the scheduled task
+     */
+    taskName?: string;
+    /**
+     * Cron expression for scheduling
+     */
+    cronExpression: string;
+    /**
+     * Whether the task is enabled
+     */
+    enabled?: boolean;
+    /**
+     * Enable snapshot retention cleanup
+     */
+    snapshotRetention?: boolean;
+    /**
+     * Retention period in milliseconds
+     */
+    retentionPeriod?: number;
+    /**
+     * Minimum number of snapshots to keep
+     */
+    minSnapshotsToKeep?: number;
+    /**
+     * Enable orphan file deletion
+     */
+    orphanFileDeletion?: boolean;
+    /**
+     * Orphan file retention period in milliseconds
+     */
+    orphanFileRetention?: number;
+    /**
+     * Enable table compaction
+     */
+    compaction?: boolean;
+    /**
+     * Target file size for compaction in bytes
+     */
+    targetFileSizeBytes?: number;
+    /**
+     * Compaction strategy (e.g., binpack, sort)
+     */
+    strategy?: string;
+    /**
+     * Sort order for compaction
+     */
+    sortOrder?: string;
+    /**
+     * WHERE clause to filter data during compaction
+     */
+    whereClause?: string;
+    /**
+     * User who created the task
+     */
+    createdBy?: string;
+};
+
+export type ScheduledTaskResponse = {
+    success: boolean;
+    message: string;
+    taskId?: number;
+    taskName?: string;
+    cronExpression?: string;
+    cronDescription?: string;
+    enabled?: boolean;
+    /**
+     * Whether this was a create operation
+     */
+    created?: boolean;
+    /**
+     * Whether this was an update operation
+     */
+    updated?: boolean;
+};
+
+export type ScheduledTask = {
+    /**
+     * Unique task ID
+     */
+    id: number;
+    /**
+     * Name of the scheduled task
+     */
+    taskName: string;
+    /**
+     * Catalog name
+     */
+    catalogName: string;
+    /**
+     * Namespace name
+     */
+    namespace: string;
+    /**
+     * Table name
+     */
+    tableName: string;
+    /**
+     * Cron expression for scheduling
+     */
+    cronExpression: string;
+    /**
+     * Human-readable cron description
+     */
+    cronDescription?: string;
+    /**
+     * Type of task
+     */
+    taskType: string;
+    /**
+     * Whether the task is enabled
+     */
+    enabled: boolean;
+    /**
+     * Timestamp of last execution
+     */
+    lastRunAt?: string;
+    /**
+     * Status of last execution
+     */
+    lastRunStatus?: string;
+    /**
+     * Message from last execution
+     */
+    lastRunMessage?: string;
+    /**
+     * Timestamp of next scheduled execution
+     */
+    nextRunAt?: string;
+    /**
+     * User who created the task
+     */
+    createdBy?: string;
+    /**
+     * Task creation timestamp
+     */
+    createdAt: string;
+    /**
+     * Task last update timestamp
+     */
+    updatedAt: string;
+    parameters: TaskParameters;
+};
+
+export type TaskParameters = {
+    /**
+     * Enable snapshot retention cleanup
+     */
+    snapshotRetention: boolean;
+    /**
+     * Retention period in milliseconds
+     */
+    retentionPeriod: number;
+    /**
+     * Minimum number of snapshots to keep
+     */
+    minSnapshotsToKeep: number;
+    /**
+     * Enable orphan file deletion
+     */
+    orphanFileDeletion: boolean;
+    /**
+     * Orphan file retention period in milliseconds
+     */
+    orphanFileRetention: number;
+    /**
+     * Enable table compaction
+     */
+    compaction: boolean;
+    /**
+     * Target file size for compaction in bytes
+     */
+    targetFileSizeBytes: number;
+    /**
+     * Compaction strategy
+     */
+    strategy?: string;
+    /**
+     * Sort order for compaction
+     */
+    sortOrder?: string;
+    /**
+     * WHERE clause to filter data during compaction
+     */
+    whereClause?: string;
+};
+
+export type ToggleTaskRequest = {
+    /**
+     * Whether to enable or disable the task
+     */
+    enabled: boolean;
+};
+
+export type ToggleTaskResponse = {
+    success: boolean;
+    message: string;
+    /**
+     * Current enabled status of the task
+     */
+    enabled: boolean;
+};
+
+export type SystemInfo = {
+    /**
+     * Number of available CPU cores
+     */
+    cpuCount: number;
+    /**
+     * Maximum available memory in bytes
+     */
+    maxMemory: number;
+};
+
 export type TableInfo = {
     /**
      * The location of the metadata file
@@ -248,6 +468,212 @@ export type GetTableInfoResponses = {
 };
 
 export type GetTableInfoResponse = GetTableInfoResponses[keyof GetTableInfoResponses];
+
+export type CreateScheduledTaskData = {
+    body: ScheduledTaskCreate;
+    path: {
+        /**
+         * The catalog name
+         */
+        catalog: string;
+        /**
+         * The namespace name
+         */
+        namespace: string;
+        /**
+         * The table name
+         */
+        table: string;
+    };
+    query?: never;
+    url: '/api/optimize/{catalog}/{namespace}/{table}/schedule';
+};
+
+export type CreateScheduledTaskErrors = {
+    /**
+     * Invalid request parameters
+     */
+    400: _Error;
+    /**
+     * Internal server error
+     */
+    500: _Error;
+};
+
+export type CreateScheduledTaskError = CreateScheduledTaskErrors[keyof CreateScheduledTaskErrors];
+
+export type CreateScheduledTaskResponses = {
+    /**
+     * Scheduled task created/updated successfully
+     */
+    200: ScheduledTaskResponse;
+};
+
+export type CreateScheduledTaskResponse = CreateScheduledTaskResponses[keyof CreateScheduledTaskResponses];
+
+export type GetScheduledTasksData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/optimize/scheduled-tasks';
+};
+
+export type GetScheduledTasksErrors = {
+    /**
+     * Internal server error
+     */
+    500: _Error;
+};
+
+export type GetScheduledTasksError = GetScheduledTasksErrors[keyof GetScheduledTasksErrors];
+
+export type GetScheduledTasksResponses = {
+    /**
+     * Successfully retrieved scheduled tasks
+     */
+    200: Array<ScheduledTask>;
+};
+
+export type GetScheduledTasksResponse = GetScheduledTasksResponses[keyof GetScheduledTasksResponses];
+
+export type DeleteScheduledTaskData = {
+    body?: never;
+    path: {
+        /**
+         * The scheduled task ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/api/optimize/scheduled-task/{id}';
+};
+
+export type DeleteScheduledTaskErrors = {
+    /**
+     * Invalid task ID
+     */
+    400: _Error;
+    /**
+     * Scheduled task not found
+     */
+    404: _Error;
+    /**
+     * Internal server error
+     */
+    500: _Error;
+};
+
+export type DeleteScheduledTaskError = DeleteScheduledTaskErrors[keyof DeleteScheduledTaskErrors];
+
+export type DeleteScheduledTaskResponses = {
+    /**
+     * Scheduled task deleted successfully
+     */
+    200: SuccessResponse;
+};
+
+export type DeleteScheduledTaskResponse = DeleteScheduledTaskResponses[keyof DeleteScheduledTaskResponses];
+
+export type GetScheduledTaskData = {
+    body?: never;
+    path: {
+        /**
+         * The scheduled task ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/api/optimize/scheduled-task/{id}';
+};
+
+export type GetScheduledTaskErrors = {
+    /**
+     * Invalid task ID
+     */
+    400: _Error;
+    /**
+     * Scheduled task not found
+     */
+    404: _Error;
+    /**
+     * Internal server error
+     */
+    500: _Error;
+};
+
+export type GetScheduledTaskError = GetScheduledTaskErrors[keyof GetScheduledTaskErrors];
+
+export type GetScheduledTaskResponses = {
+    /**
+     * Successfully retrieved scheduled task
+     */
+    200: ScheduledTask;
+};
+
+export type GetScheduledTaskResponse = GetScheduledTaskResponses[keyof GetScheduledTaskResponses];
+
+export type ToggleScheduledTaskData = {
+    body: ToggleTaskRequest;
+    path: {
+        /**
+         * The scheduled task ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/api/optimize/scheduled-task/{id}/toggle';
+};
+
+export type ToggleScheduledTaskErrors = {
+    /**
+     * Invalid task ID
+     */
+    400: _Error;
+    /**
+     * Scheduled task not found
+     */
+    404: _Error;
+    /**
+     * Internal server error
+     */
+    500: _Error;
+};
+
+export type ToggleScheduledTaskError = ToggleScheduledTaskErrors[keyof ToggleScheduledTaskErrors];
+
+export type ToggleScheduledTaskResponses = {
+    /**
+     * Scheduled task toggled successfully
+     */
+    200: ToggleTaskResponse;
+};
+
+export type ToggleScheduledTaskResponse = ToggleScheduledTaskResponses[keyof ToggleScheduledTaskResponses];
+
+export type GetSystemInfoData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/optimize/system-info';
+};
+
+export type GetSystemInfoErrors = {
+    /**
+     * Internal server error
+     */
+    500: _Error;
+};
+
+export type GetSystemInfoError = GetSystemInfoErrors[keyof GetSystemInfoErrors];
+
+export type GetSystemInfoResponses = {
+    /**
+     * Successfully retrieved system information
+     */
+    200: SystemInfo;
+};
+
+export type GetSystemInfoResponse = GetSystemInfoResponses[keyof GetSystemInfoResponses];
 
 export type ClientOptions = {
     baseUrl: `${string}://src` | (string & {});

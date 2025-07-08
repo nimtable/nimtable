@@ -19,6 +19,7 @@ import {
   HardDrive,
 } from "lucide-react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { getScheduledTasks, deleteScheduledTask, toggleScheduledTask, type ScheduledTask } from "@/lib/client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -47,36 +48,7 @@ import { errorToString } from "@/lib/utils"
 import { useState } from "react"
 import Link from "next/link"
 
-interface ScheduledTask {
-  id: number
-  taskName: string
-  catalogName: string
-  namespace: string
-  tableName: string
-  cronExpression: string
-  cronDescription: string
-  taskType: string
-  enabled: boolean
-  lastRunAt?: string
-  lastRunStatus?: string
-  lastRunMessage?: string
-  nextRunAt?: string
-  createdBy?: string
-  createdAt: string
-  updatedAt: string
-  parameters: {
-    snapshotRetention: boolean
-    retentionPeriod: number
-    minSnapshotsToKeep: number
-    orphanFileDeletion: boolean
-    orphanFileRetention: number
-    compaction: boolean
-    targetFileSizeBytes: number
-    strategy?: string
-    sortOrder?: string
-    whereClause?: string
-  }
-}
+// Using ScheduledTask type from generated SDK
 
 export default function JobsPage() {
   const { toast } = useToast()
@@ -97,21 +69,21 @@ export default function JobsPage() {
   } = useQuery<ScheduledTask[]>({
     queryKey: ["scheduled-tasks"],
     queryFn: async () => {
-      const response = await fetch("/api/optimize/scheduled-tasks")
-      if (!response.ok) {
+      const response = await getScheduledTasks()
+      if (response.error) {
         throw new Error("Failed to fetch scheduled tasks")
       }
-      return response.json()
+      return response.data || []
     },
   })
 
   // Delete task mutation
   const deleteTaskMutation = useMutation({
     mutationFn: async (taskId: number) => {
-      const response = await fetch(`/api/optimize/scheduled-task/${taskId}`, {
-        method: "DELETE",
+      const response = await deleteScheduledTask({ 
+        path: { id: taskId }
       })
-      if (!response.ok) {
+      if (response.error) {
         throw new Error("Failed to delete task")
       }
     },
@@ -142,17 +114,11 @@ export default function JobsPage() {
       taskId: number
       enabled: boolean
     }) => {
-      const response = await fetch(
-        `/api/optimize/scheduled-task/${taskId}/toggle`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ enabled }),
-        }
-      )
-      if (!response.ok) {
+      const response = await toggleScheduledTask({
+        path: { id: taskId },
+        body: { enabled }
+      })
+      if (response.error) {
         throw new Error("Failed to toggle task")
       }
     },
