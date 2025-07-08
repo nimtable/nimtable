@@ -35,7 +35,14 @@ import {
   runOptimizationOperation,
   type OptimizationOperation,
 } from "@/lib/data-loader"
-import { getSystemInfo, getScheduledTasks, deleteScheduledTask, createScheduledTask, toggleScheduledTask, type ScheduledTask } from "@/lib/client"
+import {
+  getSystemInfo,
+  getScheduledTasks,
+  deleteScheduledTask,
+  createScheduledTask,
+  toggleScheduledTask,
+  type ScheduledTask,
+} from "@/lib/client"
 import {
   Dialog,
   DialogContent,
@@ -390,10 +397,12 @@ export function OptimizeSheet({
     mutationFn: async (taskData: any) => {
       const response = await createScheduledTask({
         path: { catalog, namespace, table },
-        body: taskData
+        body: taskData,
       })
       if (response.error) {
-        throw new Error(response.error.message || "Failed to create scheduled task")
+        throw new Error(
+          response.error.message || "Failed to create scheduled task"
+        )
       }
       return response.data
     },
@@ -417,7 +426,7 @@ export function OptimizeSheet({
   const deleteTaskMutation = useMutation({
     mutationFn: async (taskId: number) => {
       const response = await deleteScheduledTask({
-        path: { id: taskId }
+        path: { id: taskId },
       })
       if (response.error) {
         throw new Error("Failed to delete task")
@@ -452,7 +461,7 @@ export function OptimizeSheet({
     }) => {
       const response = await toggleScheduledTask({
         path: { id: taskId },
-        body: { enabled }
+        body: { enabled },
       })
       if (response.error) {
         throw new Error("Failed to toggle task")

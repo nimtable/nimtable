@@ -19,7 +19,12 @@ import {
   HardDrive,
 } from "lucide-react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { getScheduledTasks, deleteScheduledTask, toggleScheduledTask, type ScheduledTask } from "@/lib/client"
+import {
+  getScheduledTasks,
+  deleteScheduledTask,
+  toggleScheduledTask,
+  type ScheduledTask,
+} from "@/lib/client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -80,8 +85,8 @@ export default function JobsPage() {
   // Delete task mutation
   const deleteTaskMutation = useMutation({
     mutationFn: async (taskId: number) => {
-      const response = await deleteScheduledTask({ 
-        path: { id: taskId }
+      const response = await deleteScheduledTask({
+        path: { id: taskId },
       })
       if (response.error) {
         throw new Error("Failed to delete task")
@@ -116,7 +121,7 @@ export default function JobsPage() {
     }) => {
       const response = await toggleScheduledTask({
         path: { id: taskId },
-        body: { enabled }
+        body: { enabled },
       })
       if (response.error) {
         throw new Error("Failed to toggle task")

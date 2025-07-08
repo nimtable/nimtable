@@ -399,8 +399,6 @@ export async function runOptimizationOperation(
   return await response.json()
 }
 
-
-
 export interface PaginationParams {
   page: number
   pageSize: number

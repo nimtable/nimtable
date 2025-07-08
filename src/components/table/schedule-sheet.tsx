@@ -12,7 +12,12 @@ import {
   AlertTriangle,
   Loader2,
 } from "lucide-react"
-import { getScheduledTasks, createScheduledTask, deleteScheduledTask, type ScheduledTask } from "@/lib/client"
+import {
+  getScheduledTasks,
+  createScheduledTask,
+  deleteScheduledTask,
+  type ScheduledTask,
+} from "@/lib/client"
 import {
   Dialog,
   DialogContent,
@@ -116,10 +121,12 @@ export function ScheduleSheet({
     mutationFn: async (taskData: any) => {
       const response = await createScheduledTask({
         path: { catalog, namespace, table },
-        body: taskData
+        body: taskData,
       })
       if (response.error) {
-        throw new Error(response.error.message || "Failed to create scheduled task")
+        throw new Error(
+          response.error.message || "Failed to create scheduled task"
+        )
       }
       return response.data
     },
@@ -145,7 +152,7 @@ export function ScheduleSheet({
   const deleteTaskMutation = useMutation({
     mutationFn: async (taskId: number) => {
       const response = await deleteScheduledTask({
-        path: { id: taskId }
+        path: { id: taskId },
       })
       if (response.error) {
         throw new Error("Failed to delete task")
