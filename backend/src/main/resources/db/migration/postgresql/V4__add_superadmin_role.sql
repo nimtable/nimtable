@@ -1,4 +1,4 @@
--- V3 Add Superadmin Role (PostgreSQL)
+-- V4 Add Superadmin Role (PostgreSQL)
 
 -- Add superadmin role to the roles table
 INSERT INTO
