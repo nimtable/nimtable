@@ -17,12 +17,8 @@ CREATE TABLE roles (
 INSERT INTO
     roles (name, description)
 VALUES (
-        'superadmin',
-        'System administrator with full access'
-    ),
-    (
         'admin',
-        'System administrator with limited access'
+        'System administrator with full access'
     ),
     (
         'editor',
