@@ -16,7 +16,7 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import { sign } from "jsonwebtoken"
-import { compare } from "bcryptjs"
+import { compare, hash } from "bcryptjs"
 import { db } from "@/lib/db"
 import { LoginResponse } from "@/lib/acc-api/client/types.gen"
 import { AUTH_COOKIE_NAME } from "../../const"
@@ -84,13 +84,47 @@ export async function POST(request: NextRequest) {
       return response
     }
 
-    // If not a database user, check if it's a super admin
-    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+    // Check if superadmin user exists in database, if not create it
+    let superAdminUser = await db.user.findFirst({
+      where: { roles: { name: "superadmin" } },
+      include: { roles: true },
+    })
+
+    if (!superAdminUser) {
+      // Find superadmin role
+      const superAdminRole = await db.role.findFirst({
+        where: { name: "superadmin" },
+      })
+
+      if (!superAdminRole) {
+        return NextResponse.json(
+          { error: "Superadmin role not found in database" },
+          { status: 500 }
+        )
+      }
+
+      superAdminUser = await db.user.create({
+        data: {
+          username: ADMIN_USERNAME,
+          password_hash: await hash(ADMIN_PASSWORD, 10), // Hash the password
+          role_id: superAdminRole.id,
+        },
+        include: { roles: true },
+      })
+    }
+
+    // Verify password for superadmin user
+    const isValidPassword = await compare(
+      password,
+      superAdminUser.password_hash
+    )
+
+    if (isValidPassword) {
       const token = sign(
         {
-          id: "0",
-          username: ADMIN_USERNAME,
-          role: "admin",
+          id: superAdminUser.id.toString(),
+          username: superAdminUser.username,
+          role: superAdminUser.roles.name,
         },
         JWT_SECRET,
         { expiresIn: "24h" }
