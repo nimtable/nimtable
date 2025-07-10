@@ -279,8 +279,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
     put:
-      summary: Update user
-      description: Updates a specific user
+      summary: Update user role
+      description: Updates a specific user's role. Only admin and superadmin users can modify roles. Users cannot modify their own role.
       operationId: updateUser
       tags:
         - User
@@ -299,25 +299,31 @@ paths:
               $ref: "#/components/schemas/UserUpdate"
       responses:
         "200":
-          description: User updated successfully
+          description: User role updated successfully
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/User"
         "400":
-          description: Invalid request parameters
+          description: Invalid request parameters or only role modification allowed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Insufficient permissions or cannot modify own role
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
         "404":
           description: User not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "409":
-          description: Username already exists
           content:
             application/json:
               schema:
@@ -444,7 +450,7 @@ components:
           type: string
         role:
           type: string
-          enum: [admin, editor, viewer]
+          enum: [admin, editor, viewer, superadmin]
           description: "User's role name"
         profile:
           type: object
@@ -475,7 +481,7 @@ components:
           format: password
         roleId:
           type: integer
-          description: "Role ID (1: admin, 2: editor, 3: viewer)"
+          description: "Role ID (1: admin, 2: editor, 3: viewer, 4: superadmin)"
         profile:
           type: object
           properties:
@@ -491,24 +497,11 @@ components:
     UserUpdate:
       type: object
       properties:
-        username:
-          type: string
-        password:
-          type: string
-          format: password
         roleId:
           type: integer
-          description: "Role ID (1: admin, 2: editor, 3: viewer)"
-        profile:
-          type: object
-          properties:
-            firstName:
-              type: string
-            lastName:
-              type: string
-            email:
-              type: string
-              format: email
+          description: "Role ID (1: admin, 2: editor, 3: viewer, 4: superadmin)"
+      required: ["roleId"]
+      description: "Only role modification is allowed. Requires admin or superadmin permissions."
 
     UserProfileUpdate:
       type: object

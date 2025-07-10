@@ -19,8 +19,6 @@ import { db } from "@/lib/db"
 import { verifyToken } from "@/lib/auth"
 import { AUTH_COOKIE_NAME } from "../const"
 
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME || ""
-
 // GET /acc-api/user-info
 export async function GET(request: NextRequest) {
   console.log("Get user profile request received")
@@ -35,17 +33,7 @@ export async function GET(request: NextRequest) {
       console.log("Invalid token")
       return NextResponse.json({ error: "Invalid token" }, { status: 401 })
     }
-    if (String(payload.id) === "0") {
-      // Superadmin user
-      return NextResponse.json({
-        id: 0,
-        username: ADMIN_USERNAME,
-        role: "admin",
-        profile: null,
-        createdAt: null,
-        updatedAt: null,
-      })
-    }
+
     const user = await db.user.findUnique({
       where: { id: BigInt(payload.id) },
       include: {
@@ -97,15 +85,6 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 })
     }
 
-    // Check if superadmin user
-    if (String(payload.id) === "0") {
-      console.log("Cannot modify superadmin user")
-      return NextResponse.json(
-        { error: "Cannot modify superadmin user" },
-        { status: 403 }
-      )
-    }
-
     const user = await db.user.findUnique({
       where: { id: BigInt(payload.id) },
       include: {
@@ -116,15 +95,6 @@ export async function PATCH(request: NextRequest) {
     if (!user) {
       console.log("User not found")
       return NextResponse.json({ error: "User not found" }, { status: 404 })
-    }
-
-    // Check if admin user
-    if (user.username === ADMIN_USERNAME) {
-      console.log("Cannot modify admin user")
-      return NextResponse.json(
-        { error: "Cannot modify admin user" },
-        { status: 403 }
-      )
     }
 
     const body = await request.json()

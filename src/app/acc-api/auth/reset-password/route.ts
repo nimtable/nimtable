@@ -52,11 +52,22 @@ export async function PATCH(request: NextRequest) {
     // Get user from database
     const user = await db.user.findUnique({
       where: { id: BigInt(payload.id) },
+      include: {
+        roles: true,
+      },
     })
 
     if (!user) {
       console.log("User not found")
       return NextResponse.json({ error: "User not found" }, { status: 404 })
+    }
+
+    // Superadmin user can't reset their own password
+    if (user?.roles.name === "superadmin") {
+      return NextResponse.json(
+        { error: "Superadmin user can't reset their own password" },
+        { status: 403 }
+      )
     }
 
     // Verify current password

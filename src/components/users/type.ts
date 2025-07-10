@@ -15,8 +15,8 @@
  */
 
 export enum UserRoleId {
-  SUPERADMIN = 0,
   ADMIN = 1,
   EDITOR = 2,
   VIEWER = 3,
+  SUPERADMIN = 4,
 }
