@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table"
 import { formatDate } from "@/lib/format"
 import { Button } from "../ui/button"
+import { LoadingButton } from "../ui/loading-button"
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -252,13 +253,14 @@ export function UserTable({ users, currentUser, refetch }: UserTableProps) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-            <Button
+            <LoadingButton
               onClick={confirmDelete}
-              loading={isDeleting}
               variant="destructive"
+              loading={isDeleting}
+              loadingText="Deleting..."
             >
               Delete
-            </Button>
+            </LoadingButton>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -300,9 +302,13 @@ export function UserTable({ users, currentUser, refetch }: UserTableProps) {
             >
               Cancel
             </Button>
-            <Button onClick={confirmEdit} loading={isEditing}>
+            <LoadingButton
+              onClick={confirmEdit}
+              loading={isEditing}
+              loadingText="Saving..."
+            >
               Save changes
-            </Button>
+            </LoadingButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>
