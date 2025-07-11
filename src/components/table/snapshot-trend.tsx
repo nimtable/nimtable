@@ -142,7 +142,10 @@ export function SnapshotTrend({
 
     const grouped = new Map<string, TrendDataPoint>()
     data.forEach((item) => {
-      const date = new Date(item.timestamp)
+      // If timestamp is in seconds (less than 1e12), convert to milliseconds
+      const timestampMs =
+        item.timestamp < 1e12 ? item.timestamp * 1000 : item.timestamp
+      const date = new Date(timestampMs)
       let key: string
 
       switch (granularity) {
@@ -185,7 +188,9 @@ export function SnapshotTrend({
   }
 
   const formatDate = (timestamp: number) => {
-    return new Date(timestamp).toLocaleString(undefined, {
+    // If timestamp is in seconds (less than 1e12), convert to milliseconds
+    const timestampMs = timestamp < 1e12 ? timestamp * 1000 : timestamp
+    return new Date(timestampMs).toLocaleString(undefined, {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -196,7 +201,9 @@ export function SnapshotTrend({
   }
 
   const formatChartDate = (timestamp: number) => {
-    const date = new Date(timestamp)
+    // If timestamp is in seconds (less than 1e12), convert to milliseconds
+    const timestampMs = timestamp < 1e12 ? timestamp * 1000 : timestamp
+    const date = new Date(timestampMs)
     switch (granularity) {
       case "snapshot":
         return date.toLocaleString(undefined, {

@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 export const formatDate = (timestamp: number) => {
-  const date = new Date(timestamp)
+  // If timestamp is in seconds (less than 1e12), convert to milliseconds
+  const timestampMs = timestamp < 1e12 ? timestamp * 1000 : timestamp
+  const date = new Date(timestampMs)
   return new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "numeric",

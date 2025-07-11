@@ -3,7 +3,7 @@
 import { Eye, GitCompare, Star } from "lucide-react"
 import { useContext, useState } from "react"
 
-import { getCompactionRecommendation } from "@/components/table/file-distribution"
+import { getOptimizationRecommendation } from "@/components/table/file-distribution"
 import { OptimizeSheet } from "@/components/table/optimize-sheet"
 import { OverviewContext } from "./OverviewProvider"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -29,8 +29,8 @@ export function TableWatchlist() {
   const tablesNeedingCompaction = tables
     .map((table) => {
       if (table) {
-        const recommendation = getCompactionRecommendation(table)
-        return recommendation.shouldCompact ? table : null
+        const recommendation = getOptimizationRecommendation(table)
+        return recommendation.shouldOptimize ? table : null
       }
       return null
     })

@@ -24,7 +24,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 
-import { getCompactionRecommendation } from "@/components/table/file-distribution"
+import { getOptimizationRecommendation } from "@/components/table/file-distribution"
 import { useNamespaces } from "../hooks/useNamespaces"
 import { useCatalogs } from "../hooks/useCatalogs"
 import { useAllTables } from "../hooks/useTables"
@@ -76,7 +76,7 @@ export function TablesContent() {
     .map((item) => {
       return {
         ...item,
-        status: getCompactionRecommendation(item).shouldCompact
+        status: getOptimizationRecommendation(item).shouldOptimize
           ? "needs_compaction"
           : "healthy",
       }

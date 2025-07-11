@@ -19,7 +19,7 @@ type Table = {
   name: string
   catalog: string
   namespace: string
-  needsCompaction: boolean
+  needsOptimization: boolean
   dataFiles: number
   avgFileSize: string
 }
@@ -130,9 +130,9 @@ export function OptimizationTable({ tables, loading }: OptimizationTableProps) {
               >
                 <div
                   className="flex cursor-pointer items-center gap-1"
-                  onClick={() => requestSort("needsCompaction")}
+                  onClick={() => requestSort("needsOptimization")}
                 >
-                  Needs Compaction
+                  Needs Optimization
                   <ArrowUpDown className="h-3 w-3" />
                 </div>
               </th>
@@ -169,7 +169,7 @@ export function OptimizationTable({ tables, loading }: OptimizationTableProps) {
                   <div className="font-medium text-gray-900">{table.name}</div>
                 </td>
                 <td className="whitespace-nowrap px-3 py-4">
-                  {table.needsCompaction ? (
+                  {table.needsOptimization ? (
                     <Badge
                       variant="outline"
                       className="border-amber-200 bg-amber-100 text-amber-800"
@@ -207,10 +207,10 @@ export function OptimizationTable({ tables, loading }: OptimizationTableProps) {
                       variant="outline"
                       className="h-8 gap-1"
                       onClick={() => handleOptimize(table.id)}
-                      disabled={!table.needsCompaction}
+                      disabled={!table.needsOptimization}
                     >
                       <GitCompare className="h-3.5 w-3.5" />
-                      Compact
+                      Optimize
                     </Button>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>

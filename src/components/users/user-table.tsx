@@ -153,7 +153,7 @@ export function UserTable({
                   </TableCell>
                   <TableCell>
                     {user.updatedAt &&
-                      formatDate(new Date(user.updatedAt).getTime() * 1000)}
+                      formatDate(new Date(user.updatedAt).getTime())}
                   </TableCell>
                   {currentUser?.role === "admin" && (
                     <TableCell className="text-right">
