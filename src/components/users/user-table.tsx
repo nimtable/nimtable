@@ -202,7 +202,8 @@ export function UserTable({ users, currentUser, refetch }: UserTableProps) {
                   </TableCell>
                   {(currentUser?.role === "superadmin" ||
                     currentUser?.role === "admin") &&
-                    user.role !== "superadmin" && (
+                    user.role !== "superadmin" &&
+                    user.id !== currentUser?.id && (
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           <Button
