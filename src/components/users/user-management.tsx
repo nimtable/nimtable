@@ -8,11 +8,9 @@ import { AddUserDialog } from "@/components/users/add-user-dialog"
 import { getUsers } from "@/lib/acc-api/client/sdk.gen"
 import { UserTable } from "@/components/users/user-table"
 import { Button } from "@/components/ui/button"
-import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/contexts/auth-context"
 import { PermissionGuard } from "@/components/shared/permission-guard"
 export function UserManagement() {
-  const { toast } = useToast()
   const { user } = useAuth()
 
   const { data: users, refetch } = useQuery({
