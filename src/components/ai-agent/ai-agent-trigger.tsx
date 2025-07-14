@@ -34,7 +34,7 @@ export function AIAgentTrigger() {
   if (isOpen || pathname === "/login") return null
 
   return (
-    <div className="fixed bottom-4 right-4 z-[99]">
+    <div className="fixed bottom-4 right-4 z-40">
       <Tooltip>
         <TooltipTrigger asChild>
           <Button

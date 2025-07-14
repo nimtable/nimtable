@@ -73,7 +73,6 @@ export function middleware(request: NextRequest) {
 
   // Check if the request path starts with /api/
   if (pathname.startsWith("/api/") && !pathname.startsWith("/api/agent/")) {
-    console.log("API path detected, forwarding to Java API")
     const javaApiBaseUrl = getJavaApiBaseUrl()
     if (!javaApiBaseUrl) {
       return NextResponse.json(

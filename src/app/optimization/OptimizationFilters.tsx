@@ -3,17 +3,17 @@
 import { Filter } from "lucide-react"
 
 type FiltersProps = {
-  compactionStatus: "all" | "needs_compaction" | "optimized"
-  setCompactionStatus: (
-    status: "all" | "needs_compaction" | "optimized"
+  optimizationStatus: "all" | "needs_optimization" | "optimized"
+  setOptimizationStatus: (
+    status: "all" | "needs_optimization" | "optimized"
   ) => void
   fileCount: "all" | "high" | "medium" | "low"
   setFileCount: (count: "all" | "high" | "medium" | "low") => void
 }
 
 export function OptimizationFilters({
-  compactionStatus,
-  setCompactionStatus,
+  optimizationStatus,
+  setOptimizationStatus,
   fileCount,
   setFileCount,
 }: FiltersProps) {
@@ -26,16 +26,16 @@ export function OptimizationFilters({
         </div>
 
         <select
-          value={compactionStatus}
+          value={optimizationStatus}
           onChange={(e) =>
-            setCompactionStatus(
-              e.target.value as "all" | "needs_compaction" | "optimized"
+            setOptimizationStatus(
+              e.target.value as "all" | "needs_optimization" | "optimized"
             )
           }
           className="h-8 rounded-md border border-gray-300 px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
-          <option value="all">All Compaction Status</option>
-          <option value="needs_compaction">Needs Compaction</option>
+          <option value="all">All Optimization Status</option>
+          <option value="needs_optimization">Needs Optimization</option>
           <option value="optimized">Optimized</option>
         </select>
 

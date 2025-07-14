@@ -1,5 +1,5 @@
 "use client"
-import { getCompactionRecommendation } from "@/components/table/file-distribution"
+import { getOptimizationRecommendation } from "@/components/table/file-distribution"
 import { OverviewContext } from "./OverviewProvider"
 import { Database, GitCompare } from "lucide-react"
 import { useContext } from "react"
@@ -8,8 +8,8 @@ export function MetricsSummary() {
   const { tables, isFileDistributionLoading } = useContext(OverviewContext)
 
   const tablesNeedingCompaction = tables
-    .map((table) => table && getCompactionRecommendation(table))
-    .filter((item) => item?.shouldCompact)
+    .map((table) => table && getOptimizationRecommendation(table))
+    .filter((item) => item?.shouldOptimize)
 
   return (
     <div className="grid grid-cols-2 gap-6 ">
