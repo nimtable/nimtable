@@ -79,7 +79,9 @@ Access the UI at [http://localhost:3000](http://localhost:3000).
 - **Username:** `admin`
 - **Password:** `admin`
 
-You can customize the admin credentials by setting environment variables in your `docker-compose.yml`:
+> **Important:** After your first login, we strongly recommend changing the default admin password through the web interface for security. Once changed, the password will be stored in the database and environment variables will no longer be used for authentication.
+
+You can customize the initial admin credentials by setting environment variables in your `docker-compose.yml`:
 
 ```yaml
 services:
@@ -88,6 +90,8 @@ services:
       - ADMIN_USERNAME=your-admin-username
       - ADMIN_PASSWORD=your-secure-password
 ```
+
+**Note:** Environment variables only set the initial password. Once you change the password through the web interface, the new password will be stored in the database and environment variables will be ignored for authentication purposes.
 
 ---
 
@@ -131,9 +135,16 @@ database:
   password: password
 ```
 
-> **Important:** Change the default admin password after your first login for security.
+> **Important:** Change the default admin password after your first login for security. Once changed through the web interface, the password will be stored in the database and environment variables will no longer be used for authentication.
 
-### 3. Catalog Configuration
+### 3. Admin Password Management
+
+The default admin password can be changed through the web interface after login. Once changed:
+- The new password is stored in the database
+- Environment variables (`ADMIN_USERNAME` and `ADMIN_PASSWORD`) are ignored for authentication
+- The password change is persistent across container restarts
+
+### 4. Catalog Configuration
 
 You can add catalogs in two ways:
 
@@ -152,7 +163,7 @@ You can add catalogs in two ways:
 
 Each catalog type may require specific fields. Refer to the sample config for details.
 
-### 4. AWS Credential Configuration
+### 5. AWS Credential Configuration
 
 If you use AWS Glue or S3, you can provide credentials in two ways:
 
