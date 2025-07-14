@@ -205,8 +205,8 @@ export const getUserById = <ThrowOnError extends boolean = false>(options: Optio
 };
 
 /**
- * Update user
- * Updates a specific user
+ * Update user role
+ * Updates a specific user's role. Only admin and superadmin users can modify roles. Users cannot modify their own role.
  */
 export const updateUser = <ThrowOnError extends boolean = false>(options: Options<UpdateUserData, ThrowOnError>) => {
     return (options.client ?? _heyApiClient).put<UpdateUserResponse, UpdateUserError, ThrowOnError>({

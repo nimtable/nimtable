@@ -64,7 +64,7 @@ export type User = {
     /**
      * User's role name
      */
-    role: 'admin' | 'editor' | 'viewer';
+    role: 'admin' | 'editor' | 'viewer' | 'superadmin';
     profile?: {
         firstName?: string;
         lastName?: string;
@@ -78,7 +78,7 @@ export type UserCreate = {
     username: string;
     password: string;
     /**
-     * Role ID (1: admin, 2: editor, 3: viewer)
+     * Role ID (1: admin, 2: editor, 3: viewer, 4: superadmin)
      */
     roleId: number;
     profile?: {
@@ -88,18 +88,14 @@ export type UserCreate = {
     };
 };
 
+/**
+ * Only role modification is allowed. Requires admin or superadmin permissions.
+ */
 export type UserUpdate = {
-    username?: string;
-    password?: string;
     /**
-     * Role ID (1: admin, 2: editor, 3: viewer)
+     * Role ID (1: admin, 2: editor, 3: viewer, 4: superadmin)
      */
-    roleId?: number;
-    profile?: {
-        firstName?: string;
-        lastName?: string;
-        email?: string;
-    };
+    roleId: number;
 };
 
 /**
@@ -405,17 +401,21 @@ export type UpdateUserData = {
 
 export type UpdateUserErrors = {
     /**
-     * Invalid request parameters
+     * Invalid request parameters or only role modification allowed
      */
     400: _Error;
+    /**
+     * Unauthorized
+     */
+    401: _Error;
+    /**
+     * Insufficient permissions or cannot modify own role
+     */
+    403: _Error;
     /**
      * User not found
      */
     404: _Error;
-    /**
-     * Username already exists
-     */
-    409: _Error;
     /**
      * Internal server error
      */
@@ -426,7 +426,7 @@ export type UpdateUserError = UpdateUserErrors[keyof UpdateUserErrors];
 
 export type UpdateUserResponses = {
     /**
-     * User updated successfully
+     * User role updated successfully
      */
     200: User;
 };

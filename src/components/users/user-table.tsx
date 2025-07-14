@@ -14,9 +14,9 @@ import {
 } from "@/components/ui/table"
 import { formatDate } from "@/lib/format"
 import { Button } from "../ui/button"
+import { LoadingButton } from "../ui/loading-button"
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -40,31 +40,30 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { UserRoleId } from "./type"
-import { User } from "@/lib/acc-api/client"
+import { deleteUser, updateUser, User } from "@/lib/acc-api/client"
+import { useToast } from "@/hooks/use-toast"
 
 interface UserTableProps {
   users: User[]
   currentUser?: User
   refetch: () => void
-  onRemove: (id: number) => void
-  onUpdate: (id: number, username: string, roleId: number) => void
 }
 
-export function UserTable({
-  users,
-  currentUser,
-  onRemove,
-  onUpdate,
-}: UserTableProps) {
+export function UserTable({ users, currentUser, refetch }: UserTableProps) {
+  const { toast } = useToast()
   const [searchTerm, setSearchTerm] = useState("")
   const [userToDelete, setUserToDelete] = useState<User | null>(null)
   const [userToEdit, setUserToEdit] = useState<User | null>(null)
   const [selectedRoleId, setSelectedRoleId] = useState<number>(
     UserRoleId.VIEWER
   )
+  const [isEditing, setIsEditing] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const getRoleId = (role: string) => {
     switch (role) {
+      case "superadmin":
+        return UserRoleId.SUPERADMIN
       case "admin":
         return UserRoleId.ADMIN
       case "editor":
@@ -100,15 +99,62 @@ export function UserTable({
 
   const confirmDelete = () => {
     if (userToDelete) {
-      onRemove(userToDelete.id)
-      setUserToDelete(null)
+      setIsDeleting(true)
+      deleteUser({
+        path: {
+          userId: userToDelete.id,
+        },
+      })
+        .then(() => {
+          refetch()
+          toast({
+            title: "User removed",
+            description: "The user has been removed successfully",
+          })
+          setUserToDelete(null)
+        })
+        .catch((err) => {
+          console.error(err)
+          toast({
+            title: "User removal failed",
+            description: err.error,
+          })
+        })
+        .finally(() => {
+          setIsDeleting(false)
+        })
     }
   }
 
   const confirmEdit = () => {
     if (userToEdit) {
-      onUpdate(userToEdit.id, userToEdit.username, selectedRoleId)
-      setUserToEdit(null)
+      setIsEditing(true)
+      updateUser({
+        path: {
+          userId: userToEdit.id,
+        },
+        body: {
+          roleId: selectedRoleId,
+        },
+      })
+        .then(() => {
+          refetch()
+          toast({
+            title: "User updated",
+            description: "The user has been updated successfully",
+          })
+          setUserToEdit(null)
+        })
+        .catch((err) => {
+          console.error(err)
+          toast({
+            title: "User update failed",
+            description: err.error,
+          })
+        })
+        .finally(() => {
+          setIsEditing(false)
+        })
     }
   }
 
@@ -155,28 +201,31 @@ export function UserTable({
                     {user.updatedAt &&
                       formatDate(new Date(user.updatedAt).getTime())}
                   </TableCell>
-                  {currentUser?.role === "admin" && (
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEdit(user)}
-                        >
-                          <Edit2 className="h-4 w-4" />
-                          <span className="sr-only">Edit</span>
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(user)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          <span className="sr-only">Remove</span>
-                        </Button>
-                      </div>
-                    </TableCell>
-                  )}
+                  {(currentUser?.role === "superadmin" ||
+                    currentUser?.role === "admin") &&
+                    user.role !== "superadmin" &&
+                    user.id !== currentUser?.id && (
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEdit(user)}
+                          >
+                            <Edit2 className="h-4 w-4" />
+                            <span className="sr-only">Edit</span>
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(user)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            <span className="sr-only">Remove</span>
+                          </Button>
+                        </div>
+                      </TableCell>
+                    )}
                 </TableRow>
               ))
             ) : (
@@ -203,10 +252,15 @@ export function UserTable({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete}>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <LoadingButton
+              onClick={confirmDelete}
+              variant="destructive"
+              loading={isDeleting}
+              loadingText="Deleting..."
+            >
               Delete
-            </AlertDialogAction>
+            </LoadingButton>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -241,10 +295,20 @@ export function UserTable({
             </Select>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setUserToEdit(null)}>
+            <Button
+              variant="outline"
+              onClick={() => setUserToEdit(null)}
+              disabled={isEditing}
+            >
               Cancel
             </Button>
-            <Button onClick={confirmEdit}>Save changes</Button>
+            <LoadingButton
+              onClick={confirmEdit}
+              loading={isEditing}
+              loadingText="Saving..."
+            >
+              Save changes
+            </LoadingButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>

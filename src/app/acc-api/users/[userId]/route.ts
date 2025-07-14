@@ -16,7 +16,8 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { hash } from "bcryptjs"
+import { verifyToken } from "@/lib/auth"
+import { AUTH_COOKIE_NAME } from "../../const"
 
 // PUT /acc-api/users/{userId}
 export async function PUT(
@@ -30,10 +31,47 @@ export async function PUT(
       return NextResponse.json({ error: "Invalid user ID" }, { status: 400 })
     }
 
-    const body = await request.json()
-    const { username, password, roleId } = body
+    // Get current user authentication info
+    const token = request.cookies.get(AUTH_COOKIE_NAME)?.value
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
 
-    // Check if user exists
+    const payload = await verifyToken(token)
+    if (!payload) {
+      return NextResponse.json({ error: "Invalid token" }, { status: 401 })
+    }
+
+    const currentUserId = BigInt(payload.id)
+
+    // Get current user's role
+    const currentUser = await db.user.findUnique({
+      where: { id: currentUserId },
+      include: { roles: true },
+    })
+
+    if (!currentUser) {
+      return NextResponse.json(
+        { error: "Current user not found" },
+        { status: 404 }
+      )
+    }
+
+    // Only admin and superadmin can modify roles
+    if (
+      currentUser.roles.name !== "admin" &&
+      currentUser.roles.name !== "superadmin"
+    ) {
+      return NextResponse.json(
+        { error: "Insufficient permissions to modify roles" },
+        { status: 403 }
+      )
+    }
+
+    const body = await request.json()
+    const { roleId } = body
+
+    // Check if target user exists
     const existingUser = await db.user.findUnique({
       where: { id: userId },
     })
@@ -42,25 +80,25 @@ export async function PUT(
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
-    // Check if new username is already taken by another user
-    if (username && username !== existingUser.username) {
-      const usernameExists = await db.user.findUnique({
-        where: { username },
-      })
-
-      if (usernameExists) {
-        return NextResponse.json(
-          { error: "Username already exists" },
-          { status: 409 }
-        )
-      }
+    // Prevent users from modifying their own role
+    if (currentUserId === userId && roleId !== undefined) {
+      return NextResponse.json(
+        { error: "Cannot modify your own role" },
+        { status: 403 }
+      )
     }
 
-    // Prepare update data
+    // Only allow role modification
+    if (!roleId) {
+      return NextResponse.json(
+        { error: "Only role modification is allowed" },
+        { status: 400 }
+      )
+    }
+
+    // Prepare update data - only role
     const updateData: any = {}
-    if (username) updateData.username = username
-    if (password) updateData.password_hash = await hash(password, 10)
-    if (roleId) updateData.role_id = BigInt(roleId)
+    updateData.role_id = BigInt(roleId)
 
     // Update user
     const updatedUser = await db.user.update({
@@ -105,7 +143,15 @@ export async function DELETE(
     console.log("Checking if user exists")
     const existingUser = await db.user.findUnique({
       where: { id: userId },
+      include: { roles: true },
     })
+
+    if (existingUser?.roles?.name === "superadmin") {
+      return NextResponse.json(
+        { error: "Cannot delete superadmin user" },
+        { status: 403 }
+      )
+    }
 
     if (!existingUser) {
       console.log("User not found")
