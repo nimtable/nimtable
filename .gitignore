@@ -46,3 +46,6 @@ dist/
 nimtable-all.jar
 
 **/.claude/settings.local.json
+
+playwright-report/
+test-results/

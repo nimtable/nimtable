@@ -48,7 +48,26 @@ Note: You need to run `pnpm prisma generate` after:
 
 ### Docker Development
 
-To setup a more complex development environment, e.g., with Postgres, or with some iceberg catalogs, you can use the `docker/dev` directory.
+For a complete development environment with all services, use the `docker/dev` directory:
+
+```bash
+cd docker/dev
+docker-compose up -d
+```
+
+This provides:
+- **Frontend**: Next.js app at http://localhost:3000
+- **Backend**: Java/Kotlin API at http://localhost:8182
+- **Database**: PostgreSQL at localhost:5432
+- **REST Catalog**: Iceberg catalog at http://localhost:8181
+- **Storage**: MinIO S3-compatible storage at http://localhost:9000
+- **Management**: MinIO console at http://localhost:9001
+
+This environment is ideal for:
+- Local development with real services
+- End-to-end testing
+- Catalog integration testing
+- S3 storage testing
 
 See the [README there](../docker/dev/README.md) for details.
 
@@ -90,24 +109,77 @@ Then edit the `.env` file with your specific configuration values.
 
 To use these environment variables with Docker, you need to explicitly configure them in your `docker-compose.yml` file under the `environment` section of the relevant service.
 
-### Testing with a Catalog
+### All-in-one Demo Environment
 
-For testing, you can use the [Spark + Iceberg Quickstart Image](https://github.com/databricks/docker-spark-iceberg/):
+See https://github.com/nimtable/nimtable-demo
 
+### End-to-End Testing
+
+Nimtable includes comprehensive E2E tests using **Playwright** that test against a real development environment including frontend, backend, database, Iceberg REST catalog, and S3 storage.
+
+**Prerequisites:**
+1. Docker and Docker Compose must be running
+2. Playwright dependencies installed
+
+**Setup and Run Tests:**
 ```bash
-git clone https://github.com/databricks/docker-spark-iceberg.git
-docker-compose up
+# Install test dependencies (one-time setup)
+pnpm install
+pnpm exec playwright install
 
-# Create tables and insert data
-docker exec -it spark-iceberg spark-sql
+  # Start the development environment
+  cd docker/dev
+  docker-compose up -d
+  
+  # Wait for all services to be ready (optional - tests will wait automatically)
+  timeout 60 bash -c 'until curl -f http://localhost:3000; do sleep 2; done'
+  timeout 60 bash -c 'until curl -f http://localhost:8182; do sleep 2; done'
+  timeout 60 bash -c 'until curl -f http://localhost:8181/v1/config; do sleep 2; done'
+  
+  # Run all E2E tests
+  pnpm run test:e2e
+  ```
+
+**Environment Management:**
+```bash
+# Stop the environment
+cd docker/dev && docker-compose down
+
+# Clean restart (removes volumes)
+cd docker/dev && docker-compose down -v && docker-compose up -d
+
+# View logs
+cd docker/dev && docker-compose logs -f
+
+# View specific service logs
+cd docker/dev && docker-compose logs -f nimtable
 ```
+
+**Test Structure:**
+- `e2e/auth/` - Authentication and authorization tests
+- `e2e/catalog/` - Catalog management tests
+- `e2e/data-query/` - SQL editor and querying tests
+- `e2e/integration/` - End-to-end workflow tests
+- `e2e/navigation/` - UI navigation tests
+- `e2e/user-management/` - User CRUD operations tests
+
+**Service URLs during testing:**
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8182
+- REST Catalog: http://localhost:8181
+- MinIO Storage: http://localhost:9000
+- MinIO Console: http://localhost:9001
+- PostgreSQL: localhost:5432
+
+See the [E2E Testing README](../e2e/README.md) for detailed instructions and troubleshooting.
+
 
 ### Code Quality
 
 ```bash
 # Frontend linting
-pnpm run lint        # Check
-pnpm run lint --fix  # Fix
+pnpm run check       # Check
+pnpm run fix         # Fix
 
 # Backend linting
 cd backend
