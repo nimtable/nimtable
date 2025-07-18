@@ -24,7 +24,7 @@ export const getOptimizationRecommendation = (
   )
 
   // Check if there are enough files to warrant optimization
-  if (totalFiles < 10) {
+  if (totalFiles < 32) {
     return {
       shouldOptimize: false,
       recommendations: [
