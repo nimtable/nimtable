@@ -134,7 +134,7 @@ export function CreateNamespaceModal({
       )
 
       // If we have a parent namespace, prepend it to the new namespace name
-      const finalNamespace = parentNamespace 
+      const finalNamespace = parentNamespace
         ? `${parentNamespace}.${formData.namespace.trim()}`
         : formData.namespace.trim()
 
@@ -147,7 +147,9 @@ export function CreateNamespaceModal({
 
       // Invalidate queries to refresh the namespace list
       queryClient.invalidateQueries({ queryKey: ["namespaces"] })
-      queryClient.invalidateQueries({ queryKey: ["namespaces", formData.catalog] })
+      queryClient.invalidateQueries({
+        queryKey: ["namespaces", formData.catalog],
+      })
 
       resetForm()
       onOpenChange(false)
@@ -180,15 +182,17 @@ export function CreateNamespaceModal({
             <div className="h-8 w-8 rounded-lg bg-blue-600/10 border border-blue-600/20 flex items-center justify-center">
               <FolderTree className="h-4 w-4 text-blue-600" />
             </div>
-            {parentNamespace ? `Create Sub-namespace under ${parentNamespace}` : "Create New Namespace"}
+            {parentNamespace
+              ? `Create Sub-namespace under ${parentNamespace}`
+              : "Create New Namespace"}
           </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="catalog">Catalog</Label>
-            <Select 
-              value={formData.catalog} 
+            <Select
+              value={formData.catalog}
               onValueChange={handleCatalogChange}
               disabled={isSubmitting}
             >
@@ -215,8 +219,10 @@ export function CreateNamespaceModal({
               value={formData.namespace}
               onChange={handleChange}
               placeholder={
-                parentNamespace 
-                  ? "e.g., staging (will create: " + parentNamespace + ".staging)"
+                parentNamespace
+                  ? "e.g., staging (will create: " +
+                    parentNamespace +
+                    ".staging)"
                   : "e.g., data_warehouse or analytics.staging"
               }
               disabled={isSubmitting}
@@ -225,7 +231,10 @@ export function CreateNamespaceModal({
             <p className="text-sm text-muted-foreground">
               {parentNamespace ? (
                 <>
-                  Enter the name for the sub-namespace. It will be created as <strong>{parentNamespace}.{formData.namespace || "[name]"}</strong>
+                  Enter the name for the sub-namespace. It will be created as{" "}
+                  <strong>
+                    {parentNamespace}.{formData.namespace || "[name]"}
+                  </strong>
                 </>
               ) : (
                 "Use dot notation for nested namespaces (e.g., analytics.staging)"
@@ -283,7 +292,8 @@ export function CreateNamespaceModal({
               ))}
               {formData.properties.length === 0 && (
                 <p className="text-sm text-muted-foreground">
-                  No properties configured. Click "Add Property" to add custom properties.
+                  No properties configured. Click "Add Property" to add custom
+                  properties.
                 </p>
               )}
             </div>
@@ -301,9 +311,7 @@ export function CreateNamespaceModal({
             <Button
               type="submit"
               disabled={
-                isSubmitting ||
-                !formData.catalog ||
-                !formData.namespace.trim()
+                isSubmitting || !formData.catalog || !formData.namespace.trim()
               }
             >
               {isSubmitting ? "Creating..." : "Create Namespace"}

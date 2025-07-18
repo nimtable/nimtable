@@ -173,10 +173,10 @@ export async function createNamespace(
   properties?: Record<string, string>
 ): Promise<void> {
   const api = catalogApi(catalog)
-  
+
   // Split namespace by dots to create the namespace array
   const namespaceArray = namespace.split(".")
-  
+
   await api.v1.createNamespace({
     namespace: namespaceArray,
     properties: properties || {},

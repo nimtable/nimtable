@@ -193,7 +193,7 @@ export default function NamespacePage(): React.ReactNode {
                     </h1>
                   </div>
                 </div>
-                
+
                 {/* Create Sub-namespace Button */}
                 <Button
                   onClick={() => setIsCreateModalOpen(true)}
@@ -373,7 +373,7 @@ export default function NamespacePage(): React.ReactNode {
           </div>
         </div>
       </div>
-      
+
       {/* Create Sub-namespace Modal */}
       {catalog && (
         <CreateNamespaceModal
