@@ -24,11 +24,11 @@ export const getOptimizationRecommendation = (
   )
 
   // Check if there are enough files to warrant optimization
-  if (totalFiles < 32) {
+  if (totalFiles < 16) {
     return {
       shouldOptimize: false,
       recommendations: [
-        `Total file count (${totalFiles}) is too low to warrant optimization. At least 10 files are recommended.`,
+        `Total file count (${totalFiles}) is too low to warrant optimization. At least 16 files are recommended.`,
       ],
     }
   }
