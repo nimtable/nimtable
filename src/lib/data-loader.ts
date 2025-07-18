@@ -167,6 +167,22 @@ export async function renameTable(
   })
 }
 
+export async function createNamespace(
+  catalog: string,
+  namespace: string,
+  properties?: Record<string, string>
+): Promise<void> {
+  const api = catalogApi(catalog)
+
+  // Split namespace by dots to create the namespace array
+  const namespaceArray = namespace.split(".")
+
+  await api.v1.createNamespace({
+    namespace: namespaceArray,
+    properties: properties || {},
+  })
+}
+
 export async function runQuery(
   query: string
 ): Promise<{ columns: string[]; rows: any[][]; error?: string }> {

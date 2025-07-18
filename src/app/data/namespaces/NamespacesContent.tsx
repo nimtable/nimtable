@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
+import { CreateNamespaceModal } from "@/components/namespace/CreateNamespaceModal"
 
 import { useNamespaces } from "../hooks/useNamespaces"
 import { useCatalogs } from "../hooks/useCatalogs"
@@ -25,6 +26,7 @@ export function NamespacesContent() {
     catalogFromUrl || "all"
   )
   const [searchQuery, setSearchQuery] = useState<string>("")
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const router = useRouter()
 
   const { catalogs, isLoading: isLoadingCatalogs } = useCatalogs()
@@ -106,12 +108,20 @@ export function NamespacesContent() {
           </div>
 
           {/* Create Namespace Button */}
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => setIsCreateModalOpen(true)}>
             <Plus className="h-4 w-4" />
             Create Namespace
           </Button>
         </div>
       </div>
+
+      {/* Create Namespace Modal */}
+      <CreateNamespaceModal
+        open={isCreateModalOpen}
+        onOpenChange={setIsCreateModalOpen}
+        catalogs={catalogs || []}
+        defaultCatalog={selectedCatalog !== "all" ? selectedCatalog : undefined}
+      />
 
       {/* Namespaces List */}
       <div className="flex-1 overflow-auto p-6">
