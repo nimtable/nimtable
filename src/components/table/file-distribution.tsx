@@ -13,6 +13,9 @@ import { Button } from "@/components/ui/button"
 // Define the order of size ranges
 export const rangeOrder = ["0-8M", "8M-32M", "32M-128M", "128M-512M", "512M+"]
 
+// Minimum file count threshold for optimization recommendations
+const MIN_FILES_FOR_OPTIMIZATION = 16
+
 // Shared optimization recommendation logic
 export const getOptimizationRecommendation = (
   distribution: DistributionData
@@ -24,11 +27,11 @@ export const getOptimizationRecommendation = (
   )
 
   // Check if there are enough files to warrant optimization
-  if (totalFiles < 10) {
+  if (totalFiles < MIN_FILES_FOR_OPTIMIZATION) {
     return {
       shouldOptimize: false,
       recommendations: [
-        `Total file count (${totalFiles}) is too low to warrant optimization. At least 10 files are recommended.`,
+        `Total file count (${totalFiles}) is too low to warrant optimization. At least ${MIN_FILES_FOR_OPTIMIZATION} files are recommended.`,
       ],
     }
   }
