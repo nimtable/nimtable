@@ -15,6 +15,7 @@ import {
   Hash,
   Calendar,
   Info,
+  Plus,
 } from "lucide-react"
 import { notFound, useSearchParams } from "next/navigation"
 import Link from "next/link"
@@ -44,6 +45,8 @@ import {
 import { TopNavbar } from "@/components/shared/top-navbar"
 import { PageLoader } from "@/components/shared/page-loader"
 import { useQuery } from "@tanstack/react-query"
+import { Button } from "@/components/ui/button"
+import { CreateNamespaceModal } from "@/components/namespace/CreateNamespaceModal"
 
 // Update the renderPartitionSpecs function to handle the complex partition spec format
 function renderPartitionSpecs(
@@ -122,6 +125,7 @@ export default function NamespacePage(): React.ReactNode {
   const namespace = searchParams.get("namespace")
 
   const [searchQuery, setSearchQuery] = useState("")
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
   const { data: tables, isPending } = useQuery<NamespaceTable[]>({
     queryKey: ["namespace-tables", catalog, namespace],
@@ -178,15 +182,27 @@ export default function NamespacePage(): React.ReactNode {
           <div className="max-w-6xl mx-auto p-6">
             {/* Enhanced header section */}
             <div className="mb-8">
-              <div className="flex items-center gap-4 mb-3">
-                <div className="h-12 w-12 rounded-lg bg-blue-600/10 border border-blue-600/20 flex items-center justify-center shadow-sm">
-                  <FolderTree className="h-6 w-6 text-blue-600" />
+              <div className="flex items-center justify-between gap-4 mb-3">
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-lg bg-blue-600/10 border border-blue-600/20 flex items-center justify-center shadow-sm">
+                    <FolderTree className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <h1 className="text-3xl font-bold tracking-tight">
+                      {namespace}
+                    </h1>
+                  </div>
                 </div>
-                <div>
-                  <h1 className="text-3xl font-bold tracking-tight">
-                    {namespace}
-                  </h1>
-                </div>
+                
+                {/* Create Sub-namespace Button */}
+                <Button
+                  onClick={() => setIsCreateModalOpen(true)}
+                  className="gap-2"
+                  variant="outline"
+                >
+                  <Plus className="h-4 w-4" />
+                  Create Sub-namespace
+                </Button>
               </div>
             </div>
 
@@ -357,6 +373,17 @@ export default function NamespacePage(): React.ReactNode {
           </div>
         </div>
       </div>
+      
+      {/* Create Sub-namespace Modal */}
+      {catalog && (
+        <CreateNamespaceModal
+          open={isCreateModalOpen}
+          onOpenChange={setIsCreateModalOpen}
+          catalogs={[catalog]}
+          defaultCatalog={catalog}
+          parentNamespace={namespace || undefined}
+        />
+      )}
     </SidebarInset>
   )
 }
