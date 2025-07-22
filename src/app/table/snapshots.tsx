@@ -893,7 +893,7 @@ function BranchView({
                           style={{ 
                             backgroundColor: node.branchColor,
                             left: node.x - 8, // Center the 16px circle on the x coordinate
-                            top: '20px', // Keep vertical centering in the row
+                            top: '12px',
                             zIndex: 10
                           }}
                           onClick={(e) => {
