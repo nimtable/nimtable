@@ -584,6 +584,13 @@ function BranchView({
 }) {
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null)
   const [selectedBranches, setSelectedBranches] = useState<Set<string>>(new Set(["All"]))
+  const [isManifestExpanded, setIsManifestExpanded] = useState(false)
+  const [manifestList, setManifestList] = useState<{
+    snapshot_id: string
+    manifest_list_location: string
+    manifests: any[]
+  } | null>(null)
+  const [loadingManifest, setLoadingManifest] = useState(false)
   const { toast } = useToast()
   const router = useRouter()
 
@@ -902,6 +909,40 @@ function BranchView({
 
   const handleNodeClick = (node: GraphNode) => {
     setSelectedNode(node)
+    // Reset manifest state when selecting a new node
+    setIsManifestExpanded(false)
+    setManifestList(null)
+  }
+
+  const handleManifestExpand = async () => {
+    if (!selectedNode) return
+
+    if (isManifestExpanded) {
+      setIsManifestExpanded(false)
+      return
+    }
+
+    if (!manifestList) {
+      setLoadingManifest(true)
+      try {
+        const data = await getManifestList(
+          catalog,
+          namespace,
+          table,
+          selectedNode.snapshot.id
+        )
+        setManifestList(data)
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Failed to load manifest list",
+          description: errorToString(error),
+        })
+      } finally {
+        setLoadingManifest(false)
+      }
+    }
+    setIsManifestExpanded(true)
   }
 
   const handleTimeTravel = (snapshot: Snapshot) => {
@@ -1211,7 +1252,11 @@ function BranchView({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setSelectedNode(null)}
+                onClick={() => {
+                  setSelectedNode(null)
+                  setIsManifestExpanded(false)
+                  setManifestList(null)
+                }}
               >
                 ×
               </Button>
@@ -1257,7 +1302,7 @@ function BranchView({
                 </div>
               </div>
             )}
-            <div className="mt-4">
+            <div className="mt-4 flex gap-2">
               <Button
                 size="sm"
                 onClick={() => handleTimeTravel(selectedNode.snapshot)}
@@ -1265,7 +1310,55 @@ function BranchView({
                 <Clock className="w-4 h-4 mr-1" />
                 Time Travel to this Snapshot
               </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleManifestExpand}
+                disabled={loadingManifest}
+              >
+                {isManifestExpanded ? (
+                  <ChevronDown className="w-4 h-4 mr-1" />
+                ) : (
+                  <ChevronRight className="w-4 h-4 mr-1" />
+                )}
+                {loadingManifest ? "Loading..." : "Manifests"}
+              </Button>
             </div>
+
+            {/* Manifest list expansion */}
+            {isManifestExpanded && (
+              <div className="mt-4 border-t pt-4">
+                {loadingManifest ? (
+                  <div className="text-sm text-muted-foreground">
+                    Loading manifest list...
+                  </div>
+                ) : manifestList ? (
+                  <div className="space-y-4">
+                    <div className="text-sm font-medium">Manifest List</div>
+                    <div className="text-xs text-muted-foreground">
+                      Location: {manifestList.manifest_list_location}
+                    </div>
+                    <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                      {manifestList.manifests.map((manifest, index) => (
+                        <ManifestItem
+                          key={index}
+                          manifest={manifest}
+                          index={index}
+                          catalog={catalog}
+                          namespace={namespace}
+                          table={table}
+                          snapshotId={selectedNode.snapshot.id}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-sm text-muted-foreground">
+                    Failed to load manifest list
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
