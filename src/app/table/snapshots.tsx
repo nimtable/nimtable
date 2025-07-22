@@ -71,8 +71,6 @@ interface ManifestDetails {
   files: any[]
 }
 
-
-
 function ManifestItem({
   manifest,
   index,
@@ -376,7 +374,9 @@ function BranchView({
   table: string
 }) {
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null)
-  const [selectedBranches, setSelectedBranches] = useState<Set<string>>(new Set(["All"]))
+  const [selectedBranches, setSelectedBranches] = useState<Set<string>>(
+    new Set(["All"])
+  )
   const [isManifestExpanded, setIsManifestExpanded] = useState(false)
   const [manifestList, setManifestList] = useState<{
     snapshot_id: string
@@ -404,7 +404,7 @@ function BranchView({
     // Generate unique colors for all branches
     const generateColor = (index: number, name: string) => {
       if (name === "main") return "#4CAF50" // green for main
-      
+
       // Use predefined colors for consistent appearance
       const predefinedColors = [
         "#2196F3", // blue
@@ -418,17 +418,17 @@ function BranchView({
         "#607D8B", // blue grey
         "#E91E63", // pink
       ]
-      
+
       if (index < predefinedColors.length) {
         return predefinedColors[index]
       }
-      
+
       // For additional branches, generate colors based on hash of name
-      const hash = name.split('').reduce((a, b) => {
-        a = ((a << 5) - a) + b.charCodeAt(0)
+      const hash = name.split("").reduce((a, b) => {
+        a = (a << 5) - a + b.charCodeAt(0)
         return a & a
       }, 0)
-      
+
       const hue = Math.abs(hash) % 360
       return `hsl(${hue}, 70%, 50%)`
     }
@@ -442,7 +442,7 @@ function BranchView({
   // Handle branch filter
   const handleBranchFilter = (branchName: string) => {
     const newSelection = new Set(selectedBranches)
-    
+
     if (branchName === "All") {
       if (selectedBranches.has("All")) {
         // If All is selected and clicked again, deselect all
@@ -455,25 +455,26 @@ function BranchView({
     } else {
       // Remove "All" if individual branch is selected
       newSelection.delete("All")
-      
+
       if (selectedBranches.has(branchName)) {
         newSelection.delete(branchName)
       } else {
         newSelection.add(branchName)
       }
-      
+
       // If no branches selected, default to "All"
       if (newSelection.size === 0) {
         newSelection.add("All")
       }
     }
-    
+
     setSelectedBranches(newSelection)
   }
 
   // Build IntelliJ-style graph layout
   const { nodes, edges, filteredSnapshots } = useMemo(() => {
-    if (snapshots.length === 0) return { nodes: [], edges: [], filteredSnapshots: [] }
+    if (snapshots.length === 0)
+      return { nodes: [], edges: [], filteredSnapshots: [] }
 
     // Create a map of snapshot ID to snapshot
     const snapshotMap = new Map<string | number, Snapshot>()
@@ -483,28 +484,33 @@ function BranchView({
 
     // Map each snapshot to its branch (for coloring)
     const snapshotToBranch = new Map<string | number, string>()
-    
+
     // First, find all branch heads and trace their paths
-    branches.forEach(branch => {
+    branches.forEach((branch) => {
       // Find the head snapshot for this branch
-      const headSnapshot = snapshots.find(s => s.branches.includes(branch.name))
+      const headSnapshot = snapshots.find((s) =>
+        s.branches.includes(branch.name)
+      )
       if (!headSnapshot) return
-      
+
       // Trace the parent chain from head until we hit another branch or root
       let current = headSnapshot
       const visited = new Set<string | number>()
-      
+
       while (current && !visited.has(current.id)) {
         visited.add(current.id)
-        
+
         // If this snapshot already belongs to another branch, stop
-        if (snapshotToBranch.has(current.id) && snapshotToBranch.get(current.id) !== branch.name) {
+        if (
+          snapshotToBranch.has(current.id) &&
+          snapshotToBranch.get(current.id) !== branch.name
+        ) {
           break
         }
-        
+
         // Assign this snapshot to the current branch
         snapshotToBranch.set(current.id, branch.name)
-        
+
         // Move to parent
         if (current.parentId) {
           const parentSnapshot = snapshotMap.get(current.parentId)
@@ -522,17 +528,21 @@ function BranchView({
     // Filter snapshots based on selected branches
     const shouldShowSnapshot = (snapshot: Snapshot) => {
       if (selectedBranches.has("All")) return true
-      
+
       // Show snapshot if it belongs to any selected branch OR if it has no branch assigned
       const assignedBranch = snapshotToBranch.get(snapshot.id)
-      return assignedBranch ? selectedBranches.has(assignedBranch) : selectedBranches.size > 0
+      return assignedBranch
+        ? selectedBranches.has(assignedBranch)
+        : selectedBranches.size > 0
     }
 
     // Filter snapshots and maintain parent-child relationships
     const filtered = snapshots.filter(shouldShowSnapshot)
-    
+
     // Sort snapshots by timestamp (newest first for display)
-    const sortedSnapshots = [...filtered].sort((a, b) => b.timestamp - a.timestamp)
+    const sortedSnapshots = [...filtered].sort(
+      (a, b) => b.timestamp - a.timestamp
+    )
 
     // Find all connected components (trees) from filtered snapshots
     const connectedComponents: Set<Snapshot>[] = []
@@ -545,8 +555,8 @@ function BranchView({
 
       // Add all children that are in filtered set
       filtered
-        .filter(s => s.parentId === snapshot.id)
-        .forEach(child => dfs(child, component))
+        .filter((s) => s.parentId === snapshot.id)
+        .forEach((child) => dfs(child, component))
 
       // Add parent if exists and is in filtered set
       if (snapshot.parentId && snapshotMap.has(snapshot.parentId)) {
@@ -568,14 +578,14 @@ function BranchView({
 
     // Sort components by their earliest snapshot (for consistent ordering)
     connectedComponents.sort((a, b) => {
-      const earliestA = Math.min(...Array.from(a).map(s => s.timestamp))
-      const earliestB = Math.min(...Array.from(b).map(s => s.timestamp))
+      const earliestA = Math.min(...Array.from(a).map((s) => s.timestamp))
+      const earliestB = Math.min(...Array.from(b).map((s) => s.timestamp))
       return earliestA - earliestB
     })
 
     // Create a global branch to color mapping
     const branchToColor = new Map<string, string>()
-    branches.forEach(branch => {
+    branches.forEach((branch) => {
       branchToColor.set(branch.name, branch.color)
     })
 
@@ -583,7 +593,7 @@ function BranchView({
     let currentColumn = 0
     const snapshotToColumn = new Map<string | number, number>()
 
-    connectedComponents.forEach(component => {
+    connectedComponents.forEach((component) => {
       const componentArray = Array.from(component)
 
       // Within each component, assign columns based on branch relationships
@@ -591,13 +601,15 @@ function BranchView({
       let nextColumnInComponent = currentColumn
 
       // Sort snapshots in component by timestamp (oldest first for path building)
-      const sortedComponent = componentArray.sort((a, b) => a.timestamp - b.timestamp)
+      const sortedComponent = componentArray.sort(
+        (a, b) => a.timestamp - b.timestamp
+      )
 
       // Build branch paths within this component
       for (const snapshot of sortedComponent) {
         // Get the branch this snapshot belongs to
         const assignedBranch = snapshotToBranch.get(snapshot.id)
-        
+
         if (assignedBranch) {
           // If this is a new branch in this component
           if (!branchPaths.has(assignedBranch)) {
@@ -619,14 +631,14 @@ function BranchView({
 
     sortedSnapshots.forEach((snapshot, rowIndex) => {
       const column = snapshotToColumn.get(snapshot.id) || 0
-      
+
       // Get branch info for this snapshot
       const assignedBranch = snapshotToBranch.get(snapshot.id)
       const isHeadOfBranch = snapshot.branches.length > 0
-      
+
       let branchColor = "#757575" // default gray for no branch
       let branchName = "no branch"
-      
+
       if (assignedBranch) {
         branchColor = branchToColor.get(assignedBranch) || "#757575"
         branchName = assignedBranch
@@ -639,9 +651,10 @@ function BranchView({
       const isLatest = rowIndex === 0
 
       // Create short ID for display
-      const shortId = String(snapshot.id).length > 8 
-        ? String(snapshot.id).substring(0, 8)
-        : String(snapshot.id)
+      const shortId =
+        String(snapshot.id).length > 8
+          ? String(snapshot.id).substring(0, 8)
+          : String(snapshot.id)
 
       const node: GraphNode = {
         snapshot,
@@ -660,11 +673,13 @@ function BranchView({
 
     // Create edges - ONLY for actual parent-child relationships in filtered set
     const edges: GraphEdge[] = []
-    nodes.forEach(childNode => {
+    nodes.forEach((childNode) => {
       if (childNode.snapshot.parentId) {
         // Find the parent node by matching snapshot IDs in filtered nodes
-        const parentNode = nodes.find(n => n.snapshot.id === childNode.snapshot.parentId)
-        
+        const parentNode = nodes.find(
+          (n) => n.snapshot.id === childNode.snapshot.parentId
+        )
+
         if (parentNode) {
           // Verify this is a real parent-child relationship
           const actualParent = snapshotMap.get(childNode.snapshot.parentId)
@@ -757,7 +772,9 @@ function BranchView({
     <div className="p-4">
       {/* Branch filters */}
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <div className="text-sm font-medium text-muted-foreground">Branches:</div>
+        <div className="text-sm font-medium text-muted-foreground">
+          Branches:
+        </div>
         <Button
           variant={selectedBranches.has("All") ? "default" : "outline"}
           size="sm"
@@ -773,15 +790,21 @@ function BranchView({
             size="sm"
             className="h-7 px-3 text-xs"
             onClick={() => handleBranchFilter(branch.name)}
-            style={{ 
-              backgroundColor: selectedBranches.has(branch.name) ? branch.color : undefined,
+            style={{
+              backgroundColor: selectedBranches.has(branch.name)
+                ? branch.color
+                : undefined,
               borderColor: branch.color,
-              color: selectedBranches.has(branch.name) ? "white" : branch.color
+              color: selectedBranches.has(branch.name) ? "white" : branch.color,
             }}
           >
-            <div 
-              className="h-2 w-2 rounded-full mr-1.5" 
-              style={{ backgroundColor: selectedBranches.has(branch.name) ? "white" : branch.color }}
+            <div
+              className="h-2 w-2 rounded-full mr-1.5"
+              style={{
+                backgroundColor: selectedBranches.has(branch.name)
+                  ? "white"
+                  : branch.color,
+              }}
             />
             {branch.name}
           </Button>
@@ -803,39 +826,45 @@ function BranchView({
               {/* Rows */}
               <div className="relative">
                 {/* Single SVG overlay for all connections */}
-                <svg 
+                <svg
                   className="absolute top-0 left-4 pointer-events-none"
-                  width="200" 
+                  width="200"
                   height={filteredSnapshots.length * 56}
                   style={{ zIndex: 1 }}
                 >
                   {/* Draw vertical guides for each column */}
-                  {Array.from(new Set(nodes.map(n => n.column))).map(column => (
-                    <line
-                      key={`guide-${column}`}
-                      x1={column * 24 + 20}
-                      y1={0}
-                      x2={column * 24 + 20}
-                      y2={filteredSnapshots.length * 56}
-                      stroke="#e5e7eb"
-                      strokeWidth="1"
-                      opacity="0.2"
-                    />
-                  ))}
-                  
+                  {Array.from(new Set(nodes.map((n) => n.column))).map(
+                    (column) => (
+                      <line
+                        key={`guide-${column}`}
+                        x1={column * 24 + 20}
+                        y1={0}
+                        x2={column * 24 + 20}
+                        y2={filteredSnapshots.length * 56}
+                        stroke="#e5e7eb"
+                        strokeWidth="1"
+                        opacity="0.2"
+                      />
+                    )
+                  )}
+
                   {/* Draw all connections */}
                   {edges.map((edge, edgeIndex) => {
-                    const fromRowIndex = filteredSnapshots.findIndex(s => s.id === edge.from.snapshot.id)
-                    const toRowIndex = filteredSnapshots.findIndex(s => s.id === edge.to.snapshot.id)
-                    
+                    const fromRowIndex = filteredSnapshots.findIndex(
+                      (s) => s.id === edge.from.snapshot.id
+                    )
+                    const toRowIndex = filteredSnapshots.findIndex(
+                      (s) => s.id === edge.to.snapshot.id
+                    )
+
                     if (fromRowIndex === -1 || toRowIndex === -1) return null
-                    
+
                     // Use the actual node coordinates for consistency
                     const fromY = edge.from.y
                     const toY = edge.to.y
                     const fromX = edge.from.x
                     const toX = edge.to.x
-                    
+
                     if (edge.fromColumn === edge.toColumn) {
                       // Straight vertical line
                       return (
@@ -852,10 +881,11 @@ function BranchView({
                       )
                     } else {
                       // Curved line for branch merges/diverges
-                      const controlY = Math.abs(toY - fromY) < 56 ? 
-                        (fromY + toY) / 2 : // Short distance, simple curve
-                        fromY + (toY - fromY) * 0.6 // Longer distance, more pronounced curve
-                      
+                      const controlY =
+                        Math.abs(toY - fromY) < 56
+                          ? (fromY + toY) / 2 // Short distance, simple curve
+                          : fromY + (toY - fromY) * 0.6 // Longer distance, more pronounced curve
+
                       return (
                         <path
                           key={`edge-${edgeIndex}`}
@@ -871,18 +901,20 @@ function BranchView({
                 </svg>
 
                 {filteredSnapshots.map((snapshot, rowIndex) => {
-                  const node = nodes.find(n => n.snapshot.id === snapshot.id)
+                  const node = nodes.find((n) => n.snapshot.id === snapshot.id)
                   if (!node) return null
 
                   const operationType = getOperationType(snapshot.summary)
-                  
+
                   return (
                     <div
                       key={snapshot.id}
                       className={`group flex items-center border-b px-4 py-3 transition-colors hover:bg-muted/20 cursor-pointer relative ${
-                        selectedNode?.snapshot.id === snapshot.id ? 'bg-blue-50 dark:bg-blue-950/30' : ''
+                        selectedNode?.snapshot.id === snapshot.id
+                          ? "bg-blue-50 dark:bg-blue-950/30"
+                          : ""
                       }`}
-                      style={{ height: '56px' }}
+                      style={{ height: "56px" }}
                       onClick={() => handleNodeClick(node)}
                     >
                       {/* Graph column */}
@@ -890,11 +922,11 @@ function BranchView({
                         {/* Node circle */}
                         <div
                           className="absolute w-4 h-4 rounded-full border-2 border-white shadow-sm cursor-pointer hover:scale-110 transition-transform"
-                          style={{ 
+                          style={{
                             backgroundColor: node.branchColor,
                             left: node.x - 8, // Center the 16px circle on the x coordinate
-                            top: '12px',
-                            zIndex: 10
+                            top: "12px",
+                            zIndex: 10,
                           }}
                           onClick={(e) => {
                             e.stopPropagation()
@@ -909,128 +941,135 @@ function BranchView({
 
                       {/* Message column */}
                       <div className="w-[400px] flex-shrink-0 pr-4">
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1">
-                          {/* Operation indicator */}
-                          <div 
-                            className="w-2 h-2 rounded-full flex-shrink-0"
-                            style={{
-                              backgroundColor: {
-                                append: "#22c55e",
-                                delete: "#ef4444", 
-                                overwrite: "#f59e0b",
-                                replace: "#3b82f6",
-                                unknown: "#6b7280"
-                              }[operationType] || "#6b7280"
-                            }}
-                          />
-                          <span className="text-sm font-medium capitalize">{operationType}</span>
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1">
+                            {/* Operation indicator */}
+                            <div
+                              className="w-2 h-2 rounded-full flex-shrink-0"
+                              style={{
+                                backgroundColor:
+                                  {
+                                    append: "#22c55e",
+                                    delete: "#ef4444",
+                                    overwrite: "#f59e0b",
+                                    replace: "#3b82f6",
+                                    unknown: "#6b7280",
+                                  }[operationType] || "#6b7280",
+                              }}
+                            />
+                            <span className="text-sm font-medium capitalize">
+                              {operationType}
+                            </span>
+                          </div>
+
+                          {/* Branch/Tag badges */}
+                          <div className="flex items-center gap-1">
+                            {node.isBranchHead && (
+                              <Badge
+                                className="text-xs px-1.5 py-0 text-white border-0"
+                                style={{ backgroundColor: node.branchColor }}
+                              >
+                                <GitBranch className="w-2 h-2 mr-1" />
+                                {node.branchName}
+                              </Badge>
+                            )}
+
+                            {snapshot.tags.map((tag) => (
+                              <Badge
+                                key={tag}
+                                className="bg-amber-100 text-amber-800 text-xs px-1.5 py-0 border-0"
+                              >
+                                <Tag className="w-2 h-2 mr-1" />
+                                {tag}
+                              </Badge>
+                            ))}
+
+                            {node.isLatest && (
+                              <Badge className="bg-blue-100 text-blue-800 text-xs px-1.5 py-0 border-0">
+                                latest
+                              </Badge>
+                            )}
+                          </div>
                         </div>
-                        
-                        {/* Branch/Tag badges */}
-                        <div className="flex items-center gap-1">
-                          {node.isBranchHead && (
-                            <Badge 
-                              className="text-xs px-1.5 py-0 text-white border-0"
-                              style={{ backgroundColor: node.branchColor }}
-                            >
-                              <GitBranch className="w-2 h-2 mr-1" />
-                              {node.branchName}
-                            </Badge>
-                          )}
-                          
-                          {snapshot.tags.map((tag) => (
-                            <Badge
-                              key={tag}
-                              className="bg-amber-100 text-amber-800 text-xs px-1.5 py-0 border-0"
-                            >
-                              <Tag className="w-2 h-2 mr-1" />
-                              {tag}
-                            </Badge>
-                          ))}
-                          
-                          {node.isLatest && (
-                            <Badge className="bg-blue-100 text-blue-800 text-xs px-1.5 py-0 border-0">
-                              latest
-                            </Badge>
-                          )}
-                        </div>
+
+                        {/* Summary info */}
+                        {snapshot.summary && (
+                          <div className="text-xs text-muted-foreground mt-1 truncate">
+                            {Object.entries(snapshot.summary)
+                              .filter(([key]) => key !== "operation")
+                              .slice(0, 2)
+                              .map(([key, value]) => `${key}: ${value}`)
+                              .join(", ")}
+                          </div>
+                        )}
                       </div>
-                      
-                      {/* Summary info */}
-                      {snapshot.summary && (
-                        <div className="text-xs text-muted-foreground mt-1 truncate">
-                          {Object.entries(snapshot.summary)
-                            .filter(([key]) => key !== 'operation')
-                            .slice(0, 2)
-                            .map(([key, value]) => `${key}: ${value}`)
-                            .join(', ')
-                          }
-                        </div>
-                      )}
-                    </div>
 
-                    {/* Date column */}
-                    <div className="w-[140px] flex-shrink-0 text-sm text-muted-foreground">
-                      {formatDate(snapshot.timestamp)}
-                    </div>
+                      {/* Date column */}
+                      <div className="w-[140px] flex-shrink-0 text-sm text-muted-foreground">
+                        {formatDate(snapshot.timestamp)}
+                      </div>
 
-                    {/* Snapshot ID column */}
-                    <div className="flex-1 flex items-center gap-2">
-                      <span className="font-mono text-sm text-muted-foreground">
-                        {String(snapshot.id)}
-                      </span>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleTimeTravel(snapshot)
-                            }}
-                          >
-                            <Clock className="w-3 h-3" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Time travel to this snapshot</p>
-                        </TooltipContent>
-                      </Tooltip>
-                      
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              navigator.clipboard.writeText(String(snapshot.id))
-                              toast({
-                                title: "Copied!",
-                                description: "Snapshot ID copied to clipboard",
-                              })
-                            }}
-                          >
-                            <FileText className="w-3 h-3" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Copy full snapshot ID</p>
-                        </TooltipContent>
-                      </Tooltip>
+                      {/* Snapshot ID column */}
+                      <div className="flex-1 flex items-center gap-2">
+                        <span className="font-mono text-sm text-muted-foreground">
+                          {String(snapshot.id)}
+                        </span>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleTimeTravel(snapshot)
+                              }}
+                            >
+                              <Clock className="w-3 h-3" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Time travel to this snapshot</p>
+                          </TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                navigator.clipboard.writeText(
+                                  String(snapshot.id)
+                                )
+                                toast({
+                                  title: "Copied!",
+                                  description:
+                                    "Snapshot ID copied to clipboard",
+                                })
+                              }}
+                            >
+                              <FileText className="w-3 h-3" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Copy full snapshot ID</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
                     </div>
-                  </div>
-                )
-              })}
+                  )
+                })}
               </div>
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-full py-12">
               <GitCommit className="mb-4 h-12 w-12 text-muted-foreground/20" />
-              <p className="text-sm font-medium">No snapshots match the selected branches</p>
+              <p className="text-sm font-medium">
+                No snapshots match the selected branches
+              </p>
             </div>
           )}
         </div>
@@ -1056,23 +1095,35 @@ function BranchView({
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="font-medium text-muted-foreground">Snapshot ID:</span>
-                <p className="font-mono text-xs mt-1 break-all">{String(selectedNode.snapshot.id)}</p>
+                <span className="font-medium text-muted-foreground">
+                  Snapshot ID:
+                </span>
+                <p className="font-mono text-xs mt-1 break-all">
+                  {String(selectedNode.snapshot.id)}
+                </p>
               </div>
               {selectedNode.snapshot.parentId && (
                 <div>
-                  <span className="font-medium text-muted-foreground">Parent ID:</span>
-                  <p className="font-mono text-xs mt-1 break-all">{String(selectedNode.snapshot.parentId)}</p>
+                  <span className="font-medium text-muted-foreground">
+                    Parent ID:
+                  </span>
+                  <p className="font-mono text-xs mt-1 break-all">
+                    {String(selectedNode.snapshot.parentId)}
+                  </p>
                 </div>
               )}
               <div>
-                <span className="font-medium text-muted-foreground">Branch:</span>
+                <span className="font-medium text-muted-foreground">
+                  Branch:
+                </span>
                 <p style={{ color: selectedNode.branchColor }}>
                   {selectedNode.branchName}
                 </p>
               </div>
               <div>
-                <span className="font-medium text-muted-foreground">Operation:</span>
+                <span className="font-medium text-muted-foreground">
+                  Operation:
+                </span>
                 <p>{getOperationType(selectedNode.snapshot.summary)}</p>
               </div>
               <div>
@@ -1082,7 +1133,9 @@ function BranchView({
             </div>
             {selectedNode.snapshot.tags.length > 0 && (
               <div className="mt-3">
-                <span className="font-medium text-muted-foreground text-sm">Tags:</span>
+                <span className="font-medium text-muted-foreground text-sm">
+                  Tags:
+                </span>
                 <div className="flex gap-1 mt-1 flex-wrap">
                   {selectedNode.snapshot.tags.map((tag) => (
                     <Badge
@@ -1158,8 +1211,6 @@ function BranchView({
     </div>
   )
 }
-
-
 
 export function SnapshotsTab({
   tableData,
