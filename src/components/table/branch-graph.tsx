@@ -8,6 +8,7 @@ import {
   FileText,
   ChevronDown,
   ChevronRight,
+  Info,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -20,6 +21,7 @@ import {
 import { useToast } from "@/hooks/use-toast"
 import { getManifestList } from "@/lib/data-loader"
 import { errorToString } from "@/lib/utils"
+import { analyzeBranches, type SnapshotWithBranch } from "@/lib/branch-utils"
 
 // Graph node for visualization
 export interface GraphNode {
@@ -43,6 +45,271 @@ export interface GraphEdge {
   toColumn: number
 }
 
+// ManifestItem 组件（从 snapshots.tsx 迁移并适配）
+function formatFileSize(bytes: number): string {
+  const units = ["B", "KB", "MB", "GB", "TB"]
+  let size = bytes
+  let unitIndex = 0
+  while (size >= 1024 && unitIndex < units.length - 1) {
+    size /= 1024
+    unitIndex++
+  }
+  return `${size.toFixed(1)} ${units[unitIndex]}`
+}
+
+function ManifestItem({
+  manifest,
+  index,
+  catalog,
+  namespace,
+  table,
+  snapshotId,
+}: {
+  manifest: any
+  index: number
+  catalog: string
+  namespace: string
+  table: string
+  snapshotId: string | number
+}) {
+  const { toast } = useToast()
+  const [isExpanded, setIsExpanded] = useState(false)
+  const [manifestDetails, setManifestDetails] = useState<any | null>(null)
+  const [loadingDetails, setLoadingDetails] = useState(false)
+
+  const handleExpand = async () => {
+    if (isExpanded) {
+      setIsExpanded(false)
+      return
+    }
+    if (!manifestDetails) {
+      setLoadingDetails(true)
+      try {
+        // 这里假设 getManifestDetails API 可用
+        const { getManifestDetails } = await import("@/lib/data-loader")
+        const data = await getManifestDetails(
+          catalog,
+          namespace,
+          table,
+          snapshotId,
+          index
+        )
+        setManifestDetails(data)
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Failed to load manifest details",
+          description: errorToString(error),
+        })
+      } finally {
+        setLoadingDetails(false)
+      }
+    }
+    setIsExpanded(true)
+  }
+
+  // Helper function to get content badge color
+  const getContentBadgeColor = (content: string) => {
+    switch (content) {
+      case "DATA":
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
+      case "DELETES":
+        return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+      default:
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400"
+    }
+  }
+
+  return (
+    <div className="flex flex-col">
+      <div className="flex items-center gap-2 text-xs">
+        <button
+          onClick={handleExpand}
+          className="flex h-4 w-4 items-center justify-center rounded hover:bg-muted/40"
+        >
+          {isExpanded ? (
+            <ChevronDown className="h-3 w-3" />
+          ) : (
+            <ChevronRight className="h-3 w-3" />
+          )}
+        </button>
+        <div className="flex flex-1 items-center gap-2">
+          <FileText className="h-3 w-3 flex-shrink-0 text-muted-foreground" />
+          <span className="flex-1 font-mono">{manifest.path}</span>
+          <div className="flex items-center gap-2">
+            <Badge
+              className={`${getContentBadgeColor(manifest.content)} px-1.5 py-0 text-[10px]`}
+            >
+              {manifest.content}
+            </Badge>
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <span className="text-green-600 dark:text-green-400">
+                +{manifest.added_files_count}
+              </span>
+              <span className="text-gray-500">•</span>
+              <span className="text-gray-500">
+                {manifest.existing_files_count}
+              </span>
+              <span className="text-gray-500">•</span>
+              <span className="text-red-600 dark:text-red-400">
+                -{manifest.deleted_files_count}
+              </span>
+            </div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button className="rounded p-1 hover:bg-muted/40">
+                  <Info className="h-3 w-3 text-muted-foreground" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-3xl">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium">Basic Information</div>
+                    <div className="space-y-1 text-xs text-muted-foreground">
+                      <div>Path: {manifest.path}</div>
+                      <div>Content: {manifest.content}</div>
+                      <div>Sequence Number: {manifest.sequence_number}</div>
+                      <div>Partition Spec ID: {manifest.partition_spec_id}</div>
+                      <div>Length: {formatFileSize(manifest.length)}</div>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium">Statistics</div>
+                    <div className="space-y-1 text-xs text-muted-foreground">
+                      {manifest.added_files_count !== undefined && (
+                        <div>Added Files: {manifest.added_files_count}</div>
+                      )}
+                      {manifest.existing_files_count !== undefined && (
+                        <div>
+                          Existing Files: {manifest.existing_files_count}
+                        </div>
+                      )}
+                      {manifest.deleted_files_count !== undefined && (
+                        <div>Deleted Files: {manifest.deleted_files_count}</div>
+                      )}
+                      {manifest.added_rows_count !== undefined && (
+                        <div>Added Rows: {manifest.added_rows_count}</div>
+                      )}
+                      {manifest.existing_rows_count !== undefined && (
+                        <div>Existing Rows: {manifest.existing_rows_count}</div>
+                      )}
+                      {manifest.deleted_rows_count !== undefined && (
+                        <div>Deleted Rows: {manifest.deleted_rows_count}</div>
+                      )}
+                    </div>
+                  </div>
+                  {manifestDetails && (
+                    <div className="space-y-2">
+                      <div className="text-sm font-medium">Files</div>
+                      {manifest.deleted_files_count > 0 && (
+                        <div className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded border">
+                          ⚠️ Note: Only non-deleted entries are displayed.{" "}
+                          {manifest.deleted_files_count} deleted entries in the
+                          manifest are not shown.
+                        </div>
+                      )}
+                      {manifestDetails.files.length > 0 ? (
+                        <div className="max-h-[300px] space-y-3 overflow-y-auto">
+                          {manifestDetails.files.map(
+                            (file: any, fileIndex: number) => (
+                              <div
+                                key={fileIndex}
+                                className="space-y-1 border-l-2 border-muted pl-2 font-mono text-xs"
+                              >
+                                <div className="text-muted-foreground">
+                                  Path: {file.file_path}
+                                </div>
+                                <div className="text-muted-foreground">
+                                  Size:{" "}
+                                  {formatFileSize(file.file_size_in_bytes)},
+                                  Records: {file.record_count}
+                                </div>
+                                {file.content && (
+                                  <div className="text-muted-foreground">
+                                    Content: {file.content}, Format:{" "}
+                                    {file.file_format}
+                                  </div>
+                                )}
+                                {file.equality_ids &&
+                                  file.equality_ids.length > 0 && (
+                                    <div className="text-muted-foreground">
+                                      Equality Fields:{" "}
+                                      {file.equality_ids.join(", ")}
+                                    </div>
+                                  )}
+                              </div>
+                            )
+                          )}
+                        </div>
+                      ) : (
+                        <div className="pl-2 text-xs text-muted-foreground">
+                          No files in this manifest
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        </div>
+      </div>
+      {/* Manifest details expansion */}
+      {isExpanded && (
+        <div className="ml-6 mt-2 rounded bg-muted/5 p-4">
+          {loadingDetails ? (
+            <div className="text-xs text-muted-foreground">
+              Loading manifest details...
+            </div>
+          ) : manifestDetails ? (
+            <div className="space-y-4">
+              <div className="text-sm font-medium">Files</div>
+              {manifest.deleted_files_count > 0 && (
+                <div className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded border">
+                  ⚠️ Note: Only non-deleted entries are displayed.{" "}
+                  {manifest.deleted_files_count} deleted entries in the manifest
+                  are not shown.
+                </div>
+              )}
+              {manifestDetails.files.length > 0 ? (
+                <div className="max-h-[300px] space-y-3 overflow-y-auto">
+                  {manifestDetails.files.map((file: any, fileIndex: number) => (
+                    <div
+                      key={fileIndex}
+                      className="space-y-1 border-l-2 border-muted pl-2 font-mono text-xs"
+                    >
+                      <div className="text-muted-foreground">
+                        Path: {file.file_path}
+                      </div>
+                      <div className="text-muted-foreground">
+                        Size: {formatFileSize(file.file_size_in_bytes)},
+                        Records: {file.record_count}
+                      </div>
+                      {file.content && (
+                        <div className="text-muted-foreground">
+                          Content: {file.content}, Format: {file.file_format}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="pl-2 text-xs text-muted-foreground">
+                  No files in this manifest
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-xs text-muted-foreground">
+              Failed to load manifest details
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // Branch view component with IntelliJ-style git graph visualization
 export function BranchView({
   snapshots,
@@ -50,7 +317,7 @@ export function BranchView({
   namespace,
   table,
 }: {
-  snapshots: any[]
+  snapshots: SnapshotWithBranch[]
   catalog: string
   namespace: string
   table: string
@@ -69,57 +336,11 @@ export function BranchView({
   const { toast } = useToast()
   const router = useRouter()
 
-  // Get all branch names and assign colors
-  const branches = useMemo(() => {
-    const branchSet = new Set<string>()
-    snapshots.forEach((snapshot) => {
-      snapshot.branches.forEach((branch: string) => branchSet.add(branch))
-    })
+  // Use shared branch analysis logic
+  const branchAnalysis = useMemo(() => analyzeBranches(snapshots), [snapshots])
 
-    // Ensure 'main' is first if it exists
-    const branchList = Array.from(branchSet)
-    if (branchList.includes("main")) {
-      branchList.splice(branchList.indexOf("main"), 1)
-      branchList.unshift("main")
-    }
-
-    // Generate unique colors for all branches
-    const generateColor = (index: number, name: string) => {
-      if (name === "main") return "#4CAF50" // green for main
-
-      // Use predefined colors for consistent appearance
-      const predefinedColors = [
-        "#2196F3", // blue
-        "#9C27B0", // purple
-        "#FF9800", // orange
-        "#F44336", // red
-        "#00BCD4", // cyan
-        "#8BC34A", // light green
-        "#FF5722", // deep orange
-        "#795548", // brown
-        "#607D8B", // blue grey
-        "#E91E63", // pink
-      ]
-
-      if (index < predefinedColors.length) {
-        return predefinedColors[index]
-      }
-
-      // For additional branches, generate colors based on hash of name
-      const hash = name.split("").reduce((a, b) => {
-        a = (a << 5) - a + b.charCodeAt(0)
-        return a & a
-      }, 0)
-
-      const hue = Math.abs(hash) % 360
-      return `hsl(${hue}, 70%, 50%)`
-    }
-
-    return branchList.map((branch, index) => ({
-      name: branch,
-      color: generateColor(index, branch),
-    }))
-  }, [snapshots])
+  // Get branch info with colors
+  const branches = branchAnalysis.branchInfos
 
   // Handle branch filter
   const handleBranchFilter = (branchName: string) => {
@@ -158,68 +379,17 @@ export function BranchView({
     if (snapshots.length === 0)
       return { nodes: [], edges: [], filteredSnapshots: [] }
 
-    // Create a map of snapshot ID to snapshot
+    // Create a map of snapshot ID to snapshot (still needed for graph building)
     const snapshotMap = new Map<string | number, any>()
     snapshots.forEach((snapshot) => {
       snapshotMap.set(snapshot.id, snapshot)
     })
 
-    // Map each snapshot to its branch (for coloring)
-    const snapshotToBranch = new Map<string | number, string>()
+    // Use shared branch mapping logic
+    const snapshotToBranch = branchAnalysis.snapshotToBranch
 
-    // First, find all branch heads and trace their paths
-    branches.forEach((branch) => {
-      // Find the head snapshot for this branch
-      const headSnapshot = snapshots.find((s) =>
-        s.branches.includes(branch.name)
-      )
-      if (!headSnapshot) return
-
-      // Trace the parent chain from head until we hit another branch or root
-      let current = headSnapshot
-      const visited = new Set<string | number>()
-
-      while (current && !visited.has(current.id)) {
-        visited.add(current.id)
-
-        // If this snapshot already belongs to another branch, stop
-        if (
-          snapshotToBranch.has(current.id) &&
-          snapshotToBranch.get(current.id) !== branch.name
-        ) {
-          break
-        }
-
-        // Assign this snapshot to the current branch
-        snapshotToBranch.set(current.id, branch.name)
-
-        // Move to parent
-        if (current.parentId) {
-          const parentSnapshot = snapshotMap.get(current.parentId)
-          if (parentSnapshot) {
-            current = parentSnapshot
-          } else {
-            break
-          }
-        } else {
-          break
-        }
-      }
-    })
-
-    // Filter snapshots based on selected branches
-    const shouldShowSnapshot = (snapshot: any) => {
-      if (selectedBranches.has("All")) return true
-
-      // Show snapshot if it belongs to any selected branch OR if it has no branch assigned
-      const assignedBranch = snapshotToBranch.get(snapshot.id)
-      return assignedBranch
-        ? selectedBranches.has(assignedBranch)
-        : selectedBranches.size > 0
-    }
-
-    // Filter snapshots and maintain parent-child relationships
-    const filtered = snapshots.filter(shouldShowSnapshot)
+    // Filter snapshots based on selected branches using shared logic
+    const filtered = branchAnalysis.filterByBranches(selectedBranches)
 
     // Sort snapshots by timestamp (newest first for display)
     const sortedSnapshots = [...filtered].sort(
@@ -379,7 +549,7 @@ export function BranchView({
     })
 
     return { nodes, edges, filteredSnapshots: sortedSnapshots }
-  }, [snapshots, branches, selectedBranches])
+  }, [branchAnalysis, selectedBranches])
 
   const formatDate = (timestamp: number) => {
     const timestampMs = timestamp < 1e12 ? timestamp * 1000 : timestamp
@@ -867,7 +1037,17 @@ export function BranchView({
                       Location: {manifestList.manifest_list_location}
                     </div>
                     <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                      {/* ManifestItem rendering should be handled by parent if needed */}
+                      {manifestList.manifests.map((manifest, index) => (
+                        <ManifestItem
+                          key={index}
+                          manifest={manifest}
+                          index={index}
+                          catalog={catalog}
+                          namespace={namespace}
+                          table={table}
+                          snapshotId={selectedNode!.snapshot.id}
+                        />
+                      ))}
                     </div>
                   </div>
                 ) : (

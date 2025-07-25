@@ -15,7 +15,8 @@
  */
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
+import { GitBranch } from "lucide-react"
 import {
   Card,
   CardContent,
@@ -24,6 +25,7 @@ import {
   CardDescription,
 } from "@/components/ui/card"
 import { getFileDistribution } from "@/lib/data-loader"
+import { analyzeBranches, type SnapshotWithBranch } from "@/lib/branch-utils"
 import {
   LineChart,
   Line,
@@ -48,11 +50,7 @@ interface SnapshotTrendProps {
   catalog: string
   namespace: string
   table: string
-  snapshots: Array<{
-    id: string | number
-    timestamp: number
-    isCompaction?: boolean
-  }>
+  snapshots: SnapshotWithBranch[]
 }
 
 type TrendType = "size" | "records" | "files"
@@ -102,14 +100,40 @@ export function SnapshotTrend({
 }: SnapshotTrendProps) {
   const [trendType, setTrendType] = useState<TrendType>("size")
   const [granularity, setGranularity] = useState<TimeGranularity>("snapshot")
+  const [selectedBranch, setSelectedBranch] = useState<string>("main")
+
+  // Use shared branch analysis logic
+  const branchAnalysis = useMemo(() => analyzeBranches(snapshots), [snapshots])
+
+  // Get all available branches from snapshots
+  const availableBranches = branchAnalysis.branchNames
+
+  // Ensure main branch is available and set as default
+  useMemo(() => {
+    if (availableBranches.length > 0 && !availableBranches.includes("main")) {
+      setSelectedBranch(availableBranches[0])
+    }
+  }, [availableBranches])
+
+  // Filter snapshots by selected branch using shared logic
+  const filteredSnapshots = useMemo(() => {
+    return branchAnalysis.filterByBranch(selectedBranch)
+  }, [branchAnalysis, selectedBranch])
 
   const { data, isPending } = useQuery<TrendDataPoint[]>({
-    queryKey: ["snapshot-distribution", catalog, namespace, table, snapshots],
+    queryKey: [
+      "snapshot-distribution",
+      catalog,
+      namespace,
+      table,
+      filteredSnapshots,
+      selectedBranch,
+    ],
     queryFn: async () => {
-      if (snapshots.length === 0) return []
+      if (filteredSnapshots.length === 0) return []
 
       const results = await Promise.all(
-        snapshots.map(async (snapshot) => {
+        filteredSnapshots.map(async (snapshot) => {
           const distribution = await getFileDistribution(
             catalog,
             namespace,
@@ -127,7 +151,7 @@ export function SnapshotTrend({
       )
       return results.sort((a, b) => a.timestamp - b.timestamp)
     },
-    enabled: snapshots.length > 0,
+    enabled: filteredSnapshots.length > 0,
     meta: {
       errorMessage: "Failed to fetch snapshot trend data for the table.",
     },
@@ -273,14 +297,67 @@ export function SnapshotTrend({
     )
   }
 
+  if (filteredSnapshots.length === 0) {
+    return (
+      <Card className="border-muted/70 shadow-sm">
+        <CardHeader className="pb-2">
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle className="text-base">Snapshot Trend</CardTitle>
+              <CardDescription>
+                {selectedBranch && selectedBranch !== "All"
+                  ? `No snapshots found for branch '${selectedBranch}'`
+                  : "No snapshots found"}
+              </CardDescription>
+            </div>
+            <div className="flex gap-2">
+              <Select
+                value={selectedBranch}
+                onValueChange={(value: string) => setSelectedBranch(value)}
+              >
+                <SelectTrigger className="w-[140px]">
+                  <GitBranch className="w-4 h-4 mr-1" />
+                  <SelectValue placeholder="Branch" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All">All Branches</SelectItem>
+                  {availableBranches.map((branch) => (
+                    <SelectItem key={branch} value={branch}>
+                      {branch}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="h-[300px] flex items-center justify-center">
+          <div className="text-center text-muted-foreground">
+            <p className="text-sm">No trend data available</p>
+            <p className="text-xs mt-1">
+              {availableBranches.length > 0
+                ? "Try selecting a different branch above"
+                : "This table has no snapshot history"}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
   const getDescription = () => {
+    const branchText =
+      selectedBranch && selectedBranch !== "All"
+        ? ` for branch '${selectedBranch}'`
+        : ""
+
     switch (trendType) {
       case "size":
-        return "Historical data size changes over time"
+        return `Historical data size changes over time${branchText}`
       case "records":
-        return "Historical record count changes over time"
+        return `Historical record count changes over time${branchText}`
       case "files":
-        return "Historical file count changes over time"
+        return `Historical file count changes over time${branchText}`
     }
   }
 
@@ -317,6 +394,23 @@ export function SnapshotTrend({
             <CardDescription>{getDescription()}</CardDescription>
           </div>
           <div className="flex gap-2">
+            <Select
+              value={selectedBranch}
+              onValueChange={(value: string) => setSelectedBranch(value)}
+            >
+              <SelectTrigger className="w-[140px]">
+                <GitBranch className="w-4 h-4 mr-1" />
+                <SelectValue placeholder="Branch" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All Branches</SelectItem>
+                {availableBranches.map((branch) => (
+                  <SelectItem key={branch} value={branch}>
+                    {branch}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Select
               value={granularity}
               onValueChange={(value: TimeGranularity) => setGranularity(value)}
