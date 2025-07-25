@@ -15,7 +15,8 @@
  */
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
+import { GitBranch } from "lucide-react"
 import {
   Card,
   CardContent,
@@ -50,7 +51,10 @@ interface SnapshotTrendProps {
   table: string
   snapshots: Array<{
     id: string | number
+    parentId?: string | number
     timestamp: number
+    branches: string[]
+    tags: string[]
     isCompaction?: boolean
   }>
 }
@@ -102,14 +106,100 @@ export function SnapshotTrend({
 }: SnapshotTrendProps) {
   const [trendType, setTrendType] = useState<TrendType>("size")
   const [granularity, setGranularity] = useState<TimeGranularity>("snapshot")
+  const [selectedBranch, setSelectedBranch] = useState<string>("main")
+
+  // Get all available branches from snapshots
+  const availableBranches = useMemo(() => {
+    const branchSet = new Set<string>()
+    snapshots.forEach((snapshot) => {
+      snapshot.branches.forEach((branch) => branchSet.add(branch))
+    })
+    const branches = Array.from(branchSet).sort()
+
+    // Ensure main branch is available and set as default
+    if (branches.length > 0 && !branches.includes("main")) {
+      setSelectedBranch(branches[0])
+    }
+
+    return branches
+  }, [snapshots])
+
+  // Filter snapshots by selected branch (reuse logic from BranchView)
+  const filteredSnapshots = useMemo(() => {
+    if (selectedBranch === "All" || !selectedBranch) {
+      return snapshots
+    }
+
+    // Create a map of snapshot ID to snapshot
+    const snapshotMap = new Map<string | number, any>()
+    snapshots.forEach((snapshot) => {
+      snapshotMap.set(snapshot.id, snapshot)
+    })
+
+    // Map each snapshot to its branch (similar to BranchView logic)
+    const snapshotToBranch = new Map<string | number, string>()
+
+    // Find all branch heads and trace their paths
+    availableBranches.forEach((branchName: string) => {
+      // Find the head snapshot for this branch
+      const headSnapshot = snapshots.find((s) =>
+        s.branches.includes(branchName)
+      )
+      if (!headSnapshot) return
+
+      // Trace the parent chain from head until we hit another branch or root
+      let current = headSnapshot
+      const visited = new Set<string | number>()
+
+      while (current && !visited.has(current.id)) {
+        visited.add(current.id)
+
+        // If this snapshot already belongs to another branch, stop
+        if (
+          snapshotToBranch.has(current.id) &&
+          snapshotToBranch.get(current.id) !== branchName
+        ) {
+          break
+        }
+
+        // Assign this snapshot to the current branch
+        snapshotToBranch.set(current.id, branchName)
+
+        // Move to parent
+        if (current.parentId) {
+          const parentSnapshot = snapshotMap.get(current.parentId)
+          if (parentSnapshot) {
+            current = parentSnapshot
+          } else {
+            break
+          }
+        } else {
+          break
+        }
+      }
+    })
+
+    // Filter snapshots based on selected branch
+    return snapshots.filter((snapshot) => {
+      const assignedBranch = snapshotToBranch.get(snapshot.id)
+      return assignedBranch === selectedBranch
+    })
+  }, [snapshots, selectedBranch, availableBranches])
 
   const { data, isPending } = useQuery<TrendDataPoint[]>({
-    queryKey: ["snapshot-distribution", catalog, namespace, table, snapshots],
+    queryKey: [
+      "snapshot-distribution",
+      catalog,
+      namespace,
+      table,
+      filteredSnapshots,
+      selectedBranch,
+    ],
     queryFn: async () => {
-      if (snapshots.length === 0) return []
+      if (filteredSnapshots.length === 0) return []
 
       const results = await Promise.all(
-        snapshots.map(async (snapshot) => {
+        filteredSnapshots.map(async (snapshot) => {
           const distribution = await getFileDistribution(
             catalog,
             namespace,
@@ -127,7 +217,7 @@ export function SnapshotTrend({
       )
       return results.sort((a, b) => a.timestamp - b.timestamp)
     },
-    enabled: snapshots.length > 0,
+    enabled: filteredSnapshots.length > 0,
     meta: {
       errorMessage: "Failed to fetch snapshot trend data for the table.",
     },
@@ -273,14 +363,67 @@ export function SnapshotTrend({
     )
   }
 
+  if (filteredSnapshots.length === 0) {
+    return (
+      <Card className="border-muted/70 shadow-sm">
+        <CardHeader className="pb-2">
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle className="text-base">Snapshot Trend</CardTitle>
+              <CardDescription>
+                {selectedBranch && selectedBranch !== "All"
+                  ? `No snapshots found for branch '${selectedBranch}'`
+                  : "No snapshots found"}
+              </CardDescription>
+            </div>
+            <div className="flex gap-2">
+              <Select
+                value={selectedBranch}
+                onValueChange={(value: string) => setSelectedBranch(value)}
+              >
+                <SelectTrigger className="w-[140px]">
+                  <GitBranch className="w-4 h-4 mr-1" />
+                  <SelectValue placeholder="Branch" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All">All Branches</SelectItem>
+                  {availableBranches.map((branch) => (
+                    <SelectItem key={branch} value={branch}>
+                      {branch}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="h-[300px] flex items-center justify-center">
+          <div className="text-center text-muted-foreground">
+            <p className="text-sm">No trend data available</p>
+            <p className="text-xs mt-1">
+              {availableBranches.length > 0
+                ? "Try selecting a different branch above"
+                : "This table has no snapshot history"}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
   const getDescription = () => {
+    const branchText =
+      selectedBranch && selectedBranch !== "All"
+        ? ` for branch '${selectedBranch}'`
+        : ""
+
     switch (trendType) {
       case "size":
-        return "Historical data size changes over time"
+        return `Historical data size changes over time${branchText}`
       case "records":
-        return "Historical record count changes over time"
+        return `Historical record count changes over time${branchText}`
       case "files":
-        return "Historical file count changes over time"
+        return `Historical file count changes over time${branchText}`
     }
   }
 
@@ -317,6 +460,23 @@ export function SnapshotTrend({
             <CardDescription>{getDescription()}</CardDescription>
           </div>
           <div className="flex gap-2">
+            <Select
+              value={selectedBranch}
+              onValueChange={(value: string) => setSelectedBranch(value)}
+            >
+              <SelectTrigger className="w-[140px]">
+                <GitBranch className="w-4 h-4 mr-1" />
+                <SelectValue placeholder="Branch" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All Branches</SelectItem>
+                {availableBranches.map((branch) => (
+                  <SelectItem key={branch} value={branch}>
+                    {branch}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Select
               value={granularity}
               onValueChange={(value: TimeGranularity) => setGranularity(value)}
