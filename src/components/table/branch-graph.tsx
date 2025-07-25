@@ -20,6 +20,7 @@ import {
 import { useToast } from "@/hooks/use-toast"
 import { getManifestList } from "@/lib/data-loader"
 import { errorToString } from "@/lib/utils"
+import { analyzeBranches, type SnapshotWithBranch } from "@/lib/branch-utils"
 
 // Graph node for visualization
 export interface GraphNode {
@@ -50,7 +51,7 @@ export function BranchView({
   namespace,
   table,
 }: {
-  snapshots: any[]
+  snapshots: SnapshotWithBranch[]
   catalog: string
   namespace: string
   table: string
@@ -69,57 +70,11 @@ export function BranchView({
   const { toast } = useToast()
   const router = useRouter()
 
-  // Get all branch names and assign colors
-  const branches = useMemo(() => {
-    const branchSet = new Set<string>()
-    snapshots.forEach((snapshot) => {
-      snapshot.branches.forEach((branch: string) => branchSet.add(branch))
-    })
+  // Use shared branch analysis logic
+  const branchAnalysis = useMemo(() => analyzeBranches(snapshots), [snapshots])
 
-    // Ensure 'main' is first if it exists
-    const branchList = Array.from(branchSet)
-    if (branchList.includes("main")) {
-      branchList.splice(branchList.indexOf("main"), 1)
-      branchList.unshift("main")
-    }
-
-    // Generate unique colors for all branches
-    const generateColor = (index: number, name: string) => {
-      if (name === "main") return "#4CAF50" // green for main
-
-      // Use predefined colors for consistent appearance
-      const predefinedColors = [
-        "#2196F3", // blue
-        "#9C27B0", // purple
-        "#FF9800", // orange
-        "#F44336", // red
-        "#00BCD4", // cyan
-        "#8BC34A", // light green
-        "#FF5722", // deep orange
-        "#795548", // brown
-        "#607D8B", // blue grey
-        "#E91E63", // pink
-      ]
-
-      if (index < predefinedColors.length) {
-        return predefinedColors[index]
-      }
-
-      // For additional branches, generate colors based on hash of name
-      const hash = name.split("").reduce((a, b) => {
-        a = (a << 5) - a + b.charCodeAt(0)
-        return a & a
-      }, 0)
-
-      const hue = Math.abs(hash) % 360
-      return `hsl(${hue}, 70%, 50%)`
-    }
-
-    return branchList.map((branch, index) => ({
-      name: branch,
-      color: generateColor(index, branch),
-    }))
-  }, [snapshots])
+  // Get branch info with colors
+  const branches = branchAnalysis.branchInfos
 
   // Handle branch filter
   const handleBranchFilter = (branchName: string) => {
@@ -158,68 +113,17 @@ export function BranchView({
     if (snapshots.length === 0)
       return { nodes: [], edges: [], filteredSnapshots: [] }
 
-    // Create a map of snapshot ID to snapshot
+    // Create a map of snapshot ID to snapshot (still needed for graph building)
     const snapshotMap = new Map<string | number, any>()
     snapshots.forEach((snapshot) => {
       snapshotMap.set(snapshot.id, snapshot)
     })
 
-    // Map each snapshot to its branch (for coloring)
-    const snapshotToBranch = new Map<string | number, string>()
+    // Use shared branch mapping logic
+    const snapshotToBranch = branchAnalysis.snapshotToBranch
 
-    // First, find all branch heads and trace their paths
-    branches.forEach((branch) => {
-      // Find the head snapshot for this branch
-      const headSnapshot = snapshots.find((s) =>
-        s.branches.includes(branch.name)
-      )
-      if (!headSnapshot) return
-
-      // Trace the parent chain from head until we hit another branch or root
-      let current = headSnapshot
-      const visited = new Set<string | number>()
-
-      while (current && !visited.has(current.id)) {
-        visited.add(current.id)
-
-        // If this snapshot already belongs to another branch, stop
-        if (
-          snapshotToBranch.has(current.id) &&
-          snapshotToBranch.get(current.id) !== branch.name
-        ) {
-          break
-        }
-
-        // Assign this snapshot to the current branch
-        snapshotToBranch.set(current.id, branch.name)
-
-        // Move to parent
-        if (current.parentId) {
-          const parentSnapshot = snapshotMap.get(current.parentId)
-          if (parentSnapshot) {
-            current = parentSnapshot
-          } else {
-            break
-          }
-        } else {
-          break
-        }
-      }
-    })
-
-    // Filter snapshots based on selected branches
-    const shouldShowSnapshot = (snapshot: any) => {
-      if (selectedBranches.has("All")) return true
-
-      // Show snapshot if it belongs to any selected branch OR if it has no branch assigned
-      const assignedBranch = snapshotToBranch.get(snapshot.id)
-      return assignedBranch
-        ? selectedBranches.has(assignedBranch)
-        : selectedBranches.size > 0
-    }
-
-    // Filter snapshots and maintain parent-child relationships
-    const filtered = snapshots.filter(shouldShowSnapshot)
+    // Filter snapshots based on selected branches using shared logic
+    const filtered = branchAnalysis.filterByBranches(selectedBranches)
 
     // Sort snapshots by timestamp (newest first for display)
     const sortedSnapshots = [...filtered].sort(
@@ -379,7 +283,7 @@ export function BranchView({
     })
 
     return { nodes, edges, filteredSnapshots: sortedSnapshots }
-  }, [snapshots, branches, selectedBranches])
+  }, [branchAnalysis, selectedBranches])
 
   const formatDate = (timestamp: number) => {
     const timestampMs = timestamp < 1e12 ? timestamp * 1000 : timestamp

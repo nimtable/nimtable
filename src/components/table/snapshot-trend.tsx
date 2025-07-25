@@ -25,6 +25,7 @@ import {
   CardDescription,
 } from "@/components/ui/card"
 import { getFileDistribution } from "@/lib/data-loader"
+import { analyzeBranches, type SnapshotWithBranch } from "@/lib/branch-utils"
 import {
   LineChart,
   Line,
@@ -49,14 +50,7 @@ interface SnapshotTrendProps {
   catalog: string
   namespace: string
   table: string
-  snapshots: Array<{
-    id: string | number
-    parentId?: string | number
-    timestamp: number
-    branches: string[]
-    tags: string[]
-    isCompaction?: boolean
-  }>
+  snapshots: SnapshotWithBranch[]
 }
 
 type TrendType = "size" | "records" | "files"
@@ -108,83 +102,23 @@ export function SnapshotTrend({
   const [granularity, setGranularity] = useState<TimeGranularity>("snapshot")
   const [selectedBranch, setSelectedBranch] = useState<string>("main")
 
+  // Use shared branch analysis logic
+  const branchAnalysis = useMemo(() => analyzeBranches(snapshots), [snapshots])
+
   // Get all available branches from snapshots
-  const availableBranches = useMemo(() => {
-    const branchSet = new Set<string>()
-    snapshots.forEach((snapshot) => {
-      snapshot.branches.forEach((branch) => branchSet.add(branch))
-    })
-    const branches = Array.from(branchSet).sort()
+  const availableBranches = branchAnalysis.branchNames
 
-    // Ensure main branch is available and set as default
-    if (branches.length > 0 && !branches.includes("main")) {
-      setSelectedBranch(branches[0])
+  // Ensure main branch is available and set as default
+  useMemo(() => {
+    if (availableBranches.length > 0 && !availableBranches.includes("main")) {
+      setSelectedBranch(availableBranches[0])
     }
+  }, [availableBranches])
 
-    return branches
-  }, [snapshots])
-
-  // Filter snapshots by selected branch (reuse logic from BranchView)
+  // Filter snapshots by selected branch using shared logic
   const filteredSnapshots = useMemo(() => {
-    if (selectedBranch === "All" || !selectedBranch) {
-      return snapshots
-    }
-
-    // Create a map of snapshot ID to snapshot
-    const snapshotMap = new Map<string | number, any>()
-    snapshots.forEach((snapshot) => {
-      snapshotMap.set(snapshot.id, snapshot)
-    })
-
-    // Map each snapshot to its branch (similar to BranchView logic)
-    const snapshotToBranch = new Map<string | number, string>()
-
-    // Find all branch heads and trace their paths
-    availableBranches.forEach((branchName: string) => {
-      // Find the head snapshot for this branch
-      const headSnapshot = snapshots.find((s) =>
-        s.branches.includes(branchName)
-      )
-      if (!headSnapshot) return
-
-      // Trace the parent chain from head until we hit another branch or root
-      let current = headSnapshot
-      const visited = new Set<string | number>()
-
-      while (current && !visited.has(current.id)) {
-        visited.add(current.id)
-
-        // If this snapshot already belongs to another branch, stop
-        if (
-          snapshotToBranch.has(current.id) &&
-          snapshotToBranch.get(current.id) !== branchName
-        ) {
-          break
-        }
-
-        // Assign this snapshot to the current branch
-        snapshotToBranch.set(current.id, branchName)
-
-        // Move to parent
-        if (current.parentId) {
-          const parentSnapshot = snapshotMap.get(current.parentId)
-          if (parentSnapshot) {
-            current = parentSnapshot
-          } else {
-            break
-          }
-        } else {
-          break
-        }
-      }
-    })
-
-    // Filter snapshots based on selected branch
-    return snapshots.filter((snapshot) => {
-      const assignedBranch = snapshotToBranch.get(snapshot.id)
-      return assignedBranch === selectedBranch
-    })
-  }, [snapshots, selectedBranch, availableBranches])
+    return branchAnalysis.filterByBranch(selectedBranch)
+  }, [branchAnalysis, selectedBranch])
 
   const { data, isPending } = useQuery<TrendDataPoint[]>({
     queryKey: [
