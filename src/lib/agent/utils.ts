@@ -23,6 +23,9 @@ import type {
   LanguageModelV1StreamPart,
 } from "ai"
 import { simulateStreamingMiddleware, wrapLanguageModel } from "ai"
+import { db } from "@/db/db"
+import { aiSettings } from "@/db/schema"
+import { eq } from "drizzle-orm"
 
 export const logMiddleware: LanguageModelV1Middleware = {
   wrapStream: async ({ doStream, params }) => {
@@ -70,6 +73,63 @@ const hostedNimtableModel = () => {
   })
 }
 
+async function getUserAIModel(userId?: number): Promise<LanguageModel | null> {
+  if (!userId) return null
+  
+  try {
+    const userSettings = await db
+      .select()
+      .from(aiSettings)
+      .where(eq(aiSettings.userId, userId))
+      .limit(1)
+
+    if (userSettings.length === 0 || !userSettings[0].isEnabled) {
+      return null
+    }
+
+    const settings = userSettings[0]
+    const provider = createOpenAICompatible({
+      name: "user-custom",
+      baseURL: settings.endpoint,
+      apiKey: settings.apiKey || undefined,
+    })
+
+    return wrapLanguageModel({
+      model: provider(settings.modelName),
+      middleware: simulateStreamingMiddleware(),
+    })
+  } catch (error) {
+    console.error("Failed to load user AI settings:", error)
+    return null
+  }
+}
+
+export async function getModel(userId?: number): Promise<LanguageModel> {
+  // Try to get user's custom AI model first
+  const userModel = await getUserAIModel(userId)
+  if (userModel) {
+    let model = userModel
+    if (process.env.NODE_ENV === "development") {
+      model = wrapLanguageModel({
+        model,
+        middleware: logMiddleware,
+      })
+    }
+    return model
+  }
+
+  // Fall back to hosted Nimtable model
+  let model = hostedNimtableModel()
+  if (process.env.NODE_ENV === "development") {
+    model = wrapLanguageModel({
+      model,
+      middleware: logMiddleware,
+    })
+  }
+  return model
+}
+
+// Keep the original export for backward compatibility
 export const model: LanguageModel = (() => {
   let model = hostedNimtableModel()
 

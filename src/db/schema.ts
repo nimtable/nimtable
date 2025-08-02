@@ -24,6 +24,7 @@ import {
   bigint,
   jsonb,
   text,
+  boolean,
 } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 
@@ -187,5 +188,37 @@ export const dataDistributions = pgTable(
     unique(
       "data_distributions_snapshot_id_catalog_name_namespace_table_key"
     ).on(table.snapshotId, table.catalogName, table.namespace, table.tableName),
+  ]
+)
+
+export const aiSettings = pgTable(
+  "ai_settings",
+  {
+    id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity({
+      name: "ai_settings_id_seq",
+      startWith: 1,
+      increment: 1,
+      minValue: 1,
+      maxValue: "9223372036854775807",
+      cache: 1,
+    }),
+    userId: bigint("user_id", { mode: "number" }).notNull(),
+    endpoint: varchar("endpoint", { length: 1024 }).notNull().default("https://api.openai.com/v1"),
+    apiKey: varchar("api_key", { length: 255 }),
+    modelName: varchar("model_name", { length: 100 }).notNull().default("gpt-4"),
+    isEnabled: boolean("is_enabled").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+  },
+  (table) => [
+    index("idx_ai_settings_user_id").using(
+      "btree",
+      table.userId.asc().nullsLast()
+    ),
+    unique("ai_settings_user_id_key").on(table.userId),
   ]
 )

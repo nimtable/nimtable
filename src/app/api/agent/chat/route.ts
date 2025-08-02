@@ -15,11 +15,32 @@
  */
 
 import { streamText } from "ai"
-import { model, systemPrompt, tools } from "@/lib/agent/utils"
+import { getModel, systemPrompt, tools } from "@/lib/agent/utils"
+import { verifyToken } from "@/lib/auth"
+import { AUTH_COOKIE_NAME } from "../../../acc-api/const"
 
 export async function POST(req: Request) {
   try {
     const { messages } = await req.json()
+
+    // Get user ID for personalized AI settings
+    let userId: number | undefined
+    try {
+      const token = req.headers.get("cookie")?.includes(AUTH_COOKIE_NAME)
+        ? req.headers.get("cookie")?.split(`${AUTH_COOKIE_NAME}=`)[1]?.split(";")[0]
+        : undefined
+      
+      if (token) {
+        const payload = await verifyToken(token)
+        if (payload?.id) {
+          userId = Number(payload.id)
+        }
+      }
+    } catch (error) {
+      console.log("Could not get user ID for AI settings, using default model")
+    }
+
+    const model = await getModel(userId)
 
     const result = streamText({
       model: model,
