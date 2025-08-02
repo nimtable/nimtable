@@ -75,7 +75,7 @@ const hostedNimtableModel = () => {
 
 async function getUserAIModel(userId?: number): Promise<LanguageModel | null> {
   if (!userId) return null
-  
+
   try {
     const userSettings = await db
       .select()

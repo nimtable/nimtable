@@ -203,9 +203,13 @@ export const aiSettings = pgTable(
       cache: 1,
     }),
     userId: bigint("user_id", { mode: "number" }).notNull(),
-    endpoint: varchar("endpoint", { length: 1024 }).notNull().default("https://api.openai.com/v1"),
+    endpoint: varchar("endpoint", { length: 1024 })
+      .notNull()
+      .default("https://api.openai.com/v1"),
     apiKey: varchar("api_key", { length: 255 }),
-    modelName: varchar("model_name", { length: 100 }).notNull().default("gpt-4"),
+    modelName: varchar("model_name", { length: 100 })
+      .notNull()
+      .default("gpt-4"),
     isEnabled: boolean("is_enabled").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
       .default(sql`CURRENT_TIMESTAMP`)

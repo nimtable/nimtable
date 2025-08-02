@@ -43,10 +43,12 @@ export async function loadCatalogNames(): Promise<string[]> {
   try {
     // Create a properly configured client for server-side or browser-side usage
     const baseUrl = getApiBaseUrl(!isBrowser())
-    const configuredClient = createClient(createConfig({
-      baseUrl: baseUrl || "http://localhost:8182"
-    }))
-    
+    const configuredClient = createClient(
+      createConfig({
+        baseUrl: baseUrl || "http://localhost:8182",
+      })
+    )
+
     const response = await getCatalogs({ client: configuredClient })
     if (response.error) {
       throw new Error(`Failed to fetch catalogs: ${response.error.message}`)

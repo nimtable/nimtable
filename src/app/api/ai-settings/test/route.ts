@@ -27,18 +27,12 @@ export async function POST(request: NextRequest) {
   try {
     const token = request.cookies.get(AUTH_COOKIE_NAME)?.value
     if (!token) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const payload = await verifyToken(token)
     if (!payload) {
-      return NextResponse.json(
-        { error: "Invalid token" },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: "Invalid token" }, { status: 401 })
     }
 
     const body = await request.json()
@@ -67,14 +61,14 @@ export async function POST(request: NextRequest) {
         } else {
           return NextResponse.json({
             success: false,
-            message: "No API key configured for testing"
+            message: "No API key configured for testing",
           })
         }
       } catch (dbError) {
         console.error("Failed to fetch API key from database:", dbError)
         return NextResponse.json({
           success: false,
-          message: "Failed to fetch API key configuration"
+          message: "Failed to fetch API key configuration",
         })
       }
     }
@@ -105,23 +99,31 @@ export async function POST(request: NextRequest) {
           promptTokens: result.usage?.promptTokens || 0,
           completionTokens: result.usage?.completionTokens || 0,
           totalTokens: result.usage?.totalTokens || 0,
-        }
+        },
       })
-
     } catch (aiError: any) {
       console.error("AI connection test failed:", aiError)
-      
+
       // Parse different types of errors to provide meaningful feedback
       let errorMessage = "Connection failed"
-      
+
       if (aiError.message) {
-        if (aiError.message.includes("401") || aiError.message.includes("Unauthorized")) {
+        if (
+          aiError.message.includes("401") ||
+          aiError.message.includes("Unauthorized")
+        ) {
           errorMessage = "Invalid API key"
-        } else if (aiError.message.includes("404") || aiError.message.includes("Not Found")) {
+        } else if (
+          aiError.message.includes("404") ||
+          aiError.message.includes("Not Found")
+        ) {
           errorMessage = "Invalid endpoint or model not found"
         } else if (aiError.message.includes("429")) {
           errorMessage = "Rate limit exceeded"
-        } else if (aiError.message.includes("network") || aiError.message.includes("ENOTFOUND")) {
+        } else if (
+          aiError.message.includes("network") ||
+          aiError.message.includes("ENOTFOUND")
+        ) {
           errorMessage = "Network error - check endpoint URL"
         } else if (aiError.message.includes("timeout")) {
           errorMessage = "Connection timeout"
@@ -133,10 +135,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: false,
         message: errorMessage,
-        error: aiError.message
+        error: aiError.message,
       })
     }
-
   } catch (error) {
     console.error("Error testing AI connection:", error)
     return NextResponse.json(
@@ -144,4 +145,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-} 
+}

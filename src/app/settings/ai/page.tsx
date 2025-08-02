@@ -18,7 +18,13 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -42,7 +48,7 @@ export default function AISettingsPage() {
     apiKey: "",
     modelName: "gpt-4",
     isEnabled: false,
-    hasApiKey: false
+    hasApiKey: false,
   })
   const [updateApiKey, setUpdateApiKey] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -79,10 +85,10 @@ export default function AISettingsPage() {
   const handleToggleEnable = async (checked: boolean) => {
     setSwitchLoading(true)
     const previousEnabled = settings.isEnabled
-    
+
     // Optimistically update UI
     setSettings({ ...settings, isEnabled: checked })
-    
+
     try {
       const response = await fetch("/api/ai-settings", {
         method: "POST",
@@ -99,12 +105,14 @@ export default function AISettingsPage() {
 
       if (response.ok) {
         toast({
-          title: checked ? "AI Configuration Enabled" : "AI Configuration Disabled",
-          description: checked 
-            ? "Custom AI settings are now active" 
+          title: checked
+            ? "AI Configuration Enabled"
+            : "AI Configuration Disabled",
+          description: checked
+            ? "Custom AI settings are now active"
             : "Using default Nimtable AI service",
         })
-        
+
         // Reload settings to get fresh data
         const getResponse = await fetch("/api/ai-settings")
         if (getResponse.ok) {
@@ -124,7 +132,10 @@ export default function AISettingsPage() {
       console.error("Failed to toggle AI settings:", error)
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to update AI settings",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to update AI settings",
         variant: "destructive",
       })
     } finally {
@@ -152,7 +163,7 @@ export default function AISettingsPage() {
           title: "Success",
           description: "AI settings saved successfully",
         })
-        
+
         // Reload to get fresh hasApiKey status
         const getResponse = await fetch("/api/ai-settings")
         if (getResponse.ok) {
@@ -168,7 +179,8 @@ export default function AISettingsPage() {
       console.error("Failed to save AI settings:", error)
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to save AI settings",
+        description:
+          error instanceof Error ? error.message : "Failed to save AI settings",
         variant: "destructive",
       })
     } finally {
@@ -183,7 +195,8 @@ export default function AISettingsPage() {
       if (!settings.endpoint || !settings.modelName) {
         toast({
           title: "Error",
-          description: "Please configure endpoint and model name before testing",
+          description:
+            "Please configure endpoint and model name before testing",
           variant: "destructive",
         })
         return
@@ -219,7 +232,8 @@ export default function AISettingsPage() {
       console.error("Failed to test AI endpoint:", error)
       toast({
         title: "Test Failed",
-        description: "Failed to test AI connection. Please check your settings.",
+        description:
+          "Failed to test AI connection. Please check your settings.",
         variant: "destructive",
       })
     } finally {
@@ -240,7 +254,7 @@ export default function AISettingsPage() {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back
           </Button>
-          
+
           <Card>
             <CardHeader>
               <CardTitle>AI Settings</CardTitle>
@@ -266,12 +280,13 @@ export default function AISettingsPage() {
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
-        
+
         <Card>
           <CardHeader>
             <CardTitle>AI Settings</CardTitle>
             <CardDescription>
-              Configure your AI endpoint and API key. When enabled, your custom settings will be used instead of the default Nimtable AI service.
+              Configure your AI endpoint and API key. When enabled, your custom
+              settings will be used instead of the default Nimtable AI service.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -331,7 +346,7 @@ export default function AISettingsPage() {
                     </Button>
                   )}
                 </div>
-                
+
                 {settings.hasApiKey && !updateApiKey ? (
                   <div className="p-3 bg-muted rounded-md">
                     <p className="text-sm text-muted-foreground">
@@ -350,7 +365,7 @@ export default function AISettingsPage() {
                     disabled={!settings.isEnabled}
                   />
                 )}
-                
+
                 <p className="text-sm text-muted-foreground">
                   Your API key will be stored securely
                 </p>
@@ -387,10 +402,11 @@ export default function AISettingsPage() {
                   onClick={handleTest}
                   loading={loading}
                   disabled={
-                    !settings.isEnabled || 
-                    !settings.endpoint || 
-                    !settings.modelName || 
-                    (!settings.hasApiKey && (!updateApiKey || !settings.apiKey)) ||
+                    !settings.isEnabled ||
+                    !settings.endpoint ||
+                    !settings.modelName ||
+                    (!settings.hasApiKey &&
+                      (!updateApiKey || !settings.apiKey)) ||
                     loading
                   }
                 >
@@ -400,11 +416,20 @@ export default function AISettingsPage() {
               <div className="text-sm text-muted-foreground space-y-1">
                 {settings.isEnabled ? (
                   <div>
-                    <p>• Test connection will send a simple "Hello" request to verify your configuration.</p>
-                    <p>• Enable/disable changes are saved automatically. Click "Save Configuration" for other settings.</p>
+                    <p>
+                      • Test connection will send a simple "Hello" request to
+                      verify your configuration.
+                    </p>
+                    <p>
+                      • Enable/disable changes are saved automatically. Click
+                      "Save Configuration" for other settings.
+                    </p>
                   </div>
                 ) : (
-                  <p>• Using default Nimtable AI service. Enable/disable changes are saved automatically.</p>
+                  <p>
+                    • Using default Nimtable AI service. Enable/disable changes
+                    are saved automatically.
+                  </p>
                 )}
               </div>
             </div>
@@ -413,4 +438,4 @@ export default function AISettingsPage() {
       </div>
     </div>
   )
-} 
+}

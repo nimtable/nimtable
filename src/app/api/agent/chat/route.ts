@@ -27,9 +27,12 @@ export async function POST(req: Request) {
     let userId: number | undefined
     try {
       const token = req.headers.get("cookie")?.includes(AUTH_COOKIE_NAME)
-        ? req.headers.get("cookie")?.split(`${AUTH_COOKIE_NAME}=`)[1]?.split(";")[0]
+        ? req.headers
+            .get("cookie")
+            ?.split(`${AUTH_COOKIE_NAME}=`)[1]
+            ?.split(";")[0]
         : undefined
-      
+
       if (token) {
         const payload = await verifyToken(token)
         if (payload?.id) {

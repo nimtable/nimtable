@@ -25,18 +25,12 @@ export async function GET(request: NextRequest) {
   try {
     const token = request.cookies.get(AUTH_COOKIE_NAME)?.value
     if (!token) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const payload = await verifyToken(token)
     if (!payload) {
-      return NextResponse.json(
-        { error: "Invalid token" },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: "Invalid token" }, { status: 401 })
     }
 
     const userSettings = await db
@@ -52,7 +46,7 @@ export async function GET(request: NextRequest) {
         apiKey: "",
         hasApiKey: false,
         modelName: "gpt-4",
-        isEnabled: false
+        isEnabled: false,
       })
     }
 
@@ -62,9 +56,8 @@ export async function GET(request: NextRequest) {
       apiKey: "", // Never return actual API key for security
       hasApiKey: !!settings.apiKey, // Flag to indicate if API key exists
       modelName: settings.modelName,
-      isEnabled: settings.isEnabled
+      isEnabled: settings.isEnabled,
     })
-
   } catch (error) {
     console.error("Error fetching AI settings:", error)
     return NextResponse.json(
@@ -78,18 +71,12 @@ export async function POST(request: NextRequest) {
   try {
     const token = request.cookies.get(AUTH_COOKIE_NAME)?.value
     if (!token) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const payload = await verifyToken(token)
     if (!payload) {
-      return NextResponse.json(
-        { error: "Invalid token" },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: "Invalid token" }, { status: 401 })
     }
 
     const body = await request.json()
@@ -115,7 +102,7 @@ export async function POST(request: NextRequest) {
       endpoint: endpoint || "https://api.openai.com/v1",
       modelName: modelName || "gpt-4",
       isEnabled: Boolean(isEnabled),
-      updatedAt: sql`CURRENT_TIMESTAMP`
+      updatedAt: sql`CURRENT_TIMESTAMP`,
     }
 
     // Only update API key if it's explicitly provided
@@ -131,16 +118,13 @@ export async function POST(request: NextRequest) {
         .where(eq(aiSettings.userId, Number(payload.id)))
     } else {
       // Create new settings
-      await db
-        .insert(aiSettings)
-        .values({
-          userId: Number(payload.id),
-          ...settingsData
-        })
+      await db.insert(aiSettings).values({
+        userId: Number(payload.id),
+        ...settingsData,
+      })
     }
 
     return NextResponse.json({ success: true })
-
   } catch (error) {
     console.error("Error saving AI settings:", error)
     return NextResponse.json(
@@ -148,4 +132,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-} 
+}

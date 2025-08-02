@@ -72,9 +72,11 @@ export function middleware(request: NextRequest) {
   }
 
   // Check if the request path starts with /api/ (exclude Next.js API routes)
-  if (pathname.startsWith("/api/") && 
-      !pathname.startsWith("/api/agent/") && 
-      !pathname.startsWith("/api/ai-settings")) {
+  if (
+    pathname.startsWith("/api/") &&
+    !pathname.startsWith("/api/agent/") &&
+    !pathname.startsWith("/api/ai-settings")
+  ) {
     const javaApiBaseUrl = getJavaApiBaseUrl()
     if (!javaApiBaseUrl) {
       return NextResponse.json(
