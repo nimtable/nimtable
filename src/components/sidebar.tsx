@@ -14,6 +14,7 @@ import {
   Settings,
   Users,
   Calendar,
+  Bot,
 } from "lucide-react"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
@@ -85,6 +86,11 @@ export function Sidebar() {
       title: "Users",
       href: "/users",
       icon: Users,
+    },
+    {
+      title: "AI Settings",
+      href: "/settings/ai",
+      icon: Bot,
     },
   ]
 
