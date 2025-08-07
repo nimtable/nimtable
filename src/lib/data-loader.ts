@@ -17,6 +17,7 @@ import { Api } from "@/lib/api"
 
 import { CatalogConfig, LoadTableResult, PartitionSpec } from "./api"
 import { getCatalogs } from "./client"
+import { createClient, createConfig } from "@hey-api/client-fetch"
 import { getApiBaseUrl } from "./api-config"
 
 // Re-export types from api.ts, ensuring application code don't need to access the api directly.
@@ -40,7 +41,15 @@ function isBrowser() {
 
 export async function loadCatalogNames(): Promise<string[]> {
   try {
-    const response = await getCatalogs()
+    // Create a properly configured client for server-side or browser-side usage
+    const baseUrl = getApiBaseUrl(!isBrowser())
+    const configuredClient = createClient(
+      createConfig({
+        baseUrl: baseUrl || "http://localhost:8182",
+      })
+    )
+
+    const response = await getCatalogs({ client: configuredClient })
     if (response.error) {
       throw new Error(`Failed to fetch catalogs: ${response.error.message}`)
     }
