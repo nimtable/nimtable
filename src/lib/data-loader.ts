@@ -18,7 +18,7 @@ import { Api } from "@/lib/api"
 import { CatalogConfig, LoadTableResult, PartitionSpec } from "./api"
 import { getCatalogs } from "./client"
 import { createClient, createConfig } from "@hey-api/client-fetch"
-import { getApiBaseUrl, getJavaApiBaseUrl } from "./api-config"
+import { getApiBaseUrl } from "./api-config"
 
 // Re-export types from api.ts, ensuring application code don't need to access the api directly.
 export type {
@@ -394,9 +394,10 @@ export async function runOptimizationOperation(
         ? "expire-snapshots"
         : "clean-orphan-files"
 
-  const javaApiBaseUrl = getJavaApiBaseUrl()
+  // Use the API base URL that respects browser vs server environment
+  const baseUrl = getApiBaseUrl()
   const response = await fetch(
-    `${javaApiBaseUrl}/optimize/${catalog}/${namespace}/${table}/${operation}`,
+    `${baseUrl}/api/optimize/${catalog}/${namespace}/${table}/${operation}`,
     {
       method: "POST",
       headers: {
