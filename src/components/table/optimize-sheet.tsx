@@ -1041,7 +1041,9 @@ export function OptimizeSheet({
               {(optimizeMutation.isPending || createTaskMutation.isPending) && (
                 <Loader2 className="h-4 w-4 animate-spin" />
               )}
-              {executionMode === "run-once" ? "Run Compaction" : "Create Schedule"}
+              {executionMode === "run-once"
+                ? "Run Compaction"
+                : "Create Schedule"}
             </Button>
           </div>
         </div>
