@@ -4,7 +4,6 @@ import {
   ChevronRight,
   Calendar,
   Trash2,
-  Edit,
   Plus,
   Clock,
   CheckCircle2,
@@ -37,7 +36,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { CrontabGenerator } from "@/components/table/crontab-generator"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQuery, useMutation } from "@tanstack/react-query"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -68,10 +67,8 @@ export function ScheduleSheet({
   table,
 }: ScheduleSheetProps) {
   const { toast } = useToast()
-  const queryClient = useQueryClient()
 
   const [showCreateDialog, setShowCreateDialog] = useState(false)
-  const [showEditDialog, setShowEditDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [selectedTask, setSelectedTask] = useState<ScheduledTask | null>(null)
 
@@ -315,16 +312,6 @@ export function ScheduleSheet({
                             )}
                           </div>
                           <div className="flex items-center gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedTask(task)
-                                setShowEditDialog(true)
-                              }}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
                             <Button
                               variant="ghost"
                               size="sm"

@@ -39,7 +39,7 @@ export async function POST(req: Request) {
           userId = Number(payload.id)
         }
       }
-    } catch (error) {
+    } catch (_error) {
       console.log("Could not get user ID for AI settings, using default model")
     }
 
