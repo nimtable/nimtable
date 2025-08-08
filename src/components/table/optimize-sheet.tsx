@@ -311,7 +311,7 @@ export function OptimizeSheet({
     }
 
     if (compaction) {
-      steps.push({ name: "Optimization", status: "pending" })
+      steps.push({ name: "Compaction", status: "pending" })
     }
 
     setOptimizationSteps(steps)
@@ -1041,9 +1041,7 @@ export function OptimizeSheet({
               {(optimizeMutation.isPending || createTaskMutation.isPending) && (
                 <Loader2 className="h-4 w-4 animate-spin" />
               )}
-              {executionMode === "run-once"
-                ? "Run Optimization"
-                : "Create Schedule"}
+              {executionMode === "run-once" ? "Run Compaction" : "Create Schedule"}
             </Button>
           </div>
         </div>
@@ -1081,7 +1079,7 @@ export function OptimizeSheet({
                     )}
                     {step.status === "done" && step.result && (
                       <div className="text-sm text-muted-foreground">
-                        {step.name === "Optimization" &&
+                        {step.name === "Compaction" &&
                           step.result?.rewrittenDataFilesCount != null &&
                           step.result?.addedDataFilesCount != null && (
                             <>
