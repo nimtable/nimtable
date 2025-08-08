@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.nimtable.db.entity.Catalog;
 import io.nimtable.db.repository.CatalogRepository;
 import io.nimtable.spark.LocalSpark;
+import io.nimtable.util.SensitiveDataFilter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -53,6 +54,16 @@ public class CatalogsServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        String pathInfo = request.getPathInfo();
+
+        // Handle specific catalog request: /api/catalogs/{catalogName}
+        if (pathInfo != null && !pathInfo.equals("/") && !pathInfo.isEmpty()) {
+            String catalogName = pathInfo.substring(1); // Remove leading slash
+            handleGetCatalogDetails(catalogName, response);
+            return;
+        }
+
+        // Handle list all catalogs request: /api/catalogs
         // Get catalogs from both config and database
         List<String> configCatalogs =
                 config.catalogs() != null
@@ -72,6 +83,71 @@ public class CatalogsServlet extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         mapper.writeValue(response.getOutputStream(), allCatalogs);
+    }
+
+    private void handleGetCatalogDetails(String catalogName, HttpServletResponse response)
+            throws IOException {
+        try {
+            // First try to get from database
+            Catalog dbCatalog = catalogRepository.findByName(catalogName);
+
+            if (dbCatalog != null) {
+                // Filter sensitive properties before returning to client
+                Map<String, String> filteredProperties =
+                        SensitiveDataFilter.filterSensitiveProperties(dbCatalog.getProperties());
+
+                // Create filtered catalog object
+                Map<String, Object> filteredCatalog = new HashMap<>();
+                filteredCatalog.put("name", dbCatalog.getName());
+                filteredCatalog.put("type", dbCatalog.getType());
+                filteredCatalog.put("uri", dbCatalog.getUri());
+                filteredCatalog.put("warehouse", dbCatalog.getWarehouse());
+                filteredCatalog.put("properties", filteredProperties);
+
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                mapper.writeValue(response.getOutputStream(), filteredCatalog);
+                return;
+            }
+
+            // If not in database, check if it exists in config
+            Config.Catalog configCatalog = config.getCatalog(catalogName);
+            if (configCatalog != null) {
+                // Create a catalog object from config data
+                Map<String, Object> catalogData = new HashMap<>();
+                catalogData.put("name", catalogName);
+
+                // Filter sensitive properties before returning to client
+                Map<String, String> properties = configCatalog.properties();
+                Map<String, String> filteredProperties =
+                        SensitiveDataFilter.filterSensitiveProperties(properties);
+
+                // Extract type, uri, warehouse from filtered properties
+                if (filteredProperties.containsKey("type")) {
+                    catalogData.put("type", filteredProperties.get("type"));
+                }
+                if (filteredProperties.containsKey("uri")) {
+                    catalogData.put("uri", filteredProperties.get("uri"));
+                }
+                if (filteredProperties.containsKey("warehouse")) {
+                    catalogData.put("warehouse", filteredProperties.get("warehouse"));
+                }
+                catalogData.put("properties", filteredProperties);
+
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                mapper.writeValue(response.getOutputStream(), catalogData);
+                return;
+            }
+
+            // Catalog not found
+            response.sendError(
+                    HttpServletResponse.SC_NOT_FOUND, "Catalog not found: " + catalogName);
+
+        } catch (Exception e) {
+            LOG.error("Error getting catalog details for: " + catalogName, e);
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal error");
+        }
     }
 
     @Override
