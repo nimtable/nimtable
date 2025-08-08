@@ -71,7 +71,7 @@ import {
 
 import { CrontabGenerator } from "@/components/table/crontab-generator"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQuery, useMutation } from "@tanstack/react-query"
 import {
   Sheet,
   SheetContent,
@@ -240,7 +240,6 @@ export function OptimizeSheet({
   table,
 }: OptimizeSheetProps) {
   const { toast } = useToast()
-  const queryClient = useQueryClient()
   const [showProgressDialog, setShowProgressDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [selectedTask, setSelectedTask] = useState<ScheduledTask | null>(null)
@@ -562,7 +561,7 @@ export function OptimizeSheet({
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
                 <Link
-                  href={`/table?catalog=${catalog}&namespace=${namespace}&table=${table}`}
+                  href={`/data/tables/table?catalog=${catalog}&namespace=${namespace}&table=${table}`}
                   className="font-medium text-muted-foreground hover:text-foreground"
                 >
                   {table}

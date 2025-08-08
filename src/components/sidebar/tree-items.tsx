@@ -46,7 +46,7 @@ export function TableItem({
       className="pl-6 text-sm font-normal text-muted-foreground hover:text-foreground transition-colors"
     >
       <Link
-        href={`/table?catalog=${catalog}&namespace=${namespace}&table=${name}`}
+        href={`/data/tables/table?catalog=${catalog}&namespace=${namespace}&table=${name}`}
       >
         <Table className="h-4 w-4 shrink-0 text-muted-foreground/70 group-hover:text-muted-foreground transition-colors" />
         <span>{name}</span>
@@ -74,7 +74,7 @@ export function NamespaceTreeItem({
             <ChevronRight className="h-4 w-4 shrink-0 transition-transform" />
           )}
           <Link
-            href={`/namespace?catalog=${catalog}&namespace=${namespace.name}`}
+            href={`/data/namespaces?catalog=${catalog}&search=${encodeURIComponent(namespace.name)}`}
             className="flex items-center gap-2 flex-1 hover:text-blue-500 hover:underline transition-colors"
           >
             <FolderTree className="h-4 w-4 shrink-0 text-blue-500" />

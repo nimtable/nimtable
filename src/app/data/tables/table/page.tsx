@@ -81,10 +81,24 @@ export default function TablePage() {
     <div className="mx-auto w-full max-w-7xl px-6 py-8">
       <div className="mb-6 flex items-center justify-between">
         <div className="space-y-1">
+          <div className="flex items-center gap-2 text-sm">
+            <Link
+              href={`/data/catalog?catalog=${catalog}`}
+              className="text-muted-foreground hover:text-blue-600 hover:underline"
+            >
+              {catalog}
+            </Link>
+            <span className="text-muted-foreground">/</span>
+            <Link
+              href={`/data/namespaces?catalog=${catalog}&search=${encodeURIComponent(namespace as string)}`}
+              className="text-muted-foreground hover:text-blue-600 hover:underline"
+            >
+              {namespace}
+            </Link>
+            <span className="text-muted-foreground">/</span>
+            <span className="font-medium text-foreground">{table}</span>
+          </div>
           <h2 className="text-2xl font-semibold tracking-tight">{table}</h2>
-          <p className="text-sm text-muted-foreground">
-            {catalog} - {namespace}
-          </p>
         </div>
         <div className="flex items-center gap-2">
           <Button
