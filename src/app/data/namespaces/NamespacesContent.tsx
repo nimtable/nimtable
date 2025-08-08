@@ -21,11 +21,12 @@ import { useCatalogs } from "../hooks/useCatalogs"
 export function NamespacesContent() {
   const searchParams = useSearchParams()
   const catalogFromUrl = searchParams.get("catalog")
+  const searchFromUrl = searchParams.get("search") || ""
 
   const [selectedCatalog, setSelectedCatalog] = useState<string>(
     catalogFromUrl || "all"
   )
-  const [searchQuery, setSearchQuery] = useState<string>("")
+  const [searchQuery, setSearchQuery] = useState<string>(searchFromUrl)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const router = useRouter()
 
@@ -40,6 +41,11 @@ export function NamespacesContent() {
       setSelectedCatalog(catalogFromUrl)
     }
   }, [catalogFromUrl])
+
+  // Update search query if URL parameter changes
+  useEffect(() => {
+    setSearchQuery(searchFromUrl)
+  }, [searchFromUrl])
 
   // Filter namespaces based on selected catalog and search query
   const filteredNamespaces = allNamespaces.filter((namespace) => {

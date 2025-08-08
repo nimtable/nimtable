@@ -16,7 +16,6 @@
 "use client"
 
 import {
-  ChevronRight,
   Settings,
   CheckCircle2,
   Circle,
@@ -71,11 +70,10 @@ import {
 
 import { CrontabGenerator } from "@/components/table/crontab-generator"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQuery, useMutation } from "@tanstack/react-query"
 import {
   Sheet,
   SheetContent,
-  SheetHeader,
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet"
@@ -89,7 +87,6 @@ import { useToast } from "@/hooks/use-toast"
 import { getTableInfo } from "@/lib/client"
 import { errorToString } from "@/lib/utils"
 import { useEffect, useState } from "react"
-import Link from "next/link"
 
 type OptimizationStep = {
   name: string
@@ -240,7 +237,6 @@ export function OptimizeSheet({
   table,
 }: OptimizeSheetProps) {
   const { toast } = useToast()
-  const queryClient = useQueryClient()
   const [showProgressDialog, setShowProgressDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [selectedTask, setSelectedTask] = useState<ScheduledTask | null>(null)
@@ -314,7 +310,7 @@ export function OptimizeSheet({
     }
 
     if (compaction) {
-      steps.push({ name: "Optimization", status: "pending" })
+      steps.push({ name: "Compaction", status: "pending" })
     }
 
     setOptimizationSteps(steps)
@@ -556,24 +552,6 @@ export function OptimizeSheet({
         side="right"
         className="flex h-full w-full flex-col p-0 sm:max-w-full"
       >
-        {/* Header */}
-        <SheetHeader className="border-b bg-background px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <Link
-                  href={`/table?catalog=${catalog}&namespace=${namespace}&table=${table}`}
-                  className="font-medium text-muted-foreground hover:text-foreground"
-                >
-                  {table}
-                </Link>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                <span className="font-medium text-foreground">Optimize</span>
-              </div>
-            </div>
-          </div>
-        </SheetHeader>
-
         {/* Title Section */}
         <div className="border-b bg-muted/5 px-6 py-4">
           <div className="flex items-center gap-3">
@@ -582,7 +560,10 @@ export function OptimizeSheet({
             </div>
             <div>
               <SheetTitle className="text-xl font-semibold">
-                Table Optimization
+                Table Optimization{" "}
+                <span className="text-muted-foreground font-normal">
+                  · {table}
+                </span>
               </SheetTitle>
               <SheetDescription className="mt-1 text-sm text-muted-foreground">
                 Configure and run Iceberg optimization operations including
@@ -1058,7 +1039,7 @@ export function OptimizeSheet({
                 <Loader2 className="h-4 w-4 animate-spin" />
               )}
               {executionMode === "run-once"
-                ? "Run Optimization"
+                ? "Run Compaction"
                 : "Create Schedule"}
             </Button>
           </div>
@@ -1097,7 +1078,7 @@ export function OptimizeSheet({
                     )}
                     {step.status === "done" && step.result && (
                       <div className="text-sm text-muted-foreground">
-                        {step.name === "Optimization" &&
+                        {step.name === "Compaction" &&
                           step.result?.rewrittenDataFilesCount != null &&
                           step.result?.addedDataFilesCount != null && (
                             <>

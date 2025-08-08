@@ -82,7 +82,7 @@ export function TopNavbar({ catalog, namespace, table }: TopNavbarProps) {
                 <>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   <Link
-                    href={`/namespace?catalog=${catalog}&namespace=${namespace}`}
+                    href={`/data/namespaces?catalog=${catalog}&search=${encodeURIComponent(namespace ?? "")}`}
                     className={cn(
                       "flex items-center gap-1 transition-colors hover:text-blue-500 hover:underline",
                       isNamespacePage
