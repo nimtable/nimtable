@@ -87,7 +87,6 @@ import { useToast } from "@/hooks/use-toast"
 import { getTableInfo } from "@/lib/client"
 import { errorToString } from "@/lib/utils"
 import { useEffect, useState } from "react"
-// import Link from "next/link"
 
 type OptimizationStep = {
   name: string
