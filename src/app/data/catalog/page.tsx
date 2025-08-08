@@ -39,7 +39,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { notFound, useSearchParams, useRouter } from "next/navigation"
 import { PageLoader } from "@/components/shared/page-loader"
 import { deleteCatalog } from "@/lib/client/sdk.gen"
-import { getCatalogConfig } from "@/lib/data-loader"
+import { getCatalogConfig, getCatalogDetails } from "@/lib/data-loader"
+import type { Catalog } from "@/lib/client/types.gen"
 import { useQuery } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
@@ -51,7 +52,8 @@ export default function CatalogPage() {
   const catalogParam = searchParams.get("catalog")
   const { toast } = useToast()
 
-  const { data: config, isPending } = useQuery({
+  // Fetch catalog configuration (REST config)
+  const { data: config, isPending: isConfigPending } = useQuery({
     queryKey: ["catalog-config", catalogParam],
     queryFn: async () => {
       if (!catalogParam) return undefined
@@ -59,6 +61,18 @@ export default function CatalogPage() {
     },
     enabled: !!catalogParam,
   })
+
+  // Fetch catalog details from database
+  const { data: catalogDetails, isPending: isDetailsPending } = useQuery({
+    queryKey: ["catalog-details", catalogParam],
+    queryFn: async () => {
+      if (!catalogParam) return undefined
+      return await getCatalogDetails(catalogParam)
+    },
+    enabled: !!catalogParam,
+  })
+
+  const isPending = isConfigPending || isDetailsPending
 
   const handleDelete = async () => {
     if (!catalogParam) return
@@ -89,17 +103,22 @@ export default function CatalogPage() {
   }
 
   // Loading state
-  if (isPending || !config) {
+  if (isPending) {
     return (
       <div className="flex h-full w-full items-center justify-center">
         <PageLoader
           icon={Database}
-          title="Loading catalog configuration"
+          title="Loading catalog information"
           entity={catalogParam}
           entityType="Catalog"
         />
       </div>
     )
+  }
+
+  // If no config and no database details, catalog doesn't exist
+  if (!config && !catalogDetails) {
+    return notFound()
   }
 
   return (
@@ -141,6 +160,87 @@ export default function CatalogPage() {
             </AlertDialog>
           </div>
 
+          {/* Basic Information */}
+          <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
+            <Card className="group relative overflow-hidden border-muted/70 bg-background shadow-sm transition-shadow duration-200 hover:shadow-md">
+              <div className="absolute left-0 right-0 top-0 h-[2px] bg-emerald-500/70"></div>
+              <div className="absolute bottom-0 left-0 top-0 w-[2px] bg-emerald-500/10 transition-colors duration-200 group-hover:bg-emerald-500/30"></div>
+              <CardHeader className="pb-2 pt-5">
+                <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <div className="rounded-md bg-emerald-50 p-1.5 dark:bg-emerald-950/30">
+                    <Database className="h-3.5 w-3.5 text-emerald-500" />
+                  </div>
+                  Catalog Type
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-semibold tracking-tight">
+                  {catalogDetails?.type ||
+                    config?.defaults?.type ||
+                    (config?.defaults?.["catalog-impl"]?.includes(".")
+                      ? config?.defaults?.["catalog-impl"]?.split(".").pop()
+                      : config?.defaults?.["catalog-impl"]) ||
+                    "hadoop"}
+                </div>
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  Catalog implementation type
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="group relative overflow-hidden border-muted/70 bg-background shadow-sm transition-shadow duration-200 hover:shadow-md">
+              <div className="absolute left-0 right-0 top-0 h-[2px] bg-amber-500/70"></div>
+              <div className="absolute bottom-0 left-0 top-0 w-[2px] bg-amber-500/10 transition-colors duration-200 group-hover:bg-amber-500/30"></div>
+              <CardHeader className="pb-2 pt-5">
+                <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <div className="rounded-md bg-amber-50 p-1.5 dark:bg-amber-950/30">
+                    <HardDrive className="h-3.5 w-3.5 text-amber-500" />
+                  </div>
+                  Warehouse Location
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-lg font-semibold tracking-tight break-all">
+                  {catalogDetails?.warehouse ||
+                    config?.defaults?.warehouse ||
+                    config?.defaults?.["warehouse.location"] ||
+                    catalogDetails?.properties?.warehouse ||
+                    catalogDetails?.properties?.["warehouse.location"] ||
+                    "Not configured"}
+                </div>
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  Data storage location
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="group relative overflow-hidden border-muted/70 bg-background shadow-sm transition-shadow duration-200 hover:shadow-md">
+              <div className="absolute left-0 right-0 top-0 h-[2px] bg-purple-500/70"></div>
+              <div className="absolute bottom-0 left-0 top-0 w-[2px] bg-purple-500/10 transition-colors duration-200 group-hover:bg-purple-500/30"></div>
+              <CardHeader className="pb-2 pt-5">
+                <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <div className="rounded-md bg-purple-50 p-1.5 dark:bg-purple-950/30">
+                    <Settings className="h-3.5 w-3.5 text-purple-500" />
+                  </div>
+                  URI
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-lg font-semibold tracking-tight break-all">
+                  {catalogDetails?.uri ||
+                    config?.defaults?.uri ||
+                    config?.defaults?.["jdbc.url"] ||
+                    catalogDetails?.properties?.uri ||
+                    catalogDetails?.properties?.["jdbc.url"] ||
+                    "Not specified"}
+                </div>
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  Connection endpoint
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
           {/* Key Metrics */}
           <div className="mb-10 grid grid-cols-1 gap-6 md:grid-cols-3">
             <Card className="group relative overflow-hidden border-muted/70 bg-background shadow-sm transition-shadow duration-200 hover:shadow-md">
@@ -156,7 +256,7 @@ export default function CatalogPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-semibold tracking-tight">
-                  {config.defaults?.["write.format.default"] || "parquet"}
+                  {config?.defaults?.["write.format.default"] || "parquet"}
                 </div>
                 <p className="mt-1.5 text-xs text-muted-foreground">
                   Default file format for new tables
@@ -177,7 +277,7 @@ export default function CatalogPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-semibold tracking-tight">
-                  {config.defaults?.["write.parquet.compression-codec"] ||
+                  {config?.defaults?.["write.parquet.compression-codec"] ||
                     "snappy"}
                 </div>
                 <p className="mt-1.5 text-xs text-muted-foreground">
@@ -201,7 +301,7 @@ export default function CatalogPage() {
                 <div className="text-2xl font-semibold tracking-tight">
                   {formatFileSize(
                     Number.parseInt(
-                      config.overrides?.["write.target-file-size-bytes"] ||
+                      config?.overrides?.["write.target-file-size-bytes"] ||
                         "134217728"
                     )
                   )}
@@ -215,11 +315,18 @@ export default function CatalogPage() {
 
           {/* Configuration Settings */}
           <div className="overflow-hidden rounded-lg border bg-background shadow-sm">
-            <div className="flex items-center gap-3 border-b px-6 py-4">
-              <div className="rounded-md bg-blue-50 p-1.5 dark:bg-blue-950/30">
-                <Settings className="h-4 w-4 text-blue-500" />
+            <div className="flex items-center justify-between border-b px-6 py-4">
+              <div className="flex items-center gap-3">
+                <div className="rounded-md bg-blue-50 p-1.5 dark:bg-blue-950/30">
+                  <Settings className="h-4 w-4 text-blue-500" />
+                </div>
+                <h2 className="text-xl font-semibold">
+                  Configuration Settings
+                </h2>
               </div>
-              <h2 className="text-xl font-semibold">Configuration Settings</h2>
+              <div className="text-xs text-muted-foreground">
+                Sensitive properties (credentials, keys) are hidden for security
+              </div>
             </div>
 
             <div className="grid grid-cols-1 divide-y md:grid-cols-2 md:divide-x md:divide-y-0">
@@ -229,25 +336,35 @@ export default function CatalogPage() {
                   <h3 className="text-base font-medium">Default Settings</h3>
                 </div>
 
-                {config.defaults && Object.keys(config.defaults).length > 0 ? (
-                  <div className="space-y-3">
-                    {Object.entries(config.defaults).map(([key, value]) => (
-                      <div
-                        key={key}
-                        className="flex flex-col gap-1 border-b border-dashed border-muted pb-3 last:border-0 last:pb-0"
-                      >
-                        <div className="text-sm font-medium">{key}</div>
-                        <div className="rounded-sm bg-muted/30 px-2 py-1 font-mono text-sm text-muted-foreground">
-                          {value}
+                {(() => {
+                  // Merge database properties and config defaults, prioritizing database
+                  const mergedDefaults = {
+                    ...(config?.defaults || {}),
+                    ...(catalogDetails?.properties || {}),
+                  }
+                  const filteredDefaults =
+                    filterSensitiveProperties(mergedDefaults)
+
+                  return Object.keys(filteredDefaults).length > 0 ? (
+                    <div className="space-y-3">
+                      {Object.entries(filteredDefaults).map(([key, value]) => (
+                        <div
+                          key={key}
+                          className="flex flex-col gap-1 border-b border-dashed border-muted pb-3 last:border-0 last:pb-0"
+                        >
+                          <div className="text-sm font-medium">{key}</div>
+                          <div className="rounded-sm bg-muted/30 px-2 py-1 font-mono text-sm text-muted-foreground">
+                            {value}
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="py-8 text-center text-muted-foreground">
-                    No default settings configured
-                  </div>
-                )}
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="py-8 text-center text-muted-foreground">
+                      No default settings configured
+                    </div>
+                  )
+                })()}
               </div>
 
               {/* Override Settings Section */}
@@ -256,26 +373,31 @@ export default function CatalogPage() {
                   <h3 className="text-base font-medium">Override Settings</h3>
                 </div>
 
-                {config.overrides &&
-                Object.keys(config.overrides).length > 0 ? (
-                  <div className="space-y-3">
-                    {Object.entries(config.overrides).map(([key, value]) => (
-                      <div
-                        key={key}
-                        className="flex flex-col gap-1 border-b border-dashed border-muted pb-3 last:border-0 last:pb-0"
-                      >
-                        <div className="text-sm font-medium">{key}</div>
-                        <div className="rounded-sm bg-muted/30 px-2 py-1 font-mono text-sm text-muted-foreground">
-                          {value}
+                {(() => {
+                  const filteredOverrides = filterSensitiveProperties(
+                    config?.overrides || {}
+                  )
+
+                  return Object.keys(filteredOverrides).length > 0 ? (
+                    <div className="space-y-3">
+                      {Object.entries(filteredOverrides).map(([key, value]) => (
+                        <div
+                          key={key}
+                          className="flex flex-col gap-1 border-b border-dashed border-muted pb-3 last:border-0 last:pb-0"
+                        >
+                          <div className="text-sm font-medium">{key}</div>
+                          <div className="rounded-sm bg-muted/30 px-2 py-1 font-mono text-sm text-muted-foreground">
+                            {value}
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="py-8 text-center text-muted-foreground">
-                    No override settings configured
-                  </div>
-                )}
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="py-8 text-center text-muted-foreground">
+                      No override settings configured
+                    </div>
+                  )
+                })()}
               </div>
             </div>
           </div>
@@ -292,4 +414,61 @@ function formatFileSize(bytes: number): string {
   const sizes = ["Bytes", "KB", "MB", "GB", "TB"]
   const i = Math.floor(Math.log(bytes) / Math.log(k))
   return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i]
+}
+
+// Helper function to filter out credential-related properties
+function filterSensitiveProperties(
+  properties: Record<string, string>
+): Record<string, string> {
+  const sensitiveKeys = [
+    // AWS credentials
+    "aws.access-key-id",
+    "aws.secret-access-key",
+    "aws.session-token",
+    "s3.access-key-id",
+    "s3.secret-access-key",
+    "s3.session-token",
+    // Database credentials
+    "jdbc.user",
+    "jdbc.password",
+    "password",
+    "user",
+    "username",
+    // OAuth and tokens
+    "oauth2.credential",
+    "credential",
+    "token",
+    "secret",
+    "key",
+    // Azure credentials
+    "azure.account.key",
+    "azure.sas-token",
+    // Google credentials
+    "gcs.service-account-json",
+    "gcs.oauth2.credential",
+    // Generic sensitive patterns
+    "auth",
+    "authentication",
+    "authorization",
+  ]
+
+  const filtered: Record<string, string> = {}
+
+  for (const [key, value] of Object.entries(properties)) {
+    const keyLower = key.toLowerCase()
+    const isSensitive = sensitiveKeys.some(
+      (sensitiveKey) =>
+        keyLower.includes(sensitiveKey) ||
+        keyLower.includes("password") ||
+        keyLower.includes("secret") ||
+        (keyLower.includes("key") &&
+          (keyLower.includes("access") || keyLower.includes("auth")))
+    )
+
+    if (!isSensitive) {
+      filtered[key] = value
+    }
+  }
+
+  return filtered
 }

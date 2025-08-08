@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import { Api } from "@/lib/api"
+import type { Catalog } from "@/lib/client/types.gen"
 
 import { CatalogConfig, LoadTableResult, PartitionSpec } from "./api"
 import { getCatalogs } from "./client"
@@ -136,6 +137,27 @@ export async function getCatalogConfig(
 ): Promise<CatalogConfig> {
   const api = catalogApi(catalog, isBrowser())
   return await api.v1.getConfig()
+}
+
+export async function getCatalogDetails(
+  catalogName: string
+): Promise<Catalog | null> {
+  try {
+    const baseUrl = getApiBaseUrl(isBrowser())
+    const response = await fetch(`${baseUrl}/api/catalogs/${catalogName}`)
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        return null
+      }
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    return await response.json()
+  } catch (error) {
+    console.error("Error fetching catalog details:", error)
+    throw error
+  }
 }
 
 export async function loadTableData(

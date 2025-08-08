@@ -53,6 +53,16 @@ public class CatalogsServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        String pathInfo = request.getPathInfo();
+
+        // Handle specific catalog request: /api/catalogs/{catalogName}
+        if (pathInfo != null && !pathInfo.equals("/") && !pathInfo.isEmpty()) {
+            String catalogName = pathInfo.substring(1); // Remove leading slash
+            handleGetCatalogDetails(catalogName, response);
+            return;
+        }
+
+        // Handle list all catalogs request: /api/catalogs
         // Get catalogs from both config and database
         List<String> configCatalogs =
                 config.catalogs() != null
@@ -72,6 +82,56 @@ public class CatalogsServlet extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         mapper.writeValue(response.getOutputStream(), allCatalogs);
+    }
+
+    private void handleGetCatalogDetails(String catalogName, HttpServletResponse response)
+            throws IOException {
+        try {
+            // First try to get from database
+            Catalog dbCatalog = catalogRepository.findByName(catalogName);
+
+            if (dbCatalog != null) {
+                // Return the database catalog entity
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                mapper.writeValue(response.getOutputStream(), dbCatalog);
+                return;
+            }
+
+            // If not in database, check if it exists in config
+            Config.Catalog configCatalog = config.getCatalog(catalogName);
+            if (configCatalog != null) {
+                // Create a catalog object from config data
+                Map<String, Object> catalogData = new HashMap<>();
+                catalogData.put("name", catalogName);
+
+                // Extract type, uri, warehouse from properties
+                Map<String, String> properties = configCatalog.properties();
+                if (properties.containsKey("type")) {
+                    catalogData.put("type", properties.get("type"));
+                }
+                if (properties.containsKey("uri")) {
+                    catalogData.put("uri", properties.get("uri"));
+                }
+                if (properties.containsKey("warehouse")) {
+                    catalogData.put("warehouse", properties.get("warehouse"));
+                }
+                catalogData.put("properties", properties);
+
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                mapper.writeValue(response.getOutputStream(), catalogData);
+                return;
+            }
+
+            // Catalog not found
+            response.sendError(
+                    HttpServletResponse.SC_NOT_FOUND, "Catalog not found: " + catalogName);
+
+        } catch (Exception e) {
+            LOG.error("Error getting catalog details for: " + catalogName, e);
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal error");
+        }
     }
 
     @Override
