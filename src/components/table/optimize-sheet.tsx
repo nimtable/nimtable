@@ -553,8 +553,6 @@ export function OptimizeSheet({
         side="right"
         className="flex h-full w-full flex-col p-0 sm:max-w-full"
       >
-        {/* Header removed per requirements */}
-
         {/* Title Section */}
         <div className="border-b bg-muted/5 px-6 py-4">
           <div className="flex items-center gap-3">
