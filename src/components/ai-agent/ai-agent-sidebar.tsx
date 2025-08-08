@@ -57,7 +57,7 @@ import {
 } from "@/components/ui/tooltip"
 
 export function AIAgentSidebar() {
-  const { isOpen, isFullscreen, closeAgent, toggleFullscreen } = useAIAgent()
+  const { isFullscreen, closeAgent, toggleFullscreen } = useAIAgent()
   const { toast } = useToast()
   const [isCopying, setIsCopying] = useState<string | null>(null)
   const [expandedTools, setExpandedTools] = useState<Record<string, boolean>>(
@@ -101,7 +101,7 @@ export function AIAgentSidebar() {
       setIsCopying(id)
       toast({ title: "Copied to clipboard" })
       setTimeout(() => setIsCopying(null), 2000)
-    } catch (error) {
+    } catch (_error) {
       toast({
         variant: "destructive",
         title: "Failed to copy to clipboard",

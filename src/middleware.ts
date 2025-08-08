@@ -100,7 +100,7 @@ export function middleware(request: NextRequest) {
     const secret = new TextEncoder().encode(JWT_SECRET)
     jwtVerify(token, secret)
     return NextResponse.next()
-  } catch (error) {
+  } catch (_error) {
     console.log("token verification error, redirecting to login")
     const loginUrl = new URL("/login", request.url)
     const response = NextResponse.redirect(loginUrl)

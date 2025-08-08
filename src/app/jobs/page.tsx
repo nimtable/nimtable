@@ -18,7 +18,7 @@ import {
   Timer,
   HardDrive,
 } from "lucide-react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQuery, useMutation } from "@tanstack/react-query"
 import {
   getScheduledTasks,
   deleteScheduledTask,
@@ -57,7 +57,6 @@ import Link from "next/link"
 
 export default function JobsPage() {
   const { toast } = useToast()
-  const queryClient = useQueryClient()
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [selectedTask, setSelectedTask] = useState<ScheduledTask | null>(null)

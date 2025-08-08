@@ -752,7 +752,7 @@ export function BranchView({
                   })}
                 </svg>
 
-                {filteredSnapshots.map((snapshot, rowIndex) => {
+                {filteredSnapshots.map((snapshot) => {
                   const node = nodes.find((n) => n.snapshot.id === snapshot.id)
                   if (!node) return null
 
