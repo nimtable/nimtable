@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.nimtable.db.entity.Catalog;
 import io.nimtable.db.repository.CatalogRepository;
 import io.nimtable.spark.LocalSpark;
+import io.nimtable.util.SensitiveDataFilter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -91,10 +92,21 @@ public class CatalogsServlet extends HttpServlet {
             Catalog dbCatalog = catalogRepository.findByName(catalogName);
 
             if (dbCatalog != null) {
-                // Return the database catalog entity
+                // Filter sensitive properties before returning to client
+                Map<String, String> filteredProperties =
+                        SensitiveDataFilter.filterSensitiveProperties(dbCatalog.getProperties());
+
+                // Create filtered catalog object
+                Map<String, Object> filteredCatalog = new HashMap<>();
+                filteredCatalog.put("name", dbCatalog.getName());
+                filteredCatalog.put("type", dbCatalog.getType());
+                filteredCatalog.put("uri", dbCatalog.getUri());
+                filteredCatalog.put("warehouse", dbCatalog.getWarehouse());
+                filteredCatalog.put("properties", filteredProperties);
+
                 response.setContentType("application/json");
                 response.setCharacterEncoding("UTF-8");
-                mapper.writeValue(response.getOutputStream(), dbCatalog);
+                mapper.writeValue(response.getOutputStream(), filteredCatalog);
                 return;
             }
 
@@ -105,18 +117,22 @@ public class CatalogsServlet extends HttpServlet {
                 Map<String, Object> catalogData = new HashMap<>();
                 catalogData.put("name", catalogName);
 
-                // Extract type, uri, warehouse from properties
+                // Filter sensitive properties before returning to client
                 Map<String, String> properties = configCatalog.properties();
-                if (properties.containsKey("type")) {
-                    catalogData.put("type", properties.get("type"));
+                Map<String, String> filteredProperties =
+                        SensitiveDataFilter.filterSensitiveProperties(properties);
+
+                // Extract type, uri, warehouse from filtered properties
+                if (filteredProperties.containsKey("type")) {
+                    catalogData.put("type", filteredProperties.get("type"));
                 }
-                if (properties.containsKey("uri")) {
-                    catalogData.put("uri", properties.get("uri"));
+                if (filteredProperties.containsKey("uri")) {
+                    catalogData.put("uri", filteredProperties.get("uri"));
                 }
-                if (properties.containsKey("warehouse")) {
-                    catalogData.put("warehouse", properties.get("warehouse"));
+                if (filteredProperties.containsKey("warehouse")) {
+                    catalogData.put("warehouse", filteredProperties.get("warehouse"));
                 }
-                catalogData.put("properties", properties);
+                catalogData.put("properties", filteredProperties);
 
                 response.setContentType("application/json");
                 response.setCharacterEncoding("UTF-8");

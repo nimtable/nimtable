@@ -324,7 +324,7 @@ export default function CatalogPage() {
                 </h2>
               </div>
               <div className="text-xs text-muted-foreground">
-                Sensitive properties (credentials, keys) are hidden for security
+                Sensitive properties are filtered server-side for security
               </div>
             </div>
 
@@ -337,16 +337,15 @@ export default function CatalogPage() {
 
                 {(() => {
                   // Merge database properties and config defaults, prioritizing database
+                  // Note: Server now filters sensitive properties before sending to client
                   const mergedDefaults = {
                     ...(config?.defaults || {}),
                     ...(catalogDetails?.properties || {}),
                   }
-                  const filteredDefaults =
-                    filterSensitiveProperties(mergedDefaults)
 
-                  return Object.keys(filteredDefaults).length > 0 ? (
+                  return Object.keys(mergedDefaults).length > 0 ? (
                     <div className="space-y-3">
-                      {Object.entries(filteredDefaults).map(([key, value]) => (
+                      {Object.entries(mergedDefaults).map(([key, value]) => (
                         <div
                           key={key}
                           className="flex flex-col gap-1 border-b border-dashed border-muted pb-3 last:border-0 last:pb-0"
@@ -373,13 +372,12 @@ export default function CatalogPage() {
                 </div>
 
                 {(() => {
-                  const filteredOverrides = filterSensitiveProperties(
-                    config?.overrides || {}
-                  )
+                  // Note: Server now filters sensitive properties before sending to client
+                  const overrides = config?.overrides || {}
 
-                  return Object.keys(filteredOverrides).length > 0 ? (
+                  return Object.keys(overrides).length > 0 ? (
                     <div className="space-y-3">
-                      {Object.entries(filteredOverrides).map(([key, value]) => (
+                      {Object.entries(overrides).map(([key, value]) => (
                         <div
                           key={key}
                           className="flex flex-col gap-1 border-b border-dashed border-muted pb-3 last:border-0 last:pb-0"
@@ -413,61 +411,4 @@ function formatFileSize(bytes: number): string {
   const sizes = ["Bytes", "KB", "MB", "GB", "TB"]
   const i = Math.floor(Math.log(bytes) / Math.log(k))
   return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i]
-}
-
-// Helper function to filter out credential-related properties
-function filterSensitiveProperties(
-  properties: Record<string, string>
-): Record<string, string> {
-  const sensitiveKeys = [
-    // AWS credentials
-    "aws.access-key-id",
-    "aws.secret-access-key",
-    "aws.session-token",
-    "s3.access-key-id",
-    "s3.secret-access-key",
-    "s3.session-token",
-    // Database credentials
-    "jdbc.user",
-    "jdbc.password",
-    "password",
-    "user",
-    "username",
-    // OAuth and tokens
-    "oauth2.credential",
-    "credential",
-    "token",
-    "secret",
-    "key",
-    // Azure credentials
-    "azure.account.key",
-    "azure.sas-token",
-    // Google credentials
-    "gcs.service-account-json",
-    "gcs.oauth2.credential",
-    // Generic sensitive patterns
-    "auth",
-    "authentication",
-    "authorization",
-  ]
-
-  const filtered: Record<string, string> = {}
-
-  for (const [key, value] of Object.entries(properties)) {
-    const keyLower = key.toLowerCase()
-    const isSensitive = sensitiveKeys.some(
-      (sensitiveKey) =>
-        keyLower.includes(sensitiveKey) ||
-        keyLower.includes("password") ||
-        keyLower.includes("secret") ||
-        (keyLower.includes("key") &&
-          (keyLower.includes("access") || keyLower.includes("auth")))
-    )
-
-    if (!isSensitive) {
-      filtered[key] = value
-    }
-  }
-
-  return filtered
 }

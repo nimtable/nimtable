@@ -17,6 +17,7 @@
 package io.nimtable;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.nimtable.util.SensitiveDataFilter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -51,9 +52,13 @@ public class CatalogConfigServlet extends HttpServlet {
             return;
         }
 
+        // Filter sensitive properties before returning to client
         Map<String, String> catalogConfig = catalog.properties();
+        Map<String, String> filteredConfig =
+                SensitiveDataFilter.filterSensitiveProperties(catalogConfig);
+
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        mapper.writeValue(response.getOutputStream(), catalogConfig);
+        mapper.writeValue(response.getOutputStream(), filteredConfig);
     }
 }
