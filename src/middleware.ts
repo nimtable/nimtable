@@ -31,7 +31,6 @@ const clearAuthCookie = (response: NextResponse) => {
     name: AUTH_COOKIE_NAME,
     value: "",
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
     maxAge: 0, // Set to 0 to expire immediately
   })
