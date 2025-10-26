@@ -1,6 +1,6 @@
 <div align="center">
 
-# Nimtable: The Control Plane for Apache Iceberg™
+# Nimtable: The Observability Platform for Apache Iceberg™
 
 </div>
 
