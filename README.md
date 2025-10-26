@@ -12,7 +12,7 @@
 
 <div align="center">
   <a
-    href="https://go.nimtable.com/slack"
+    href="https://go.risingwave.com/slack"
     target="_blank"
   >
     <img alt="Slack" src="https://badgen.net/badge/Slack/Join%20Nimtable/0abd59?icon=slack" />
