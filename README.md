@@ -6,7 +6,7 @@
 
 <div align="center">
 
-<b> A lightweight, easy-to-use platform to monitor, optimize, and govern your Iceberg-based lakehouse. </b>
+<b> Nimtable is a lightweight web platform for exploring and managing Apache Iceberg catalogs and tables. </b>
 
 </div>
 
@@ -25,41 +25,22 @@
 
 ## Overview
 
-Nimtable helps you easily manage and explore Apache Iceberg catalogs. With a web-based platform designed for clarity and simplicity, Nimtable makes it easy to browse tables, run queries, analyze file distributions, and optimize storage layouts.
+Nimtable provides a clean interface and REST API for Apache Iceberg.
+It helps engineers inspect catalog metadata, view table schemas and partitions, analyze file layouts, and manage routine maintenance workflows through existing compute engines such as [Apache Spark](https://spark.apache.org/) or [RisingWave](https://github.com/risingwavelabs/risingwave).
 
+## Core Capabilities
 
-### Key Features
-
-- 🌟 **Multi-Catalog Support**  
-  Connect to REST Catalog, AWS Glue, AWS S3 Tables, and PostgreSQL (via JDBC).
-
-- 🗄️ **Object Store Integration**  
-  Seamlessly work with S3 and S3-compatible stores like Cloudflare R2, Minio, and more.
-
-- 🔍 **Table Exploration**  
-  Inspect table schemas, partitions, and snapshots with ease.
-
-- ⚡ **Interactive Querying**  
-  Run SQL queries directly from the platform.
-
-- 🤖 **AI Copilot**  
-  Get intelligent assistance for Iceberg table exploration.
-
-- 📄 **AI Summary**  
-  Automatically generate summaries of your Iceberg tables.
-
-- 📊 **File Distribution Analysis**  
-  Visualize how data files are distributed across partitions and snapshots.
-
-- 🔧 **Table Optimization**  
-  Run file compaction and manage snapshot expiration.
-
-- 🔌 **REST Catalog Compatibility**  
-  Serve as a standard Iceberg REST Catalog, adapting any underlying catalog to a RESTful API.
+- Connect to multiple catalogs including REST, AWS Glue, and S3 Tables.
+- Explore tables, schemas, partitions, snapshots, and manifests.
+- Run SQL queries directly from the browser for quick inspection.
+- Visualize file and snapshot distribution to identify optimization opportunities.
+- Integrate with external engines like Spark or RisingWave to manage compaction and maintenance tasks.
+- Serve as a standard Iceberg REST Catalog API endpoint.
 
 ## Architecture
 
-Nimtable acts as a bridge between users and catalog servers, providing both an interactive web interface and a standard REST Catalog API layer.
+Nimtable runs between users and Iceberg catalogs.
+It provides both a REST API and a browser-based console for interactive metadata management.
 
 <img src="docs/nimtable-arch.drawio1.png" alt="Architecture" width=491>
 
@@ -189,16 +170,16 @@ If you use AWS Glue or S3, you can provide credentials in two ways:
 
 ## Roadmap
 
-- 🔧 **Optimized Compaction**: Advanced compaction strategies and scheduling
-- 📊 **Monitoring & Analytics**: Comprehensive dashboard and insights
-- 💾 **Caching**: Database integration and metadata caching
-- ⚡ **Query Engine Integration**: Support for multiple query engines
-- 📋 **Metadata Management**: Enhanced snapshot, schema and partition management
-- 🔐 **Security & Access Control**: RBAC and fine-grained permissions
-- 🔌 **API & Integration**: REST API support and authentication
-- 🔄 **Data Lineage**: Table and column-level lineage tracking
-- 🤖 **Better AI Copilot Support**: Enhanced capabilities for AI agent.
-- 🏢 **Catalog & Warehouse Integration**: Support for various storage backends
+- **Optimized Compaction**: Advanced compaction strategies and scheduling
+- **Monitoring & Analytics**: Comprehensive dashboard and insights
+- **Caching**: Database integration and metadata caching
+- **Query Engine Integration**: Support for multiple query engines
+- **Metadata Management**: Enhanced snapshot, schema and partition management
+- **Security & Access Control**: RBAC and fine-grained permissions
+- **API & Integration**: REST API support and authentication
+- **Data Lineage**: Table and column-level lineage tracking
+- **Better AI Copilot Support**: Enhanced capabilities for AI agent.
+- **Catalog & Warehouse Integration**: Support for various storage backends
 
 For detailed roadmap items and progress tracking, see [Roadmap](https://github.com/nimtable/nimtable/issues/50).
 
