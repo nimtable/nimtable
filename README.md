@@ -1,6 +1,6 @@
 <div align="center">
 
-# Nimtable: The Observability Platform for Apache Iceberg™
+# Nimtable: Observability for Apache Iceberg™
 
 </div>
 
