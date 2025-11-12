@@ -61,7 +61,7 @@ export default function RootLayout({
                   <AIAgentProvider>
                     <SidebarProvider>
                       <AIAgentLayoutWrapper>
-                        <Suspense fallback={<></>}>{children}</Suspense>
+                        <Suspense fallback={<></>}>{children}1</Suspense>
                         <AIAgentTrigger />
                       </AIAgentLayoutWrapper>
                       <Toaster />
