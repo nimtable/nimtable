@@ -1,12 +1,17 @@
 "use client"
 
-import { ExternalLink, Plus, Search, Trash2 } from "lucide-react"
+import {
+  ExternalLink,
+  FolderTreeIcon,
+  Plus,
+  Search,
+  Trash2,
+} from "lucide-react"
 import { useQueries } from "@tanstack/react-query"
 import { formatDistanceToNow } from "date-fns"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import type React from "react"
-import Link from "next/link"
 
 import {
   AlertDialog,
@@ -27,7 +32,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Card, CardContent } from "@/components/ui/card"
 import { getCatalogConfig } from "@/lib/data-loader"
 import { loadTableData } from "@/lib/data-loader"
 import { Button } from "@/components/ui/button"
@@ -49,9 +53,7 @@ export function CatalogsContent() {
     isLoading: isLoadingCatalogs,
     refetch: refetchCatalogs,
   } = useCatalogs()
-  const { namespaces, isLoading: isLoadingNamespaces } = useNamespaces(
-    catalogs || []
-  )
+  const { namespaces } = useNamespaces(catalogs || [])
   const { tables, isLoading: isLoadingTables } = useAllTables()
   const [searchQuery, setSearchQuery] = useState<string>("")
   const [mirrorModalOpen, setMirrorModalOpen] = useState<boolean>(false)
@@ -256,159 +258,176 @@ export function CatalogsContent() {
   )
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden bg-gray-50">
-      {/* Search Bar */}
-      <div className="border-b bg-white p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <h1 className="text-2xl font-semibold">Catalogs</h1>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Search Input */}
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+    <div className="flex flex-1 flex-col overflow-hidden bg-background min-h-screen">
+      {/* Search and actions bar */}
+      <div className="bg-card border-b border-border px-6 py-4">
+        <div className="flex items-center gap-3">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
+              type="text"
               placeholder="Search catalogs..."
-              className="h-10 pl-9"
+              className="pl-10 bg-card border-input"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-
-          {/* Create Catalog Button Group */}
-          <div className="flex">
-            <Button
-              className="rounded-r-none"
-              onClick={() => setCreateModalOpen(true)}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Create Catalog
-            </Button>
-            <Button
-              variant="outline"
-              className="rounded-l-none border-l-0 px-2"
-              onClick={() => setMirrorModalOpen(true)}
-            >
-              <ExternalLink className="h-4 w-4" />
-            </Button>
-          </div>
+          <button
+            className="btn-secondary flex items-center gap-2"
+            onClick={() => setMirrorModalOpen(true)}
+          >
+            <ExternalLink className="w-4 h-4" />
+            <span>Mirror external catalog</span>
+          </button>
+          <Button
+            className="bg-primary hover:bg-primary/90 text-primary-foreground"
+            onClick={() => setCreateModalOpen(true)}
+          >
+            <Plus className="w-4 h-4 mr-0" />
+            Create new catalog
+          </Button>
         </div>
       </div>
 
       {/* Catalogs Grid */}
       <div className="flex-1 overflow-auto p-6">
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredCatalogs?.map((catalog, index) => (
-            <Card
-              key={index}
-              className="overflow-hidden border border-gray-200 transition-shadow duration-200 hover:shadow-md"
-            >
-              <CardContent className="p-0">
-                <div className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="flex items-center">
-                        <h3 className="text-lg font-medium">{catalog}</h3>
-                        <button
-                          onClick={() => handleInfoClick(catalog)}
-                          className="ml-2 flex items-center text-xs text-blue-500 hover:text-blue-700"
-                        >
-                          Info
-                        </button>
-                      </div>
-                      <div className="mt-2 space-y-1">
-                        <div className="flex items-center text-sm text-gray-500">
-                          <span className="w-32">Namespaces:</span>
-                          <span className="font-medium">
-                            {isLoadingNamespaces ? (
-                              <div className="h-4 w-16 animate-pulse rounded bg-gray-200" />
-                            ) : (
-                              catalogStats[catalog]?.namespaceCount || 0
-                            )}
-                          </span>
-                        </div>
-                        <div className="flex items-center text-sm text-gray-500">
-                          <span className="w-32">Tables:</span>
-                          <span className="font-medium">
-                            {isLoadingTables ||
-                            tableMetadataQueries.some((q) => q.isLoading) ? (
-                              <div className="h-4 w-16 animate-pulse rounded bg-gray-200" />
-                            ) : (
-                              catalogStats[catalog]?.tableCount || 0
-                            )}
-                          </span>
-                        </div>
-                        <div className="flex items-center text-sm text-gray-500">
-                          <span className="w-32">Storage Size:</span>
-                          <span className="font-medium">
-                            {isLoadingTables ||
-                            catalogConfigs.some((q) => q.isLoading) ||
-                            tableMetadataQueries.some((q) => q.isLoading) ? (
-                              <div className="h-4 w-16 animate-pulse rounded bg-gray-200" />
-                            ) : catalogStats[catalog]?.storageSize ? (
-                              `${(catalogStats[catalog].storageSize / (1024 * 1024)).toFixed(2)} MB`
-                            ) : (
-                              "0 MB"
-                            )}
-                          </span>
-                        </div>
-                        <div className="flex items-center text-sm text-gray-500">
-                          <span className="w-32">Last Modified:</span>
-                          <span>
-                            {isLoadingTables ||
-                            catalogConfigs.some((q) => q.isLoading) ||
-                            tableMetadataQueries.some((q) => q.isLoading) ? (
-                              <div className="h-4 w-16 animate-pulse rounded bg-gray-200" />
-                            ) : catalogStats[catalog]?.lastModified ? (
-                              formatDistanceToNow(
-                                catalogStats[catalog].lastModified,
-                                { addSuffix: true }
-                              )
-                            ) : (
-                              "Never"
-                            )}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <button className="rounded-full p-1 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600">
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This action cannot be undone. This will permanently
-                            delete the catalog and remove it from the database.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => handleDeleteClick(catalog)}
-                          >
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                </div>
-                <div className="flex border-t">
-                  <Link
-                    href={`/data/namespaces?catalog=${catalog}`}
-                    className="flex-1 px-4 py-3 text-center text-sm font-medium text-blue-600 hover:bg-blue-50"
-                  >
-                    View Namespaces
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+        <div className="px-6 py-4 border-b border-border flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <FolderTreeIcon className="w-5 h-5 text-card-foreground" />
+            <h2 className="text-m font-normal text-card-foreground">
+              Catalogs ({filteredCatalogs?.length})
+            </h2>
+          </div>
         </div>
+        {/* Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-table-header border-b border-border">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-normal text-muted-foreground uppercase tracking-wider">
+                  Name
+                </th>
+
+                <th className="px-6 py-3 text-right text-xs font-normal text-muted-foreground uppercase tracking-wider">
+                  Namespaces
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-normal text-muted-foreground uppercase tracking-wider">
+                  Tables
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-normal text-muted-foreground uppercase tracking-wider">
+                  Storage size
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-normal text-muted-foreground uppercase tracking-wider">
+                  Last modified
+                </th>
+                <th></th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody className="bg-card divide-y divide-border">
+              {filteredCatalogs.map((catalog, index) => (
+                <tr
+                  key={index}
+                  className="group hover:bg-table-row-hover transition-colors cursor-pointer"
+                  onClick={() => {
+                    handleInfoClick(catalog)
+                  }}
+                >
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-normal text-card-foreground">
+                    <span>{catalog}</span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground text-right">
+                    {catalogStats[catalog]?.namespaceCount || 0}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground text-right">
+                    {catalogStats[catalog]?.tableCount || 0}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground text-right">
+                    {isLoadingTables ||
+                    catalogConfigs.some((q) => q.isLoading) ||
+                    tableMetadataQueries.some((q) => q.isLoading) ? (
+                      <div className="h-4 w-16 inline-block animate-pulse rounded bg-gray-200" />
+                    ) : catalogStats[catalog]?.storageSize ? (
+                      `${(catalogStats[catalog].storageSize / (1024 * 1024)).toFixed(2)} MB`
+                    ) : (
+                      "0 MB"
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground text-right">
+                    <span>
+                      {isLoadingTables ||
+                      catalogConfigs.some((q) => q.isLoading) ||
+                      tableMetadataQueries.some((q) => q.isLoading) ? (
+                        <div className="h-4 w-16 animate-pulse rounded inline-block bg-gray-200" />
+                      ) : catalogStats[catalog]?.lastModified ? (
+                        formatDistanceToNow(
+                          catalogStats[catalog].lastModified,
+                          { addSuffix: true }
+                        )
+                      ) : (
+                        "Never"
+                      )}
+                    </span>
+                  </td>
+                  <td>
+                    <a
+                      href={`/data/namespaces?catalog=${catalog}`}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                      }}
+                      className="text-primary hover:text-primary/80 font-normal flex items-center gap-1 ml-4 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      View Namespaces
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    </a>
+                  </td>
+                  <td>
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <button className="rounded-full p-1 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600">
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone. This will
+                              permanently delete the catalog and remove it from
+                              the database.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDeleteClick(catalog)}
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
         {filteredCatalogs?.length === 0 && (
           <div className="py-8 text-center text-gray-500">
             No catalogs found matching your criteria

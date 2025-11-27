@@ -19,7 +19,7 @@ export function ConnectCatalogStep({ onSuccess }: ConnectCatalogStepProps) {
 
   return (
     <div className="flex flex-col space-y-6">
-      <p className="text-gray-600">
+      <p className="text-sm text-muted-foreground text-center">
         Connect to your Iceberg catalog to get started.
       </p>
 
