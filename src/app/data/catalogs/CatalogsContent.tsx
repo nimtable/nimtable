@@ -370,31 +370,10 @@ export function CatalogsContent() {
                     </span>
                   </td>
                   <td>
-                    <a
-                      href={`/data/namespaces?catalog=${catalog}`}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                      }}
-                      className="text-primary hover:text-primary/80 font-normal flex items-center gap-1 ml-4 opacity-0 group-hover:opacity-100 transition-opacity"
+                    <div
+                      className="text-right w-40 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      View Namespaces
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 5l7 7-7 7"
-                        />
-                      </svg>
-                    </a>
-                  </td>
-                  <td>
-                    <div onClick={(e) => e.stopPropagation()}>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <button className="rounded-full p-1 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600">
@@ -421,6 +400,30 @@ export function CatalogsContent() {
                         </AlertDialogContent>
                       </AlertDialog>
                     </div>
+                  </td>
+                  <td>
+                    <a
+                      href={`/data/namespaces?catalog=${catalog}`}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                      }}
+                      className="text-primary hover:text-primary/80 font-normal flex items-center justify-end gap-1 pr-4 opacity-0 group-hover:opacity-100 transition-opacity "
+                    >
+                      View Namespaces
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    </a>
                   </td>
                 </tr>
               ))}

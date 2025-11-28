@@ -29,9 +29,9 @@ export function DashboardLayout({
     : user?.username || ""
 
   return (
-    <div className="flex h-screen w-full bg-gray-50">
+    <div className="flex h-screen max-h-screen overflow-hidden w-full bg-gray-50">
       <Sidebar />
-      <div className="flex-1">
+      <div className="flex-1 h-full">
         <header className="bg-card border-b border-border">
           <div className="flex items-center justify-between px-6 h-14 text-[rgba(250,250,250,1)] bg-[rgba(250,250,250,1)]">
             <h1 className="text-sm font-normal text-card-foreground">
@@ -62,7 +62,9 @@ export function DashboardLayout({
             </div>
           </div>
         </header>
-        <main className="flex-1 overflow-auto">{children}</main>
+        <main className="flex-1 overflow-auto h-[calc(100vh-56px)]">
+          {children}
+        </main>
       </div>
 
       {/* Table Detail Panel */}

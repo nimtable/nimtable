@@ -28,7 +28,7 @@ export function Sidebar() {
 
   const dataNavItems = [
     {
-      title: "Catalogs",
+      title: "Data",
       href: "/data/catalogs",
       icon: Database,
     },
