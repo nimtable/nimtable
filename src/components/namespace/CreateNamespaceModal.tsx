@@ -17,7 +17,7 @@
 "use client"
 
 import { useState } from "react"
-import { Plus, Trash2, FolderTree } from "lucide-react"
+import { Plus } from "lucide-react"
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
@@ -179,9 +179,15 @@ export function CreateNamespaceModal({
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-blue-600/10 border border-blue-600/20 flex items-center justify-center">
-              <FolderTree className="h-4 w-4 text-blue-600" />
-            </div>
+            <svg
+              className="w-5 h-5 text-primary"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M20 7h-9M14 17H5M17 14a3 3 0 100-6 3 3 0 000 6zM7 10a3 3 0 100-6 3 3 0 000 6z" />
+            </svg>
             {parentNamespace
               ? `Create Sub-namespace under ${parentNamespace}`
               : "Create New Namespace"}
@@ -244,22 +250,33 @@ export function CreateNamespaceModal({
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label>Properties (Optional)</Label>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
+              <label className="text-sm font-medium text-card-foreground">
+                Properties (Optional)
+              </label>
+              <button
                 onClick={addProperty}
-                className="h-8"
-                disabled={isSubmitting}
+                className="flex items-center gap-1 text-sm text-primary hover:text-primary/80"
               >
-                <Plus className="mr-2 h-4 w-4" />
+                <Plus className="w-4 h-4" />
                 Add Property
-              </Button>
+              </button>
             </div>
             <div className="space-y-3">
               {formData.properties.map((property, index) => (
                 <div key={index} className="flex items-center gap-2">
+                  <button
+                    onClick={() => removeProperty(index)}
+                    className="p-2 hover:bg-muted rounded transition-colors"
+                  >
+                    <svg
+                      className="w-4 h-4 text-[#B83430]"
+                      viewBox="0 0 448 512"
+                      fill="currentColor"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path d="M135.2 17.7C140.6 6.8 151.7 0 163.8 0H284.2c12.1 0 23.2 6.8 28.6 17.7L320 32h96c17.7 0 32 14.3 32 32s-14.3 32-32 32H96c-35.3 0-64-28.7-64-64V32zm96 64c-8.8 0-16 7.2-16 16V432c0 8.8 7.2 16 16 16s16-7.2 16-16V80c0-8.8-7.2-16-16-16zm96 0c-8.8 0-16 7.2-16 16V432c0 8.8 7.2 16 16 16s16-7.2 16-16V80c0-8.8-7.2-16-16-16zm96 0c-8.8 0-16 7.2-16 16V432c0 8.8 7.2 16 16 16s16-7.2 16-16V80c0-8.8-7.2-16-16-16z" />
+                    </svg>
+                  </button>
                   <Input
                     placeholder="Key"
                     value={property.key}
@@ -278,16 +295,6 @@ export function CreateNamespaceModal({
                     className="flex-1"
                     disabled={isSubmitting}
                   />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeProperty(index)}
-                    className="h-9 w-9"
-                    disabled={isSubmitting}
-                  >
-                    <Trash2 className="h-4 w-4 text-muted-foreground" />
-                  </Button>
                 </div>
               ))}
               {formData.properties.length === 0 && (

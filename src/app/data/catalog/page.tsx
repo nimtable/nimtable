@@ -47,6 +47,7 @@ import { useAllTables } from "../hooks/useTables"
 import { useCatalogStats } from "../utils"
 import { formatDistanceToNow } from "date-fns"
 import React from "react"
+import Link from "next/link"
 
 export default function CatalogPage() {
   const router = useRouter()
@@ -219,12 +220,12 @@ export default function CatalogPage() {
       <div className="bg-card border-b border-border px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <a
-              href="/catalog"
+            <Link
+              href="/data/catalogs"
               className="text-primary hover:text-primary/80 transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
-            </a>
+            </Link>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
                 <svg
@@ -380,26 +381,26 @@ export default function CatalogPage() {
           </div>
 
           {/* Namespaces card - spans 1 column */}
-          <a
-            href="/namespaces"
+          <Link
+            href={`/data/namespaces?catalog=${catalogParam}`}
             className="md:col-span-1 bg-card border border-border rounded-lg p-6 hover:border-primary transition-colors flex flex-col items-center justify-center gap-2"
           >
             <p className="text-xs text-muted-foreground">Namespaces</p>
             <p className="text-4xl font-semibold text-primary">
               {catalogStats[catalogParam || ""]?.namespaceCount || 0}
             </p>
-          </a>
+          </Link>
 
           {/* Tables card - spans 1 column */}
-          <a
-            href="/tables"
+          <Link
+            href={`/data/tables?catalog=${catalogParam}`}
             className="md:col-span-1 bg-card border border-border rounded-lg p-6 hover:border-primary transition-colors flex flex-col items-center justify-center gap-2"
           >
             <p className="text-xs text-muted-foreground">Tables</p>
             <p className="text-4xl font-semibold text-primary">
               {catalogStats[catalogParam || ""]?.tableCount || 0}
             </p>
-          </a>
+          </Link>
         </div>
 
         {/* Configuration Settings */}
