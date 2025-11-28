@@ -128,6 +128,8 @@ export function NamespacesContent() {
               type="text"
               placeholder="Search namespaces..."
               className="pl-10 bg-card border-input"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
           <Button
@@ -149,7 +151,7 @@ export function NamespacesContent() {
       />
 
       {/* Namespaces List */}
-      <div className="flex-1 overflow-auto p-6">
+      <div className="h-[calc(100vh-200px)] overflow-auto p-6">
         {/* Table */}
         <div className="overflow-x-auto">
           <table className="w-full">
