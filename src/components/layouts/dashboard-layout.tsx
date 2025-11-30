@@ -40,11 +40,11 @@ export function DashboardLayout({
             <div className="flex items-center gap-4">
               <DropdownMenu>
                 <DropdownMenuTrigger className="flex cursor-pointer items-center gap-2 rounded-md p-2 hover:bg-gray-100">
-                  <button className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
                     <UserIcon className="w-4 h-4" />
                     <span> {username}</span>
                     <ChevronDown className="w-4 h-4" />
-                  </button>
+                  </div>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem className="cursor-pointer" asChild>

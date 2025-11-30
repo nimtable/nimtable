@@ -1,12 +1,13 @@
 "use client"
 
 import {
-  Code,
+  ArrowLeft,
   Database,
   FileText,
   LayoutList,
+  Plus,
   RefreshCw,
-  Settings,
+  TableIcon,
 } from "lucide-react"
 import { useSearchParams } from "next/navigation"
 import { useState, useEffect } from "react"
@@ -21,6 +22,7 @@ import { Button } from "@/components/ui/button"
 import { InfoTab } from "@/app/table/info"
 
 import { useTableData } from "../../hooks/useTableData"
+import { ScrewdriverWrenchIcon } from "@/components/icon"
 
 export default function TablePage() {
   const params = useSearchParams()
@@ -79,50 +81,44 @@ export default function TablePage() {
 
   return (
     <div className="mx-auto w-full max-w-7xl px-6 py-8">
-      <div className="mb-6 flex items-center justify-between">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 text-sm">
-            <Link
-              href={`/data/catalog?catalog=${catalog}`}
-              className="text-muted-foreground hover:text-blue-600 hover:underline"
-            >
-              {catalog}
-            </Link>
-            <span className="text-muted-foreground">/</span>
-            <Link
-              href={`/data/namespaces?catalog=${catalog}&search=${encodeURIComponent(namespace as string)}`}
-              className="text-muted-foreground hover:text-blue-600 hover:underline"
-            >
-              {namespace}
-            </Link>
-            <span className="text-muted-foreground">/</span>
-            <span className="font-medium text-foreground">{table}</span>
+      <div className="bg-card px-6 pt-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Link
+            href={`/data/catalog?catalog=${catalog}`}
+            className="text-primary hover:text-primary/80 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <TableIcon className="w-5 h-5 text-card-foreground" />
+              <h2 className="text-m font-normal text-card-foreground">
+                {table}
+              </h2>
+            </div>
+            <span className="px-2 py-1 text-xs font-normal bg-muted text-muted-foreground rounded">
+              Table details
+            </span>
           </div>
-          <h2 className="text-2xl font-semibold tracking-tight">{table}</h2>
         </div>
+
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRefresh}
-            disabled={isFetching}
-          >
-            <RefreshCw className="mr-2 h-4 w-4" />
-            {isRefetching ? "Refreshing..." : "Refresh"}
-          </Button>
+          <button className="btn-secondary" onClick={handleRefresh}>
+            <RefreshCw className="w-4 h-4" />
+            <span>{isRefetching ? "Refreshing..." : "Refresh"}</span>
+          </button>
 
-          <Button
-            variant="outline"
-            size="sm"
+          <button
             onClick={() => setShowOptimizeSheet(true)}
+            className="btn-secondary"
           >
-            <Settings className="mr-2 h-4 w-4" />
-            Optimize Table
-          </Button>
+            <ScrewdriverWrenchIcon className="w-4 h-4" />
+            <span>Optimize table</span>
+          </button>
 
-          <Button size="sm">
+          <Button className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
             <Link href={sqlEditorUrl} className="flex items-center">
-              <Code className="mr-2 h-4 w-4" />
+              <Plus className="w-4 h-4" />
               <span>SQL Query</span>
             </Link>
           </Button>
@@ -134,21 +130,25 @@ export default function TablePage() {
         onValueChange={setActiveTab}
         className="space-y-4"
       >
-        <TabsList className="mb-6 grid w-full max-w-md grid-cols-3">
-          <TabsTrigger value="info" className="flex items-center gap-1.5">
-            <FileText className="h-4 w-4" />
-            <span>Info</span>
-          </TabsTrigger>
-          <TabsTrigger value="data" className="flex items-center gap-1.5">
-            <Database className="h-4 w-4" />
-            <span>Data Preview</span>
-          </TabsTrigger>
-          <TabsTrigger value="snapshots" className="flex items-center gap-1.5">
-            <LayoutList className="h-4 w-4" />
-            <span>Version Control</span>
-          </TabsTrigger>
-        </TabsList>
-
+        <div className="bg-card border-b border-border px-6 py-4">
+          <TabsList className="grid w-full max-w-md grid-cols-3">
+            <TabsTrigger value="info" className="flex items-center gap-1.5">
+              <FileText className="h-4 w-4" />
+              <span>Info</span>
+            </TabsTrigger>
+            <TabsTrigger value="data" className="flex items-center gap-1.5">
+              <Database className="h-4 w-4" />
+              <span>Data Preview</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="snapshots"
+              className="flex items-center gap-1.5"
+            >
+              <LayoutList className="h-4 w-4" />
+              <span>Version Control</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
         <TabsContent value="info" className="space-y-4">
           <InfoTab
             tableData={data}

@@ -5,10 +5,11 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card"
-import { AlertTriangle, RefreshCw, CheckCircle2 } from "lucide-react"
+import { AlertTriangle, RefreshCw, CheckCircle2, Info } from "lucide-react"
 import { FileStatistics } from "@/components/table/file-statistics"
 import type { DistributionData } from "@/lib/data-loader"
 import { Button } from "@/components/ui/button"
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip"
 
 // Define the order of size ranges
 export const rangeOrder = ["0-8M", "8M-32M", "32M-128M", "128M-512M", "512M+"]
@@ -132,10 +133,18 @@ export function FileDistribution({
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-base">File Size Distribution</CardTitle>
-            <CardDescription>
-              Current distribution of file sizes in the table
-            </CardDescription>
+            <CardTitle className="text-base">
+              File Size Distribution
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="w-4 h-4 inline-block ml-2 text-muted-foreground hover:text-card-foreground cursor-pointer" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Current distribution of file sizes in the table.</p>
+                </TooltipContent>
+              </Tooltip>
+            </CardTitle>
+            <CardDescription></CardDescription>
           </div>
           <div className="flex items-center gap-2">
             {shouldOptimize ? (
