@@ -24,14 +24,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import {
   dropTable,
   renameTable,
   getFileDistribution,
@@ -359,65 +351,116 @@ export function InfoTab({
         </div>
 
         {/* Schema Section */}
-        <Card className="overflow-hidden border-muted/70 shadow-sm">
-          <CardHeader className="border-b pb-2">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <FileText className="h-4 w-4 text-blue-500" />
+        <div className="bg-card border border-border rounded-lg p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <svg
+              className="w-5 h-5 text-primary"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M4 7h16M4 12h16M4 17h16" />
+            </svg>
+            <h3 className="text-base font-semibold text-card-foreground">
               Table Schema
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead>ID</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Required</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            </h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="text-left py-3 px-4 text-sm font-normal text-muted-foreground">
+                    ID
+                  </th>
+                  <th className="text-left py-3 px-4 text-sm font-normal text-muted-foreground">
+                    Name
+                  </th>
+                  <th className="text-left py-3 px-4 text-sm font-normal text-muted-foreground">
+                    Type
+                  </th>
+                  <th className="text-left py-3 px-4 text-sm font-normal text-muted-foreground">
+                    Required
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
                 {schema?.fields.map((field: StructField) => (
-                  <TableRow key={field.id}>
-                    <TableCell>{field.id}</TableCell>
-                    <TableCell>{field.name}</TableCell>
-                    <TableCell>
+                  <tr
+                    key={field.id}
+                    className="border-b border-border hover:bg-muted/30"
+                  >
+                    <td className="py-3 px-4 text-sm text-card-foreground">
+                      {field.id}
+                    </td>
+                    <td className="py-3 px-4 text-sm text-card-foreground">
+                      {field.name}
+                    </td>
+                    <td className="py-3 px-4 text-sm text-card-foreground">
                       {typeof field.type === "string"
                         ? field.type
                         : field.type.type}
-                    </TableCell>
-                    <TableCell>{field.required ? "Yes" : "No"}</TableCell>
-                  </TableRow>
+                    </td>
+                    <td className="py-3 px-4 text-sm text-card-foreground">
+                      {field.required ? "Yes" : "No"}
+                    </td>
+                  </tr>
                 ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
 
+      <div className="grid grid-cols-2 gap-6">
         {/* Partition Information */}
-        <Card className="overflow-hidden border-muted/70 shadow-sm">
-          <CardHeader className="border-b pb-2">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <FileText className="h-4 w-4 text-blue-500" />
+        <div className="bg-card border border-border rounded-lg p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <svg
+              className="w-5 h-5 text-primary"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <rect x="3" y="3" width="7" height="7" />
+              <rect x="14" y="3" width="7" height="7" />
+              <rect x="14" y="14" width="7" height="7" />
+              <rect x="3" y="14" width="7" height="7" />
+            </svg>
+            <h3 className="text-base font-semibold text-card-foreground">
               Partition Specs
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead>Spec ID</TableHead>
-                  <TableHead>Fields</TableHead>
-                  <TableHead>Default</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            </h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="text-left py-3 px-4 text-sm font-normal text-muted-foreground">
+                    Spec ID
+                  </th>
+                  <th className="text-left py-3 px-4 text-sm font-normal text-muted-foreground">
+                    Fields
+                  </th>
+                  <th className="text-left py-3 px-4 text-sm font-normal text-muted-foreground">
+                    Default
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
                 {tableData.metadata["partition-specs"] &&
                 tableData.metadata["partition-specs"].length > 0 ? (
                   tableData.metadata["partition-specs"].map((spec) => (
-                    <TableRow key={spec["spec-id"]}>
-                      <TableCell>{spec["spec-id"]}</TableCell>
-                      <TableCell>
+                    <tr key={spec["spec-id"]} className="hover:bg-muted/30">
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-primary"></div>
+                          <span className="text-sm text-card-foreground">
+                            {spec["spec-id"]}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-sm text-card-foreground">
                         {!spec.fields || spec.fields.length === 0 ? (
                           <div className="flex items-center gap-2 text-muted-foreground">
                             <Layers className="h-3.5 w-3.5" />
@@ -472,81 +515,80 @@ export function InfoTab({
                             </div>
                           </div>
                         )}
-                      </TableCell>
-                      <TableCell>
+                      </td>
+                      <td className="py-3 px-4 text-sm text-card-foreground">
                         {spec["spec-id"] ===
                         tableData.metadata["default-spec-id"] ? (
                           <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-400">
                             Default
                           </span>
                         ) : null}
-                      </TableCell>
-                    </TableRow>
+                      </td>
+                    </tr>
                   ))
                 ) : (
-                  <TableRow>
-                    <TableCell colSpan={3}>
+                  <tr className="hover:bg-muted/30">
+                    <td colSpan={3} className="py-3 px-4">
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <Layers className="h-3.5 w-3.5" />
                         <span>Unpartitioned</span>
                       </div>
-                    </TableCell>
-                  </TableRow>
+                    </td>
+                  </tr>
                 )}
-              </TableBody>
-            </Table>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        {/* Properties Section */}
+        <div className="bg-card border border-border rounded-lg p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <TableIcon className="w-5 h-5 text-primary" />
+            <h3 className="text-base font-semibold text-card-foreground">
+              Properties
+            </h3>
+          </div>
+          <CardContent className="px-0 py-2">
+            {tableData.metadata.properties &&
+            Object.keys(tableData.metadata.properties).length > 0 ? (
+              <div className="divide-y divide-muted/30">
+                {Object.entries(tableData.metadata.properties)
+                  .filter(([key]) => !isSensitiveProperty(key)) // Filter out sensitive properties
+                  .map(([key, value]) => (
+                    <div key={key} className="px-6 py-3">
+                      <div className="mb-1 flex items-center justify-between">
+                        <h4 className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                          {key}
+                          {getPropertyDescription(key) && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Info className="h-3.5 w-3.5 cursor-help text-muted-foreground/70" />
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="max-w-sm">
+                                <p className="text-xs">
+                                  {getPropertyDescription(key)}
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                        </h4>
+                      </div>
+                      <div className="rounded-md border border-muted/30 bg-muted/30 p-1.5">
+                        <p className="break-all font-mono text-xs text-foreground/90">
+                          {value}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            ) : (
+              <div className="px-4 py-6 text-center text-xs text-muted-foreground">
+                No properties defined
+              </div>
+            )}
           </CardContent>
-        </Card>
+        </div>
       </div>
-
-      {/* Properties Section */}
-      <Card className="overflow-hidden border-muted/70 shadow-sm">
-        <CardHeader className="border-b py-3 pb-2">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <FileText className="h-4 w-4 text-blue-500" />
-            Properties
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-0 py-2">
-          {tableData.metadata.properties &&
-          Object.keys(tableData.metadata.properties).length > 0 ? (
-            <div className="divide-y divide-muted/30">
-              {Object.entries(tableData.metadata.properties)
-                .filter(([key]) => !isSensitiveProperty(key)) // Filter out sensitive properties
-                .map(([key, value]) => (
-                  <div key={key} className="px-6 py-3">
-                    <div className="mb-1 flex items-center justify-between">
-                      <h4 className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                        {key}
-                        {getPropertyDescription(key) && (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Info className="h-3.5 w-3.5 cursor-help text-muted-foreground/70" />
-                            </TooltipTrigger>
-                            <TooltipContent side="top" className="max-w-sm">
-                              <p className="text-xs">
-                                {getPropertyDescription(key)}
-                              </p>
-                            </TooltipContent>
-                          </Tooltip>
-                        )}
-                      </h4>
-                    </div>
-                    <div className="rounded-md border border-muted/30 bg-muted/30 p-1.5">
-                      <p className="break-all font-mono text-xs text-foreground/90">
-                        {value}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-            </div>
-          ) : (
-            <div className="px-4 py-6 text-center text-xs text-muted-foreground">
-              No properties defined
-            </div>
-          )}
-        </CardContent>
-      </Card>
 
       {/* Drop Dialog */}
       <Dialog open={showDropDialog} onOpenChange={setShowDropDialog}>
