@@ -32,7 +32,6 @@ import {
 import { omit } from "lodash"
 import { useActionState, useState } from "react"
 import {
-  FileText,
   Copy,
   Check,
   Info,
@@ -47,7 +46,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { FileDistributionLoading } from "@/components/table/file-distribution-loading"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { CardContent } from "@/components/ui/card"
 import {
   useQuery,
   useQueryClient,
