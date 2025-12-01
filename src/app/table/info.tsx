@@ -40,7 +40,6 @@ import {
 import { omit } from "lodash"
 import { useActionState, useState } from "react"
 import {
-  Database,
   FileText,
   Copy,
   Check,
@@ -48,6 +47,7 @@ import {
   Layers,
   Hash,
   Calendar,
+  TableIcon,
 } from "lucide-react"
 import {
   Tooltip,
@@ -234,31 +234,21 @@ export function InfoTab({
           refreshKey={refreshKey}
         />
 
-        <Card className="border-muted/70 shadow-sm overflow-hidden">
-          <CardHeader className="pb-2 border-b">
-            <CardTitle className="text-base flex items-center gap-2">
-              <FileText className="h-4 w-4 text-blue-500" />
-              Table Context
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <TableSummary
-              catalog={catalog}
-              namespace={namespace}
-              table={table}
-              tableData={tableData}
-            />
-          </CardContent>
-        </Card>
+        <div className="grid grid-cols-2 gap-6">
+          <TableSummary
+            catalog={catalog}
+            namespace={namespace}
+            table={table}
+            tableData={tableData}
+          />
 
-        <Card className="overflow-hidden border-muted/70 shadow-sm">
-          <CardHeader className="border-b py-3 pb-2">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Database className="h-4 w-4 text-blue-500" />
-              Table Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-0 py-2">
+          <div className="bg-card border border-border rounded-lg p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <TableIcon className="w-5 h-5 text-primary" />
+              <h3 className="text-base font-semibold text-card-foreground">
+                Table Information
+              </h3>
+            </div>
             <div className="divide-y divide-muted/30">
               <div className="px-6 py-3">
                 <div className="mb-1 flex items-center justify-between">
@@ -365,8 +355,8 @@ export function InfoTab({
                 </p>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Schema Section */}
         <Card className="overflow-hidden border-muted/70 shadow-sm">
@@ -743,7 +733,7 @@ export function TableSummary({
   }
 
   return (
-    <div className="px-6 py-3 space-y-2">
+    <div className="">
       <AITextInput
         title="Table Summary"
         placeholder="Write a summary for this table or click 'AI Generate' to generate one"

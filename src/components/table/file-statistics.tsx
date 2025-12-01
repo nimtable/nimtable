@@ -33,15 +33,29 @@ function FileTypeStats({
   title: string
 }) {
   return (
-    <div className="space-y-2">
-      <h3 className="text-sm font-medium mb-3">{title}</h3>
-      <div className="grid grid-cols-3 gap-3">
-        <StatCard value={fileCount} label="Files" />
-        <StatCard
-          value={`${(fileSize / (1024 * 1024)).toFixed(2)} MB`}
-          label="Size"
-        />
-        <StatCard value={recordCount.toLocaleString()} label="Records" />
+    <div className="flex flex-col items-center">
+      <h4 className="text-sm font-normal text-card-foreground mb-4 text-center">
+        {title}
+      </h4>
+      <div className="flex flex-col gap-6">
+        <div className="text-center">
+          <div className="text-2xl font-semibold text-card-foreground">
+            {fileCount}
+          </div>
+          <div className="text-xs text-muted-foreground">Files</div>
+        </div>
+        <div className="text-center">
+          <div className="text-2xl font-semibold text-card-foreground">
+            {(fileSize / (1024 * 1024)).toFixed(2)} MB
+          </div>
+          <div className="text-xs text-muted-foreground">Size</div>
+        </div>
+        <div className="text-center">
+          <div className="text-2xl font-semibold text-card-foreground">
+            {recordCount.toLocaleString()}
+          </div>
+          <div className="text-xs text-muted-foreground">Records</div>
+        </div>
       </div>
     </div>
   )
@@ -49,7 +63,7 @@ function FileTypeStats({
 
 export function FileStatistics({ distribution }: FileStatisticsProps) {
   return (
-    <div className="space-y-6">
+    <div className="flex gap-8 justify-around">
       <FileTypeStats
         title="Data Files"
         fileCount={distribution.dataFileCount}
