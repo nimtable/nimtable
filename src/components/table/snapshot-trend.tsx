@@ -310,6 +310,7 @@ export function SnapshotTrend({
                   : "No snapshots found"}
               </CardDescription>
             </div>
+
             <div className="flex gap-2">
               <Select
                 value={selectedBranch}

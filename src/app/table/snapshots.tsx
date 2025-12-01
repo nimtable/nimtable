@@ -90,11 +90,6 @@ export function SnapshotsTab({
 
   return (
     <div className="space-y-6">
-      <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold">
-        <span className="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
-        Version Control
-      </h3>
-
       {snapshots.length === 0 ? (
         <Card className="overflow-hidden border-muted/70 shadow-sm">
           <CardContent className="flex flex-col items-center justify-center py-12">
