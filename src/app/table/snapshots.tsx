@@ -15,7 +15,7 @@
  */
 
 "use client"
-import { GitBranch, GitCommit } from "lucide-react"
+import { GitBranchIcon, GitCommit } from "lucide-react"
 import { useMemo } from "react"
 import { SnapshotTrend } from "@/components/table/snapshot-trend"
 import { Card, CardContent } from "@/components/ui/card"
@@ -111,7 +111,7 @@ export function SnapshotsTab({
           <Card className="overflow-hidden border-muted/70 shadow-sm">
             <div className="flex items-center justify-between border-b p-4">
               <div className="flex items-center gap-1.5">
-                <GitBranch className="h-4 w-4" />
+                <GitBranchIcon className="w-5 h-5 text-primary" />
                 <span className="font-medium">Branch View</span>
               </div>
 

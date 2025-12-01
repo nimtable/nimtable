@@ -16,7 +16,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { GitBranch } from "lucide-react"
+import { GitBranch, Info } from "lucide-react"
 import {
   Card,
   CardContent,
@@ -36,7 +36,6 @@ import {
   ResponsiveContainer,
   ReferenceDot,
 } from "recharts"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import {
   Select,
   SelectContent,
@@ -45,6 +44,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useQuery } from "@tanstack/react-query"
+import { cn } from "@/lib/utils"
 
 interface SnapshotTrendProps {
   catalog: string
@@ -390,9 +390,53 @@ export function SnapshotTrend({
     <Card className="border-muted/70 shadow-sm">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-center">
-          <div>
-            <CardTitle className="text-base">Snapshot Trend</CardTitle>
-            <CardDescription>{getDescription()}</CardDescription>
+          <div className="flex items-center gap-2">
+            <h3 className="text-base font-semibold text-card-foreground">
+              Snapshot Trend
+            </h3>
+            <div className="relative group">
+              <Info className="w-4 h-4 text-muted-foreground hover:text-card-foreground cursor-help" />
+              <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-md whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none z-10">
+                {getDescription()}
+                <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-900"></div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1 p-1 pl-3 rounded-lg text-sm mr-auto">
+            <button
+              className={cn(
+                "px-4 py-1.5 rounded-md text-foreground font-medium transition-colors",
+                trendType === "size"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground hover:bg-background/50 transition-colors"
+              )}
+              onClick={() => setTrendType("size")}
+            >
+              Size
+            </button>
+            <button
+              className={cn(
+                "px-4 py-1.5 rounded-md text-foreground font-medium transition-colors",
+                trendType === "records"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground hover:bg-background/50 transition-colors"
+              )}
+              onClick={() => setTrendType("records")}
+            >
+              Records
+            </button>
+            <button
+              className={cn(
+                "px-4 py-1.5 rounded-md text-foreground font-medium transition-colors",
+                trendType === "files"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground hover:bg-background/50 transition-colors"
+              )}
+              onClick={() => setTrendType("files")}
+            >
+              Files
+            </button>
           </div>
           <div className="flex gap-2">
             <Select
@@ -428,21 +472,6 @@ export function SnapshotTrend({
                 <SelectItem value="year">By Year</SelectItem>
               </SelectContent>
             </Select>
-            <ToggleGroup
-              type="single"
-              value={trendType}
-              onValueChange={(value: TrendType) => setTrendType(value)}
-            >
-              <ToggleGroupItem value="size" aria-label="Show size trend">
-                Size
-              </ToggleGroupItem>
-              <ToggleGroupItem value="records" aria-label="Show record trend">
-                Records
-              </ToggleGroupItem>
-              <ToggleGroupItem value="files" aria-label="Show file trend">
-                Files
-              </ToggleGroupItem>
-            </ToggleGroup>
           </div>
         </div>
       </CardHeader>
