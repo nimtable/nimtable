@@ -70,7 +70,6 @@ export default function OptimizationPage() {
 
   return (
     <div className="mx-auto w-full max-w-7xl px-6 py-8">
-      <h1 className="mb-2 text-3xl font-semibold">Optimization</h1>
       <p className="mb-8 text-gray-500">
         Identify and fix performance and cost inefficiencies across your tables
       </p>

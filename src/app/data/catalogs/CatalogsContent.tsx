@@ -371,7 +371,7 @@ export function CatalogsContent() {
                   </td>
                   <td>
                     <div
-                      className="text-right w-40 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="text-center w-40 opacity-0 group-hover:opacity-100 transition-opacity"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <AlertDialog>

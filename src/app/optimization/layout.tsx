@@ -5,5 +5,5 @@ export default function OptimizationLayout({
 }: {
   children: React.ReactNode
 }) {
-  return <DashboardLayout>{children}</DashboardLayout>
+  return <DashboardLayout title="Optimization">{children}</DashboardLayout>
 }
