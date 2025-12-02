@@ -46,7 +46,6 @@ import {
 } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { cn } from "@/lib/utils"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -173,10 +172,7 @@ export function DataTable<TData, TValue>({
               ))
             ) : (
               <tr>
-                <td
-                  colSpan={columns.length}
-                  className="h-32 text-center"
-                >
+                <td colSpan={columns.length} className="h-32 text-center">
                   <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
                     <p className="text-sm font-medium">No results found</p>
                     <p className="mt-1.5 text-xs">
