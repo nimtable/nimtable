@@ -80,7 +80,7 @@ export default function TablePage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-6 py-8">
+    <div className="mx-auto w-full">
       <div className="bg-card px-6 pt-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link
@@ -149,7 +149,7 @@ export default function TablePage() {
             </TabsTrigger>
           </TabsList>
         </div>
-        <TabsContent value="info" className="space-y-4">
+        <TabsContent value="info" className="space-y-4 p-6">
           <InfoTab
             tableData={data}
             catalog={catalog}

@@ -30,7 +30,7 @@ import {
   type DistributionData,
 } from "@/lib/data-loader"
 import { omit } from "lodash"
-import { useActionState, useState } from "react"
+import { useActionState, useState, useEffect } from "react"
 import {
   Copy,
   Check,
@@ -657,6 +657,7 @@ export function TableSummary({
   tableData: LoadTableResult
 }) {
   const queryClient = useQueryClient()
+  const { toast } = useToast()
 
   const {
     data: tableSummary,
@@ -673,86 +674,95 @@ export function TableSummary({
     },
   })
 
-  const [_result, handleTableSummaryAction, isPending] = useActionState(
-    async (_state: string | null, formData: FormData) => {
-      const action = formData.get("action") as string
+  type ActionResult =
+    | { success: true; data: string }
+    | { success: false; error: string }
+    | null
 
-      const actions = {
-        generate: async () => {
-          // use shared queryClient to fetch cached distribution data
-          const fileDistribution = await queryClient.fetchQuery(
-            fileDistributionQuery(catalog, namespace, table)
-          )
-          // TODO: add more info, e.g., sample data / snapshot trend
+  const [result, handleTableSummaryAction, isPending] = useActionState<
+    ActionResult,
+    FormData
+  >(async (_state: ActionResult, formData: FormData) => {
+    const action = formData.get("action") as string
 
-          // Get the additionalPrompt from FormData
-          const additionalPrompt = formData.get("additionalPrompt") as
-            | string
-            | null
+    const actions = {
+      generate: async () => {
+        // use shared queryClient to fetch cached distribution data
+        const fileDistribution = await queryClient.fetchQuery(
+          fileDistributionQuery(catalog, namespace, table)
+        )
+        // TODO: add more info, e.g., sample data / snapshot trend
 
-          // Currently we collect table data in frontend,
-          // and just let the backend to generate summary (and also save it)
-          const summary = await actionGenerateTableSummary(
-            {
-              catalog,
-              namespace,
-              table,
-              fileDistribution,
-              metadata: omit(
-                tableData.metadata,
-                "snapshots",
-                "refs",
-                "metadata-log",
-                "snapshot-log",
-                "last-updated-ms"
-              ),
-              lastUpdatedTime: tableData.metadata["last-updated-ms"]
-                ? new Date(
-                    tableData.metadata["last-updated-ms"]
-                  ).toLocaleString()
-                : "",
-            },
-            additionalPrompt || undefined
-          )
-          return summary
-        },
+        // Get the additionalPrompt from FormData
+        const additionalPrompt = formData.get("additionalPrompt") as
+          | string
+          | null
 
-        edit: async () => {
-          const summary = formData.get("summary") as string
-          if (!summary.trim()) {
-            throw new Error("Summary cannot be empty")
-          }
+        // Currently we collect table data in frontend,
+        // and just let the backend to generate summary (and also save it)
+        const summary = await actionGenerateTableSummary(
+          {
+            catalog,
+            namespace,
+            table,
+            fileDistribution,
+            metadata: omit(
+              tableData.metadata,
+              "snapshots",
+              "refs",
+              "metadata-log",
+              "snapshot-log",
+              "last-updated-ms"
+            ),
+            lastUpdatedTime: tableData.metadata["last-updated-ms"]
+              ? new Date(tableData.metadata["last-updated-ms"]).toLocaleString()
+              : "",
+          },
+          additionalPrompt || undefined
+        )
+        return summary
+      },
 
-          await saveTableSummary({
-            catalogName: catalog,
-            namespace: namespace,
-            tableName: table,
-            summary: summary.trim(),
-            createdBy: "user",
-          })
-
-          return summary.trim()
-        },
-      }
-
-      try {
-        const handler = actions[action as keyof typeof actions]
-        if (!handler) {
-          throw new Error(`Unknown action: ${action}`)
+      edit: async () => {
+        const summary = formData.get("summary") as string
+        if (!summary.trim()) {
+          throw new Error("Summary cannot be empty")
         }
 
-        const result = await handler()
-        queryClient.invalidateQueries({
-          queryKey: ["table-summary", catalog, namespace, table],
+        await saveTableSummary({
+          catalogName: catalog,
+          namespace: namespace,
+          tableName: table,
+          summary: summary.trim(),
+          createdBy: "user",
         })
-        return result
-      } catch (error) {
-        console.error(`Failed to create table summary:`, error)
-        throw error
+
+        return summary.trim()
+      },
+    }
+
+    try {
+      const handler = actions[action as keyof typeof actions]
+      if (!handler) {
+        return {
+          success: false,
+          error: `Unknown action: ${action}`,
+        }
       }
-    },
-    null
-  )
+
+      const data = await handler()
+      queryClient.invalidateQueries({
+        queryKey: ["table-summary", catalog, namespace, table],
+      })
+      return { success: true, data }
+    } catch (error) {
+      console.error(`Failed to create table summary:`, error)
+      return {
+        success: false,
+        error: errorToString(error),
+      }
+    }
+  }, null)
 
   const handleAIGenerate = async (
     additionalPrompt?: string,
@@ -773,6 +783,17 @@ export function TableSummary({
     handleTableSummaryAction(formData)
   }
 
+  // Handle errors from action result
+  useEffect(() => {
+    if (result && !result.success) {
+      toast({
+        variant: "destructive",
+        title: "Failed to update table summary",
+        description: result.error,
+      })
+    }
+  }, [result, toast])
+
   return (
     <div className="">
       <AITextInput
@@ -782,17 +803,14 @@ export function TableSummary({
         content={tableSummary?.summary || ""}
         saveAction={handleSave}
         aiGenerateAction={handleAIGenerate}
+        lastUpdatedTime={
+          tableSummary?.createdAt
+            ? new Date(tableSummary.createdAt).toLocaleString()
+            : ""
+        }
         loading={isPending || isQueryPending || isQueryError}
         startInEditMode={false}
       />
-
-      {tableSummary?.createdAt && (
-        <div className="mt-2">
-          <p className="text-xs text-muted-foreground">
-            Last updated: {new Date(tableSummary.createdAt).toLocaleString()}
-          </p>
-        </div>
-      )}
     </div>
   )
 }

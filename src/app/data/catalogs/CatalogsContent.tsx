@@ -369,9 +369,9 @@ export function CatalogsContent() {
                       )}
                     </span>
                   </td>
-                  <td>
+                  <td className="text-center w-40">
                     <div
-                      className="text-center w-40 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="text-center opacity-0 group-hover:opacity-100 transition-opacity"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <AlertDialog>
@@ -407,7 +407,7 @@ export function CatalogsContent() {
                       onClick={(e) => {
                         e.stopPropagation()
                       }}
-                      className="text-primary hover:text-primary/80 font-normal flex items-center justify-end gap-1 pr-4 opacity-0 group-hover:opacity-100 transition-opacity "
+                      className="text-primary hover:text-primary/80 font-normal w-full flex items-center justify-center gap-1 pr-4 opacity-0 group-hover:opacity-100 transition-opacity "
                     >
                       View Namespaces
                       <svg

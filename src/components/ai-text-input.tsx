@@ -38,7 +38,8 @@ export interface AITextInputProps {
   className?: string
   /** Whether to start in edit mode (default: true if no initialValue) */
   startInEditMode: boolean
-
+  /** Last updated time */
+  lastUpdatedTime?: string
   /** Loading state from parent component */
   loading?: boolean
   /** Error state */
@@ -57,6 +58,7 @@ export function AITextInput({
   loading = false,
   error,
   successMessage,
+  lastUpdatedTime,
 }: AITextInputProps) {
   const [isTransitionPending, startTransition] = useTransition()
 
@@ -214,6 +216,13 @@ export function AITextInput({
       <div className="mt-10">
         {isEditMode ? <EditContent /> : <PreviewContent />}
       </div>
+      {lastUpdatedTime && (
+        <div className="mt-2">
+          <p className="text-xs text-muted-foreground">
+            Last updated: {new Date(lastUpdatedTime).toLocaleString()}
+          </p>
+        </div>
+      )}
     </div>
   )
 }
