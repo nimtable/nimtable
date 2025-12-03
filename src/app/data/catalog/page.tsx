@@ -27,15 +27,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import {
-  Database,
-  FileText,
-  Layers,
-  HardDrive,
-  Settings,
-  Trash2,
-} from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Database, Trash2, ArrowLeft } from "lucide-react"
 import { notFound, useSearchParams, useRouter } from "next/navigation"
 import { PageLoader } from "@/components/shared/page-loader"
 import { deleteCatalog } from "@/lib/client/sdk.gen"
@@ -44,11 +36,34 @@ import { useQuery } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { errorToString } from "@/lib/utils"
+import { CircleQuestionIcon } from "@/components/icon"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { useNamespaces } from "../hooks/useNamespaces"
+import { useAllTables } from "../hooks/useTables"
+import { useCatalogStats } from "../utils"
+import { formatDistanceToNow } from "date-fns"
+import React from "react"
+import Link from "next/link"
 
 export default function CatalogPage() {
   const router = useRouter()
+
   const searchParams = useSearchParams()
   const catalogParam = searchParams.get("catalog")
+
+  const { namespaces } = useNamespaces([catalogParam || ""])
+  const { tables, isLoading: isLoadingTables } = useAllTables()
+
+  const catalogStats = useCatalogStats(
+    [catalogParam || ""],
+    namespaces || [],
+    tables || []
+  )
+
   const { toast } = useToast()
 
   // Fetch catalog configuration (REST config)
@@ -71,7 +86,7 @@ export default function CatalogPage() {
     enabled: !!catalogParam,
   })
 
-  const isPending = isConfigPending || isDetailsPending
+  const isPending = isConfigPending || isDetailsPending || isLoadingTables
 
   const handleDelete = async () => {
     if (!catalogParam) return
@@ -120,282 +135,329 @@ export default function CatalogPage() {
     return notFound()
   }
 
+  // Merge database properties and config defaults, prioritizing database
+  const mergedDefaults = {
+    ...(config?.defaults || {}),
+    ...(catalogDetails?.properties || {}),
+  }
+
+  // Get overrides
+  const overrides = config?.overrides || {}
+
+  // Helper function to check if a value is long and needs copy button
+  const isLongValue = (value: string | number | undefined): boolean => {
+    if (!value) return false
+    const str = String(value)
+    return str.length > 50 || str.includes("http") || str.includes("arn:")
+  }
+
+  // Helper function to render a config item
+  const renderConfigItem = (
+    key: string,
+    value: string | number | undefined,
+    showCopyButton = false
+  ) => {
+    const displayValue = value !== undefined ? String(value) : ""
+    const needsCopyButton = showCopyButton || isLongValue(value)
+
+    if (needsCopyButton) {
+      return (
+        <div>
+          <div className="flex items-center gap-1 mb-1">
+            <p className="text-sm font-medium text-card-foreground">{key}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <p className="text-sm text-muted-foreground break-all flex-1">
+              {displayValue}
+            </p>
+            <button
+              onClick={() => navigator.clipboard.writeText(displayValue)}
+              className="shrink-0 p-1 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+              title="Copy to clipboard"
+            >
+              <svg
+                className="w-4 h-4"
+                viewBox="0 0 448 512"
+                fill="currentColor"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M384 336H192c-8.8 0-16-7.2-16-16V64c0-8.8 7.2-16 16-16l140.1 0L400 115.9V320c0 8.8-7.2 16-16 16zM192 384H384c35.3 0 64-28.7 64-64V115.9c0-12.7-5.1-24.9-14.1-33.9L366.1 14.1c-9-9-21.2-14.1-33.9-14.1H192c-35.3 0-64 28.7-64 64V320c0 35.3 28.7 64 64 64zM64 128c-35.3 0-64 28.7-64 64V448c0 35.3 28.7 64 64 64H256c35.3 0 64-28.7 64-64V416H272v32c0 8.8-7.2 16-16 16H64c-8.8 0-16-7.2-16-16V192c0-8.8 7.2-16 16-16H96V128H64z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )
+    }
+
+    return (
+      <div>
+        <p className="text-sm font-medium text-card-foreground mb-1">{key}</p>
+        <p className="text-sm text-muted-foreground">{displayValue}</p>
+      </div>
+    )
+  }
+
+  // Convert mergedDefaults to array and split into pairs for grid layout
+  const defaultEntries = Object.entries(mergedDefaults)
+  const defaultPairs: Array<
+    [
+      [string, string | number | undefined],
+      [string, string | number | undefined]?,
+    ]
+  > = []
+  for (let i = 0; i < defaultEntries.length; i += 2) {
+    defaultPairs.push([
+      defaultEntries[i] as [string, string | number | undefined],
+      defaultEntries[i + 1] as
+        | [string, string | number | undefined]
+        | undefined,
+    ])
+  }
+
   return (
     <div className="flex h-full w-full flex-col overflow-auto bg-muted/5">
-      <div className="flex flex-1 justify-center">
-        <div className="w-full max-w-5xl px-6 py-8">
-          {/* Header */}
-          <div className="mb-8 flex items-center justify-between gap-3">
+      {/* Page header with catalog name */}
+      <div className="bg-card border-b border-border px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Link
+              href="/data/catalogs"
+              className="text-primary hover:text-primary/80 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Link>
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-blue-600/20 bg-blue-600/10">
-                <Database className="h-6 w-6 text-blue-600" />
-              </div>
               <div className="flex items-center gap-2">
-                <h1 className="text-3xl font-bold">{catalogParam}</h1>
+                <svg
+                  className="w-5 h-5 text-card-foreground"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                </svg>
+                <h2 className="text-m font-normal text-card-foreground">
+                  {catalogParam}
+                </h2>
               </div>
+              <span className="px-2 py-1 text-xs font-normal bg-muted text-muted-foreground rounded">
+                Catalog details
+              </span>
             </div>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive" size="sm">
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete Catalog
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete
-                    the catalog and remove it from the database.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDelete}>
-                    Delete
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
           </div>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete the
+                  catalog and remove it from the database.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete}>
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      </div>
+      {/* Main content with cards */}
+      <div className="flex-1 p-6 bg-[#fafafa]">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+          {/* Details card - spans 3 columns */}
+          <div className="md:col-span-3 bg-card border border-border rounded-lg p-3">
+            <div className="grid grid-cols-3 gap-x-6 gap-y-4">
+              <div>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-1 mb-1">
+                      <p className="text-xs text-muted-foreground">
+                        Catalog Type
+                      </p>
+                      <CircleQuestionIcon className="w-3 h-3 text-muted-foreground" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>The type of catalog implementation</p>
+                  </TooltipContent>
+                </Tooltip>
 
-          {/* Basic Information */}
-          <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
-            <Card className="group relative overflow-hidden border-muted/70 bg-background shadow-sm transition-shadow duration-200 hover:shadow-md">
-              <div className="absolute left-0 right-0 top-0 h-[2px] bg-emerald-500/70"></div>
-              <div className="absolute bottom-0 left-0 top-0 w-[2px] bg-emerald-500/10 transition-colors duration-200 group-hover:bg-emerald-500/30"></div>
-              <CardHeader className="pb-2 pt-5">
-                <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                  <div className="rounded-md bg-emerald-50 p-1.5 dark:bg-emerald-950/30">
-                    <Database className="h-3.5 w-3.5 text-emerald-500" />
-                  </div>
-                  Catalog Type
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-semibold tracking-tight">
+                <p className="text-sm font-medium text-card-foreground">
                   {catalogDetails?.type ||
                     config?.defaults?.type ||
                     (config?.defaults?.["catalog-impl"]?.includes(".")
                       ? config?.defaults?.["catalog-impl"]?.split(".").pop()
                       : config?.defaults?.["catalog-impl"]) ||
                     "hadoop"}
-                </div>
-                <p className="mt-1.5 text-xs text-muted-foreground">
-                  Catalog implementation type
                 </p>
-              </CardContent>
-            </Card>
-
-            <Card className="group relative overflow-hidden border-muted/70 bg-background shadow-sm transition-shadow duration-200 hover:shadow-md">
-              <div className="absolute left-0 right-0 top-0 h-[2px] bg-amber-500/70"></div>
-              <div className="absolute bottom-0 left-0 top-0 w-[2px] bg-amber-500/10 transition-colors duration-200 group-hover:bg-amber-500/30"></div>
-              <CardHeader className="pb-2 pt-5">
-                <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                  <div className="rounded-md bg-amber-50 p-1.5 dark:bg-amber-950/30">
-                    <HardDrive className="h-3.5 w-3.5 text-amber-500" />
-                  </div>
-                  Warehouse Location
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-lg font-semibold tracking-tight break-all">
-                  {catalogDetails?.warehouse ||
-                    config?.defaults?.warehouse ||
-                    config?.defaults?.["warehouse.location"] ||
-                    catalogDetails?.properties?.warehouse ||
-                    catalogDetails?.properties?.["warehouse.location"] ||
-                    "Not configured"}
-                </div>
-                <p className="mt-1.5 text-xs text-muted-foreground">
-                  Data storage location
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">
+                  Storage size (GB)
                 </p>
-              </CardContent>
-            </Card>
-
-            <Card className="group relative overflow-hidden border-muted/70 bg-background shadow-sm transition-shadow duration-200 hover:shadow-md">
-              <div className="absolute left-0 right-0 top-0 h-[2px] bg-purple-500/70"></div>
-              <div className="absolute bottom-0 left-0 top-0 w-[2px] bg-purple-500/10 transition-colors duration-200 group-hover:bg-purple-500/30"></div>
-              <CardHeader className="pb-2 pt-5">
-                <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                  <div className="rounded-md bg-purple-50 p-1.5 dark:bg-purple-950/30">
-                    <Settings className="h-3.5 w-3.5 text-purple-500" />
-                  </div>
-                  URI
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-lg font-semibold tracking-tight break-all">
-                  {catalogDetails?.uri ||
-                    config?.defaults?.uri ||
-                    config?.defaults?.["jdbc.url"] ||
-                    catalogDetails?.properties?.uri ||
-                    catalogDetails?.properties?.["jdbc.url"] ||
-                    "Not specified"}
-                </div>
-                <p className="mt-1.5 text-xs text-muted-foreground">
-                  Connection endpoint
+                <p className="text-sm font-medium text-card-foreground">
+                  {catalogStats[catalogParam || ""]?.storageSize
+                    ? `${(catalogStats[catalogParam || ""].storageSize / (1024 * 1024)).toFixed(2)} MB`
+                    : "0 MB"}
                 </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Key Metrics */}
-          <div className="mb-10 grid grid-cols-1 gap-6 md:grid-cols-3">
-            <Card className="group relative overflow-hidden border-muted/70 bg-background shadow-sm transition-shadow duration-200 hover:shadow-md">
-              <div className="absolute left-0 right-0 top-0 h-[2px] bg-blue-500/70"></div>
-              <div className="absolute bottom-0 left-0 top-0 w-[2px] bg-blue-500/10 transition-colors duration-200 group-hover:bg-blue-500/30"></div>
-              <CardHeader className="pb-2 pt-5">
-                <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                  <div className="rounded-md bg-blue-50 p-1.5 dark:bg-blue-950/30">
-                    <FileText className="h-3.5 w-3.5 text-blue-500" />
-                  </div>
-                  Default Format
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-semibold tracking-tight">
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">
+                  Last modified
+                </p>
+                <p className="text-sm font-medium text-card-foreground">
+                  {catalogStats[catalogParam || ""]?.lastModified
+                    ? formatDistanceToNow(
+                        catalogStats[catalogParam || ""].lastModified,
+                        { addSuffix: true }
+                      )
+                    : "Never"}
+                </p>
+              </div>
+              <div>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-1 mb-1 cursor-help">
+                      <p className="text-xs text-muted-foreground">
+                        Default Format
+                      </p>
+                      <CircleQuestionIcon className="w-3 h-3 text-muted-foreground" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Default file format for new tables</p>
+                  </TooltipContent>
+                </Tooltip>
+                <p className="text-sm font-medium text-card-foreground">
                   {config?.defaults?.["write.format.default"] || "parquet"}
-                </div>
-                <p className="mt-1.5 text-xs text-muted-foreground">
-                  Default file format for new tables
                 </p>
-              </CardContent>
-            </Card>
-
-            <Card className="group relative overflow-hidden border-muted/70 bg-background shadow-sm transition-shadow duration-200 hover:shadow-md">
-              <div className="absolute left-0 right-0 top-0 h-[2px] bg-blue-500/70"></div>
-              <div className="absolute bottom-0 left-0 top-0 w-[2px] bg-blue-500/10 transition-colors duration-200 group-hover:bg-blue-500/30"></div>
-              <CardHeader className="pb-2 pt-5">
-                <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                  <div className="rounded-md bg-blue-50 p-1.5 dark:bg-blue-950/30">
-                    <Layers className="h-3.5 w-3.5 text-blue-500" />
-                  </div>
-                  Compression Codec
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-semibold tracking-tight">
+              </div>
+              <div>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-1 mb-1 cursor-help">
+                      <p className="text-xs text-muted-foreground">
+                        Compression Codec
+                      </p>
+                      <CircleQuestionIcon className="w-3 h-3 text-muted-foreground" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Default compression algorithm</p>
+                  </TooltipContent>
+                </Tooltip>
+                <p className="text-sm font-medium text-card-foreground">
                   {config?.defaults?.["write.parquet.compression-codec"] ||
                     "snappy"}
-                </div>
-                <p className="mt-1.5 text-xs text-muted-foreground">
-                  Default compression algorithm
                 </p>
-              </CardContent>
-            </Card>
-
-            <Card className="group relative overflow-hidden border-muted/70 bg-background shadow-sm transition-shadow duration-200 hover:shadow-md">
-              <div className="absolute left-0 right-0 top-0 h-[2px] bg-blue-500/70"></div>
-              <div className="absolute bottom-0 left-0 top-0 w-[2px] bg-blue-500/10 transition-colors duration-200 group-hover:bg-blue-500/30"></div>
-              <CardHeader className="pb-2 pt-5">
-                <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                  <div className="rounded-md bg-blue-50 p-1.5 dark:bg-blue-950/30">
-                    <HardDrive className="h-3.5 w-3.5 text-blue-500" />
-                  </div>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">
                   Target File Size
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-semibold tracking-tight">
+                </p>
+                <p className="text-sm font-medium text-card-foreground">
                   {formatFileSize(
                     Number.parseInt(
                       config?.overrides?.["write.target-file-size-bytes"] ||
                         "134217728"
                     )
                   )}
-                </div>
-                <p className="mt-1.5 text-xs text-muted-foreground">
-                  Target size for data files
                 </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Configuration Settings */}
-          <div className="overflow-hidden rounded-lg border bg-background shadow-sm">
-            <div className="flex items-center justify-between border-b px-6 py-4">
-              <div className="flex items-center gap-3">
-                <div className="rounded-md bg-blue-50 p-1.5 dark:bg-blue-950/30">
-                  <Settings className="h-4 w-4 text-blue-500" />
-                </div>
-                <h2 className="text-xl font-semibold">
-                  Configuration Settings
-                </h2>
-              </div>
-              <div className="text-xs text-muted-foreground">
-                Sensitive properties are filtered server-side for security
               </div>
             </div>
+          </div>
 
-            <div className="grid grid-cols-1 divide-y md:grid-cols-2 md:divide-x md:divide-y-0">
-              {/* Default Settings Section */}
-              <div className="p-5">
-                <div className="mb-4 flex items-center gap-2">
-                  <h3 className="text-base font-medium">Default Settings</h3>
+          {/* Namespaces card - spans 1 column */}
+          <Link
+            href={`/data/namespaces?catalog=${catalogParam}`}
+            className="md:col-span-1 bg-card border border-border rounded-lg p-6 hover:border-primary transition-colors flex flex-col items-center justify-center gap-2"
+          >
+            <p className="text-xs text-muted-foreground">Namespaces</p>
+            <p className="text-4xl font-semibold text-primary">
+              {catalogStats[catalogParam || ""]?.namespaceCount || 0}
+            </p>
+          </Link>
+
+          {/* Tables card - spans 1 column */}
+          <Link
+            href={`/data/tables?catalog=${catalogParam}`}
+            className="md:col-span-1 bg-card border border-border rounded-lg p-6 hover:border-primary transition-colors flex flex-col items-center justify-center gap-2"
+          >
+            <p className="text-xs text-muted-foreground">Tables</p>
+            <p className="text-4xl font-semibold text-primary">
+              {catalogStats[catalogParam || ""]?.tableCount || 0}
+            </p>
+          </Link>
+        </div>
+
+        {/* Configuration Settings */}
+        <div className="bg-card border border-border rounded-lg p-4 pb-6">
+          <div className="flex items-center gap-2 mb-4">
+            <svg
+              className="w-5 h-5 text-primary"
+              viewBox="0 0 512 512"
+              fill="currentColor"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path d="M78.6 5C69.1-2.4 55.6-1.5 47 7L7 47c-8.5 8.5-9.4 22-2.1 31.6l80 104c4.5 5.9 11.6 9.4 19 9.4h54.1l109 109c-14.7 29-10 65.4 14.3 89.6l112 112c12.5 12.5 32.8 12.5 45.3 0l64-64c12.5-12.5 12.5-32.8 0-45.3l-112-112c-24.2-24.2-60.6-29-89.6-14.3l-109-109V104c0-7.5-3.5-14.5-9.4-19L78.6 5zM19.9 396.1C7.2 408.8 0 426.1 0 444.1C0 481.6 30.4 512 67.9 512c18 0 35.3-7.2 48-19.9L233.7 374.3c-7.8-20.9-9-43.6-3.6-65.1l-61.7-61.7L19.9 396.1zM512 144c0-10.5-1.1-20.7-3.2-30.5c-2.4-11.2-16.1-14.1-24.2-6l-63.9 63.9c-3 3-7.1 4.7-11.3 4.7H352c-8.8 0-16-7.2-16-16V102.6c0-4.2 1.7-8.3 4.7-11.3l63.9-63.9c8.1-8.1 5.2-21.8-6-24.2C388.7 1.1 378.5 0 368 0C288.5 0 224 64.5 224 144l0 .8 85.3 85.3c36-9.1 75.8 .5 104 28.7L429 274.5c49-23 83-72.8 83-130.5zM56 432a24 24 0 1 1 48 0 24 24 0 1 1 -48 0z" />
+            </svg>
+            <h3 className="text-lg font-semibold text-card-foreground">
+              Configuration Settings
+            </h3>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-4">
+            {/* Default Settings - Grouped left 2 columns with visual border */}
+            <div className="border border-border rounded-lg p-4 bg-muted/30">
+              <h4 className="text-sm font-semibold text-card-foreground mb-3">
+                Default Settings
+              </h4>
+              {Object.keys(mergedDefaults).length > 0 ? (
+                <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                  {defaultPairs.map((pair, rowIndex) => (
+                    <React.Fragment key={rowIndex}>
+                      <div>{renderConfigItem(pair[0][0], pair[0][1])}</div>
+                      {pair[1] && (
+                        <div>{renderConfigItem(pair[1][0], pair[1][1])}</div>
+                      )}
+                    </React.Fragment>
+                  ))}
                 </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No default settings configured
+                </p>
+              )}
+            </div>
 
-                {(() => {
-                  // Merge database properties and config defaults, prioritizing database
-                  // Note: Server now filters sensitive properties before sending to client
-                  const mergedDefaults = {
-                    ...(config?.defaults || {}),
-                    ...(catalogDetails?.properties || {}),
-                  }
-
-                  return Object.keys(mergedDefaults).length > 0 ? (
-                    <div className="space-y-3">
-                      {Object.entries(mergedDefaults).map(([key, value]) => (
-                        <div
-                          key={key}
-                          className="flex flex-col gap-1 border-b border-dashed border-muted pb-3 last:border-0 last:pb-0"
-                        >
-                          <div className="text-sm font-medium">{key}</div>
-                          <div className="rounded-sm bg-muted/30 px-2 py-1 font-mono text-sm text-muted-foreground">
-                            {value}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="py-8 text-center text-muted-foreground">
-                      No default settings configured
-                    </div>
-                  )
-                })()}
-              </div>
-
-              {/* Override Settings Section */}
-              <div className="p-5">
-                <div className="mb-4 flex items-center gap-2">
-                  <h3 className="text-base font-medium">Override Settings</h3>
+            {/* Override Settings - Right column */}
+            <div className="border border-border rounded-lg p-4 bg-muted/30">
+              <h4 className="text-sm font-semibold text-card-foreground mb-3">
+                Override Settings
+              </h4>
+              {Object.keys(overrides).length > 0 ? (
+                <div className="space-y-3">
+                  {Object.entries(overrides).map(([key, value]) => (
+                    <div key={key}>{renderConfigItem(key, value)}</div>
+                  ))}
                 </div>
-
-                {(() => {
-                  // Note: Server now filters sensitive properties before sending to client
-                  const overrides = config?.overrides || {}
-
-                  return Object.keys(overrides).length > 0 ? (
-                    <div className="space-y-3">
-                      {Object.entries(overrides).map(([key, value]) => (
-                        <div
-                          key={key}
-                          className="flex flex-col gap-1 border-b border-dashed border-muted pb-3 last:border-0 last:pb-0"
-                        >
-                          <div className="text-sm font-medium">{key}</div>
-                          <div className="rounded-sm bg-muted/30 px-2 py-1 font-mono text-sm text-muted-foreground">
-                            {value}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="py-8 text-center text-muted-foreground">
-                      No override settings configured
-                    </div>
-                  )
-                })()}
-              </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No override settings configured
+                </p>
+              )}
             </div>
           </div>
         </div>

@@ -38,14 +38,6 @@ import {
 import * as React from "react"
 
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -54,7 +46,6 @@ import {
 } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { cn } from "@/lib/utils"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -117,19 +108,16 @@ export function DataTable<TData, TValue>({
           </div>
         </div>
       )}
-      <div className="overflow-hidden rounded-lg border border-border/40 shadow-sm">
-        <Table>
-          <TableHeader className="bg-muted/50">
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow
-                key={headerGroup.id}
-                className="border-b border-border/40 hover:bg-transparent"
-              >
+              <tr key={headerGroup.id} className="border-b border-border">
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead
+                    <th
                       key={header.id}
-                      className="whitespace-nowrap px-6 py-4 font-medium text-foreground/80"
+                      className="text-left py-3 px-4 text-sm font-normal text-muted-foreground whitespace-nowrap"
                       onClick={header.column.getToggleSortingHandler()}
                       style={{
                         cursor: header.column.getCanSort()
@@ -156,53 +144,46 @@ export function DataTable<TData, TValue>({
                           </div>
                         )}
                       </div>
-                    </TableHead>
+                    </th>
                   )
                 })}
-              </TableRow>
+              </tr>
             ))}
-          </TableHeader>
-          <TableBody>
+          </thead>
+          <tbody>
             {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row, rowIndex) => (
-                <TableRow
+              table.getRowModel().rows.map((row) => (
+                <tr
                   key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                  className={cn(
-                    "transition-colors hover:bg-muted/40",
-                    rowIndex % 2 === 0 ? "bg-background" : "bg-muted/5"
-                  )}
+                  className="border-b border-border hover:bg-table-row-hover"
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell
+                    <td
                       key={cell.id}
-                      className="border-b border-border/40 px-6 py-4 last:border-r-0"
+                      className="py-3 px-4 text-sm text-card-foreground"
                     >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
                       )}
-                    </TableCell>
+                    </td>
                   ))}
-                </TableRow>
+                </tr>
               ))
             ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-32 text-center"
-                >
+              <tr>
+                <td colSpan={columns.length} className="h-32 text-center">
                   <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
                     <p className="text-sm font-medium">No results found</p>
                     <p className="mt-1.5 text-xs">
                       Try adjusting your search or filters
                     </p>
                   </div>
-                </TableCell>
-              </TableRow>
+                </td>
+              </tr>
             )}
-          </TableBody>
-        </Table>
+          </tbody>
+        </table>
       </div>
       {table.getPageCount() > 1 ? (
         <div className="flex items-center justify-between space-x-2 py-4">

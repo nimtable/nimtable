@@ -1,13 +1,6 @@
 "use client"
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { ArrowRight, Database, FolderOpen, Plus, Search } from "lucide-react"
+import { ArrowLeft, Plus, Search } from "lucide-react"
 import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,6 +10,14 @@ import { CreateNamespaceModal } from "@/components/namespace/CreateNamespaceModa
 
 import { useNamespaces } from "../hooks/useNamespaces"
 import { useCatalogs } from "../hooks/useCatalogs"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { FolderIcon, ChevronDown } from "lucide-react"
+import Link from "next/link"
 
 export function NamespacesContent() {
   const searchParams = useSearchParams()
@@ -77,46 +78,66 @@ export function NamespacesContent() {
   }
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden bg-gray-50">
-      {/* Search Bar */}
-      <div className="border-b bg-white p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <h1 className="text-2xl font-semibold">Namespaces</h1>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Catalog Selector */}
-          <div className="w-48">
-            <Select value={selectedCatalog} onValueChange={setSelectedCatalog}>
-              <SelectTrigger className="h-10">
-                <SelectValue placeholder="Select Catalog" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Catalogs</SelectItem>
-                {catalogs?.map((catalog) => (
-                  <SelectItem key={catalog} value={catalog}>
-                    {catalog}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+    <div className="min-h-screen bg-background">
+      <div className="flex items-center gap-3 px-6 py-4">
+        <Link
+          href="/data/catalogs"
+          className="text-primary hover:text-primary/80 transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </Link>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <FolderIcon className="w-5 h-5 text-card-foreground" />
+            <h2 className="text-m font-normal text-card-foreground">
+              {selectedCatalog} ({filteredNamespaces.length})
+            </h2>
           </div>
-
-          {/* Search Input */}
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+          <span className="px-2 py-1 text-xs font-normal bg-muted text-muted-foreground rounded">
+            Namespaces
+          </span>
+        </div>
+      </div>
+      <div className="bg-card border-b border-border px-6 py-4">
+        <div className="flex items-center gap-3">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-2 bg-card border-input">
+                <FolderIcon className="w-4 h-4" />
+                {selectedCatalog}
+                <ChevronDown className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => setSelectedCatalog("all")}>
+                All Catalogs
+              </DropdownMenuItem>
+              {catalogs?.map((catalog) => (
+                <DropdownMenuItem
+                  key={catalog}
+                  onClick={() => setSelectedCatalog(catalog)}
+                >
+                  {catalog}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
+              type="text"
               placeholder="Search namespaces..."
-              className="h-10 pl-9"
+              className="pl-10 bg-card border-input"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-
-          {/* Create Namespace Button */}
-          <Button className="gap-2" onClick={() => setIsCreateModalOpen(true)}>
-            <Plus className="h-4 w-4" />
-            Create Namespace
+          <Button
+            className="bg-primary hover:bg-primary/90 text-primary-foreground"
+            onClick={() => setIsCreateModalOpen(true)}
+          >
+            <Plus className="w-4 h-4 mr-0" />
+            Create new Namespace
           </Button>
         </div>
       </div>
@@ -130,84 +151,71 @@ export function NamespacesContent() {
       />
 
       {/* Namespaces List */}
-      <div className="flex-1 overflow-auto p-6">
-        <div className="overflow-hidden rounded-lg border bg-white shadow-sm">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+      <div className="h-[calc(100vh-200px)] overflow-auto p-6">
+        {/* Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-table-header border-b border-border">
               <tr>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-                >
+                <th className="px-6 py-3 text-left text-xs font-normal text-muted-foreground uppercase tracking-wider">
                   Namespace
                 </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-                >
+                <th className="px-6 py-3 text-left text-xs font-normal text-muted-foreground uppercase tracking-wider">
                   Catalog
                 </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-                >
+                <th className="px-6 py-3 text-left text-xs font-normal text-muted-foreground uppercase tracking-wider">
                   Tables
-                </th>
-
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500"
-                >
-                  Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
-              {filteredNamespaces.map((namespace) => (
+            <tbody className="bg-card divide-y divide-border">
+              {filteredNamespaces.map((namespace, index) => (
                 <tr
-                  key={namespace.id}
-                  className="cursor-pointer hover:bg-gray-50"
-                  onClick={() =>
-                    router.push(
-                      `/data/tables?catalog=${namespace.catalog}&namespace=${namespace.name}`
-                    )
-                  }
+                  key={index}
+                  className="group hover:bg-table-row-hover transition-colors"
                 >
-                  <td className="whitespace-nowrap px-6 py-4">
-                    <div className="flex items-center">
-                      <FolderOpen className="mr-2 h-5 w-5 text-gray-400" />
-                      <div className="font-medium text-gray-900">
-                        {namespace.name}
-                      </div>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-normal text-card-foreground">
+                    {namespace.name}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                    {namespace.catalog}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                    <div className="flex items-center justify-between">
+                      {namespace.tableCount}
+
+                      <a
+                        href={`/data/tables?catalog=${namespace.catalog}&namespace=${namespace.name}`}
+                        className="text-primary cursor-pointer hover:text-primary/80 font-normal flex items-center gap-1 ml-4 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        View Tables
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 5l7 7-7 7"
+                          />
+                        </svg>
+                      </a>
                     </div>
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4">
-                    <div className="flex items-center">
-                      <Database className="mr-2 h-4 w-4 text-gray-400" />
-                      <div className="text-sm text-gray-500">
-                        {namespace.catalog}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                    {namespace.tableCount}
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
-                    <span className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-900">
-                      View Tables
-                      <ArrowRight className="h-3 w-3" />
-                    </span>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          {filteredNamespaces.length === 0 && (
-            <div className="py-8 text-center text-gray-500">
-              No namespaces found matching your criteria
-            </div>
-          )}
         </div>
+
+        {filteredNamespaces.length === 0 && (
+          <div className="py-8 text-center text-gray-500">
+            No namespaces found matching your criteria
+          </div>
+        )}
       </div>
     </div>
   )

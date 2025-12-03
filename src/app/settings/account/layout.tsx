@@ -5,5 +5,5 @@ export default function AccountSettingsLayout({
 }: {
   children: React.ReactNode
 }) {
-  return <DashboardLayout>{children}</DashboardLayout>
+  return <DashboardLayout title="Account Settings">{children}</DashboardLayout>
 }

@@ -1,8 +1,25 @@
-import { getFileDistribution } from "@/lib/data-loader"
+import { DistributionItem, getFileDistribution } from "@/lib/data-loader"
 import { useQueries } from "@tanstack/react-query"
 import { useNamespaces } from "./useNamespaces"
 import { useCatalogs } from "./useCatalogs"
 
+export interface Table {
+  table: string
+  catalog: string
+  namespace: string
+  ranges: {
+    [range: string]: DistributionItem
+  }
+  dataFileCount: number
+  positionDeleteFileCount: number
+  eqDeleteFileCount: number
+  dataFileSizeInBytes: number
+  positionDeleteFileSizeInBytes: number
+  eqDeleteFileSizeInBytes: number
+  dataFileRecordCount: number
+  positionDeleteFileRecordCount: number
+  eqDeleteFileRecordCount: number
+}
 export const useAllTables = () => {
   const {
     catalogs,

@@ -1,44 +1,22 @@
 "use client"
 
 import {
-  ChevronDown,
-  ChevronRight,
   Code,
   Database,
-  FolderOpen,
-  FolderTree,
   Home,
-  Layers,
   LayoutGrid,
-  LogOut,
-  Settings,
   Users,
   Calendar,
   Bot,
 } from "lucide-react"
 import { usePathname } from "next/navigation"
-import { useState } from "react"
 import Link from "next/link"
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible"
-import { useAuth } from "@/contexts/auth-context"
 import { cn } from "@/lib/utils"
 import { FeedbackButton } from "@/components/feedback-button"
 
 export function Sidebar() {
   const pathname = usePathname()
-  const [dataExpanded, setDataExpanded] = useState(true)
-  const { user, logout } = useAuth()
 
   const mainNavItems = [
     {
@@ -50,20 +28,20 @@ export function Sidebar() {
 
   const dataNavItems = [
     {
-      title: "Catalogs",
+      title: "Data",
       href: "/data/catalogs",
-      icon: FolderTree,
-    },
-    {
-      title: "Namespaces",
-      href: "/data/namespaces",
-      icon: FolderOpen,
-    },
-    {
-      title: "Tables",
-      href: "/data/tables",
       icon: Database,
     },
+    // {
+    //   title: "Namespaces",
+    //   href: "/data/namespaces",
+    //   icon: FolderOpen,
+    // },
+    // {
+    //   title: "Tables",
+    //   href: "/data/tables",
+    //   icon: Database,
+    // },
   ]
 
   const otherNavItems = [
@@ -93,10 +71,6 @@ export function Sidebar() {
       icon: Bot,
     },
   ]
-
-  const username = user?.profile?.firstName
-    ? `${user.profile.firstName} ${user.profile.lastName}`
-    : user?.username || ""
 
   return (
     <div className="flex h-full w-64 flex-col border-r border-gray-200 bg-white">
@@ -131,44 +105,25 @@ export function Sidebar() {
         </nav>
 
         {/* Data Section with Collapsible */}
-        <div className="mt-6">
-          <Collapsible
-            open={dataExpanded}
-            onOpenChange={setDataExpanded}
-            className="px-2"
-          >
-            <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-50">
-              <div className="flex items-center gap-2">
-                <Layers className="h-5 w-5" />
-                <span>Data</span>
-              </div>
-              {dataExpanded ? (
-                <ChevronDown className="h-4 w-4 text-gray-500" />
-              ) : (
-                <ChevronRight className="h-4 w-4 text-gray-500" />
+        <div className="mt-1 px-2">
+          {dataNavItems.map((item) => (
+            <Link
+              key={item.title}
+              href={item.href}
+              className={cn(
+                "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium",
+                pathname === item.href
+                  ? "bg-gray-100 text-gray-900"
+                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
               )}
-            </CollapsibleTrigger>
-            <CollapsibleContent className="mt-1 space-y-1 pl-4">
-              {dataNavItems.map((item) => (
-                <Link
-                  key={item.title}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium",
-                    pathname === item.href
-                      ? "bg-gray-100 text-gray-900"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                  )}
-                >
-                  <item.icon className="h-4 w-4" />
-                  {item.title}
-                </Link>
-              ))}
-            </CollapsibleContent>
-          </Collapsible>
+            >
+              <item.icon className="h-5 w-5" />
+              {item.title}
+            </Link>
+          ))}
         </div>
 
-        <div className="mt-6">
+        <div className="mt-1">
           <nav className="space-y-1 px-2">
             {otherNavItems.map((item) => (
               <Link
@@ -192,33 +147,6 @@ export function Sidebar() {
       {/* Feedback Button */}
       <div className="px-2 pb-2">
         <FeedbackButton />
-      </div>
-
-      {/* User Profile */}
-      <div className="relative border-t p-4">
-        <DropdownMenu>
-          <DropdownMenuTrigger className="flex w-full cursor-pointer items-center gap-2 rounded-md p-2 hover:bg-gray-100">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200">
-              <span className="text-sm font-medium">{username.charAt(0)}</span>
-            </div>
-            <div className="w-36 text-left">
-              <p className="truncate text-sm font-medium">{username}</p>
-            </div>
-            <ChevronDown className="h-4 w-4 text-gray-500" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuItem className="cursor-pointer" asChild>
-              <Link href="/settings/account">
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Account Settings</span>
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer" onClick={logout}>
-              <LogOut className="mr-2 h-4 w-4" />
-              <span>Sign Out</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
     </div>
   )

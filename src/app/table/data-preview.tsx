@@ -24,6 +24,7 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  TableIcon,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -72,30 +73,24 @@ export function DataPreview({ catalog, namespace, table }: DataPreviewProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold flex items-center gap-2">
-          <span className="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
-          Data Preview
-        </h3>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => refetch()}
-          disabled={isPending}
-          className="gap-1.5"
-        >
-          <RefreshCw
-            className={`h-3.5 w-3.5 ${isPending ? "animate-spin" : ""}`}
-          />
-          Refresh
-        </Button>
-      </div>
-
       <Card className="border-muted/70 shadow-sm overflow-hidden">
         <CardHeader className="pb-2 border-b">
           <CardTitle className="text-base flex items-center gap-2">
-            <Database className="h-4 w-4 text-blue-500" />
+            <TableIcon className="w-5 h-5 text-primary" />
             Sample Data
+            <div className="flex items-center justify-between">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => refetch()}
+                disabled={isPending}
+                className="gap-1.5"
+              >
+                <RefreshCw
+                  className={`h-3.5 w-3.5 ${isPending ? "animate-spin" : ""}`}
+                />
+              </Button>
+            </div>
           </CardTitle>
         </CardHeader>
 

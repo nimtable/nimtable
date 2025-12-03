@@ -9,9 +9,8 @@ import {
 } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useState, useEffect } from "react"
-import { Clock, CalendarDays, AlertCircle } from "lucide-react"
+import { CalendarDays, AlertCircle } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 
 interface CrontabGeneratorProps {
@@ -251,17 +250,26 @@ export function CrontabGenerator({ value, onChange }: CrontabGeneratorProps) {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Clock className="h-5 w-5" />
-          Schedule Configuration
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
+    <div className="pt-4 border-t border-border">
+      <h4 className="text-sm font-semibold text-card-foreground mb-3 flex items-center gap-2">
+        <svg
+          className="w-4 h-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <polyline points="12 6 12 12 16 14" />
+        </svg>
+        Schedule Configuration
+      </h4>
+      <div className="space-y-6">
         {/* Schedule Type */}
         <div className="space-y-2">
-          <Label>Schedule Type</Label>
+          <label className="text-sm font-normal text-card-foreground block mb-2">
+            Schedule Type
+          </label>
           <Select
             value={scheduleType}
             onValueChange={(value: ScheduleType) => setScheduleType(value)}
@@ -410,7 +418,7 @@ export function CrontabGenerator({ value, onChange }: CrontabGeneratorProps) {
             {getDescription()}
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

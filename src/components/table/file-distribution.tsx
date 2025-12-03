@@ -1,14 +1,7 @@
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card"
-import { AlertTriangle, RefreshCw, CheckCircle2 } from "lucide-react"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { AlertTriangle, RefreshCw, Info } from "lucide-react"
 import { FileStatistics } from "@/components/table/file-statistics"
 import type { DistributionData } from "@/lib/data-loader"
-import { Button } from "@/components/ui/button"
 
 // Define the order of size ranges
 export const rangeOrder = ["0-8M", "8M-32M", "32M-128M", "128M-512M", "512M+"]
@@ -131,11 +124,17 @@ export function FileDistribution({
     <Card className="h-full border-muted/70 shadow-sm">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="text-base">File Size Distribution</CardTitle>
-            <CardDescription>
-              Current distribution of file sizes in the table
-            </CardDescription>
+          <div className="flex items-center gap-2">
+            <h3 className="text-base font-semibold text-card-foreground">
+              File Size Distribution
+            </h3>
+            <div className="relative group">
+              <Info className="w-4 h-4 text-muted-foreground hover:text-card-foreground cursor-help" />
+              <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-md whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none z-10">
+                Current distribution of file sizes in the table
+                <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-900"></div>
+              </div>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             {shouldOptimize ? (
@@ -146,117 +145,97 @@ export function FileDistribution({
                 </span>
               </div>
             ) : (
-              <div className="flex items-center gap-2 rounded-md border border-green-200 bg-green-50 px-3 py-1 dark:border-green-900/50 dark:bg-green-950/30">
-                <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-500" />
-                <span className="text-sm font-medium text-green-700 dark:text-green-400">
-                  Health
-                </span>
+              <div className="flex items-center gap-2 text-sm">
+                <svg
+                  className="w-4 h-4 text-success"
+                  viewBox="0 0 512 512"
+                  fill="currentColor"
+                >
+                  <path d="M256 48a208 208 0 1 1 0 416 208 208 0 1 1 0-416zm0 464A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM369 209c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-111 111-47-47c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l64 64c9.4 9.4 24.6 9.4 33.9 0L369 209z" />
+                </svg>
+                <span className="text-success font-normal">Healthy</span>
               </div>
             )}
           </div>
         </div>
       </CardHeader>
       <CardContent className="pt-4">
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          {/* Left section - File Statistics */}
-          <div className="space-y-6">
-            <div className="pt-4">
-              <FileStatistics distribution={distribution} />
-            </div>
+        <div className="space-y-6 grid grid-cols-[5fr_5fr] gap-8 mt-6">
+          {/* File Statistics section */}
+          <div className="border border-border rounded-lg p-6 bg-muted/20">
+            <FileStatistics distribution={distribution} />
           </div>
 
-          {/* Right section - Distribution Chart, Total Files and Recommendation */}
+          {/* Distribution Chart, Total Files and Recommendation section */}
           <div className="space-y-6">
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-2">
-                <span className="font-medium">Total Files: {totalFiles}</span>
-                {onRefresh && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    onClick={onRefresh}
-                    disabled={isFetching}
-                  >
-                    <RefreshCw
-                      className={`h-3 w-3 ${isFetching ? "animate-spin" : ""}`}
-                    />
-                  </Button>
-                )}
-              </div>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-normal text-card-foreground">
+                Total Files: {totalFiles}
+              </span>
+              {onRefresh && (
+                <button
+                  onClick={onRefresh}
+                  disabled={isFetching}
+                  className="text-muted-foreground hover:text-card-foreground"
+                >
+                  <RefreshCw
+                    className={`w-4 h-4 ${isFetching ? "animate-spin" : ""}`}
+                  />
+                </button>
+              )}
             </div>
 
-            <div className="space-y-5">
+            <div className="space-y-3">
               {sortedDistributionEntries.map(([range, data]) => (
-                <div key={range} className="space-y-1.5">
-                  <div className="flex items-center justify-between">
+                <div key={range}>
+                  <div className="flex items-center justify-between text-sm mb-1">
                     <div className="flex items-center gap-2">
                       <div
-                        className={`h-3 w-3 rounded-full ${
-                          range === "0-8M"
-                            ? "bg-blue-300 dark:bg-blue-400/80"
-                            : range === "8M-32M"
-                              ? "bg-blue-400 dark:bg-blue-500/80"
-                              : range === "32M-128M"
-                                ? "bg-blue-500"
-                                : range === "128M-512M"
-                                  ? "bg-blue-600"
-                                  : "bg-blue-700"
+                        className={`w-2 h-2 rounded-full ${
+                          data.count > 0 ? "bg-primary" : "bg-muted"
                         }`}
                       />
-                      <span className="text-sm font-medium">{range}</span>
+                      <span className="text-card-foreground">{range}</span>
                     </div>
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-muted-foreground">
                       {data.count} files ({data.percentage}%)
                     </span>
                   </div>
-                  <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted/50">
-                    <div
-                      className={`h-full rounded-full ${
-                        range === "0-8M"
-                          ? "bg-blue-300 dark:bg-blue-400/80"
-                          : range === "8M-32M"
-                            ? "bg-blue-400 dark:bg-blue-500/80"
-                            : range === "32M-128M"
-                              ? "bg-blue-500"
-                              : range === "128M-512M"
-                                ? "bg-blue-600"
-                                : "bg-blue-700"
-                      }`}
-                      style={{ width: `${data.percentage}%` }}
-                    />
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    {data.count > 0 && (
+                      <div
+                        className="h-full bg-primary"
+                        style={{ width: `${data.percentage}%` }}
+                      />
+                    )}
                   </div>
                 </div>
               ))}
             </div>
 
             {showRecommendation && (
-              <div className="border-t border-muted/50 pt-4">
-                <div className="text-sm">
-                  <p className="mb-2 font-medium text-foreground">
-                    Optimization Recommendation:
-                  </p>
-                  {shouldOptimize ? (
-                    <div className="space-y-2">
-                      <p className="text-muted-foreground">
-                        This table would benefit from optimization for the
-                        following reasons:
-                      </p>
-                      <ul className="list-disc space-y-1 pl-4 text-muted-foreground">
-                        {recommendations.map(
-                          (reason: string, index: number) => (
-                            <li key={index}>{reason}</li>
-                          )
-                        )}
-                      </ul>
-                    </div>
-                  ) : (
-                    <p className="text-muted-foreground">
-                      This table's file distribution is optimal and does not
-                      require optimization at this time.
+              <div className="mt-6 p-3 bg-muted rounded">
+                <p className="text-sm font-normal text-card-foreground mb-1">
+                  Optimization Recommendation:
+                </p>
+                {shouldOptimize ? (
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">
+                      This table would benefit from optimization for the
+                      following reasons:
                     </p>
-                  )}
-                </div>
+                    <ul className="list-disc space-y-1 pl-4 text-sm text-muted-foreground">
+                      {recommendations.map((reason: string, index: number) => (
+                        <li key={index}>{reason}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    This table's file distribution is optimal and does not
+                    require optimization at this time.
+                  </p>
+                )}
               </div>
             )}
           </div>

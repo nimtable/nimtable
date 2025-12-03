@@ -51,8 +51,8 @@ export default function RootLayout({
         <TooltipProvider delayDuration={300}>
           <ThemeProvider
             attribute="class"
-            defaultTheme="system"
-            enableSystem
+            defaultTheme="light"
+            enableSystem={false}
             disableTransitionOnChange
           >
             <ReactQueryProvider>
