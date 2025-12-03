@@ -176,6 +176,6 @@
 
   .tab-item-active {
     @apply px-6 text-sm font-normal text-primary border-b-0 border-l-2 cursor-pointer underline pointer-events-none;
-    border-left-color: #f1f1f1;
+    border-left-color: var(--border);
   }
 }
