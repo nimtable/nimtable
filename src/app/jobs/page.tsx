@@ -451,7 +451,10 @@ export default function JobsPage() {
                             </Button>
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
-                                <button className="rounded-full p-1 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600">
+                                <button
+                                  className="rounded-full p-1 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                                  aria-label="Delete task"
+                                >
                                   <Trash2 className="h-4 w-4" />
                                 </button>
                               </AlertDialogTrigger>
