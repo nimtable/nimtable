@@ -68,14 +68,6 @@ export default function OptimizationPage() {
       return a.name.localeCompare(b.name)
     })
 
-  // if (isLoading || isFileDistributionLoading) {
-  //   return (
-  //     <div className="flex h-screen items-center justify-center">
-  //       <div className="h-16 w-16 animate-spin rounded-full border-b-2 border-t-2 border-gray-900" />
-  //     </div>
-  //   )
-  // }
-
   return (
     <div className="flex flex-1 flex-col overflow-hidden bg-background">
       {/* Search and filters bar */}
