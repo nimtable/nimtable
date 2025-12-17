@@ -439,11 +439,14 @@ export default function JobsPage() {
                               }
                               disabled={toggleTaskMutation.isPending}
                               className="h-8 w-8 p-0"
+                              aria-label={
+                                task.enabled ? "Pause task" : "Resume task"
+                              }
                             >
                               {task.enabled ? (
-                                <Pause className="h-4 w-4" />
+                                <Pause className="h-4 w-4" aria-hidden="true" />
                               ) : (
-                                <Play className="h-4 w-4" />
+                                <Play className="h-4 w-4" aria-hidden="true" />
                               )}
                             </Button>
                             <AlertDialog>
