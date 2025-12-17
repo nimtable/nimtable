@@ -1,17 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { Edit2, Search, Trash2 } from "lucide-react"
+import { Edit2, Trash2 } from "lucide-react"
 
-import { Input } from "@/components/ui/input"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
+import { Skeleton } from "@/components/ui/skeleton"
 import { formatDate } from "@/lib/format"
 import { Button } from "../ui/button"
 import { LoadingButton } from "../ui/loading-button"
@@ -47,11 +39,18 @@ interface UserTableProps {
   users: User[]
   currentUser?: User
   refetch: () => void
+  loading?: boolean
+  searchTerm?: string
 }
 
-export function UserTable({ users, currentUser, refetch }: UserTableProps) {
+export function UserTable({
+  users,
+  currentUser,
+  refetch,
+  loading = false,
+  searchTerm = "",
+}: UserTableProps) {
   const { toast } = useToast()
-  const [searchTerm, setSearchTerm] = useState("")
   const [userToDelete, setUserToDelete] = useState<User | null>(null)
   const [userToEdit, setUserToEdit] = useState<User | null>(null)
   const [selectedRoleId, setSelectedRoleId] = useState<number>(
@@ -158,86 +157,132 @@ export function UserTable({ users, currentUser, refetch }: UserTableProps) {
     }
   }
 
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search users..."
-            className="pl-8"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
+  if (loading) {
+    return (
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[600px]">
+          <thead className="bg-table-header border-b border-border">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-normal text-muted-foreground uppercase tracking-wider">
+                Name
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-normal text-muted-foreground uppercase tracking-wider">
+                Role
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-normal text-muted-foreground uppercase tracking-wider">
+                Last Modified
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-normal text-muted-foreground uppercase tracking-wider">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-card divide-y divide-border">
+            {[1, 2, 3, 4, 5].map((index) => (
+              <tr key={index} className="hover:bg-table-row-hover">
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <Skeleton className="h-4 w-32" />
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <Skeleton className="h-5 w-16" />
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <Skeleton className="h-4 w-24" />
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-right">
+                  <div className="flex justify-end gap-2">
+                    <Skeleton className="h-8 w-8" />
+                    <Skeleton className="h-8 w-8" />
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
+    )
+  }
 
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Last Modified</TableHead>
-              <TableHead className="w-[80px]"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredUsers.length > 0 ? (
-              filteredUsers.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.username}</TableCell>
-                  <TableCell>
-                    <div
-                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-normal ${getRoleStyle(
-                        user.role
-                      )}`}
-                    >
-                      {user.role}
+  return (
+    <div className="overflow-x-auto">
+      {filteredUsers.length === 0 ? (
+        <div className="py-8 text-center text-gray-500">No users found</div>
+      ) : (
+        <table className="w-full min-w-[600px]">
+          <thead className="bg-table-header border-b border-border">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-normal text-muted-foreground uppercase tracking-wider">
+                Name
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-normal text-muted-foreground uppercase tracking-wider">
+                Role
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-normal text-muted-foreground uppercase tracking-wider">
+                Last Modified
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-normal text-muted-foreground uppercase tracking-wider">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-card divide-y divide-border">
+            {filteredUsers.map((user) => (
+              <tr
+                key={user.id}
+                className="group hover:bg-table-row-hover transition-colors"
+              >
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm font-normal text-card-foreground">
+                    {user.username}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div
+                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-normal ${getRoleStyle(
+                      user.role
+                    )}`}
+                  >
+                    {user.role}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                  {user.updatedAt &&
+                    formatDate(new Date(user.updatedAt).getTime())}
+                </td>
+                {(currentUser?.role === "superadmin" ||
+                  currentUser?.role === "admin") &&
+                user.role !== "superadmin" &&
+                user.id !== currentUser?.id ? (
+                  <td className="px-6 py-4 whitespace-nowrap text-right">
+                    <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEdit(user)}
+                        className="h-8 w-8 text-primary hover:!text-primary hover:bg-muted/50"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                        <span className="sr-only">Edit</span>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(user)}
+                        className="h-8 w-8 text-primary hover:!text-primary hover:bg-muted/50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Remove</span>
+                      </Button>
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    {user.updatedAt &&
-                      formatDate(new Date(user.updatedAt).getTime())}
-                  </TableCell>
-                  {(currentUser?.role === "superadmin" ||
-                    currentUser?.role === "admin") &&
-                    user.role !== "superadmin" &&
-                    user.id !== currentUser?.id && (
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEdit(user)}
-                          >
-                            <Edit2 className="h-4 w-4" />
-                            <span className="sr-only">Edit</span>
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(user)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            <span className="sr-only">Remove</span>
-                          </Button>
-                        </div>
-                      </TableCell>
-                    )}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
-                  No users found
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+                  </td>
+                ) : (
+                  <td className="px-6 py-4 whitespace-nowrap"></td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
 
       <AlertDialog
         open={!!userToDelete}

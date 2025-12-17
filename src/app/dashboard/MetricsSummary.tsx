@@ -12,33 +12,37 @@ export function MetricsSummary() {
     .filter((item) => item?.shouldOptimize)
 
   return (
-    <div className="grid grid-cols-2 gap-6 ">
-      <div className="rounded-lg border bg-white p-6 shadow-sm">
+    <div className="grid grid-cols-2 gap-6">
+      <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-sm font-medium text-gray-500">Total Tables</p>
-            <p className="mt-2 text-3xl font-semibold">{tables.length}</p>
+            <p className="text-sm font-medium text-muted-foreground">
+              Total Tables
+            </p>
+            <p className="mt-2 text-3xl font-semibold text-card-foreground">
+              {tables.length}
+            </p>
           </div>
-          <div className={`rounded-md bg-blue-500 p-3 text-white`}>
+          <div className="rounded-md bg-primary p-3 text-primary-foreground">
             <Database className="h-6 w-6" />
           </div>
         </div>
       </div>
-      <div className="rounded-lg border bg-white p-6 shadow-sm">
+      <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-sm font-medium text-gray-500">
+            <p className="text-sm font-medium text-muted-foreground">
               Tables Needing Compaction
             </p>
-            <div className="mt-2 text-3xl font-semibold">
+            <div className="mt-2 text-3xl font-semibold text-card-foreground">
               {isFileDistributionLoading ? (
-                <div className="mt-4 h-4 w-16 animate-pulse rounded bg-gray-200" />
+                <div className="mt-4 h-4 w-16 animate-pulse rounded bg-muted" />
               ) : (
                 tablesNeedingCompaction.length
               )}
             </div>
           </div>
-          <div className={`rounded-md bg-amber-500 p-3 text-white`}>
+          <div className="rounded-md bg-amber-500 p-3 text-white">
             <GitCompare className="h-6 w-6" />
           </div>
         </div>

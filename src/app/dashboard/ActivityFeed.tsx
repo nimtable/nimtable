@@ -1,4 +1,4 @@
-import { ArrowRight, Clock, GitCompare, Star } from "lucide-react"
+import { ArrowRight, Clock, GitCompare } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { enUS } from "date-fns/locale"
 import Link from "next/link"
@@ -68,14 +68,16 @@ export function ActivityFeed() {
 
   if (isLoadingTables || isLoading) {
     return (
-      <div className="rounded-lg border bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b px-6 py-4">
+      <div className="rounded-lg border border-border bg-card shadow-sm">
+        <div className="flex items-center justify-between border-b border-border px-6 py-4 bg-card">
           <div className="flex items-center gap-2">
-            <Clock className="h-5 w-5 text-gray-500" />
-            <h2 className="text-lg font-semibold">Recent Activity</h2>
+            <Clock className="h-5 w-5 text-muted-foreground" />
+            <h2 className="text-base font-medium text-card-foreground">
+              Recent Activity
+            </h2>
           </div>
         </div>
-        <div className="divide-y">
+        <div className="divide-y divide-border">
           {[1, 2, 3, 4, 5].map((index) => (
             <div key={index} className="flex items-center gap-4 px-6 py-4">
               <Skeleton className="h-9 w-9 rounded-md" />
@@ -93,43 +95,61 @@ export function ActivityFeed() {
 
   if (compactionHistory.length === 0) {
     return (
-      <div className="rounded-lg border bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b px-6 py-4">
+      <div className="rounded-lg border border-border bg-card shadow-sm">
+        <div className="flex items-center justify-between border-b border-border px-6 py-4 bg-card">
           <div className="flex items-center gap-2">
-            <Clock className="h-5 w-5 text-gray-500" />
-            <h2 className="text-lg font-semibold">Recent Activity</h2>
+            <Clock className="h-5 w-5 text-muted-foreground" />
+            <h2 className="text-base font-medium text-card-foreground">
+              Recent Activity
+            </h2>
           </div>
         </div>
         <div className="flex flex-col items-center justify-center py-8 text-center">
-          <Star className="h-8 w-8 text-muted-foreground/50" />
-          <h3 className="mt-2 text-sm font-medium">No recent activity</h3>
+          <Clock className="h-8 w-8 text-muted-foreground/50" />
+          <h3 className="mt-2 text-sm font-medium text-card-foreground">
+            No recent activity
+          </h3>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="rounded-lg border bg-white shadow-sm">
-      <div className="flex items-center justify-between border-b px-6 py-4">
+    <div className="rounded-lg border border-border bg-card shadow-sm">
+      <div className="flex items-center justify-between border-b border-border px-6 py-4 bg-card">
         <div className="flex items-center gap-2">
-          <Clock className="h-5 w-5 text-gray-500" />
-          <h2 className="text-lg font-semibold">Recent Activity</h2>
+          <Clock className="h-5 w-5 text-muted-foreground" />
+          <h2 className="text-base font-medium text-card-foreground">
+            Recent Activity
+          </h2>
         </div>
-        <Button variant="ghost" size="sm" className="text-sm">
-          <Link href="/dashboard/activity">View all</Link>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-sm text-primary hover:!text-primary hover:bg-muted/50"
+        >
+          <Link
+            href="/dashboard/activity"
+            className="text-primary hover:text-primary"
+          >
+            View all
+          </Link>
         </Button>
       </div>
-      <div className="divide-y">
+      <div className="divide-y divide-border">
         {compactionHistory.map((activity, index) => (
-          <div key={index} className="flex items-center gap-4 px-6 py-4">
-            <div className={`rounded-md bg-green-100 p-2 text-green-600`}>
+          <div
+            key={index}
+            className="flex items-center gap-4 px-6 py-4 hover:bg-muted/50 transition-colors"
+          >
+            <div className="rounded-md bg-green-100 p-2 text-green-600">
               <GitCompare className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1 font-medium">
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className="text-gray-900 truncate">
+                    <span className="text-card-foreground truncate">
                       {activity?.catalog}.{activity?.namespace}.
                       {activity?.table}
                     </span>
@@ -141,11 +161,11 @@ export function ActivityFeed() {
                     </p>
                   </TooltipContent>
                 </Tooltip>
-                <span className="text-gray-500 flex-shrink-0">
+                <span className="text-muted-foreground shrink-0">
                   — Compaction job completed
                 </span>
               </div>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted-foreground">
                 {formatDistanceToNow(
                   new Date(
                     activity.timestamp < 1e12
@@ -159,9 +179,14 @@ export function ActivityFeed() {
                 )}
               </p>
             </div>
-            <Button variant="ghost" size="sm" className="text-xs">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs text-primary hover:!text-primary hover:bg-muted/50"
+            >
               <Link
                 href={`/data/tables/table?catalog=${activity.catalog}&namespace=${activity.namespace}&table=${activity.table}`}
+                className="text-primary hover:text-primary"
               >
                 <ArrowRight className="h-4 w-4" />
               </Link>

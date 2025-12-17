@@ -240,7 +240,7 @@ export default function JobsPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden bg-background">
+    <div className="flex flex-1 flex-col overflow-hidden bg-background h-full">
       {/* Search and filters bar */}
       <div className="bg-card border-b border-border px-6 py-4">
         <div className="flex items-center gap-3">

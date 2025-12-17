@@ -1,9 +1,9 @@
 import { DashboardLayout } from "@/components/layouts/dashboard-layout"
 
-export default function UsersLayout({
+export default function AISettingsLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  return <DashboardLayout title="Users">{children}</DashboardLayout>
+  return <DashboardLayout title="AI Settings">{children}</DashboardLayout>
 }
