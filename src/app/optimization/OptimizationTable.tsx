@@ -10,9 +10,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { OptimizeSheet } from "@/components/table/optimize-sheet"
-import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
 import { useRouter } from "next/navigation"
 type Table = {
   id: string
@@ -94,81 +94,113 @@ export function OptimizationTable({ tables, loading }: OptimizationTableProps) {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="rounded-lg border bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b px-6 py-4">
-          <div className="flex items-center gap-2">
-            <Skeleton className="h-5 w-5 rounded-full" />
-            <Skeleton className="h-5 w-20" />
-          </div>
-        </div>
-      </div>
-    )
-  }
   return (
-    <div className="overflow-hidden rounded-lg border bg-white shadow-sm">
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+    <div className="overflow-x-auto">
+      {loading ? (
+        <table className="w-full min-w-[800px]">
+          <thead className="bg-table-header border-b border-border">
             <tr>
-              <th
-                scope="col"
-                className="px-3 py-3.5 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-              >
+              <th className="px-6 py-3 text-left text-xs font-normal text-muted-foreground uppercase tracking-wider">
+                Table Name
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-normal text-muted-foreground uppercase tracking-wider">
+                Needs Optimization
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-normal text-muted-foreground uppercase tracking-wider">
+                Data Files
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-normal text-muted-foreground uppercase tracking-wider">
+                Avg File Size
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-normal text-muted-foreground uppercase tracking-wider">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-card divide-y divide-border">
+            {[1, 2, 3, 4, 5].map((index) => (
+              <tr key={index} className="hover:bg-table-row-hover">
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <Skeleton className="h-4 w-32 mb-2" />
+                  <Skeleton className="h-3 w-24" />
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <Skeleton className="h-5 w-16" />
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <Skeleton className="h-4 w-20" />
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <Skeleton className="h-4 w-16" />
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-right">
+                  <div className="flex justify-end gap-2">
+                    <Skeleton className="h-8 w-24" />
+                    <Skeleton className="h-8 w-8" />
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : tables.length === 0 ? (
+        <div className="py-8 text-center text-gray-500">
+          No tables match the current filters
+        </div>
+      ) : (
+        <table className="w-full min-w-[800px]">
+          <thead className="bg-table-header border-b border-border">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-normal text-muted-foreground uppercase tracking-wider">
                 <div
-                  className="flex cursor-pointer items-center gap-1"
+                  className="flex cursor-pointer items-center gap-1 hover:text-card-foreground transition-colors"
                   onClick={() => requestSort("name")}
                 >
                   Table Name
                   <ArrowUpDown className="h-3 w-3" />
                 </div>
               </th>
-              <th
-                scope="col"
-                className="px-3 py-3.5 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-              >
+              <th className="px-6 py-3 text-left text-xs font-normal text-muted-foreground uppercase tracking-wider">
                 <div
-                  className="flex cursor-pointer items-center gap-1"
+                  className="flex cursor-pointer items-center gap-1 hover:text-card-foreground transition-colors"
                   onClick={() => requestSort("needsOptimization")}
                 >
                   Needs Optimization
                   <ArrowUpDown className="h-3 w-3" />
                 </div>
               </th>
-              <th
-                scope="col"
-                className="px-3 py-3.5 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-              >
+              <th className="px-6 py-3 text-left text-xs font-normal text-muted-foreground uppercase tracking-wider">
                 <div
-                  className="flex cursor-pointer items-center gap-1"
+                  className="flex cursor-pointer items-center gap-1 hover:text-card-foreground transition-colors"
                   onClick={() => requestSort("dataFiles")}
                 >
                   Data Files
                   <ArrowUpDown className="h-3 w-3" />
                 </div>
               </th>
-              <th
-                scope="col"
-                className="px-3 py-3.5 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-              >
+              <th className="px-6 py-3 text-left text-xs font-normal text-muted-foreground uppercase tracking-wider">
                 Avg File Size
               </th>
-              <th
-                scope="col"
-                className="px-3 py-3.5 text-right text-xs font-medium uppercase tracking-wider text-gray-500"
-              >
+              <th className="px-6 py-3 text-right text-xs font-normal text-muted-foreground uppercase tracking-wider">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200 bg-white">
+          <tbody className="bg-card divide-y divide-border">
             {sortedTables.map((table) => (
-              <tr key={table.id} className="hover:bg-gray-50">
-                <td className="whitespace-nowrap px-3 py-4">
-                  <div className="font-medium text-gray-900">{table.name}</div>
+              <tr
+                key={table.id}
+                className="group hover:bg-table-row-hover transition-colors"
+              >
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm font-normal text-card-foreground">
+                    {table.name}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {table.catalog}.{table.namespace}
+                  </div>
                 </td>
-                <td className="whitespace-nowrap px-3 py-4">
+                <td className="px-6 py-4 whitespace-nowrap">
                   {table.needsOptimization ? (
                     <Badge
                       variant="outline"
@@ -185,23 +217,22 @@ export function OptimizationTable({ tables, loading }: OptimizationTableProps) {
                     </Badge>
                   )}
                 </td>
-                <td className="whitespace-nowrap px-3 py-4 text-sm">
+                <td className="px-6 py-4 whitespace-nowrap">
                   <div
-                    className={
+                    className={`text-sm ${
                       table.dataFiles > 1000
                         ? "font-medium text-amber-600"
-                        : "text-gray-500"
-                    }
+                        : "text-muted-foreground"
+                    }`}
                   >
                     {table.dataFiles.toLocaleString()}
                   </div>
                 </td>
-                <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                   {table.avgFileSize}
                 </td>
-
-                <td className="whitespace-nowrap px-3 py-4 text-right text-sm font-medium">
-                  <div className="flex justify-end gap-2">
+                <td className="px-6 py-4 whitespace-nowrap text-right">
+                  <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <Button
                       size="sm"
                       variant="outline"
@@ -249,11 +280,6 @@ export function OptimizationTable({ tables, loading }: OptimizationTableProps) {
             ))}
           </tbody>
         </table>
-      </div>
-      {tables.length === 0 && (
-        <div className="py-8 text-center text-gray-500">
-          No tables match the current filters
-        </div>
       )}
 
       {selectedCompactTable && (

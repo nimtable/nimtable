@@ -17,21 +17,14 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
 import { LoadingButton } from "@/components/ui/loading-button"
-import { ArrowLeft } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Bot } from "lucide-react"
 
 interface AISettings {
   endpoint: string
@@ -42,7 +35,6 @@ interface AISettings {
 }
 
 export default function AISettingsPage() {
-  const router = useRouter()
   const [settings, setSettings] = useState<AISettings>({
     endpoint: "https://api.openai.com/v1",
     apiKey: "",
@@ -243,73 +235,113 @@ export default function AISettingsPage() {
 
   if (initialLoading) {
     return (
-      <div className="container mx-auto py-6">
-        <div className="max-w-2xl mx-auto">
-          {/* Back Button */}
-          <Button
-            variant="ghost"
-            className="mb-4 -ml-4"
-            onClick={() => router.back()}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
-          </Button>
+      <div className="flex flex-1 flex-col overflow-hidden bg-background h-full">
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-border flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-2">
+            <Bot className="w-5 h-5 text-card-foreground" />
+            <h2 className="text-m font-normal text-card-foreground">
+              AI Settings
+            </h2>
+          </div>
+        </div>
+        {/* Content */}
+        <div className="flex-1 overflow-auto p-6">
+          <div className="mx-auto max-w-4xl space-y-8">
+            {/* Description */}
+            <div>
+              <Skeleton className="h-4 w-full max-w-md" />
+            </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>AI Settings</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">Loading...</div>
-            </CardContent>
-          </Card>
+            {/* Settings Form */}
+            <div className="space-y-6">
+              {/* Enable Switch */}
+              <div className="flex items-center space-x-2 pb-6 border-b border-border">
+                <Skeleton className="h-5 w-10 rounded-full" />
+                <Skeleton className="h-5 w-48" />
+              </div>
+
+              {/* Form Fields */}
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-3 w-64" />
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-4 w-16" />
+                    <Skeleton className="h-8 w-24" />
+                  </div>
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-3 w-48" />
+                </div>
+
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-3 w-56" />
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="space-y-3 pt-6 border-t border-border">
+                <div className="flex gap-2">
+                  <Skeleton className="h-10 w-40" />
+                  <Skeleton className="h-10 w-36" />
+                </div>
+                <div className="space-y-1">
+                  <Skeleton className="h-3 w-full max-w-md" />
+                  <Skeleton className="h-3 w-full max-w-lg" />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto py-6">
-      <div className="max-w-2xl mx-auto">
-        {/* Back Button */}
-        <Button
-          variant="ghost"
-          className="mb-4 -ml-4"
-          onClick={() => router.back()}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
-        </Button>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>AI Settings</CardTitle>
-            <CardDescription>
+    <div className="flex flex-1 flex-col overflow-hidden bg-background h-full">
+      {/* Content */}
+      <div className="flex-1 overflow-auto p-6">
+        <div className="mx-auto max-w-4xl space-y-8">
+          {/* Description */}
+          <div>
+            <p className="text-sm text-muted-foreground">
               Configure your AI endpoint and API key. When enabled, your custom
               settings will be used instead of the default Nimtable AI service.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex items-center space-x-2">
+            </p>
+          </div>
+
+          {/* Settings Form */}
+          <div className="space-y-6">
+            {/* Enable Switch */}
+            <div className="flex items-center space-x-2 pb-6 border-b border-border">
               <Switch
                 id="ai-enabled"
                 checked={settings.isEnabled}
                 onCheckedChange={handleToggleEnable}
                 disabled={switchLoading}
               />
-              <Label htmlFor="ai-enabled">
+              <Label htmlFor="ai-enabled" className="text-sm font-medium">
                 Enable custom AI configuration
                 {switchLoading && (
-                  <span className="ml-2 text-sm text-muted-foreground">
+                  <span className="ml-2 text-sm text-muted-foreground font-normal">
                     Updating...
                   </span>
                 )}
               </Label>
             </div>
 
-            <div className="space-y-4">
-              <div className="grid gap-2">
-                <Label htmlFor="endpoint">API Endpoint</Label>
+            {/* Form Fields */}
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="endpoint" className="text-sm font-medium">
+                  API Endpoint
+                </Label>
                 <Input
                   id="endpoint"
                   placeholder="https://api.openai.com/v1"
@@ -318,15 +350,18 @@ export default function AISettingsPage() {
                     setSettings({ ...settings, endpoint: e.target.value })
                   }
                   disabled={!settings.isEnabled}
+                  className="bg-card border-input"
                 />
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Must be OpenAI-compatible API endpoint
                 </p>
               </div>
 
-              <div className="grid gap-2">
+              <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="api-key">API Key</Label>
+                  <Label htmlFor="api-key" className="text-sm font-medium">
+                    API Key
+                  </Label>
                   {settings.hasApiKey && (
                     <Button
                       type="button"
@@ -341,15 +376,15 @@ export default function AISettingsPage() {
                         }
                       }}
                       disabled={!settings.isEnabled}
+                      className="border-input bg-card h-8"
                     >
                       {updateApiKey ? "Keep existing" : "Update"}
                     </Button>
                   )}
                 </div>
-
                 {settings.hasApiKey && !updateApiKey ? (
-                  <div className="p-3 bg-muted rounded-md">
-                    <p className="text-sm text-muted-foreground">
+                  <div className="p-3 bg-muted/50 rounded-md border border-border">
+                    <p className="text-xs text-muted-foreground">
                       ✓ API key is configured. Click "Update" to change it.
                     </p>
                   </div>
@@ -363,16 +398,18 @@ export default function AISettingsPage() {
                       setSettings({ ...settings, apiKey: e.target.value })
                     }
                     disabled={!settings.isEnabled}
+                    className="bg-card border-input"
                   />
                 )}
-
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Your API key will be stored securely
                 </p>
               </div>
 
-              <div className="grid gap-2">
-                <Label htmlFor="model-name">Model Name</Label>
+              <div className="space-y-2">
+                <Label htmlFor="model-name" className="text-sm font-medium">
+                  Model Name
+                </Label>
                 <Input
                   id="model-name"
                   placeholder="gpt-4"
@@ -381,19 +418,22 @@ export default function AISettingsPage() {
                     setSettings({ ...settings, modelName: e.target.value })
                   }
                   disabled={!settings.isEnabled}
+                  className="bg-card border-input"
                 />
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   The model name to use for AI requests
                 </p>
               </div>
             </div>
 
-            <div className="space-y-3 pt-4">
+            {/* Actions */}
+            <div className="space-y-3 pt-6 border-t border-border">
               <div className="flex gap-2">
                 <LoadingButton
                   onClick={handleSave}
                   loading={loading}
                   disabled={loading}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
                 >
                   Save Configuration
                 </LoadingButton>
@@ -409,11 +449,12 @@ export default function AISettingsPage() {
                       (!updateApiKey || !settings.apiKey)) ||
                     loading
                   }
+                  className="border-input bg-card hover:bg-muted/50"
                 >
                   {loading ? "Testing..." : "Test Connection"}
                 </LoadingButton>
               </div>
-              <div className="text-sm text-muted-foreground space-y-1">
+              <div className="text-xs text-muted-foreground space-y-1">
                 {settings.isEnabled ? (
                   <div>
                     <p>
@@ -433,8 +474,8 @@ export default function AISettingsPage() {
                 )}
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   )

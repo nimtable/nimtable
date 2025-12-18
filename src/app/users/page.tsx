@@ -2,8 +2,8 @@ import { UserManagement } from "@/components/users/user-management"
 
 export default function Users() {
   return (
-    <main className="mx-auto w-full max-w-7xl px-6 py-8">
+    <div className="flex flex-1 flex-col overflow-hidden bg-background">
       <UserManagement />
-    </main>
+    </div>
   )
 }

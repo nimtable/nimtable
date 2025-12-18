@@ -38,14 +38,16 @@ export function TableWatchlist() {
 
   if (isFileDistributionLoading) {
     return (
-      <div className="rounded-lg border bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b px-6 py-4">
+      <div className="rounded-lg border border-border bg-card shadow-sm">
+        <div className="flex items-center justify-between border-b border-border px-6 py-4 bg-card">
           <div className="flex items-center gap-2">
             <Star className="h-5 w-5 text-amber-500" />
-            <h2 className="text-lg font-semibold">Watchlist</h2>
+            <h2 className="text-base font-medium text-card-foreground">
+              Watchlist
+            </h2>
           </div>
         </div>
-        <div className="divide-y">
+        <div className="divide-y divide-border">
           {[1, 2, 3].map((index) => (
             <div key={index} className="px-6 py-4">
               <div className="mb-2 flex items-center justify-between">
@@ -64,16 +66,18 @@ export function TableWatchlist() {
 
   if (tablesNeedingCompaction.length === 0) {
     return (
-      <div className="rounded-lg border bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b px-6 py-4">
+      <div className="rounded-lg border border-border bg-card shadow-sm">
+        <div className="flex items-center justify-between border-b border-border px-6 py-4 bg-card">
           <div className="flex items-center gap-2">
             <Star className="h-5 w-5 text-amber-500" />
-            <h2 className="text-lg font-semibold">Watchlist</h2>
+            <h2 className="text-base font-medium text-card-foreground">
+              Watchlist
+            </h2>
           </div>
         </div>
         <div className="flex flex-col items-center justify-center py-8 text-center">
           <Star className="h-8 w-8 text-muted-foreground/50" />
-          <h3 className="mt-2 text-sm font-medium">
+          <h3 className="mt-2 text-sm font-medium text-card-foreground">
             No tables need compaction
           </h3>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -85,20 +89,25 @@ export function TableWatchlist() {
   }
 
   return (
-    <div className="rounded-lg border bg-white shadow-sm">
-      <div className="flex items-center justify-between border-b px-6 py-4">
+    <div className="rounded-lg border border-border bg-card shadow-sm">
+      <div className="flex items-center justify-between border-b border-border px-6 py-4 bg-card">
         <div className="flex items-center gap-2">
           <Star className="h-5 w-5 text-amber-500" />
-          <h2 className="text-lg font-semibold">Watchlist</h2>
+          <h2 className="text-base font-medium text-card-foreground">
+            Watchlist
+          </h2>
         </div>
       </div>
-      <div className="divide-y">
+      <div className="divide-y divide-border">
         {tablesNeedingCompaction.map((table, index) => (
-          <div key={index} className="px-6 py-4">
+          <div
+            key={index}
+            className="px-6 py-4 hover:bg-muted/50 transition-colors"
+          >
             <div className="mb-2 flex flex-col gap-2">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <h3 className="font-medium truncate max-w-full">
+                  <h3 className="text-sm font-medium text-card-foreground truncate max-w-full">
                     {table.catalog}.{table.namespace}.{table.table}
                   </h3>
                 </TooltipTrigger>
@@ -111,7 +120,7 @@ export function TableWatchlist() {
 
               <Badge
                 variant="outline"
-                className="w-fit bg-amber-100 text-amber-800 hover:bg-amber-200"
+                className="w-fit bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200"
               >
                 <span className="flex items-center pt-0.5">
                   Needs Compaction
@@ -123,13 +132,13 @@ export function TableWatchlist() {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-7 gap-1 text-xs"
+                className="h-7 gap-1 text-xs border-input bg-card hover:bg-muted/50"
                 onClick={() => {
                   setSelectedCompactTable(table)
                   setShowOptimizeSheet(true)
                 }}
               >
-                <GitCompare className="h-3 w-3" />
+                <GitCompare className="h-3 w-3 text-primary" />
                 Compact
               </Button>
               <Link
@@ -138,9 +147,9 @@ export function TableWatchlist() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-7 gap-1 text-xs"
+                  className="h-7 gap-1 text-xs border-input bg-card hover:bg-muted/50"
                 >
-                  <Eye className="h-3 w-3" />
+                  <Eye className="h-3 w-3 text-primary" />
                   View
                 </Button>
               </Link>

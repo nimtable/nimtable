@@ -5,6 +5,8 @@ import { OptimizationFilters } from "./OptimizationFilters"
 import { OptimizationTable } from "./OptimizationTable"
 import { useAllTables } from "../data/hooks/useTables"
 import { useState } from "react"
+import { Database } from "lucide-react"
+
 export default function OptimizationPage() {
   const { tables, isLoading, isFileDistributionLoading } = useAllTables()
 
@@ -66,26 +68,32 @@ export default function OptimizationPage() {
       return a.name.localeCompare(b.name)
     })
 
-  console.log("formattedTables", formattedTables)
-
   return (
-    <div className="mx-auto w-full max-w-7xl px-6 py-8">
-      <p className="mb-8 text-gray-500">
-        Identify and fix performance and cost inefficiencies across your tables
-      </p>
-
-      <div className="mt-8">
+    <div className="flex flex-1 flex-col overflow-hidden bg-background">
+      {/* Search and filters bar */}
+      <div className="bg-card border-b border-border px-6 py-4">
         <OptimizationFilters
           optimizationStatus={optimizationStatus}
           setOptimizationStatus={setOptimizationStatus}
           fileCount={fileCount}
           setFileCount={setFileCount}
         />
+      </div>
 
-        <div className="mt-4">
+      {/* Tables */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="px-6 py-4 border-b border-border flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-2">
+            <Database className="w-5 h-5 text-card-foreground" />
+            <h2 className="text-m font-normal text-card-foreground">
+              Tables ({formattedTables.length})
+            </h2>
+          </div>
+        </div>
+        <div className="flex-1 overflow-auto p-6">
           <OptimizationTable
             tables={formattedTables}
-            loading={isFileDistributionLoading || isLoading}
+            loading={isLoading || isFileDistributionLoading}
           />
         </div>
       </div>
