@@ -59,7 +59,7 @@ const YAML_EXAMPLE = `catalogs:
    s3.path-style-access: true
 `
 
-const SPARK_CLI_EXAMPLE = `spark-sql --packages org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.10.0,org.apache.iceberg:iceberg-aws-bundle:1.10.0 \\
+const SPARK_CLI_EXAMPLE = `spark-sql --packages org.apache.iceberg:iceberg-spark-runtime-4.0_2.13:1.10.0,org.apache.iceberg:iceberg-aws-bundle:1.10.0 \\
     --conf spark.sql.catalog.my_catalog=org.apache.iceberg.spark.SparkCatalog \\
     --conf spark.sql.catalog.my_catalog.warehouse=s3://my-bucket/my/key/prefix \\    
     --conf spark.sql.catalog.my_catalog.type=glue \\
@@ -74,7 +74,7 @@ spark.sql.catalog.rest_prod.type = rest
 spark.sql.catalog.rest_prod.uri = http://localhost:8080
 `
 
-const SPARK_DEFAULTS_EXAMPLE = `spark.jars.packages                                  org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.10.0
+const SPARK_DEFAULTS_EXAMPLE = `spark.jars.packages                                  org.apache.iceberg:iceberg-spark-runtime-4.0_2.13:1.10.0
 spark.sql.extensions                                 org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions
 spark.sql.catalog.spark_catalog                      org.apache.iceberg.spark.SparkSessionCatalog
 spark.sql.catalog.spark_catalog.type                 hive
