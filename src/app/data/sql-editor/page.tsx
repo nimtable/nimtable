@@ -252,7 +252,7 @@ export default function SQLEditorPage() {
                   {/* Highlighted code display */}
                   <div
                     ref={highlightedCodeRef}
-                    className="sql-editor-container pointer-events-none absolute inset-0 whitespace-pre-wrap break-words p-4 font-mono text-sm"
+                    className="sql-editor-container pointer-events-none absolute inset-0 whitespace-pre-wrap break-words p-4 font-mono text-sm leading-5"
                     dangerouslySetInnerHTML={{ __html: highlightedCode }}
                     aria-hidden="true"
                   ></div>
@@ -264,7 +264,7 @@ export default function SQLEditorPage() {
                     onChange={(e) => {
                       setQuery(e.target.value)
                     }}
-                    className="absolute inset-0 h-full w-full resize-none border-0 bg-transparent p-4 font-mono text-sm text-transparent caret-foreground focus:outline-none [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar]:w-2"
+                    className="absolute inset-0 h-full w-full resize-none border-0 bg-transparent p-4 font-mono text-sm leading-5 text-transparent caret-foreground whitespace-pre-wrap break-words focus:outline-none [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar]:w-2"
                     placeholder="Enter your SQL query here..."
                     spellCheck="false"
                     onKeyDown={(e) => {

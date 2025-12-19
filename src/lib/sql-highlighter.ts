@@ -27,11 +27,11 @@ export function highlightSQL(sql: string): string {
     // Highlight the SQL code
     const highlighted = Prism.highlight(sql, Prism.languages.sql, "sql")
 
-    // Wrap in pre and code tags with custom styling
-    return `<pre class="language-sql" style="margin: 0; padding: 0; background: transparent;"><code class="language-sql" style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 14px; line-height: 1.5;">${highlighted}</code></pre>`
+    // Wrap in pre/code tags and let the editor container styles control layout.
+    return `<pre class="language-sql"><code class="language-sql">${highlighted}</code></pre>`
   } catch (error) {
     console.error("Error highlighting SQL:", error)
     // Fallback to plain text if highlighting fails
-    return `<pre style="margin: 0; padding: 0; background: transparent;">${sql.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>`
+    return `<pre class="language-sql"><code class="language-sql">${sql.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code></pre>`
   }
 }
