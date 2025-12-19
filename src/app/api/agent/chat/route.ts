@@ -75,9 +75,19 @@ Always start by understanding what data is available before writing queries or e
 
     return result.toDataStreamResponse()
   } catch (error) {
-    console.error("Error in AI chat endpoint:", error)
+    const message = error instanceof Error ? error.message : String(error)
+    const stack = error instanceof Error ? error.stack : undefined
+    console.error("Error in AI chat endpoint:", {
+      message,
+      stack,
+      error,
+    })
     return new Response(
-      JSON.stringify({ error: "Failed to process chat request" }),
+      JSON.stringify({
+        error: "Failed to process chat request",
+        message,
+        ...(process.env.NODE_ENV === "production" ? {} : { stack }),
+      }),
       {
         status: 500,
         headers: { "Content-Type": "application/json" },

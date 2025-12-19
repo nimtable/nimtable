@@ -17,10 +17,13 @@
 "use server"
 
 import { saveTableSummary } from "@/db/table-summary"
-import { model, systemPrompt } from "@/lib/agent/utils"
+import { getModel, systemPrompt } from "@/lib/agent/utils"
 import { TableMetadata } from "@/lib/api"
 import { DistributionData } from "@/lib/data-loader"
+import { verifyToken } from "@/lib/auth"
+import { cookies } from "next/headers"
 import { generateText } from "ai"
+import { AUTH_COOKIE_NAME } from "@/app/acc-api/const"
 
 type TableInfo = {
   catalog: string
@@ -80,6 +83,18 @@ ${data}
 ${new Date().toLocaleString()}
 `
 
+  const authToken = cookies().get(AUTH_COOKIE_NAME)?.value
+  let userId: number | undefined
+  if (authToken) {
+    try {
+      const payload = await verifyToken(authToken)
+      if (payload?.id) userId = Number(payload.id)
+    } catch (error) {
+      console.error("Failed to verify user token for AI model:", error)
+    }
+  }
+
+  const model = await getModel(userId)
   const { text } = await generateText({
     model: model,
     system: systemPrompt(),

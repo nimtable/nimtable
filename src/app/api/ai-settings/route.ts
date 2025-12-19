@@ -40,12 +40,12 @@ export async function GET(request: NextRequest) {
       .limit(1)
 
     if (userSettings.length === 0) {
-      // Return default settings if none exist
+      // Return empty settings if none exist
       return NextResponse.json({
-        endpoint: "https://api.openai.com/v1",
+        endpoint: "",
         apiKey: "",
         hasApiKey: false,
-        modelName: "gpt-4",
+        modelName: "",
         isEnabled: false,
       })
     }
@@ -99,8 +99,8 @@ export async function POST(request: NextRequest) {
 
     // Prepare settings data, only update API key if provided
     const settingsData: any = {
-      endpoint: endpoint || "https://api.openai.com/v1",
-      modelName: modelName || "gpt-4",
+      endpoint: endpoint || "",
+      modelName: modelName || "",
       isEnabled: Boolean(isEnabled),
       updatedAt: sql`CURRENT_TIMESTAMP`,
     }
