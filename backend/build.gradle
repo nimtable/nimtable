@@ -60,8 +60,8 @@ ext {
   icebergVersion = '1.10.0'
   hadoopVersion = '3.3.6'
   jettyVersion = '11.0.15'
-  sparkVersion = '3.5.1'
-  scalaVersion = '2.12.18'
+  sparkVersion = '4.0.0'
+  scalaVersion = '2.13.16'
   ebeanVersion = '15.11.0'
   flywayVersion = '11.8.0'
 }
@@ -112,11 +112,11 @@ dependencies {
   implementation "org.eclipse.jetty:jetty-util-ajax:${jettyVersion}"
 
   // Spark dependencies
-  implementation "org.apache.spark:spark-core_2.12:${sparkVersion}"
-  implementation "org.apache.spark:spark-sql_2.12:${sparkVersion}"
-  implementation "org.apache.spark:spark-hive_2.12:${sparkVersion}"
-  implementation "org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:${icebergVersion}"
-  implementation 'org.scala-lang.modules:scala-collection-compat_2.12:2.12.0'
+  implementation "org.apache.spark:spark-core_2.13:${sparkVersion}"
+  implementation "org.apache.spark:spark-sql_2.13:${sparkVersion}"
+  implementation "org.apache.spark:spark-hive_2.13:${sparkVersion}"
+  implementation "org.apache.iceberg:iceberg-spark-runtime-4.0_2.13:${icebergVersion}"
+  implementation 'org.scala-lang.modules:scala-collection-compat_2.13:2.12.0'
 
   // Servlet API
   compileOnly 'jakarta.servlet:jakarta.servlet-api:6.0.0'
