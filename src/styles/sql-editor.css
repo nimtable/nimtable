@@ -126,3 +126,17 @@ pre[class*="language-"] {
 .token.inserted {
     color: #718c00;
 }
+
+/* Align Prism output with overlay textarea in SQL editor */
+.sql-editor-container pre[class*="language-"],
+.sql-editor-container code[class*="language-"] {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    white-space: pre-wrap;
+    word-break: break-word;
+    word-wrap: break-word;
+}
