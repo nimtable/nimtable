@@ -32,13 +32,7 @@ export const logMiddleware: LanguageModelV1Middleware = {
     console.log("doStream called")
     console.log(`params: ${JSON.stringify(params, null, 2)}`)
 
-    let streamResult: Awaited<ReturnType<typeof doStream>>
-    try {
-      streamResult = await doStream()
-    } catch (error) {
-      console.error("doStream failed", error)
-      throw error
-    }
+    const streamResult = await doStream()
 
     const { stream, ...rest } = streamResult
 
@@ -49,9 +43,6 @@ export const logMiddleware: LanguageModelV1Middleware = {
       LanguageModelV1StreamPart
     >({
       transform(chunk, controller) {
-        if (chunk.type === "error") {
-          console.error("stream error part", chunk)
-        }
         if (chunk.type === "text-delta") {
           chunks.push(chunk)
         }

@@ -61,7 +61,6 @@ export function AIAgentSidebar() {
   const { isFullscreen, closeAgent, toggleFullscreen } = useAIAgent()
   const { toast } = useToast()
   const [isCopying, setIsCopying] = useState<string | null>(null)
-  const [chatErrorDetails, setChatErrorDetails] = useState<string | null>(null)
   const [aiSettingsStatus, setAiSettingsStatus] = useState<
     "unknown" | "configured" | "missing"
   >("unknown")
@@ -82,36 +81,6 @@ export function AIAgentSidebar() {
     api: "/api/agent/chat",
     maxSteps: 5,
     experimental_throttle: 50,
-    onResponse: async (response) => {
-      if (response.ok) {
-        setChatErrorDetails(null)
-        return
-      }
-
-      let detail = response.statusText || `HTTP ${response.status}`
-      try {
-        const contentType = response.headers.get("content-type") || ""
-        if (contentType.includes("application/json")) {
-          const data = await response.json()
-          detail =
-            (typeof data?.error === "string" && data.error) ||
-            (typeof data?.message === "string" && data.message) ||
-            JSON.stringify(data)
-        } else {
-          const text = await response.text()
-          if (text) detail = text
-        }
-      } catch (_error) {
-        // Keep the fallback detail when parsing fails.
-      }
-
-      console.error("AI chat response error:", {
-        status: response.status,
-        statusText: response.statusText,
-        detail,
-      })
-      setChatErrorDetails(detail)
-    },
     onError: (err) => {
       let detail = err instanceof Error ? err.message : String(err)
       if (err instanceof Error && err.cause) {
@@ -120,7 +89,6 @@ export function AIAgentSidebar() {
         detail = `${detail} (cause: ${cause})`
       }
       console.error("AI chat request error:", err)
-      setChatErrorDetails(detail)
     },
   })
 
@@ -596,7 +564,7 @@ export function AIAgentSidebar() {
 
             {error && (
               <div className="mt-2 text-xs text-destructive">
-                Error: {chatErrorDetails ?? error.message}
+                Error: {error.message}
               </div>
             )}
           </div>

@@ -21,7 +21,6 @@ import { getModel, systemPrompt } from "@/lib/agent/utils"
 import { TableMetadata } from "@/lib/api"
 import { DistributionData } from "@/lib/data-loader"
 import { generateText } from "ai"
-import { AUTH_COOKIE_NAME } from "@/app/acc-api/const"
 
 type TableInfo = {
   catalog: string
