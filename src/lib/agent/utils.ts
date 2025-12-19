@@ -32,7 +32,9 @@ export const logMiddleware: LanguageModelV1Middleware = {
     console.log("doStream called")
     console.log(`params: ${JSON.stringify(params, null, 2)}`)
 
-    const { stream, ...rest } = await doStream()
+    const streamResult = await doStream()
+
+    const { stream, ...rest } = streamResult
 
     const chunks: LanguageModelV1StreamPart[] = []
 
@@ -59,18 +61,6 @@ export const logMiddleware: LanguageModelV1Middleware = {
       ...rest,
     }
   },
-}
-
-const hostedNimtableModel = () => {
-  const provider = createOpenAICompatible({
-    name: "nimtable",
-    baseURL: "https://gvhzsvzxusepnpfcipac.supabase.co/functions/v1/openai",
-  })
-  // TODO: remove simulateStreamingMiddleware
-  return wrapLanguageModel({
-    model: provider("gpt-4.1"),
-    middleware: simulateStreamingMiddleware(),
-  })
 }
 
 async function getUserAIModel(userId?: number): Promise<LanguageModel | null> {
@@ -118,30 +108,10 @@ export async function getModel(userId?: number): Promise<LanguageModel> {
     return model
   }
 
-  // Fall back to hosted Nimtable model
-  let model = hostedNimtableModel()
-  if (process.env.NODE_ENV === "development") {
-    model = wrapLanguageModel({
-      model,
-      middleware: logMiddleware,
-    })
-  }
-  return model
+  throw new Error(
+    "AI is not configured. Please configure AI settings in Settings → AI."
+  )
 }
-
-// Keep the original export for backward compatibility
-export const model: LanguageModel = (() => {
-  let model = hostedNimtableModel()
-
-  if (process.env.NODE_ENV === "development") {
-    model = wrapLanguageModel({
-      model,
-      middleware: logMiddleware,
-    })
-  }
-
-  return model
-})()
 
 export function errorHandler(error: unknown) {
   if (error == null) {

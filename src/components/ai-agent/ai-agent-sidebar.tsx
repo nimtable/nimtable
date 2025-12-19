@@ -17,6 +17,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
+import Link from "next/link"
 import {
   Bot,
   Send,
@@ -60,6 +61,9 @@ export function AIAgentSidebar() {
   const { isFullscreen, closeAgent, toggleFullscreen } = useAIAgent()
   const { toast } = useToast()
   const [isCopying, setIsCopying] = useState<string | null>(null)
+  const [aiSettingsStatus, setAiSettingsStatus] = useState<
+    "unknown" | "configured" | "missing"
+  >("unknown")
   const [expandedTools, setExpandedTools] = useState<Record<string, boolean>>(
     {}
   )
@@ -77,6 +81,15 @@ export function AIAgentSidebar() {
     api: "/api/agent/chat",
     maxSteps: 5,
     experimental_throttle: 50,
+    onError: (err) => {
+      let detail = err instanceof Error ? err.message : String(err)
+      if (err instanceof Error && err.cause) {
+        const cause =
+          err.cause instanceof Error ? err.cause.message : String(err.cause)
+        detail = `${detail} (cause: ${cause})`
+      }
+      console.error("AI chat request error:", err)
+    },
   })
 
   const scrollToBottom = () => {
@@ -86,6 +99,38 @@ export function AIAgentSidebar() {
   useEffect(() => {
     scrollToBottom()
   }, [messages])
+
+  useEffect(() => {
+    let isMounted = true
+
+    const loadAiSettings = async () => {
+      try {
+        const response = await fetch("/api/ai-settings")
+        if (!response.ok) {
+          return
+        }
+        const data = await response.json()
+        const isConfigured =
+          Boolean(data?.isEnabled) &&
+          Boolean(data?.hasApiKey) &&
+          typeof data?.endpoint === "string" &&
+          data.endpoint.trim().length > 0 &&
+          typeof data?.modelName === "string" &&
+          data.modelName.trim().length > 0
+        if (isMounted) {
+          setAiSettingsStatus(isConfigured ? "configured" : "missing")
+        }
+      } catch (_error) {
+        // Ignore settings errors; Copilot will surface request errors separately.
+      }
+    }
+
+    loadAiSettings()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   const handleCopy = async (text: string, id: string) => {
     if (!navigator.clipboard) {
@@ -349,6 +394,18 @@ export function AIAgentSidebar() {
 
         <CardContent className="p-0 flex flex-col h-full overflow-hidden">
           <div className="flex-1 overflow-auto p-4 space-y-4 min-h-0">
+            {aiSettingsStatus === "missing" && (
+              <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                AI settings are not configured.{" "}
+                <Link
+                  href="/settings/ai"
+                  className="font-medium text-amber-900 underline underline-offset-2"
+                >
+                  Configure AI settings
+                </Link>{" "}
+                to enable Nimtable Copilot.
+              </div>
+            )}
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center">
                 <Bot className="h-10 w-10 text-muted-foreground/50 mb-3" />

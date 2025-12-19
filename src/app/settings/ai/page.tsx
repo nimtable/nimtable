@@ -36,9 +36,9 @@ interface AISettings {
 
 export default function AISettingsPage() {
   const [settings, setSettings] = useState<AISettings>({
-    endpoint: "https://api.openai.com/v1",
+    endpoint: "",
     apiKey: "",
-    modelName: "gpt-4",
+    modelName: "",
     isEnabled: false,
     hasApiKey: false,
   })
@@ -311,8 +311,8 @@ export default function AISettingsPage() {
           {/* Description */}
           <div>
             <p className="text-sm text-muted-foreground">
-              Configure your AI endpoint and API key. When enabled, your custom
-              settings will be used instead of the default Nimtable AI service.
+              Configure your AI endpoint and API key. When enabled, Nimtable
+              will use your custom settings.
             </p>
           </div>
 
@@ -468,8 +468,8 @@ export default function AISettingsPage() {
                   </div>
                 ) : (
                   <p>
-                    • Using default Nimtable AI service. Enable/disable changes
-                    are saved automatically.
+                    • AI is disabled. Enable to use your custom settings.
+                    Enable/disable changes are saved automatically.
                   </p>
                 )}
               </div>

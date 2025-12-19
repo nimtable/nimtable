@@ -17,7 +17,7 @@
 "use server"
 
 import { saveTableSummary } from "@/db/table-summary"
-import { model, systemPrompt } from "@/lib/agent/utils"
+import { getModel, systemPrompt } from "@/lib/agent/utils"
 import { TableMetadata } from "@/lib/api"
 import { DistributionData } from "@/lib/data-loader"
 import { generateText } from "ai"
@@ -80,6 +80,7 @@ ${data}
 ${new Date().toLocaleString()}
 `
 
+  const model = await getModel()
   const { text } = await generateText({
     model: model,
     system: systemPrompt(),
