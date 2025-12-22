@@ -40,6 +40,16 @@ const clearAuthCookie = (response: NextResponse) => {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
+  // Skip middleware for static assets and image files
+  if (
+    pathname.startsWith("/_next/static") ||
+    pathname.startsWith("/_next/image") ||
+    pathname === "/favicon.ico" ||
+    /\.(svg|png|jpg|jpeg|gif|webp|ico|bmp|avif)$/i.test(pathname)
+  ) {
+    return NextResponse.next()
+  }
+
   // Check if it's a public path
   if (PUBLIC_PATHS.includes(pathname)) {
     return NextResponse.next()
@@ -112,6 +122,6 @@ export const config = {
   matcher: [
     "/api/:path*",
     "/acc-api/:path*",
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.svg$).*)",
+    "/((?!_next/static|_next/image|favicon\\.ico).*)",
   ],
 }
