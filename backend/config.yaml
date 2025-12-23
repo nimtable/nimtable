@@ -12,7 +12,7 @@ catalogs:
 #  - name: rest-catalog-demo
 #    type: rest
 #    uri: http://lakekeeper:8181/catalog/
-#    warehouse: s3://warehouse/wh/
+#    warehouse: warehouse-name
 #    io-impl: org.apache.iceberg.aws.s3.S3FileIO
 #    s3.endpoint: http://localhost:9000
 #    s3.access-key-id: admin
@@ -24,7 +24,7 @@ catalogs:
 #    type: jdbc
 #    jdbc.schema-version: V1
 #    uri: jdbc:postgresql://localhost:5432/db
-#    warehouse: s3://warehouse/wh/
+#    warehouse: warehouse-name
 #    io-impl: org.apache.iceberg.aws.s3.S3FileIO
 #    s3.endpoint: http://localhost:9000
 #    s3.access-key-id: admin
