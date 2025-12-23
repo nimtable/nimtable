@@ -49,7 +49,7 @@ interface CatalogTemplate {
 const YAML_EXAMPLE = `catalogs:
  - name: my-yaml-catalog
    type: rest
-   uri: http://localhost:8181
+   uri: http://lakekeeper:8181/catalog/
    warehouse: s3://warehouse/wh/
    io-impl: org.apache.iceberg.aws.s3.S3FileIO
    s3.endpoint: http://localhost:9000
@@ -102,7 +102,7 @@ const CATALOG_TEMPLATES: Record<string, CatalogTemplate> = {
   "rest-s3": {
     name: "REST + S3",
     type: "rest",
-    uri: "http://localhost:8181",
+    uri: "http://lakekeeper:8181/catalog/",
     warehouse: "s3://warehouse/wh/",
     properties: [
       { key: "io-impl", value: "org.apache.iceberg.aws.s3.S3FileIO" },
@@ -191,7 +191,7 @@ export default function NewCatalogPage() {
   const [formData, setFormData] = useState({
     name: "",
     type: "rest",
-    uri: "http://localhost:8181",
+    uri: "http://lakekeeper:8181/catalog/",
     warehouse: "s3://warehouse/wh/",
     properties: [
       { key: "io-impl", value: "org.apache.iceberg.aws.s3.S3FileIO" },

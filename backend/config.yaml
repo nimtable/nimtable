@@ -11,7 +11,7 @@ database:
 catalogs:
 #  - name: rest-catalog-demo
 #    type: rest
-#    uri: http://localhost:8181
+#    uri: http://lakekeeper:8181/catalog/
 #    warehouse: s3://warehouse/wh/
 #    io-impl: org.apache.iceberg.aws.s3.S3FileIO
 #    s3.endpoint: http://localhost:9000
