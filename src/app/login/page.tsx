@@ -114,7 +114,7 @@ export default function LoginPage() {
 
   return (
     <div
-      className="fixed h-screen w-screen overflow-auto bg-full text-center"
+      className="fixed h-screen w-screen overflow-auto bg-cover text-center"
       style={{
         backgroundImage: `url(/login_bg.png)`,
       }}
