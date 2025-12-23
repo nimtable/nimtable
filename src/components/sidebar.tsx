@@ -11,6 +11,7 @@ import {
 } from "lucide-react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
 
 import { cn } from "@/lib/utils"
 import { FeedbackButton } from "@/components/feedback-button"
@@ -77,9 +78,12 @@ export function Sidebar() {
       {/* Sidebar Header */}
       <div className="border-b p-4">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gradient-to-br from-blue-500 to-cyan-400 font-bold text-white">
-            N
-          </div>
+          <Image
+            src="/logo_dark.svg"
+            alt="Nimtable Logo"
+            width={20}
+            height={20}
+          />
           <span className="text-lg font-semibold">Nimtable</span>
         </div>
       </div>
