@@ -1,5 +1,5 @@
-FROM node:23-alpine
-
+FROM node:23-alpine AS deps
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Install pnpm
@@ -9,11 +9,20 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 COPY package.json pnpm-lock.yaml ./
 
 # Install dependencies
-RUN pnpm install --frozen-lockfile
+RUN pnpm fetch --prod && pnpm install --frozen-lockfile --prod
 
+
+# Build application
+FROM node:23-alpine AS builder
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+RUN corepack enable && corepack prepare pnpm@latest --activate
+# Copy package.json and pnpm-lock.yaml
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm fetch && pnpm install --frozen-lockfile
 # Copy Prisma schema and related files
 COPY prisma ./prisma/
-
 # Generate Prisma client
 RUN pnpm prisma generate
 
@@ -23,8 +32,19 @@ COPY . .
 # Build the application
 RUN pnpm run build
 
+# Production image
+FROM node:23-alpine AS runner
+WORKDIR /app
+
+RUN addgroup -g 1001 -S nodejs && adduser -S nextjs -u 1001
+USER nextjs
+
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+
 # Expose port 3000
 EXPOSE 3000
 
 # Start the application
-CMD ["pnpm", "start"]
+CMD ["node", "server.js"]
