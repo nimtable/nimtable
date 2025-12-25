@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: "standalone",
   // rewrites is only for development (pnpm run dev); it won't affect static export
   rewrites: () => [
     {
