@@ -67,7 +67,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build-and-push-images]
     steps:
-      - name: Login to DockerHub
+      - name: Login to DockerHub (merge Docker manifest)
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
