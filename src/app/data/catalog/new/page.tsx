@@ -49,8 +49,8 @@ interface CatalogTemplate {
 const YAML_EXAMPLE = `catalogs:
  - name: my-yaml-catalog
    type: rest
-   uri: http://localhost:8181
-   warehouse: s3://warehouse/wh/
+   uri: http://lakekeeper:8181/catalog/
+   warehouse: warehouse-name
    io-impl: org.apache.iceberg.aws.s3.S3FileIO
    s3.endpoint: http://localhost:9000
    s3.access-key-id: admin
@@ -102,8 +102,8 @@ const CATALOG_TEMPLATES: Record<string, CatalogTemplate> = {
   "rest-s3": {
     name: "REST + S3",
     type: "rest",
-    uri: "http://localhost:8181",
-    warehouse: "s3://warehouse/wh/",
+    uri: "http://lakekeeper:8181/catalog/",
+    warehouse: "warehouse-name",
     properties: [
       { key: "io-impl", value: "org.apache.iceberg.aws.s3.S3FileIO" },
       { key: "s3.endpoint", value: "http://localhost:9000" },
@@ -118,7 +118,7 @@ const CATALOG_TEMPLATES: Record<string, CatalogTemplate> = {
     name: "JDBC + S3",
     type: "jdbc",
     uri: "jdbc:postgresql://localhost:5432/db",
-    warehouse: "s3://warehouse/wh/",
+    warehouse: "warehouse-name",
     properties: [
       { key: "jdbc.schema-version", value: "V1" },
       { key: "io-impl", value: "org.apache.iceberg.aws.s3.S3FileIO" },
@@ -191,8 +191,8 @@ export default function NewCatalogPage() {
   const [formData, setFormData] = useState({
     name: "",
     type: "rest",
-    uri: "http://localhost:8181",
-    warehouse: "s3://warehouse/wh/",
+    uri: "http://lakekeeper:8181/catalog/",
+    warehouse: "warehouse-name",
     properties: [
       { key: "io-impl", value: "org.apache.iceberg.aws.s3.S3FileIO" },
       { key: "s3.endpoint", value: "http://localhost:9000" },
