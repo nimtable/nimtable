@@ -1,4 +1,4 @@
-name: Publish Nightly Docker Image
+name: Publish Nightly DockerHub Image
 
 on:
   schedule:
@@ -11,8 +11,8 @@ permissions:
   packages: write
 
 env:
-  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/nimtable
-  FRONTEND_IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/nimtable-web
+  DOCKERHUB_IMAGE_NAME: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/nimtable
+  DOCKERHUB_FRONTEND_IMAGE_NAME: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/nimtable-web
 
 jobs:
   build-and-push-images:
@@ -24,10 +24,10 @@ jobs:
         image_config:
           - type: 'backend'
             dockerfile: './docker/Dockerfile'
-            image_name: ghcr.io/${{ github.repository_owner }}/nimtable
+            dockerhub_image_name: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/nimtable
           - type: 'frontend'
             dockerfile: './docker/Dockerfile.frontend'
-            image_name: ghcr.io/${{ github.repository_owner }}/nimtable-web
+            dockerhub_image_name: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/nimtable-web
     runs-on: ${{ matrix.arch_config.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     steps:
       - name: Checkout code
@@ -36,18 +36,17 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Login to GitHub Container Registry
+      - name: Login to DockerHub
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Extract metadata for Docker (${{ matrix.image_config.type }})
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ matrix.image_config.image_name }}
+          images: ${{ matrix.image_config.dockerhub_image_name }}
           tags: |
             type=raw,value=nightly-${{matrix.arch_config.arch}}
             type=raw,value=nightly-${{ github.sha }}-${{matrix.arch_config.arch}}
@@ -68,32 +67,33 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build-and-push-images]
     steps:
-      - uses: docker/login-action@v3
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Create and push manifest images (nightly)
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Create and push manifest images to DockerHub (nightly)
         uses: Noelware/docker-manifest-action@0.4.3
         with:
-          inputs: ${{ env.IMAGE_NAME }}:nightly
-          images: ${{ env.IMAGE_NAME }}:nightly-amd64,${{ env.IMAGE_NAME }}:nightly-arm64
+          inputs: ${{ env.DOCKERHUB_IMAGE_NAME }}:nightly
+          images: ${{ env.DOCKERHUB_IMAGE_NAME }}:nightly-amd64,${{ env.DOCKERHUB_IMAGE_NAME }}:nightly-arm64
           push: true
-      - name: Create and push manifest images (nightly-sha)
+      - name: Create and push manifest images to DockerHub (nightly-sha)
         uses: Noelware/docker-manifest-action@0.4.3
         with:
-          inputs: ${{ env.IMAGE_NAME }}:nightly-${{ github.sha }}
-          images: ${{ env.IMAGE_NAME }}:nightly-${{ github.sha }}-amd64,${{ env.IMAGE_NAME }}:nightly-${{ github.sha }}-arm64
+          inputs: ${{ env.DOCKERHUB_IMAGE_NAME }}:nightly-${{ github.sha }}
+          images: ${{ env.DOCKERHUB_IMAGE_NAME }}:nightly-${{ github.sha }}-amd64,${{ env.DOCKERHUB_IMAGE_NAME }}:nightly-${{ github.sha }}-arm64
           push: true
-      - name: Create and push manifest images for Frontend (nightly)
+      - name: Create and push manifest images for Frontend to DockerHub (nightly)
         uses: Noelware/docker-manifest-action@0.4.3
         with:
-          inputs: ${{ env.FRONTEND_IMAGE_NAME }}:nightly
-          images: ${{ env.FRONTEND_IMAGE_NAME }}:nightly-amd64,${{ env.FRONTEND_IMAGE_NAME }}:nightly-arm64
+          inputs: ${{ env.DOCKERHUB_FRONTEND_IMAGE_NAME }}:nightly
+          images: ${{ env.DOCKERHUB_FRONTEND_IMAGE_NAME }}:nightly-amd64,${{ env.DOCKERHUB_FRONTEND_IMAGE_NAME }}:nightly-arm64
           push: true
-      - name: Create and push manifest images for Frontend (nightly-sha)
+      - name: Create and push manifest images for Frontend to DockerHub (nightly-sha)
         uses: Noelware/docker-manifest-action@0.4.3
         with:
-          inputs: ${{ env.FRONTEND_IMAGE_NAME }}:nightly-${{ github.sha }}
-          images: ${{ env.FRONTEND_IMAGE_NAME }}:nightly-${{ github.sha }}-amd64,${{ env.FRONTEND_IMAGE_NAME }}:nightly-${{ github.sha }}-arm64
+          inputs: ${{ env.DOCKERHUB_FRONTEND_IMAGE_NAME }}:nightly-${{ github.sha }}
+          images: ${{ env.DOCKERHUB_FRONTEND_IMAGE_NAME }}:nightly-${{ github.sha }}-amd64,${{ env.DOCKERHUB_FRONTEND_IMAGE_NAME }}:nightly-${{ github.sha }}-arm64
           push: true
+
