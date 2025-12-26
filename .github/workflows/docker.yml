@@ -62,8 +62,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          # TODO: can be removed after https://github.com/Noelware/docker-manifest-action/pull/811
-          provenance: false
 
   # create multi-arch image
   merge-docker-manifest:
