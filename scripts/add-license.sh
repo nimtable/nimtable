@@ -2,7 +2,7 @@
 
 # license header
 LICENSE_HEADER='/*
- * Copyright 2025 Nimtable
+ * Copyright 2026 Nimtable
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ LICENSE_HEADER='/*
 
 add_license() {
     local file="$1"
-    if ! grep -q "Copyright 2025 Nimtable" "$file"; then
+    if ! grep -q "Copyright 2026 Nimtable" "$file"; then
         echo "Adding license header to $file"
         echo "$LICENSE_HEADER" | cat - "$file" > temp && mv temp "$file"
     fi
