@@ -78,22 +78,26 @@ jobs:
         with:
           inputs: ${{ env.IMAGE_NAME }}:nightly
           images: ${{ env.IMAGE_NAME }}:nightly-amd64,${{ env.IMAGE_NAME }}:nightly-arm64
+          amend: true
           push: true
       - name: Create and push manifest images (nightly-sha)
         uses: Noelware/docker-manifest-action@0.4.3
         with:
           inputs: ${{ env.IMAGE_NAME }}:nightly-${{ github.sha }}
           images: ${{ env.IMAGE_NAME }}:nightly-${{ github.sha }}-amd64,${{ env.IMAGE_NAME }}:nightly-${{ github.sha }}-arm64
+          amend: true
           push: true
       - name: Create and push manifest images for Frontend (nightly)
         uses: Noelware/docker-manifest-action@0.4.3
         with:
           inputs: ${{ env.FRONTEND_IMAGE_NAME }}:nightly
           images: ${{ env.FRONTEND_IMAGE_NAME }}:nightly-amd64,${{ env.FRONTEND_IMAGE_NAME }}:nightly-arm64
+          amend: true
           push: true
       - name: Create and push manifest images for Frontend (nightly-sha)
         uses: Noelware/docker-manifest-action@0.4.3
         with:
           inputs: ${{ env.FRONTEND_IMAGE_NAME }}:nightly-${{ github.sha }}
           images: ${{ env.FRONTEND_IMAGE_NAME }}:nightly-${{ github.sha }}-amd64,${{ env.FRONTEND_IMAGE_NAME }}:nightly-${{ github.sha }}-arm64
+          amend: true
           push: true
