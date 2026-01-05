@@ -49,10 +49,7 @@ export function DashboardLayout({
                     window.location.reload()
                   }}
                 >
-                  <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-semibold">
-                    Demo
-                  </span>
-                  <span>Exit</span>
+                  <span>Exit demo mode</span>
                 </button>
               )}
               <DropdownMenu>
