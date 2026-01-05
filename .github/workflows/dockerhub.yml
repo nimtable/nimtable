@@ -77,23 +77,27 @@ jobs:
         with:
           inputs: ${{ env.DOCKERHUB_IMAGE_NAME }}:nightly
           images: ${{ env.DOCKERHUB_IMAGE_NAME }}:nightly-amd64,${{ env.DOCKERHUB_IMAGE_NAME }}:nightly-arm64
+          amend: true
           push: true
       - name: Create and push manifest images to DockerHub (nightly-sha)
         uses: Noelware/docker-manifest-action@0.4.3
         with:
           inputs: ${{ env.DOCKERHUB_IMAGE_NAME }}:nightly-${{ github.sha }}
           images: ${{ env.DOCKERHUB_IMAGE_NAME }}:nightly-${{ github.sha }}-amd64,${{ env.DOCKERHUB_IMAGE_NAME }}:nightly-${{ github.sha }}-arm64
+          amend: true
           push: true
       - name: Create and push manifest images for Frontend to DockerHub (nightly)
         uses: Noelware/docker-manifest-action@0.4.3
         with:
           inputs: ${{ env.DOCKERHUB_FRONTEND_IMAGE_NAME }}:nightly
           images: ${{ env.DOCKERHUB_FRONTEND_IMAGE_NAME }}:nightly-amd64,${{ env.DOCKERHUB_FRONTEND_IMAGE_NAME }}:nightly-arm64
+          amend: true
           push: true
       - name: Create and push manifest images for Frontend to DockerHub (nightly-sha)
         uses: Noelware/docker-manifest-action@0.4.3
         with:
           inputs: ${{ env.DOCKERHUB_FRONTEND_IMAGE_NAME }}:nightly-${{ github.sha }}
           images: ${{ env.DOCKERHUB_FRONTEND_IMAGE_NAME }}:nightly-${{ github.sha }}-amd64,${{ env.DOCKERHUB_FRONTEND_IMAGE_NAME }}:nightly-${{ github.sha }}-arm64
+          amend: true
           push: true
 
