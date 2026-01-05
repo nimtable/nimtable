@@ -22,9 +22,9 @@ export const DEMO_NAMESPACE_TABLES: Record<string, NamespaceTables[]> = {
 
 const now = Date.now()
 
-const baseSnapshots = [
+const baseSnapshots: any[] = [
   {
-    "snapshot-id": 1,
+    "snapshot-id": "1",
     "parent-snapshot-id": null,
     "timestamp-ms": now - 1000 * 60 * 60 * 24,
     summary: {
@@ -34,8 +34,8 @@ const baseSnapshots = [
     },
   },
   {
-    "snapshot-id": 2,
-    "parent-snapshot-id": 1,
+    "snapshot-id": "2",
+    "parent-snapshot-id": "1",
     "timestamp-ms": now - 1000 * 60 * 30,
     summary: {
       operation: "replace",
@@ -44,8 +44,9 @@ const baseSnapshots = [
   },
 ]
 
-const schemas = [
+const schemas: any[] = [
   {
+    type: "struct",
     "schema-id": 0,
     fields: [
       { id: 1, name: "id", type: "long", required: true },
@@ -56,8 +57,9 @@ const schemas = [
   },
 ]
 
-const orderSchema = [
+const orderSchema: any[] = [
   {
+    type: "struct",
     "schema-id": 0,
     fields: [
       { id: 1, name: "order_id", type: "long", required: true },
@@ -90,13 +92,14 @@ export const DEMO_TABLE_METADATA: Record<DemoTableKey, LoadTableResult> = {
   "demo.public.users": {
     metadata: {
       ...commonMetadata,
+      "format-version": 2,
       location: "s3://demo-bucket/warehouse/demo/public/users",
       "table-uuid": "demo-users-uuid",
       schemas,
       snapshots: baseSnapshots,
       refs: {
-        main: { type: "branch", "snapshot-id": 2 },
-        tag_latest: { type: "tag", "snapshot-id": 2 },
+        main: { type: "branch", "snapshot-id": "2" },
+        tag_latest: { type: "tag", "snapshot-id": "2" },
       },
       "last-updated-ms": now - 1000 * 60 * 15,
     },
@@ -104,56 +107,58 @@ export const DEMO_TABLE_METADATA: Record<DemoTableKey, LoadTableResult> = {
   "demo.public.orders": {
     metadata: {
       ...commonMetadata,
+      "format-version": 2,
       location: "s3://demo-bucket/warehouse/demo/public/orders",
       "table-uuid": "demo-orders-uuid",
       schemas: orderSchema,
       snapshots: baseSnapshots,
       refs: {
-        main: { type: "branch", "snapshot-id": 2 },
+        main: { type: "branch", "snapshot-id": "2" },
       },
       "last-updated-ms": now - 1000 * 60 * 45,
     },
   },
 }
 
-export const DEMO_TABLE_DISTRIBUTIONS: Record<DemoTableKey, DistributionData> = {
-  "demo.public.users": {
-    ranges: {
-      "0-8M": { count: 2, percentage: 10 },
-      "8M-32M": { count: 4, percentage: 40 },
-      "32M-128M": { count: 3, percentage: 30 },
-      "128M-512M": { count: 1, percentage: 20 },
-      "512M+": { count: 0, percentage: 0 },
+export const DEMO_TABLE_DISTRIBUTIONS: Record<DemoTableKey, DistributionData> =
+  {
+    "demo.public.users": {
+      ranges: {
+        "0-8M": { count: 2, percentage: 10 },
+        "8M-32M": { count: 4, percentage: 40 },
+        "32M-128M": { count: 3, percentage: 30 },
+        "128M-512M": { count: 1, percentage: 20 },
+        "512M+": { count: 0, percentage: 0 },
+      },
+      dataFileCount: 10,
+      positionDeleteFileCount: 0,
+      eqDeleteFileCount: 0,
+      dataFileSizeInBytes: 320 * 1024 * 1024,
+      positionDeleteFileSizeInBytes: 0,
+      eqDeleteFileSizeInBytes: 0,
+      dataFileRecordCount: 50000,
+      positionDeleteFileRecordCount: 0,
+      eqDeleteFileRecordCount: 0,
     },
-    dataFileCount: 10,
-    positionDeleteFileCount: 0,
-    eqDeleteFileCount: 0,
-    dataFileSizeInBytes: 320 * 1024 * 1024,
-    positionDeleteFileSizeInBytes: 0,
-    eqDeleteFileSizeInBytes: 0,
-    dataFileRecordCount: 50000,
-    positionDeleteFileRecordCount: 0,
-    eqDeleteFileRecordCount: 0,
-  },
-  "demo.public.orders": {
-    ranges: {
-      "0-8M": { count: 1, percentage: 5 },
-      "8M-32M": { count: 5, percentage: 50 },
-      "32M-128M": { count: 3, percentage: 30 },
-      "128M-512M": { count: 1, percentage: 15 },
-      "512M+": { count: 0, percentage: 0 },
+    "demo.public.orders": {
+      ranges: {
+        "0-8M": { count: 1, percentage: 5 },
+        "8M-32M": { count: 5, percentage: 50 },
+        "32M-128M": { count: 3, percentage: 30 },
+        "128M-512M": { count: 1, percentage: 15 },
+        "512M+": { count: 0, percentage: 0 },
+      },
+      dataFileCount: 9,
+      positionDeleteFileCount: 0,
+      eqDeleteFileCount: 0,
+      dataFileSizeInBytes: 280 * 1024 * 1024,
+      positionDeleteFileSizeInBytes: 0,
+      eqDeleteFileSizeInBytes: 0,
+      dataFileRecordCount: 35000,
+      positionDeleteFileRecordCount: 0,
+      eqDeleteFileRecordCount: 0,
     },
-    dataFileCount: 9,
-    positionDeleteFileCount: 0,
-    eqDeleteFileCount: 0,
-    dataFileSizeInBytes: 280 * 1024 * 1024,
-    positionDeleteFileSizeInBytes: 0,
-    eqDeleteFileSizeInBytes: 0,
-    dataFileRecordCount: 35000,
-    positionDeleteFileRecordCount: 0,
-    eqDeleteFileRecordCount: 0,
-  },
-}
+  }
 
 export const DEMO_SAMPLE_DATA: Record<DemoTableKey, FetchSampleDataResult> = {
   "demo.public.users": {
@@ -189,4 +194,3 @@ export function getDemoTableKey(
 ): DemoTableKey {
   return `${catalog}.${namespace}.${table}`
 }
-
