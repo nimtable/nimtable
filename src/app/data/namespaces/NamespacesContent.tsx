@@ -4,7 +4,6 @@ import { ArrowLeft, Plus, Search } from "lucide-react"
 import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { CreateNamespaceModal } from "@/components/namespace/CreateNamespaceModal"
 
@@ -30,7 +29,6 @@ export function NamespacesContent() {
   )
   const [searchQuery, setSearchQuery] = useState<string>(searchFromUrl)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  const _router = useRouter()
 
   const { catalogs, isLoading: isLoadingCatalogs } = useCatalogs()
   const { demoMode } = useDemoMode()

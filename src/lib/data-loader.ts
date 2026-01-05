@@ -195,7 +195,7 @@ export async function dropTable(
   table: string
 ): Promise<void> {
   if (isDemoModeEnabled()) {
-    throw new Error("Delete is disabled in demo mode")
+    throw new Error("Table deletion is disabled in demo mode")
   }
   const api = catalogApi(catalog)
   await api.v1.dropTable(namespace, table)
@@ -208,7 +208,7 @@ export async function renameTable(
   destinationTable: string
 ): Promise<void> {
   if (isDemoModeEnabled()) {
-    throw new Error("Rename is disabled in demo mode")
+    throw new Error("able renaming is disabled in demo mode")
   }
   const api = catalogApi(catalog)
   await api.v1.renameTable({

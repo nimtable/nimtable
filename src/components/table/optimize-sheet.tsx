@@ -212,7 +212,7 @@ function CompactionHistory({
                 </div>
               </td>
               <td className="py-3 px-4 text-sm text-card-foreground">
-                    {formatDate(item.timestamp)}
+                {formatDate(item.timestamp)}
               </td>
               <td className="py-3 px-4 text-sm text-card-foreground">
                 Optimization
@@ -471,7 +471,7 @@ export function OptimizeSheet({
       enabled: boolean
     }) => {
       if (demoMode) {
-        throw new Error("Toggle task is disabled in demo mode")
+        throw new Error("Task toggling is disabled in demo mode")
       }
       const response = await toggleScheduledTask({
         path: { id: taskId },

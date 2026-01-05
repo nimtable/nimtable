@@ -143,7 +143,7 @@ export function InfoTab({
   const { toast } = useToast()
   const router = useRouter()
   const { refresh } = useRefresh()
-  const { demoMode: _demoMode } = useDemoMode()
+  const { demoMode } = useDemoMode()
   const [showDropDialog, setShowDropDialog] = useState(false)
   const [showRenameDialog, setShowRenameDialog] = useState(false)
   const [newTableName, setNewTableName] = useState(table)
@@ -155,6 +155,14 @@ export function InfoTab({
 
   const handleDropTable = async () => {
     try {
+      if (demoMode) {
+        toast({
+          variant: "destructive",
+          title: "Disabled in demo mode",
+          description: "Dropping tables is not available in demo preview.",
+        })
+        return
+      }
       await dropTable(catalog, namespace, table)
       toast({
         title: "Table dropped successfully",

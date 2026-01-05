@@ -124,10 +124,10 @@ export const DEMO_TABLE_DISTRIBUTIONS: Record<DemoTableKey, DistributionData> =
   {
     "demo.public.users": {
       ranges: {
-        "0-8M": { count: 2, percentage: 10 },
+        "0-8M": { count: 1, percentage: 10 },
         "8M-32M": { count: 4, percentage: 40 },
         "32M-128M": { count: 3, percentage: 30 },
-        "128M-512M": { count: 1, percentage: 20 },
+        "128M-512M": { count: 2, percentage: 20 },
         "512M+": { count: 0, percentage: 0 },
       },
       dataFileCount: 10,
