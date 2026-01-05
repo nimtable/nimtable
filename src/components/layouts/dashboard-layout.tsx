@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/contexts/auth-context"
+import { useDemoMode } from "@/contexts/demo-mode-context"
 import Link from "next/link"
 
 export function DashboardLayout({
@@ -23,6 +24,7 @@ export function DashboardLayout({
   children: React.ReactNode
 }) {
   const { user, logout } = useAuth()
+  const { demoMode, disable } = useDemoMode()
 
   const username = user?.profile?.firstName
     ? `${user.profile.firstName} ${user.profile.lastName}`
@@ -38,6 +40,21 @@ export function DashboardLayout({
               {title}
             </h1>
             <div className="flex items-center gap-4">
+              {demoMode && (
+                <button
+                  className="flex items-center gap-2 rounded-full bg-primary/90 px-3 py-1 text-[11px] font-semibold text-primary-foreground shadow-sm ring-1 ring-primary/30 transition hover:bg-primary hover:shadow-md"
+                  onClick={() => {
+                    disable()
+                    // hard refresh to reload real data
+                    window.location.reload()
+                  }}
+                >
+                  <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-semibold">
+                    Demo
+                  </span>
+                  <span>Exit</span>
+                </button>
+              )}
               <DropdownMenu>
                 <DropdownMenuTrigger className="flex cursor-pointer items-center gap-2 rounded-md p-2 hover:bg-gray-100">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">

@@ -6,7 +6,6 @@ import { MetricsSummary } from "./MetricsSummary"
 import { TableWatchlist } from "./TableWatchlist"
 import { ActivityFeed } from "./ActivityFeed"
 import { useContext } from "react"
-import { ConnectCatalogStep } from "@/components/onboarding/connect-catalog-step"
 import { DashboardLayout } from "@/components/layouts/dashboard-layout"
 
 export default function DashboardPage() {
@@ -21,27 +20,6 @@ export default function DashboardPage() {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="h-16 w-16 animate-spin rounded-full border-b-2 border-t-2 border-gray-900" />
-      </div>
-    )
-  }
-
-  if (tables.length === 0) {
-    return (
-      <div className="flex flex-1 flex-col overflow-hidden bg-background">
-        <div className="flex-1 overflow-auto p-6">
-          <div className="mx-auto max-w-3xl">
-            <div className="text-center mb-6">
-              <h1 className="text-2xl font-semibold text-card-foreground">
-                Welcome to Nimtable
-              </h1>
-            </div>
-            <ConnectCatalogStep
-              onSuccess={() => {
-                refresh()
-              }}
-            />
-          </div>
-        </div>
       </div>
     )
   }

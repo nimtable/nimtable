@@ -1,6 +1,8 @@
 import { useQueries } from "@tanstack/react-query"
 
 import { loadNamespacesAndTables } from "@/lib/data-loader"
+import { useDemoMode } from "@/contexts/demo-mode-context"
+import { DEMO_NAMESPACE_TABLES } from "@/lib/demo-data"
 
 export interface Namespace {
   id: string
@@ -11,15 +13,35 @@ export interface Namespace {
 }
 
 export function useNamespaces(catalogs: string[]) {
+  const { demoMode } = useDemoMode()
+
   // Use useQueries to fetch namespaces for all catalogs in parallel
   const namespaceQueries = useQueries({
     queries:
       catalogs?.map((catalog) => ({
         queryKey: ["namespaces", catalog],
         queryFn: () => loadNamespacesAndTables(catalog),
-        enabled: !!catalog,
+        enabled: !!catalog && !demoMode,
       })) || [],
   })
+
+  if (demoMode) {
+    const namespaces = catalogs.flatMap((catalog) =>
+      (DEMO_NAMESPACE_TABLES[catalog] || []).map((ns) => ({
+        id: ns.name,
+        name: ns.shortName,
+        catalog,
+        tableCount: ns.tables.length,
+        tables: ns.tables,
+      }))
+    )
+
+    return {
+      namespaces,
+      isLoading: false,
+      error: false,
+    }
+  }
 
   // Combine all namespaces data
   const allNamespaces = namespaceQueries

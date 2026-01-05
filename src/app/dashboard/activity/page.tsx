@@ -10,10 +10,14 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { getTableInfo } from "@/lib/client"
 import { formatDate } from "@/lib/format"
+import { useDemoMode } from "@/contexts/demo-mode-context"
+import { DEMO_TABLE_METADATA, getDemoTableKey } from "@/lib/demo-data"
+import { DashboardLayout } from "@/components/layouts/dashboard-layout"
 
 export default function ActivityPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const { tables } = useContext(OverviewContext)
+  const { demoMode } = useDemoMode()
 
   const compactionQueries = useQueries({
     queries: tables.map((table) => ({
@@ -25,6 +29,20 @@ export default function ActivityPage() {
       ],
       queryFn: () => {
         if (!table) return null
+        if (demoMode) {
+          const key = getDemoTableKey(
+            table.catalog,
+            table.namespace,
+            table.table
+          )
+          const data = DEMO_TABLE_METADATA[key]
+          return {
+            data,
+            table: table.table,
+            catalog: table.catalog,
+            namespace: table.namespace,
+          }
+        }
         return getTableInfo({
           path: {
             catalog: table.catalog,
@@ -75,60 +93,55 @@ export default function ActivityPage() {
     .sort((a, b) => b.timestamp - a.timestamp)
 
   return (
-    <div className="container mx-auto max-w-7xl px-6 py-8">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Activity Log</h1>
-          <p className="text-muted-foreground">View all data lake activities</p>
-        </div>
-      </div>
-
-      <div className="mb-6 flex gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
-          <Input
-            placeholder="Search by table name or activity description..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-      </div>
-
-      <Card>
-        <CardHeader className="border-b">
-          <CardTitle className="text-lg">Recent Activities</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="divide-y">
-            {compactionHistory.map((activity, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-4 p-6 transition-colors hover:bg-muted/50"
-              >
-                <div className={`rounded-md bg-green-100 p-2 text-green-600`}>
-                  <GitCompare className="h-5 w-5" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="mb-1 flex items-center gap-2">
-                    <span className="font-medium">{activity.table}</span>
-                    <Badge variant="outline" className="text-xs">
-                      Compaction
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Compaction job completed
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Clock className="h-4 w-4" />
-                  <span>{formatDate(activity.timestamp)}</span>
-                </div>
-              </div>
-            ))}
+    <DashboardLayout title="Activity Log">
+      <div className="container mx-auto max-w-7xl px-6 py-8">
+        <div className="mb-6 flex gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
+            <Input
+              placeholder="Search by table name or activity description..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+
+        <Card>
+          <CardHeader className="border-b">
+            <CardTitle className="text-lg">Recent Activities</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="divide-y">
+              {compactionHistory.map((activity, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-4 p-6 transition-colors hover:bg-muted/50"
+                >
+                  <div className={`rounded-md bg-green-100 p-2 text-green-600`}>
+                    <GitCompare className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-1 flex items-center gap-2">
+                      <span className="font-medium">{activity.table}</span>
+                      <Badge variant="outline" className="text-xs">
+                        Compaction
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Compaction job completed
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Clock className="h-4 w-4" />
+                    <span>{formatDate(activity.timestamp)}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </DashboardLayout>
   )
 }

@@ -44,6 +44,7 @@ interface CreateNamespaceModalProps {
   catalogs: string[]
   defaultCatalog?: string
   parentNamespace?: string // For creating sub-namespaces
+  disabled?: boolean
 }
 
 interface NamespaceFormData {
@@ -58,6 +59,7 @@ export function CreateNamespaceModal({
   catalogs,
   defaultCatalog,
   parentNamespace,
+  disabled = false,
 }: CreateNamespaceModalProps) {
   const queryClient = useQueryClient()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -112,6 +114,7 @@ export function CreateNamespaceModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (disabled) return
     setIsSubmitting(true)
 
     try {

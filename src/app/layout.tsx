@@ -23,6 +23,7 @@ import "@/styles/globals.css"
 import { RefreshProvider } from "@/contexts/refresh-context"
 import { AuthProvider } from "@/contexts/auth-context"
 import { AIAgentProvider } from "@/contexts/ai-agent-context"
+import { DemoModeProvider } from "@/contexts/demo-mode-context"
 import type { Metadata } from "next"
 import { Suspense } from "react"
 
@@ -56,19 +57,21 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <ReactQueryProvider>
-              <AuthProvider>
-                <RefreshProvider>
-                  <AIAgentProvider>
-                    <SidebarProvider>
-                      <AIAgentLayoutWrapper>
-                        <Suspense fallback={<></>}>{children}</Suspense>
-                        <AIAgentTrigger />
-                      </AIAgentLayoutWrapper>
-                      <Toaster />
-                    </SidebarProvider>
-                  </AIAgentProvider>
-                </RefreshProvider>
-              </AuthProvider>
+              <DemoModeProvider>
+                <AuthProvider>
+                  <RefreshProvider>
+                    <AIAgentProvider>
+                      <SidebarProvider>
+                        <AIAgentLayoutWrapper>
+                          <Suspense fallback={<></>}>{children}</Suspense>
+                          <AIAgentTrigger />
+                        </AIAgentLayoutWrapper>
+                        <Toaster />
+                      </SidebarProvider>
+                    </AIAgentProvider>
+                  </RefreshProvider>
+                </AuthProvider>
+              </DemoModeProvider>
             </ReactQueryProvider>
           </ThemeProvider>
         </TooltipProvider>

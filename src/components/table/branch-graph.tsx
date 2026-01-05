@@ -45,7 +45,7 @@ export interface GraphEdge {
   toColumn: number
 }
 
-// ManifestItem 组件（从 snapshots.tsx 迁移并适配）
+// ManifestItem component (migrated and adapted from snapshots.tsx)
 function formatFileSize(bytes: number): string {
   const units = ["B", "KB", "MB", "GB", "TB"]
   let size = bytes
@@ -85,7 +85,7 @@ function ManifestItem({
     if (!manifestDetails) {
       setLoadingDetails(true)
       try {
-        // 这里假设 getManifestDetails API 可用
+        // Assumes getManifestDetails API is available
         const { getManifestDetails } = await import("@/lib/data-loader")
         const data = await getManifestDetails(
           catalog,

@@ -2,6 +2,8 @@ import { DistributionItem, getFileDistribution } from "@/lib/data-loader"
 import { useQueries } from "@tanstack/react-query"
 import { useNamespaces } from "./useNamespaces"
 import { useCatalogs } from "./useCatalogs"
+import { useDemoMode } from "@/contexts/demo-mode-context"
+import { DEMO_TABLE_DISTRIBUTIONS } from "@/lib/demo-data"
 
 export interface Table {
   table: string
@@ -26,6 +28,7 @@ export const useAllTables = () => {
     isLoading: isLoadingCatalogs,
     refetch: refetchCatalogs,
   } = useCatalogs()
+  const { demoMode } = useDemoMode()
 
   const { namespaces, isLoading: isLoadingNamespaces } = useNamespaces(catalogs)
 
@@ -57,10 +60,32 @@ export const useAllTables = () => {
                 namespace: table.namespace,
               }
             }),
-          enabled: !!table.catalog && !!table.namespace && !!table.table,
+          enabled: !!table.catalog && !!table.namespace && !!table.table && !demoMode,
         }
       }) || [],
   })
+
+  if (demoMode) {
+    const tables = Object.entries(DEMO_TABLE_DISTRIBUTIONS).map(
+      ([key, distribution]) => {
+        const [catalog, namespace, table] = key.split(".")
+        return {
+          ...distribution,
+          table,
+          catalog,
+          namespace,
+        }
+      }
+    )
+
+    return {
+      tables,
+      isLoading: false,
+      isFileDistributionLoading: false,
+      error: false,
+      refetchCatalogs,
+    }
+  }
 
   const tables = tablesQueries
     .map((query) => {

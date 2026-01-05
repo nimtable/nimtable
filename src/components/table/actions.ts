@@ -21,6 +21,7 @@ import { getModel, systemPrompt } from "@/lib/agent/utils"
 import { TableMetadata } from "@/lib/api"
 import { DistributionData } from "@/lib/data-loader"
 import { generateText } from "ai"
+import { isDemoModeEnabled } from "@/lib/demo-mode"
 
 type TableInfo = {
   catalog: string
@@ -38,6 +39,9 @@ export async function actionGenerateTableSummary(
   tableData: TableInfo,
   additionalPrompt?: string
 ) {
+  if (isDemoModeEnabled()) {
+    throw new Error("Table summary generation is disabled in demo mode")
+  }
   const data = JSON.stringify(tableData)
   console.log(
     "Generating table summary",
