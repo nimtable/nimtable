@@ -50,11 +50,12 @@ export function DemoModeProvider({ children }: { children: ReactNode }) {
   )
 
   return (
-    <DemoModeContext.Provider value={value}>{children}</DemoModeContext.Provider>
+    <DemoModeContext.Provider value={value}>
+      {children}
+    </DemoModeContext.Provider>
   )
 }
 
 export function useDemoMode() {
   return useContext(DemoModeContext)
 }
-

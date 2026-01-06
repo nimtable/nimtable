@@ -60,7 +60,8 @@ export const useAllTables = () => {
                 namespace: table.namespace,
               }
             }),
-          enabled: !!table.catalog && !!table.namespace && !!table.table && !demoMode,
+          enabled:
+            !!table.catalog && !!table.namespace && !!table.table && !demoMode,
         }
       }) || [],
   })
