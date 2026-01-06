@@ -10,12 +10,12 @@ permissions:
   contents: read
   packages: write
 
-env:
-  DOCKERHUB_IMAGE_NAME: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/nimtable
-  DOCKERHUB_FRONTEND_IMAGE_NAME: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/nimtable-web
-
 jobs:
   build-and-push-images:
+    env:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_IMAGE_NAME: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/nimtable
+      DOCKERHUB_FRONTEND_IMAGE_NAME: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/nimtable-web
     strategy:
       matrix:
         arch_config:
@@ -24,10 +24,8 @@ jobs:
         image_config:
           - type: 'backend'
             dockerfile: './docker/Dockerfile'
-            dockerhub_image_name: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/nimtable
           - type: 'frontend'
             dockerfile: './docker/Dockerfile.frontend'
-            dockerhub_image_name: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/nimtable-web
     runs-on: ${{ matrix.arch_config.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     steps:
       - name: Checkout code
@@ -46,7 +44,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ matrix.image_config.dockerhub_image_name }}
+          images: ${{ matrix.image_config.type == 'backend' && env.DOCKERHUB_IMAGE_NAME || env.DOCKERHUB_FRONTEND_IMAGE_NAME }}
           tags: |
             type=raw,value=nightly-${{matrix.arch_config.arch}}
             type=raw,value=nightly-${{ github.sha }}-${{matrix.arch_config.arch}}
@@ -66,6 +64,10 @@ jobs:
           
   # create multi-arch image
   merge-docker-manifest:
+    env:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_IMAGE_NAME: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/nimtable
+      DOCKERHUB_FRONTEND_IMAGE_NAME: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/nimtable-web
     runs-on: ubuntu-latest
     needs: [build-and-push-images]
     steps:
