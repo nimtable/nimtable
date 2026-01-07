@@ -41,6 +41,7 @@ import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 import { deleteCatalog } from "@/lib/client"
 import { errorToString } from "@/lib/utils"
+import { useDemoMode } from "@/contexts/demo-mode-context"
 
 import { CreateCatalogModal } from "./CreateCatalogModal"
 import { useNamespaces } from "../hooks/useNamespaces"
@@ -53,6 +54,7 @@ export function CatalogsContent() {
     isLoading: isLoadingCatalogs,
     refetch: refetchCatalogs,
   } = useCatalogs()
+  const { demoMode } = useDemoMode()
   const { namespaces } = useNamespaces(catalogs || [])
   const { tables, isLoading: isLoadingTables } = useAllTables()
   const [searchQuery, setSearchQuery] = useState<string>("")
@@ -71,22 +73,35 @@ export function CatalogsContent() {
 
   // Get catalog configurations
   const catalogConfigs = useQueries({
-    queries: (catalogs || []).map((catalog) => ({
-      queryKey: ["catalog-config", catalog],
-      queryFn: () => getCatalogConfig(catalog),
-      enabled: !!catalog,
-    })),
+    queries: demoMode
+      ? []
+      : (catalogs || []).map((catalog) => ({
+          queryKey: ["catalog-config", catalog],
+          queryFn: () => getCatalogConfig(catalog),
+          enabled: !!catalog,
+        })),
   })
 
-  const catalogConfigMap = catalogConfigs.reduce(
-    (acc, query, index) => {
-      if (query.data && catalogs?.[index]) {
-        acc[catalogs[index]] = query.data
+  const catalogConfigMap = demoMode
+    ? {
+        demo: {
+          defaults: {
+            type: "demo",
+            warehouse: "demo",
+            properties: {},
+          },
+          overrides: {},
+        },
       }
-      return acc
-    },
-    {} as Record<string, any>
-  )
+    : catalogConfigs.reduce(
+        (acc, query, index) => {
+          if (query.data && catalogs?.[index]) {
+            acc[catalogs[index]] = query.data
+          }
+          return acc
+        },
+        {} as Record<string, any>
+      )
 
   // Get table metadata for each table
   const tableMetadataQueries = useQueries({
@@ -182,6 +197,13 @@ export function CatalogsContent() {
   })
 
   const handleDeleteClick = (catalog: string) => {
+    if (demoMode) {
+      toast({
+        title: "Disabled in demo mode",
+        description: "Catalog delete is not available in demo preview.",
+      })
+      return
+    }
     deleteCatalog({
       path: {
         catalogName: catalog,
@@ -274,14 +296,16 @@ export function CatalogsContent() {
           </div>
           <button
             className="btn-secondary flex items-center gap-2"
-            onClick={() => setMirrorModalOpen(true)}
+            onClick={() => !demoMode && setMirrorModalOpen(true)}
+            disabled={demoMode}
           >
             <ExternalLink className="w-4 h-4" />
             <span>Mirror external catalog</span>
           </button>
           <Button
             className="bg-primary hover:bg-primary/90 text-primary-foreground"
-            onClick={() => setCreateModalOpen(true)}
+            onClick={() => !demoMode && setCreateModalOpen(true)}
+            disabled={demoMode}
           >
             <Plus className="w-4 h-4 mr-0" />
             Create new catalog

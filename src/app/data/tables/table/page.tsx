@@ -23,6 +23,7 @@ import { InfoTab } from "@/app/table/info"
 
 import { useTableData } from "../../hooks/useTableData"
 import { ScrewdriverWrenchIcon } from "@/components/icon"
+import { useDemoMode } from "@/contexts/demo-mode-context"
 
 export default function TablePage() {
   const params = useSearchParams()
@@ -37,6 +38,7 @@ export default function TablePage() {
     namespace as string,
     table as string
   )
+  const { demoMode } = useDemoMode()
 
   const [showOptimizeSheet, setShowOptimizeSheet] = useState(false)
   const [activeTab, setActiveTab] = useState(tab || "info")
@@ -109,11 +111,14 @@ export default function TablePage() {
           </button>
 
           <button
-            onClick={() => setShowOptimizeSheet(true)}
+            onClick={() => !demoMode && setShowOptimizeSheet(true)}
             className="btn-secondary"
+            disabled={demoMode}
           >
             <ScrewdriverWrenchIcon className="w-4 h-4" />
-            <span>Optimize table</span>
+            <span>
+              {demoMode ? "Optimize (demo disabled)" : "Optimize table"}
+            </span>
           </button>
 
           <Button className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2">

@@ -81,6 +81,8 @@ import { getTableInfo } from "@/lib/client"
 import { errorToString } from "@/lib/utils"
 import { useEffect, useState } from "react"
 import { CPUIcon, MemoryIcon, SystemResourcesIcon } from "../icon"
+import { useDemoMode } from "@/contexts/demo-mode-context"
+import { DEMO_TABLE_METADATA, getDemoTableKey } from "@/lib/demo-data"
 
 type OptimizationStep = {
   name: string
@@ -111,8 +113,17 @@ function CompactionHistory({
   namespace: string
   table: string
 }) {
+  const { demoMode } = useDemoMode()
+
+  const demoTableData = (() => {
+    if (!demoMode) return null
+    const key = getDemoTableKey(catalog, namespace, table)
+    return DEMO_TABLE_METADATA[key]
+  })()
+
   const { data: tableData } = useQuery({
     queryKey: ["table", catalog, namespace, table],
+    enabled: !demoMode,
     queryFn: () =>
       getTableInfo({
         path: {
@@ -136,12 +147,14 @@ function CompactionHistory({
     }).format(date)
   }
 
-  if (!tableData?.metadata?.snapshots) {
+  const effectiveTableData = demoMode ? demoTableData : tableData
+
+  if (!effectiveTableData?.metadata?.snapshots) {
     return null
   }
 
   // Filter snapshots with operation type "replace" and sort by timestamp
-  const compactionHistory = tableData.metadata.snapshots
+  const compactionHistory = effectiveTableData.metadata.snapshots
     .filter((snapshot: any) => snapshot.summary?.operation === "replace")
     .map((snapshot: any) => ({
       id: snapshot["snapshot-id"],
@@ -228,6 +241,7 @@ export function OptimizeSheet({
   table,
 }: OptimizeSheetProps) {
   const { toast } = useToast()
+  const { demoMode } = useDemoMode()
   const [showProgressDialog, setShowProgressDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [selectedTask, setSelectedTask] = useState<ScheduledTask | null>(null)
@@ -268,7 +282,7 @@ export function OptimizeSheet({
       }
       return response.data || []
     },
-    enabled: open,
+    enabled: open && !demoMode,
   })
 
   // Filter tasks for current table
@@ -283,6 +297,7 @@ export function OptimizeSheet({
   // Get system information
   const { data: systemInfo } = useQuery({
     queryKey: ["system-info"],
+    enabled: !demoMode,
     queryFn: async () => {
       const response = await getSystemInfo()
       if (response.error) {
@@ -323,6 +338,9 @@ export function OptimizeSheet({
       step: OptimizationStep
       index: number
     }) => {
+      if (demoMode) {
+        throw new Error("Optimization is disabled in demo mode")
+      }
       setOptimizationSteps((steps) => {
         const newSteps = [...steps]
         newSteps[index] = { ...step, status: "running" }
@@ -382,6 +400,9 @@ export function OptimizeSheet({
   // Create task mutation
   const createTaskMutation = useMutation({
     mutationFn: async (taskData: any) => {
+      if (demoMode) {
+        throw new Error("Scheduling is disabled in demo mode")
+      }
       const response = await createScheduledTask({
         path: { catalog, namespace, table },
         body: taskData,
@@ -412,6 +433,9 @@ export function OptimizeSheet({
   // Delete task mutation
   const deleteTaskMutation = useMutation({
     mutationFn: async (taskId: number) => {
+      if (demoMode) {
+        throw new Error("Delete task is disabled in demo mode")
+      }
       const response = await deleteScheduledTask({
         path: { id: taskId },
       })
@@ -446,6 +470,9 @@ export function OptimizeSheet({
       taskId: number
       enabled: boolean
     }) => {
+      if (demoMode) {
+        throw new Error("Task toggling is disabled in demo mode")
+      }
       const response = await toggleScheduledTask({
         path: { id: taskId },
         body: { enabled },

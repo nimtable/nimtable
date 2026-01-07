@@ -4,7 +4,6 @@ import { ArrowLeft, Plus, Search } from "lucide-react"
 import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { CreateNamespaceModal } from "@/components/namespace/CreateNamespaceModal"
 
@@ -18,6 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { FolderIcon, ChevronDown } from "lucide-react"
 import Link from "next/link"
+import { useDemoMode } from "@/contexts/demo-mode-context"
 
 export function NamespacesContent() {
   const searchParams = useSearchParams()
@@ -29,9 +29,9 @@ export function NamespacesContent() {
   )
   const [searchQuery, setSearchQuery] = useState<string>(searchFromUrl)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  const router = useRouter()
 
   const { catalogs, isLoading: isLoadingCatalogs } = useCatalogs()
+  const { demoMode } = useDemoMode()
   // Use useQueries to fetch namespaces for all catalogs in parallel
   const { namespaces: allNamespaces, isLoading: isLoadingNamespaces } =
     useNamespaces(catalogs || [])
@@ -134,7 +134,8 @@ export function NamespacesContent() {
           </div>
           <Button
             className="bg-primary hover:bg-primary/90 text-primary-foreground"
-            onClick={() => setIsCreateModalOpen(true)}
+            onClick={() => !demoMode && setIsCreateModalOpen(true)}
+            disabled={demoMode}
           >
             <Plus className="w-4 h-4 mr-0" />
             Create new Namespace
