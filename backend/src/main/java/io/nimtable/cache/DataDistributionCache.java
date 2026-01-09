@@ -18,6 +18,8 @@ package io.nimtable.cache;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.nimtable.db.entity.DataDistribution;
 import io.nimtable.db.repository.DataDistributionRepository;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
@@ -105,6 +107,27 @@ public class DataDistributionCache {
     public void clear() {
         memoryCache.clear();
         LOG.debug("Cleared memory cache");
+    }
+
+    public void removeByCatalogName(String catalogName) {
+        // Remove from database first
+        repository.deleteByCatalogName(catalogName);
+
+        // Remove matching entries from memory cache
+        String marker = ":" + catalogName + ":";
+        List<String> keysToRemove = new ArrayList<>();
+        for (String key : memoryCache.keySet()) {
+            if (key.contains(marker)) {
+                keysToRemove.add(key);
+            }
+        }
+        for (String key : keysToRemove) {
+            memoryCache.remove(key);
+        }
+        LOG.debug(
+                "Removed {} entries from memory cache for catalog: {}",
+                keysToRemove.size(),
+                catalogName);
     }
 
     public Map<String, DataDistribution> getMemoryCache() {

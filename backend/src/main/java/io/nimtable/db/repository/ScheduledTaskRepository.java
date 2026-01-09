@@ -89,6 +89,12 @@ public class ScheduledTaskRepository {
         }
     }
 
+    public int deleteByCatalogName(String catalogName) {
+        int deleted = DB.find(ScheduledTask.class).where().eq("catalogName", catalogName).delete();
+        LOG.info("Deleted {} scheduled tasks for catalog: {}", deleted, catalogName);
+        return deleted;
+    }
+
     public void enableTask(Long id) {
         ScheduledTask task = findById(id);
         if (task != null) {
