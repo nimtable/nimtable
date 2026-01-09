@@ -28,7 +28,6 @@
 Nimtable provides a clean interface and REST API for Apache Iceberg.
 It helps engineers inspect catalog metadata, view table schemas and partitions, analyze file layouts, and manage routine maintenance workflows through existing compute engines such as [Apache Spark](https://spark.apache.org/) or [RisingWave](https://github.com/risingwavelabs/risingwave).
 
-
 ## Quick Start
 
 The fastest way to get started is using Docker:
