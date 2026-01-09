@@ -23,7 +23,7 @@
   >
     <img
       alt="Docs"
-      src="https://badgen.net/badge/Docs/RisingWave%20Get%20Started/2b6cb0?icon=book"
+      src="https://badgen.net/badge/Docs/Nimtable%20Docs/2b6cb0?icon=book"
     />
   </a>
 </div>
