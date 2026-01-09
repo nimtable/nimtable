@@ -57,7 +57,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex-1 overflow-auto p-6">
-          <div className="w-full max-w-3xl">
+          <div className="mx-auto w-11/12">
             <ConnectCatalogStep
               onSuccess={() => {
                 refresh()
