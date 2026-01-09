@@ -6,9 +6,9 @@ import { TableWatchlist } from "./TableWatchlist"
 import { ActivityFeed } from "./ActivityFeed"
 import { useContext } from "react"
 import { ConnectCatalogStep } from "@/components/onboarding/connect-catalog-step"
-import { DashboardLayout } from "@/components/layouts/dashboard-layout"
 import { Button } from "@/components/ui/button"
 import { useDemoMode } from "@/contexts/demo-mode-context"
+import { LayoutGrid } from "lucide-react"
 
 export default function DashboardPage() {
   const { isLoading, isFileDistributionLoading, tables, refresh } =
@@ -17,7 +17,7 @@ export default function DashboardPage() {
 
   if (isLoading || isFileDistributionLoading) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex h-full items-center justify-center p-6">
         <div className="h-16 w-16 animate-spin rounded-full border-b-2 border-t-2 border-gray-900" />
       </div>
     )
@@ -26,27 +26,38 @@ export default function DashboardPage() {
   if (tables.length === 0) {
     return (
       <div className="flex flex-1 flex-col overflow-hidden bg-background">
-        <div className="flex-1 overflow-auto p-6">
-          <div className="mx-auto max-w-3xl">
-            <div className="relative mb-6">
-              <h1 className="text-2xl font-semibold text-card-foreground text-center">
-                {demoMode ? "Demo Mode" : "Welcome to Nimtable"}
-              </h1>
-              {!demoMode && (
-                <div className="absolute right-0 top-1/2 -translate-y-1/2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      enableDemo()
-                      refresh()
-                    }}
-                  >
-                    Try Demo
-                  </Button>
-                </div>
-              )}
+        {/* Top bar (match Optimization layout style) */}
+        <div className="bg-card border-b border-border px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <LayoutGrid className="w-5 h-5 text-card-foreground" />
+              <h2 className="text-base font-normal text-card-foreground">
+                Overview
+              </h2>
             </div>
+            {!demoMode && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="bg-card border-input"
+                onClick={() => {
+                  enableDemo()
+                  refresh()
+                }}
+              >
+                Try Demo
+              </Button>
+            )}
+          </div>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {demoMode
+              ? "Demo mode is enabled"
+              : "Connect a catalog to start monitoring your Iceberg lakehouse"}
+          </p>
+        </div>
+
+        <div className="flex-1 overflow-auto p-6">
+          <div className="mx-auto w-11/12">
             <ConnectCatalogStep
               onSuccess={() => {
                 refresh()
@@ -59,28 +70,27 @@ export default function DashboardPage() {
   }
 
   return (
-    <DashboardLayout title="Dashboard">
-      <div className="flex flex-1 flex-col overflow-hidden bg-background">
-        <div className="flex-1 overflow-auto p-6">
-          <div className="mx-auto w-full max-w-7xl space-y-8">
-            <div>
-              <h1 className="mb-2 text-2xl font-semibold text-card-foreground">
-                Overview
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Welcome back to your Iceberg lakehouse control center
-              </p>
-            </div>
+    <div className="flex flex-1 flex-col overflow-hidden bg-background">
+      {/* Top bar (match Optimization layout style) */}
+      <div className="bg-card border-b border-border px-6 py-4">
+        <div className="flex items-center gap-2">
+          <LayoutGrid className="w-5 h-5 text-card-foreground" />
+          <h2 className="text-base font-normal text-card-foreground">
+            Overview
+          </h2>
+        </div>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Welcome back to your Iceberg lakehouse control center
+        </p>
+      </div>
 
-            <MetricsSummary />
-
-            <div className="space-y-6">
-              <ActivityFeed />
-              <TableWatchlist />
-            </div>
-          </div>
+      <div className="flex-1 overflow-auto p-6">
+        <div className="w-full space-y-6">
+          <MetricsSummary />
+          <ActivityFeed />
+          <TableWatchlist />
         </div>
       </div>
-    </DashboardLayout>
+    </div>
   )
 }

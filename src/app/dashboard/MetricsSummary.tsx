@@ -13,28 +13,28 @@ export function MetricsSummary() {
 
   return (
     <div className="grid grid-cols-2 gap-6">
-      <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
+      <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-sm font-medium text-muted-foreground">
+            <p className="text-xs font-normal text-muted-foreground uppercase tracking-wider">
               Total Tables
             </p>
-            <p className="mt-2 text-3xl font-semibold text-card-foreground">
+            <p className="mt-2 text-2xl font-normal text-card-foreground">
               {tables.length}
             </p>
           </div>
-          <div className="rounded-md bg-primary p-3 text-primary-foreground">
+          <div className="rounded-md bg-primary p-2.5 text-primary-foreground">
             <Database className="h-6 w-6" />
           </div>
         </div>
       </div>
-      <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
+      <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-sm font-medium text-muted-foreground">
+            <p className="text-xs font-normal text-muted-foreground uppercase tracking-wider">
               Tables Needing Compaction
             </p>
-            <div className="mt-2 text-3xl font-semibold text-card-foreground">
+            <div className="mt-2 text-2xl font-normal text-card-foreground">
               {isFileDistributionLoading ? (
                 <div className="mt-4 h-4 w-16 animate-pulse rounded bg-muted" />
               ) : (
@@ -42,7 +42,7 @@ export function MetricsSummary() {
               )}
             </div>
           </div>
-          <div className="rounded-md bg-amber-500 p-3 text-white">
+          <div className="rounded-md bg-amber-500 p-2.5 text-white">
             <GitCompare className="h-6 w-6" />
           </div>
         </div>

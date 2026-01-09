@@ -1,5 +1,7 @@
 services:
   nimtable:
+    # Override the base compose image (ghcr.io/nimtable/nimtable:nightly) so dev uses a locally built backend image.
+    image: nimtable-dev:local
     build:
       context: .
       dockerfile: Dockerfile
@@ -15,6 +17,8 @@ services:
       - AWS_SECRET_ACCESS_KEY=password
       - AWS_REGION=us-east-1
   nimtable-web:
+    # Override the base compose image (ghcr.io/nimtable/nimtable-web:nightly) so dev uses a locally built frontend image.
+    image: nimtable-web-dev:local
     build:
       context: ../../
       dockerfile: docker/dev/Dockerfile

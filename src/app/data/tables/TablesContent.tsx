@@ -175,7 +175,7 @@ export function TablesContent() {
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               <TableIcon className="w-5 h-5 text-card-foreground" />
-              <h2 className="text-m font-normal text-card-foreground">
+              <h2 className="text-base font-normal text-card-foreground">
                 {catalogFromUrl}
               </h2>
             </div>

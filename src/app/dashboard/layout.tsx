@@ -1,6 +1,7 @@
 import { ReactNode } from "react"
 
-import { DashboardProvider } from "./OverviewProvider"
+import DashboardClientLayout from "./DashboardClientLayout"
+
 export default function layout({ children }: { children: ReactNode }) {
-  return <DashboardProvider>{children}</DashboardProvider>
+  return <DashboardClientLayout>{children}</DashboardClientLayout>
 }

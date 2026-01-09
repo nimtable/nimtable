@@ -37,7 +37,16 @@ const AuthContext = React.createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { data: userInfo, refetch: refetchUserInfo } = useQuery({
     queryKey: ["userInfo"],
-    queryFn: () => getCurrentUserProfile().then((res) => res.data),
+    queryFn: () =>
+      getCurrentUserProfile()
+        .then((res) => res.data)
+        .catch((error) => {
+          if (error.status === 401) {
+            return null
+          } else {
+            throw error
+          }
+        }),
   })
   const router = useRouter()
 
@@ -77,7 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return (
     <AuthContext.Provider
       value={{
-        user: userInfo,
+        user: userInfo ?? undefined,
         login,
         logout,
         refreshUser,
