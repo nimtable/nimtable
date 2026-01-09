@@ -481,7 +481,9 @@ export default function NewCatalogPage() {
         const statusText = result.response?.statusText
         const message = errorToString(result.error)
         throw new Error(
-          status ? `HTTP ${status}${statusText ? ` ${statusText}` : ""}: ${message}` : message
+          status
+            ? `HTTP ${status}${statusText ? ` ${statusText}` : ""}: ${message}`
+            : message
         )
       }
 

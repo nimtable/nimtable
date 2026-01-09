@@ -91,9 +91,13 @@ export function NamespacesContent() {
       {!catalogFromUrl && selectedCatalog === "all" && (
         <div className="px-6 pt-4">
           <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm text-muted-foreground">
-            You&apos;re viewing <span className="text-foreground">all catalogs</span>. For a clearer
+            You&apos;re viewing{" "}
+            <span className="text-foreground">all catalogs</span>. For a clearer
             drill-down experience, start from{" "}
-            <Link href="/data/catalogs" className="text-primary hover:text-primary/80">
+            <Link
+              href="/data/catalogs"
+              className="text-primary hover:text-primary/80"
+            >
               Catalogs
             </Link>{" "}
             and click a catalog to browse its namespaces.

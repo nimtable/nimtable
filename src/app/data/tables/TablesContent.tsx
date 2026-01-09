@@ -157,7 +157,11 @@ export function TablesContent() {
             >
               Catalogs
             </Link>{" "}
-            and drill down: <span className="text-foreground">Catalog → Namespace → Tables</span>.
+            and drill down:{" "}
+            <span className="text-foreground">
+              Catalog → Namespace → Tables
+            </span>
+            .
           </div>
         </div>
       )}

@@ -40,7 +40,8 @@ export function errorToString(error: unknown): string {
   ) {
     const message = (error as { message: string }).message
     const details =
-      "details" in error && typeof (error as { details?: unknown }).details === "string"
+      "details" in error &&
+      typeof (error as { details?: unknown }).details === "string"
         ? (error as { details: string }).details
         : ""
     return details ? `${message} (${details})` : message

@@ -64,7 +64,9 @@ export function Sidebar() {
     },
   ]
 
-  const isOperationsRoute = operationNavItems.some((item) => pathname === item.href)
+  const isOperationsRoute = operationNavItems.some(
+    (item) => pathname === item.href
+  )
   const [operationsOpen, setOperationsOpen] = useState<boolean>(() => true)
 
   useEffect(() => {
@@ -129,8 +131,8 @@ export function Sidebar() {
                     ? "bg-gray-100 text-gray-900"
                     : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                   : isSqlRoute
-                  ? "bg-gray-100 text-gray-900"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    ? "bg-gray-100 text-gray-900"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
               )}
             >
               <item.icon className="h-5 w-5" />

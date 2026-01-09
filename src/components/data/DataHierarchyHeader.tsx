@@ -52,7 +52,9 @@ export function DataHierarchyHeader({
   if (current === "namespaces" || current === "tables" || current === "table") {
     crumbs.push({
       label: "Namespaces",
-      href: catalog ? `/data/namespaces?catalog=${catalogEncoded}` : "/data/namespaces",
+      href: catalog
+        ? `/data/namespaces?catalog=${catalogEncoded}`
+        : "/data/namespaces",
     })
   }
   if (current === "tables" || current === "table") {
@@ -90,7 +92,9 @@ export function DataHierarchyHeader({
           ))}
         </div>
 
-        {rightSlot && <div className="shrink-0 flex items-center">{rightSlot}</div>}
+        {rightSlot && (
+          <div className="shrink-0 flex items-center">{rightSlot}</div>
+        )}
       </div>
 
       {/* Row 2: title/subtitle + current selection chips (separate from actions to avoid crowding) */}
@@ -150,4 +154,3 @@ export function DataHierarchyHeader({
     </div>
   )
 }
-

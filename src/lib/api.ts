@@ -1501,8 +1501,10 @@ export interface ApiConfig<SecurityDataType = unknown> {
   customFetch?: typeof fetch
 }
 
-export interface HttpResponse<D extends unknown, E extends unknown = unknown>
-  extends Response {
+export interface HttpResponse<
+  D extends unknown,
+  E extends unknown = unknown,
+> extends Response {
   data: D
   error: E
 }
