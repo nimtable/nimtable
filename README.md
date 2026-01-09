@@ -42,7 +42,24 @@ It helps engineers inspect catalog metadata, view table schemas and partitions, 
 Nimtable runs between users and Iceberg catalogs.
 It provides both a REST API and a browser-based console for interactive metadata management.
 
-<img src="docs/nimtable-arch.drawio1.png" alt="Architecture" width=491>
+```
+                     [Users]        [AI agents]        [Apps]
+
+                             +-------------------------+
+                             |         NIMTABLE         |
+                             +-------------------------+
+                                          |
++-------------------------+  +-------------------------+  +-------------------------+
+|     Catalog services    |  | Ingestion + compaction  |  |      Query engines      |
+|-------------------------|  |-------------------------|  |-------------------------|
+| - Hive Metastore        |  | - RisingWave            |  | - Snowflake             |
+| - AWS Glue              |  | - Spark                 |  | - Databricks            |
+| - Apache Polaris        |  | - Flink                 |  | - DuckDB                |
+| - Unity Catalog         |  | - Other engines         |  | - StarRocks             |
+| - Lakekeeper            |  |                         |  | - ClickHouse            |
+| - Other catalogs        |  |                         |  | - Other engines         |
++-------------------------+  +-------------------------+  +-------------------------+
+```
 
 ## Quick Start
 
