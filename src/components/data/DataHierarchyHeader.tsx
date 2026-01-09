@@ -22,7 +22,7 @@ export function DataHierarchyHeader({
 }: Props) {
   const catalogEncoded = encodeURIComponent(catalog || "")
   const namespaceEncoded = encodeURIComponent(namespace || "")
-  const namespaceSearchEncoded = encodeURIComponent(namespace || "")
+  const namespaceSearchEncoded = namespaceEncoded
   const tableSearchEncoded = encodeURIComponent(table || "")
 
   const title =
