@@ -169,7 +169,7 @@ public class Server {
             // Register servlet + mapping. Jetty can be picky about adding servlet mappings after
             // the
             // handler has started, so we stop/start the context to apply changes safely.
-            final boolean wasStarted = apiContext != null && apiContext.isStarted();
+            final boolean wasStarted = apiContext.isStarted();
             if (wasStarted) {
                 apiContext.stop();
             }
