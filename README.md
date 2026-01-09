@@ -12,12 +12,6 @@
 
 <div align="center">
   <a
-    href="https://go.risingwave.com/slack"
-    target="_blank"
-  >
-    <img alt="Slack" src="https://badgen.net/badge/Slack/Join%20Nimtable%20(Powered%20By%20RisingWave%20Labs)/0abd59?icon=slack" />
-  </a>
-  <a
     href="https://docs.risingwave.com/iceberg/nimtable/get-started"
     target="_blank"
   >
@@ -25,6 +19,12 @@
       alt="Docs"
       src="https://badgen.net/badge/Docs/Nimtable%20Docs/2b6cb0?icon=book"
     />
+  </a>
+  <a
+    href="https://go.risingwave.com/slack"
+    target="_blank"
+  >
+    <img alt="Slack" src="https://badgen.net/badge/Slack/Join%20Nimtable%20Community%20(Powered%20By%20RisingWave%20Labs)/0abd59?icon=slack" />
   </a>
 </div>
 

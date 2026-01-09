@@ -89,7 +89,7 @@ export function ActivityFeed() {
         <div className="flex items-center justify-between border-b border-border px-6 py-4 bg-card">
           <div className="flex items-center gap-2">
             <Clock className="h-5 w-5 text-muted-foreground" />
-            <h2 className="text-base font-medium text-card-foreground">
+            <h2 className="text-m font-normal text-card-foreground">
               Recent Activity
             </h2>
           </div>
@@ -116,7 +116,7 @@ export function ActivityFeed() {
         <div className="flex items-center justify-between border-b border-border px-6 py-4 bg-card">
           <div className="flex items-center gap-2">
             <Clock className="h-5 w-5 text-muted-foreground" />
-            <h2 className="text-base font-medium text-card-foreground">
+            <h2 className="text-m font-normal text-card-foreground">
               Recent Activity
             </h2>
           </div>
@@ -136,7 +136,7 @@ export function ActivityFeed() {
       <div className="flex items-center justify-between border-b border-border px-6 py-4 bg-card">
         <div className="flex items-center gap-2">
           <Clock className="h-5 w-5 text-muted-foreground" />
-          <h2 className="text-base font-medium text-card-foreground">
+          <h2 className="text-m font-normal text-card-foreground">
             Recent Activity
           </h2>
         </div>
@@ -157,13 +157,13 @@ export function ActivityFeed() {
         {compactionHistory.map((activity, index) => (
           <div
             key={index}
-            className="flex items-center gap-4 px-6 py-4 hover:bg-muted/50 transition-colors"
+            className="flex items-center gap-4 px-6 py-3 hover:bg-muted/50 transition-colors"
           >
             <div className="rounded-md bg-green-100 p-2 text-green-600">
               <GitCompare className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1 font-medium">
+              <div className="flex items-center gap-1 text-sm font-normal">
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <span className="text-card-foreground truncate">
@@ -182,7 +182,7 @@ export function ActivityFeed() {
                   — Compaction job completed
                 </span>
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="mt-1 text-xs text-muted-foreground">
                 {formatDistanceToNow(
                   new Date(
                     activity.timestamp < 1e12
