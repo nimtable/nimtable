@@ -86,7 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return (
     <AuthContext.Provider
       value={{
-        user: userInfo,
+        user: userInfo ?? undefined,
         login,
         logout,
         refreshUser,
