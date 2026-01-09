@@ -17,6 +17,15 @@
   >
     <img alt="Slack" src="https://badgen.net/badge/Slack/Join%20Nimtable%20(Powered%20By%20RisingWave%20Labs)/0abd59?icon=slack" />
   </a>
+  <a
+    href="https://docs.risingwave.com/iceberg/nimtable/get-started"
+    target="_blank"
+  >
+    <img
+      alt="Docs"
+      src="https://badgen.net/badge/Docs/RisingWave%20Get%20Started/2b6cb0?icon=book"
+    />
+  </a>
 </div>
 
 
