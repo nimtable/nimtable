@@ -15,7 +15,7 @@
     href="https://go.risingwave.com/slack"
     target="_blank"
   >
-    <img alt="Slack" src="https://badgen.net/badge/Slack/Join%20Nimtable/0abd59?icon=slack" />
+    <img alt="Slack" src="https://badgen.net/badge/Slack/Join%20Nimtable%20(Powered%20By%20RisingWave%20Labs)/0abd59?icon=slack" />
   </a>
 </div>
 
@@ -27,39 +27,6 @@
 
 Nimtable provides a clean interface and REST API for Apache Iceberg.
 It helps engineers inspect catalog metadata, view table schemas and partitions, analyze file layouts, and manage routine maintenance workflows through existing compute engines such as [Apache Spark](https://spark.apache.org/) or [RisingWave](https://github.com/risingwavelabs/risingwave).
-
-## Core Capabilities
-
-- Connect to multiple catalogs including REST, AWS Glue, and S3 Tables.
-- Explore tables, schemas, partitions, snapshots, and manifests.
-- Run SQL queries directly from the browser for quick inspection.
-- Visualize file and snapshot distribution to identify optimization opportunities.
-- Integrate with external engines like Spark or RisingWave to manage compaction and maintenance tasks.
-- Serve as a standard Iceberg REST Catalog API endpoint.
-
-## Architecture
-
-Nimtable runs between users and Iceberg catalogs.
-It provides both a REST API and a browser-based console for interactive metadata management.
-
-```
-                     [Users]        [AI agents]        [Apps]
-
-                             +-------------------------+
-                             |         NIMTABLE         |
-                             +-------------------------+
-                                          |
-+-------------------------+  +-------------------------+  +-------------------------+
-|     Catalog services    |  | Ingestion + compaction  |  |      Query engines      |
-|-------------------------|  |-------------------------|  |-------------------------|
-| - Hive Metastore        |  | - RisingWave            |  | - Snowflake             |
-| - AWS Glue              |  | - Spark                 |  | - Databricks            |
-| - Apache Polaris        |  | - Flink                 |  | - DuckDB                |
-| - Unity Catalog         |  | - Other engines         |  | - StarRocks             |
-| - Lakekeeper            |  |                         |  | - ClickHouse            |
-| - Other catalogs        |  |                         |  | - Other engines         |
-+-------------------------+  +-------------------------+  +-------------------------+
-```
 
 ## Quick Start
 
@@ -91,22 +58,37 @@ services:
 
 **Note:** Environment variables only set the initial password. Once you change the password through the web interface, the new password will be stored in the database and environment variables will be ignored for authentication purposes.
 
----
+## Core Capabilities
 
-## Managing the Service (Optional)
+Nimtable runs between users and Iceberg catalogs.
+It provides both a REST API and a browser-based console for interactive metadata management.
 
-- **View logs:**
-  ```bash
-  docker compose logs -f
-  ```
-- **Stop the service:**
-  ```bash
-  docker compose down
-  ```
+```
+                     [Users]        [AI agents]        [Apps]
 
-## Development
+                             +-------------------------+
+                             |         NIMTABLE         |
+                             +-------------------------+
+                                          |
++-------------------------+  +-------------------------+  +-------------------------+
+|     Catalog services    |  | Ingestion + compaction  |  |      Query engines      |
+|-------------------------|  |-------------------------|  |-------------------------|
+| - Hive Metastore        |  | - RisingWave            |  | - Snowflake             |
+| - AWS Glue              |  | - Spark                 |  | - Databricks            |
+| - Apache Polaris        |  | - Flink                 |  | - DuckDB                |
+| - Unity Catalog         |  | - Other engines         |  | - StarRocks             |
+| - Lakekeeper            |  |                         |  | - ClickHouse            |
+| - Other catalogs        |  |                         |  | - Other engines         |
++-------------------------+  +-------------------------+  +-------------------------+
+```
+It offers the following capabilities:
 
-See [HACKING.md](docs/HACKING.md) for details on how to hack on Nimtable.
+- Connect to multiple catalogs including REST, AWS Glue, and S3 Tables.
+- Explore tables, schemas, partitions, snapshots, and manifests.
+- Run SQL queries directly from the browser for quick inspection.
+- Visualize file and snapshot distribution to identify optimization opportunities.
+- Integrate with external engines like Spark or RisingWave to manage compaction and maintenance tasks.
+- Serve as a standard Iceberg REST Catalog API endpoint.
 
 ## Configuration
 
@@ -186,17 +168,6 @@ If you use AWS Glue or S3, you can provide credentials in two ways:
   ```
 
 ## Roadmap
-
-- **Optimized Compaction**: Advanced compaction strategies and scheduling
-- **Monitoring & Analytics**: Comprehensive dashboard and insights
-- **Caching**: Database integration and metadata caching
-- **Query Engine Integration**: Support for multiple query engines
-- **Metadata Management**: Enhanced snapshot, schema and partition management
-- **Security & Access Control**: RBAC and fine-grained permissions
-- **API & Integration**: REST API support and authentication
-- **Data Lineage**: Table and column-level lineage tracking
-- **Better AI Copilot Support**: Enhanced capabilities for AI agent.
-- **Catalog & Warehouse Integration**: Support for various storage backends
 
 For detailed roadmap items and progress tracking, see [Roadmap](https://github.com/nimtable/nimtable/issues/50).
 
