@@ -24,7 +24,7 @@ import {
 import { useAuth } from "@/contexts/auth-context"
 import { useDemoMode } from "@/contexts/demo-mode-context"
 import Link from "next/link"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useSearchParams } from "next/navigation"
 
 export function DashboardLayout({
   title,
@@ -37,7 +37,6 @@ export function DashboardLayout({
   const { demoMode, disable } = useDemoMode()
   const searchParams = useSearchParams()
   const catalogParam = searchParams.get("catalog")
-  const router = useRouter()
 
   const username = user?.profile?.firstName
     ? `${user.profile.firstName} ${user.profile.lastName}`

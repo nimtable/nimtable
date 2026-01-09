@@ -26,7 +26,6 @@ import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useToast } from "@/hooks/use-toast"
 import { useDemoMode } from "@/contexts/demo-mode-context"
 
 import { CreateCatalogModal } from "./CreateCatalogModal"
@@ -54,7 +53,6 @@ export function CatalogsContent() {
     readOnly: true,
   })
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
-  const { toast } = useToast()
   const [selectedCatalog, setSelectedCatalog] = useState<string | null>(null)
   const router = useRouter()
 
@@ -182,12 +180,6 @@ export function CatalogsContent() {
     }
     return true
   })
-
-  const handleDeleteClick = (catalog: string) => {
-    // Deletion is intentionally handled in the catalog details page
-    // to avoid duplicate delete entry points and accidental deletions.
-    router.push(`/data/catalog?catalog=${catalog}`)
-  }
 
   const handleInfoClick = (catalog: string) => {
     router.push(`/data/namespaces?catalog=${encodeURIComponent(catalog)}`)
