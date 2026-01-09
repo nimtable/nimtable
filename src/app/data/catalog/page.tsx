@@ -125,7 +125,6 @@ export default function CatalogPage() {
           "Catalog and Nimtable-managed data were removed. Iceberg tables/data were not deleted.",
       })
       router.replace("/data/catalogs")
-      router.refresh()
     } catch (error) {
       toast({
         variant: "destructive",
