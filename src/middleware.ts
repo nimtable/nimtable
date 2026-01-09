@@ -60,7 +60,7 @@ export function middleware(request: NextRequest) {
     const token = request.cookies.get(AUTH_COOKIE_NAME)?.value
     if (!token) {
       return NextResponse.json(
-        { error: "Unauthorized - No token provided" },
+        { error: "Unauthorized - No token provided", status: 401 },
         { status: 401 }
       )
     }
@@ -73,7 +73,7 @@ export function middleware(request: NextRequest) {
     } catch (error) {
       console.log("token verification error", error)
       const response = NextResponse.json(
-        { error: "Unauthorized - Invalid token" },
+        { error: "Unauthorized - Invalid token", status: 401 },
         { status: 401 }
       )
       return clearAuthCookie(response)

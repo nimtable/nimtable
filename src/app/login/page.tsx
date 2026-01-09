@@ -19,7 +19,7 @@
 import type React from "react"
 
 import { useRouter, useSearchParams } from "next/navigation"
-import { useState, useEffect, useRef } from "react"
+import { useState, useRef } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { useToast } from "@/hooks/use-toast"
 import Image from "next/image"
@@ -27,21 +27,6 @@ import { AlertCircle, LockIcon, User } from "lucide-react"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-
-// Add a pulse animation for error states
-const pulseErrorAnimation = `
-  @keyframes pulse-once {
-    0%, 100% {
-      box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
-    }
-    50% {
-      box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2);
-    }
-  }
-  .animate-pulse-once {
-    animation: pulse-once 0.8s ease-out;
-  }
-`
 
 export default function LoginPage() {
   const [username, setUsername] = useState("")
@@ -97,20 +82,6 @@ export default function LoginPage() {
       console.error(err)
     }
   }
-
-  // Add the animation style
-  useEffect(() => {
-    if (error) {
-      // Add the animation style to the document head
-      const styleElement = document.createElement("style")
-      styleElement.innerHTML = pulseErrorAnimation
-      document.head.appendChild(styleElement)
-
-      return () => {
-        document.head.removeChild(styleElement)
-      }
-    }
-  }, [error])
 
   return (
     <div
