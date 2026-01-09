@@ -28,6 +28,7 @@ import { TopNavbar } from "@/components/shared/top-navbar"
 import { useState, useEffect, useCallback } from "react"
 import { Database, Plus, Trash2 } from "lucide-react"
 import { createCatalog } from "@/lib/client/sdk.gen"
+import { errorToString } from "@/lib/utils"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -471,9 +472,18 @@ export default function NewCatalogPage() {
         throw new Error("Catalog name is required.")
       }
 
-      await createCatalog({
+      const result = await createCatalog({
         body: catalogData,
+        throwOnError: false,
       })
+      if (result.error) {
+        const status = result.response?.status
+        const statusText = result.response?.statusText
+        const message = errorToString(result.error)
+        throw new Error(
+          status ? `HTTP ${status}${statusText ? ` ${statusText}` : ""}: ${message}` : message
+        )
+      }
 
       toast({
         title: "Catalog created successfully",
@@ -482,9 +492,7 @@ export default function NewCatalogPage() {
 
       router.push("/data/catalog?catalog=" + catalogData.name)
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "An unknown error occurred"
-      console.error("Submission Error:", error)
+      const errorMessage = errorToString(error)
       toast({
         variant: "destructive",
         title: "Failed to create catalog",

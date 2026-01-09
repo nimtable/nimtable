@@ -75,7 +75,7 @@ export const createCatalog = <ThrowOnError extends boolean = false>(options: Opt
 
 /**
  * Delete catalog
- * Deletes a specific catalog
+ * Deletes a specific catalog. If purge=true, also deletes Nimtable-managed data associated with the catalog.
  */
 export const deleteCatalog = <ThrowOnError extends boolean = false>(options: Options<DeleteCatalogData, ThrowOnError>) => {
     return (options.client ?? _heyApiClient).delete<DeleteCatalogResponse, DeleteCatalogError, ThrowOnError>({

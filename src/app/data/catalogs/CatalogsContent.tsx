@@ -5,7 +5,6 @@ import {
   FolderTreeIcon,
   Plus,
   Search,
-  Trash2,
 } from "lucide-react"
 import { useQueries } from "@tanstack/react-query"
 import { formatDistanceToNow } from "date-fns"
@@ -13,17 +12,6 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 import type React from "react"
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
 import {
   Dialog,
   DialogContent,
@@ -39,14 +27,13 @@ import { Switch } from "@/components/ui/switch"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
-import { deleteCatalog } from "@/lib/client"
-import { errorToString } from "@/lib/utils"
 import { useDemoMode } from "@/contexts/demo-mode-context"
 
 import { CreateCatalogModal } from "./CreateCatalogModal"
 import { useNamespaces } from "../hooks/useNamespaces"
 import { useCatalogs } from "../hooks/useCatalogs"
 import { useAllTables } from "../hooks/useTables"
+import { DataHierarchyHeader } from "@/components/data/DataHierarchyHeader"
 
 export function CatalogsContent() {
   const {
@@ -197,36 +184,13 @@ export function CatalogsContent() {
   })
 
   const handleDeleteClick = (catalog: string) => {
-    if (demoMode) {
-      toast({
-        title: "Disabled in demo mode",
-        description: "Catalog delete is not available in demo preview.",
-      })
-      return
-    }
-    deleteCatalog({
-      path: {
-        catalogName: catalog,
-      },
-    })
-      .then(() => {
-        toast({
-          title: "Catalog deleted successfully",
-          description: "The catalog has been removed from the database.",
-        })
-        refetchCatalogs()
-      })
-      .catch((error) => {
-        toast({
-          variant: "destructive",
-          title: "Failed to delete catalog",
-          description: errorToString(error),
-        })
-      })
+    // Deletion is intentionally handled in the catalog details page
+    // to avoid duplicate delete entry points and accidental deletions.
+    router.push(`/data/catalog?catalog=${catalog}`)
   }
 
   const handleInfoClick = (catalog: string) => {
-    router.push(`/data/catalog?catalog=${catalog}`)
+    router.push(`/data/namespaces?catalog=${encodeURIComponent(catalog)}`)
   }
 
   if (isLoadingCatalogs) {
@@ -281,6 +245,10 @@ export function CatalogsContent() {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden bg-background min-h-screen">
+      <DataHierarchyHeader
+        current="catalogs"
+        count={filteredCatalogs?.length || 0}
+      />
       {/* Search and actions bar */}
       <div className="bg-card border-b border-border px-6 py-4">
         <div className="flex items-center gap-3">
@@ -344,8 +312,9 @@ export function CatalogsContent() {
                 <th className="px-6 py-3 text-right text-xs font-normal text-muted-foreground uppercase tracking-wider">
                   Last modified
                 </th>
-                <th></th>
-                <th></th>
+                <th className="px-6 py-3 text-right text-xs font-normal text-muted-foreground uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="bg-card divide-y divide-border">
@@ -361,10 +330,24 @@ export function CatalogsContent() {
                     <span>{catalog}</span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground text-right">
-                    {catalogStats[catalog]?.namespaceCount || 0}
+                    <a
+                      href={`/data/namespaces?catalog=${encodeURIComponent(catalog)}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-primary hover:text-primary/80"
+                      title="View namespaces"
+                    >
+                      {catalogStats[catalog]?.namespaceCount || 0}
+                    </a>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground text-right">
-                    {catalogStats[catalog]?.tableCount || 0}
+                    <a
+                      href={`/data/tables?catalog=${encodeURIComponent(catalog)}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-primary hover:text-primary/80"
+                      title="View tables"
+                    >
+                      {catalogStats[catalog]?.tableCount || 0}
+                    </a>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground text-right">
                     {isLoadingTables ||
@@ -393,60 +376,14 @@ export function CatalogsContent() {
                       )}
                     </span>
                   </td>
-                  <td className="text-center w-40">
-                    <div
-                      className="text-center opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <button className="rounded-full p-1 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600">
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This action cannot be undone. This will
-                              permanently delete the catalog and remove it from
-                              the database.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDeleteClick(catalog)}
-                            >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </td>
-                  <td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right">
                     <a
-                      href={`/data/namespaces?catalog=${catalog}`}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                      }}
-                      className="text-primary hover:text-primary/80 font-normal w-full flex items-center justify-center gap-1 pr-4 opacity-0 group-hover:opacity-100 transition-opacity "
+                      href={`/data/catalog?catalog=${encodeURIComponent(catalog)}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-primary hover:text-primary/80 font-normal opacity-0 group-hover:opacity-100 transition-opacity"
+                      title="Open catalog details"
                     >
-                      View Namespaces
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 5l7 7-7 7"
-                        />
-                      </svg>
+                      Details →
                     </a>
                   </td>
                 </tr>

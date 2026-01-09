@@ -402,7 +402,12 @@ export type DeleteCatalogData = {
     path: {
         catalogName: string;
     };
-    query?: never;
+    query?: {
+        /**
+         * When true, also deletes Nimtable-managed data for this catalog (scheduled tasks, cached distributions, table summaries).
+         */
+        purge?: boolean;
+    };
     url: '/api/catalogs/{catalogName}';
 };
 

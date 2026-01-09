@@ -65,7 +65,7 @@ paths:
   /api/catalogs/{catalogName}:
     delete:
       summary: Delete catalog
-      description: Deletes a specific catalog
+      description: Deletes a specific catalog. If purge=true, also deletes Nimtable-managed data associated with the catalog.
       operationId: deleteCatalog
       tags:
         - Catalog
@@ -75,6 +75,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: purge
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+          description: When true, also deletes Nimtable-managed data for this catalog (scheduled tasks, cached distributions, table summaries).
       responses:
         "204":
           description: Catalog deleted successfully

@@ -32,7 +32,7 @@ import { notFound, useSearchParams, useRouter } from "next/navigation"
 import { PageLoader } from "@/components/shared/page-loader"
 import { deleteCatalog } from "@/lib/client/sdk.gen"
 import { getCatalogConfig, getCatalogDetails } from "@/lib/data-loader"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { errorToString } from "@/lib/utils"
@@ -51,9 +51,11 @@ import Link from "next/link"
 
 export default function CatalogPage() {
   const router = useRouter()
+  const queryClient = useQueryClient()
 
   const searchParams = useSearchParams()
   const catalogParam = searchParams.get("catalog")
+  const catalogEncoded = encodeURIComponent(catalogParam || "")
 
   const { namespaces } = useNamespaces([catalogParam || ""])
   const { tables, isLoading: isLoadingTables } = useAllTables()
@@ -96,12 +98,34 @@ export default function CatalogPage() {
         path: {
           catalogName: catalogParam,
         },
+        query: {
+          purge: true,
+        },
       })
+
+      // Clear cached data so other pages (e.g., Dashboard metrics) don't keep showing stale catalog tables.
+      queryClient.removeQueries({
+        predicate: (q) => {
+          const key = q.queryKey
+          const root = Array.isArray(key) ? key[0] : key
+          return (
+            root === "catalogs" ||
+            root === "namespaces" ||
+            root === "tables" ||
+            root === "catalog-config" ||
+            root === "catalog-details" ||
+            root === "table-metadata"
+          )
+        },
+      })
+
       toast({
         title: "Catalog deleted successfully",
-        description: "The catalog has been removed from the database.",
+        description:
+          "Catalog and Nimtable-managed data were removed. Iceberg tables/data were not deleted.",
       })
-      router.push("/")
+      router.replace("/data/catalogs")
+      router.refresh()
     } catch (error) {
       toast({
         variant: "destructive",
@@ -244,6 +268,22 @@ export default function CatalogPage() {
               <span className="px-2 py-1 text-xs font-normal bg-muted text-muted-foreground rounded">
                 Catalog details
               </span>
+              <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground">
+                <span>/</span>
+                <Link
+                  href={`/data/namespaces?catalog=${catalogEncoded}`}
+                  className="hover:text-foreground transition-colors"
+                >
+                  Namespaces
+                </Link>
+                <span>/</span>
+                <Link
+                  href={`/data/tables?catalog=${catalogEncoded}`}
+                  className="hover:text-foreground transition-colors"
+                >
+                  Tables
+                </Link>
+              </div>
             </div>
           </div>
           <AlertDialog>
@@ -382,7 +422,7 @@ export default function CatalogPage() {
 
           {/* Namespaces card - spans 1 column */}
           <Link
-            href={`/data/namespaces?catalog=${catalogParam}`}
+            href={`/data/namespaces?catalog=${catalogEncoded}`}
             className="md:col-span-1 bg-card border border-border rounded-lg p-6 hover:border-primary transition-colors flex flex-col items-center justify-center gap-2"
           >
             <p className="text-xs text-muted-foreground">Namespaces</p>
@@ -393,7 +433,7 @@ export default function CatalogPage() {
 
           {/* Tables card - spans 1 column */}
           <Link
-            href={`/data/tables?catalog=${catalogParam}`}
+            href={`/data/tables?catalog=${catalogEncoded}`}
             className="md:col-span-1 bg-card border border-border rounded-lg p-6 hover:border-primary transition-colors flex flex-col items-center justify-center gap-2"
           >
             <p className="text-xs text-muted-foreground">Tables</p>

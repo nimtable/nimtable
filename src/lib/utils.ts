@@ -30,6 +30,21 @@ export function errorToString(error: unknown): string {
   if (typeof error === "string") {
     return error
   }
+  // Nimtable backend error shape (generated as `_Error`)
+  // { code: string; message: string; details?: string }
+  if (
+    error &&
+    typeof error === "object" &&
+    "message" in error &&
+    typeof (error as { message?: unknown }).message === "string"
+  ) {
+    const message = (error as { message: string }).message
+    const details =
+      "details" in error && typeof (error as { details?: unknown }).details === "string"
+        ? (error as { details: string }).details
+        : ""
+    return details ? `${message} (${details})` : message
+  }
   // IcebergErrorResponse
   if (
     error &&

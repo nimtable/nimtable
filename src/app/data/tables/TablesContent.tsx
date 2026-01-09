@@ -1,16 +1,10 @@
 "use client"
 
-import {
-  ArrowLeft,
-  ChevronDown,
-  FolderIcon,
-  Loader2,
-  Search,
-  TableIcon,
-} from "lucide-react"
+import { ChevronDown, FolderIcon, Loader2, Search } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Choose } from "react-extras"
+import Link from "next/link"
 
 import {
   DropdownMenu,
@@ -27,6 +21,7 @@ import { getOptimizationRecommendation } from "@/components/table/file-distribut
 import { useNamespaces } from "../hooks/useNamespaces"
 import { useCatalogs } from "../hooks/useCatalogs"
 import { useAllTables } from "../hooks/useTables"
+import { DataHierarchyHeader } from "@/components/data/DataHierarchyHeader"
 
 export function TablesContent() {
   const { catalogs } = useCatalogs()
@@ -35,13 +30,14 @@ export function TablesContent() {
   const searchParams = useSearchParams()
   const catalogFromUrl = searchParams.get("catalog")
   const namespaceFromUrl = searchParams.get("namespace")
+  const searchFromUrl = searchParams.get("search") || ""
 
   const { tables, isLoading, isFileDistributionLoading } = useAllTables()
 
   const [selectedStatus, setSelectedStatus] = useState<
     "all" | "needs_compaction" | "healthy"
   >("all")
-  const [searchQuery, setSearchQuery] = useState<string>("")
+  const [searchQuery, setSearchQuery] = useState<string>(searchFromUrl)
 
   const [selectedNamespace, setSelectedNamespace] = useState<string>(
     namespaceFromUrl || "all"
@@ -65,6 +61,10 @@ export function TablesContent() {
       setSelectedNamespace(namespaceFromUrl)
     }
   }, [catalogFromUrl, namespaceFromUrl])
+
+  useEffect(() => {
+    setSearchQuery(searchFromUrl)
+  }, [searchFromUrl])
 
   // Get namespaces for the selected catalog
   const catalogNamespaces = allNamespaces.filter(
@@ -104,6 +104,64 @@ export function TablesContent() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col overflow-hidden">
+      <DataHierarchyHeader
+        current="tables"
+        catalog={catalogFromUrl}
+        namespace={namespaceFromUrl}
+        count={filteredTables.length}
+        rightSlot={
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground hidden sm:inline">
+              View by:
+            </span>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 bg-transparent"
+                >
+                  {selectedStatus === "all"
+                    ? "All status"
+                    : selectedStatus === "healthy"
+                      ? "Healthy"
+                      : "Needs Compaction"}
+                  <ChevronDown className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => setSelectedStatus("all")}>
+                  All status
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSelectedStatus("healthy")}>
+                  Healthy
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setSelectedStatus("needs_compaction")}
+                >
+                  Needs Compaction
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        }
+      />
+
+      {!catalogFromUrl && (
+        <div className="px-6 pt-4">
+          <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm text-muted-foreground">
+            Start from{" "}
+            <Link
+              href="/data/catalogs"
+              className="text-primary hover:text-primary/80"
+            >
+              Catalogs
+            </Link>{" "}
+            and drill down: <span className="text-foreground">Catalog → Namespace → Tables</span>.
+          </div>
+        </div>
+      )}
+
       {/* Catalog and namespace selector with search bar */}
       <div className="bg-card border-b border-border px-6 py-4">
         <div className="flex items-center gap-3">
@@ -164,60 +222,6 @@ export function TablesContent() {
         </div>
       </div>
 
-      <div className="px-6 py-4 border-b border-border flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <a
-            href={`/data/namespaces?catalog=${selectedCatalog}`}
-            className="text-primary hover:text-primary/80 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </a>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <TableIcon className="w-5 h-5 text-card-foreground" />
-              <h2 className="text-base font-normal text-card-foreground">
-                {catalogFromUrl}
-              </h2>
-            </div>
-            <span className="px-2 py-1 text-xs font-normal bg-muted text-muted-foreground rounded">
-              {namespaceFromUrl}
-            </span>
-          </div>
-        </div>
-        <div className="flex items-center gap-4 text-foreground">
-          <span className="text-sm text-muted-foreground">View by:</span>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2 bg-transparent"
-              >
-                {selectedStatus === "all"
-                  ? "All status"
-                  : selectedStatus === "healthy"
-                    ? "Healthy"
-                    : "Needs Compaction"}
-                <ChevronDown className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => setSelectedStatus("all")}>
-                All status
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setSelectedStatus("healthy")}>
-                Healthy
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => setSelectedStatus("needs_compaction")}
-              >
-                Needs Compaction
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
-
       {/* Table List */}
       <Choose>
         <Choose.When condition={isFileDistributionLoading || isLoading}>
@@ -261,7 +265,12 @@ export function TablesContent() {
                   {filteredTables.map((table, index) => (
                     <tr
                       key={index}
-                      className="group hover:bg-table-row-hover transition-colors"
+                      className="group hover:bg-table-row-hover transition-colors cursor-pointer"
+                      onClick={() => {
+                        router.push(
+                          `/data/tables/table?catalog=${table.catalog}&namespace=${table.namespace}&table=${table.table}`
+                        )
+                      }}
                     >
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-normal text-card-foreground">
                         {table.table}
@@ -290,29 +299,7 @@ export function TablesContent() {
                         {`${(table.dataFileSizeInBytes / (1024 * 1024)).toFixed(2)} MB`}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                        <div className="flex items-center justify-between">
-                          {table.dataFileCount}
-
-                          <a
-                            href={`/data/tables/table?catalog=${table.catalog}&namespace=${table.namespace}&table=${table.table}`}
-                            className="text-primary hover:text-primary/80 font-normal flex items-center gap-1 ml-4 opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            View details
-                            <svg
-                              className="w-4 h-4"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M9 5l7 7-7 7"
-                              />
-                            </svg>
-                          </a>
-                        </div>
+                        {table.dataFileCount}
                       </td>
                     </tr>
                   ))}

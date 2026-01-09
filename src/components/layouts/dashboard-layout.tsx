@@ -5,16 +5,26 @@ import type React from "react"
 // import { TableDetail } from "@/components/table-detail"
 // import { CopilotPanel } from "@/components/copilot-panel"
 import { Sidebar } from "../sidebar"
-import { ChevronDown, LogOut, Settings, UserIcon } from "lucide-react"
+import {
+  Bot,
+  ChevronDown,
+  Database,
+  LogOut,
+  Settings,
+  UserIcon,
+  Users,
+} from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/contexts/auth-context"
 import { useDemoMode } from "@/contexts/demo-mode-context"
 import Link from "next/link"
+import { useRouter, useSearchParams } from "next/navigation"
 
 export function DashboardLayout({
   title,
@@ -25,17 +35,22 @@ export function DashboardLayout({
 }) {
   const { user, logout } = useAuth()
   const { demoMode, disable } = useDemoMode()
+  const searchParams = useSearchParams()
+  const catalogParam = searchParams.get("catalog")
+  const router = useRouter()
 
   const username = user?.profile?.firstName
     ? `${user.profile.firstName} ${user.profile.lastName}`
     : user?.username || ""
 
   return (
-    <div className="flex h-screen max-h-screen overflow-hidden w-full bg-gray-50">
+    <div className="relative flex h-screen max-h-screen overflow-hidden w-full bg-gray-50">
+      {/* Single, continuous top divider line to avoid 1px seams between Sidebar + Header */}
+      <div className="pointer-events-none absolute left-0 right-0 top-14 border-b border-border" />
       <Sidebar />
       <div className="flex-1 h-full overflow-hidden">
-        <header className="bg-card border-b border-border">
-          <div className="flex items-center justify-between px-6 h-14 text-[rgba(250,250,250,1)] bg-[rgba(250,250,250,1)]">
+        <header className="bg-card">
+          <div className="flex items-center justify-between px-6 h-14 bg-card">
             <h1 className="text-sm font-normal text-card-foreground">
               {title}
             </h1>
@@ -52,6 +67,18 @@ export function DashboardLayout({
                   <span>Exit demo mode</span>
                 </button>
               )}
+
+              {catalogParam && (
+                <Link
+                  href={`/data/catalog?catalog=${encodeURIComponent(catalogParam)}`}
+                  className="flex items-center gap-2 rounded-md p-2 text-sm text-muted-foreground hover:bg-gray-100 hover:text-foreground"
+                  title="Open catalog details"
+                >
+                  <Database className="w-4 h-4" />
+                  <span className="max-w-[220px] truncate">{catalogParam}</span>
+                </Link>
+              )}
+
               <DropdownMenu>
                 <DropdownMenuTrigger className="flex cursor-pointer items-center gap-2 rounded-md p-2 hover:bg-gray-100">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
@@ -67,6 +94,19 @@ export function DashboardLayout({
                       <span>Account Settings</span>
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-pointer" asChild>
+                    <Link href="/settings/ai">
+                      <Bot className="mr-2 h-4 w-4" />
+                      <span>AI Settings</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-pointer" asChild>
+                    <Link href="/users">
+                      <Users className="mr-2 h-4 w-4" />
+                      <span>Users</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem className="cursor-pointer" onClick={logout}>
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Sign Out</span>

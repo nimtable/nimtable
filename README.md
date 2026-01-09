@@ -24,7 +24,7 @@
     href="https://go.risingwave.com/slack"
     target="_blank"
   >
-    <img alt="Slack" src="https://badgen.net/badge/Slack/Join%20Nimtable%20Community%20(Powered%20By%20RisingWave%20Labs)/0abd59?icon=slack" />
+    <img alt="Slack" src="https://badgen.net/badge/Slack/Join%20Community%20(Powered%20By%20RisingWave%20Labs)/0abd59?icon=slack" />
   </a>
 </div>
 
