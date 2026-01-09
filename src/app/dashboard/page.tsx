@@ -31,7 +31,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <LayoutGrid className="w-5 h-5 text-card-foreground" />
-              <h2 className="text-m font-normal text-card-foreground">
+              <h2 className="text-base font-normal text-card-foreground">
                 Overview
               </h2>
             </div>
@@ -75,7 +75,9 @@ export default function DashboardPage() {
       <div className="bg-card border-b border-border px-6 py-4">
         <div className="flex items-center gap-2">
           <LayoutGrid className="w-5 h-5 text-card-foreground" />
-          <h2 className="text-m font-normal text-card-foreground">Overview</h2>
+          <h2 className="text-base font-normal text-card-foreground">
+            Overview
+          </h2>
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
           Welcome back to your Iceberg lakehouse control center

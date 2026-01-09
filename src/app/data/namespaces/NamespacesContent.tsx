@@ -89,7 +89,7 @@ export function NamespacesContent() {
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <FolderIcon className="w-5 h-5 text-card-foreground" />
-            <h2 className="text-m font-normal text-card-foreground">
+            <h2 className="text-base font-normal text-card-foreground">
               {selectedCatalog} ({filteredNamespaces.length})
             </h2>
           </div>

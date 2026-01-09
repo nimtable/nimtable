@@ -42,7 +42,7 @@ export function TableWatchlist() {
         <div className="flex items-center justify-between border-b border-border px-6 py-4 bg-card">
           <div className="flex items-center gap-2">
             <Star className="h-5 w-5 text-amber-500" />
-            <h2 className="text-m font-normal text-card-foreground">
+            <h2 className="text-base font-normal text-card-foreground">
               Watchlist
             </h2>
           </div>
@@ -70,7 +70,7 @@ export function TableWatchlist() {
         <div className="flex items-center justify-between border-b border-border px-6 py-4 bg-card">
           <div className="flex items-center gap-2">
             <Star className="h-5 w-5 text-amber-500" />
-            <h2 className="text-m font-normal text-card-foreground">
+            <h2 className="text-base font-normal text-card-foreground">
               Watchlist
             </h2>
           </div>
@@ -93,7 +93,9 @@ export function TableWatchlist() {
       <div className="flex items-center justify-between border-b border-border px-6 py-4 bg-card">
         <div className="flex items-center gap-2">
           <Star className="h-5 w-5 text-amber-500" />
-          <h2 className="text-m font-normal text-card-foreground">Watchlist</h2>
+          <h2 className="text-base font-normal text-card-foreground">
+            Watchlist
+          </h2>
         </div>
       </div>
       <div className="divide-y divide-border">
