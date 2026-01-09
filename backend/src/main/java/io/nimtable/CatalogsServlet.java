@@ -337,7 +337,9 @@ public class CatalogsServlet extends HttpServlet {
             int scheduledTasksDeleted = scheduledTaskRepository.deleteByCatalogName(catalogName);
             int distributionsDeleted = dataDistributionRepository.deleteByCatalogName(catalogName);
             int tableSummariesDeleted =
-                    DB.sqlUpdate("delete from table_summaries where catalog_name = :catalogName")
+                    DB.createUpdate(
+                                    Catalog.class,
+                                    "delete from table_summaries where catalog_name = :catalogName")
                             .setParameter("catalogName", catalogName)
                             .execute();
 
