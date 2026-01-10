@@ -5,7 +5,6 @@ import { IntroductionStep } from "./introduction-step"
 import { Button } from "@/components/ui/button"
 import { X } from "lucide-react"
 import { useState } from "react"
-import { useDemoMode } from "@/contexts/demo-mode-context"
 
 type OnboardingFlowProps = {
   onComplete: () => void
@@ -14,7 +13,6 @@ type OnboardingFlowProps = {
 
 export function OnboardingFlow({ onComplete, onDismiss }: OnboardingFlowProps) {
   const [currentStep, setCurrentStep] = useState(1)
-  const { enable: enableDemo } = useDemoMode()
 
   const goToNextStep = () => {
     setCurrentStep(currentStep + 1)
@@ -56,28 +54,6 @@ export function OnboardingFlow({ onComplete, onDismiss }: OnboardingFlowProps) {
                   }, 1000)
                 }}
               />
-
-              <div className="rounded-lg border bg-muted/40 p-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-card-foreground">
-                      Want to see a quick preview?
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Turn on demo mode to explore without connecting a catalog.
-                    </p>
-                  </div>
-                  <Button
-                    variant="secondary"
-                    onClick={() => {
-                      enableDemo()
-                      onComplete()
-                    }}
-                  >
-                    Try Demo Now
-                  </Button>
-                </div>
-              </div>
             </div>
           )}
         </div>
