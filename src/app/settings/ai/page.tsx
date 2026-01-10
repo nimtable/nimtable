@@ -20,11 +20,16 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import { useToast } from "@/hooks/use-toast"
 import { LoadingButton } from "@/components/ui/loading-button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Bot } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import {
+  AlertCircle,
+  Bot,
+  CheckCircle2,
+  PlugZap,
+  TestTube2,
+} from "lucide-react"
 
 interface AISettings {
   endpoint: string
@@ -43,10 +48,33 @@ export default function AISettingsPage() {
     hasApiKey: false,
   })
   const [updateApiKey, setUpdateApiKey] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [switchLoading, setSwitchLoading] = useState(false)
+  const [saveLoading, setSaveLoading] = useState(false)
+  const [testLoading, setTestLoading] = useState(false)
+  const [enableLoading, setEnableLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
-  const { toast } = useToast()
+
+  const missingEndpoint = !settings.endpoint?.trim()
+  const missingModelName = !settings.modelName?.trim()
+  const apiKeyReady =
+    Boolean(settings.hasApiKey) && !updateApiKey
+      ? true
+      : Boolean(settings.apiKey?.trim())
+  const missingApiKey = !apiKeyReady
+
+  const isConfigured = !missingEndpoint && !missingModelName && !missingApiKey
+  const canTest = isConfigured && !testLoading
+
+  type InlineState =
+    | { status: "idle" }
+    | { status: "success"; message: string }
+    | { status: "error"; message: string }
+
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [saveState, setSaveState] = useState<InlineState>({ status: "idle" })
+  const [testState, setTestState] = useState<InlineState>({ status: "idle" })
+  const [enableState, setEnableState] = useState<InlineState>({
+    status: "idle",
+  })
 
   // Load existing settings
   useEffect(() => {
@@ -58,25 +86,39 @@ export default function AISettingsPage() {
           setSettings(data)
           // If no API key exists, show input field by default
           setUpdateApiKey(!data.hasApiKey)
+          setLoadError(null)
         }
       } catch (error) {
         console.error("Failed to load AI settings:", error)
-        toast({
-          title: "Error",
-          description: "Failed to load AI settings",
-          variant: "destructive",
-        })
+        setLoadError("Failed to load AI settings. Please refresh the page.")
       } finally {
         setInitialLoading(false)
       }
     }
 
     loadSettings()
-  }, [toast])
+  }, [])
 
   const handleToggleEnable = async (checked: boolean) => {
-    setSwitchLoading(true)
+    setEnableLoading(true)
     const previousEnabled = settings.isEnabled
+    setEnableState({ status: "idle" })
+
+    // If enabling, validate required fields before calling the server.
+    // Otherwise users get an error toast while they can't even edit the inputs yet.
+    if (checked) {
+      // The toggle is disabled when configuration is incomplete, but keep a guard
+      // here in case it's triggered programmatically.
+      if (!isConfigured) {
+        setEnableState({
+          status: "error",
+          message:
+            "Complete API Endpoint, Model Name, and API Key before enabling AI.",
+        })
+        setEnableLoading(false)
+        return
+      }
+    }
 
     // Optimistically update UI
     setSettings({ ...settings, isEnabled: checked })
@@ -96,13 +138,9 @@ export default function AISettingsPage() {
       })
 
       if (response.ok) {
-        toast({
-          title: checked
-            ? "AI Configuration Enabled"
-            : "AI Configuration Disabled",
-          description: checked
-            ? "Custom AI settings are now active"
-            : "Using default Nimtable AI service",
+        setEnableState({
+          status: "success",
+          message: checked ? "AI is enabled." : "AI is disabled.",
         })
 
         // Reload settings to get fresh data
@@ -122,21 +160,21 @@ export default function AISettingsPage() {
       // Revert on error
       setSettings({ ...settings, isEnabled: previousEnabled })
       console.error("Failed to toggle AI settings:", error)
-      toast({
-        title: "Error",
-        description:
+      setEnableState({
+        status: "error",
+        message:
           error instanceof Error
             ? error.message
             : "Failed to update AI settings",
-        variant: "destructive",
       })
     } finally {
-      setSwitchLoading(false)
+      setEnableLoading(false)
     }
   }
 
   const handleSave = async () => {
-    setLoading(true)
+    setSaveLoading(true)
+    setSaveState({ status: "idle" })
     try {
       const response = await fetch("/api/ai-settings", {
         method: "POST",
@@ -151,10 +189,8 @@ export default function AISettingsPage() {
       })
 
       if (response.ok) {
-        toast({
-          title: "Success",
-          description: "AI settings saved successfully",
-        })
+        setSaveState({ status: "success", message: "Settings saved." })
+        setTestState({ status: "idle" })
 
         // Reload to get fresh hasApiKey status
         const getResponse = await fetch("/api/ai-settings")
@@ -169,27 +205,25 @@ export default function AISettingsPage() {
       }
     } catch (error) {
       console.error("Failed to save AI settings:", error)
-      toast({
-        title: "Error",
-        description:
+      setSaveState({
+        status: "error",
+        message:
           error instanceof Error ? error.message : "Failed to save AI settings",
-        variant: "destructive",
       })
     } finally {
-      setLoading(false)
+      setSaveLoading(false)
     }
   }
 
   const handleTest = async () => {
-    setLoading(true)
+    setTestLoading(true)
+    setTestState({ status: "idle" })
     try {
       // Validate settings before testing
       if (!settings.endpoint || !settings.modelName) {
-        toast({
-          title: "Error",
-          description:
-            "Please configure endpoint and model name before testing",
-          variant: "destructive",
+        setTestState({
+          status: "error",
+          message: "Fill API Endpoint and Model Name before testing.",
         })
         return
       }
@@ -209,27 +243,24 @@ export default function AISettingsPage() {
       const result = await response.json()
 
       if (result.success) {
-        toast({
-          title: "Connection Successful! ✅",
-          description: `Test response: "${result.response}" | Tokens used: ${result.usage?.totalTokens || 0}`,
+        setTestState({
+          status: "success",
+          message: `Connected successfully. Response: "${result.response}"`,
         })
       } else {
-        toast({
-          title: "Connection Failed ❌",
-          description: result.message || "Failed to connect to AI endpoint",
-          variant: "destructive",
+        setTestState({
+          status: "error",
+          message: result.message || "Failed to connect to AI endpoint.",
         })
       }
     } catch (error) {
       console.error("Failed to test AI endpoint:", error)
-      toast({
-        title: "Test Failed",
-        description:
-          "Failed to test AI connection. Please check your settings.",
-        variant: "destructive",
+      setTestState({
+        status: "error",
+        message: "Failed to test AI connection. Please check your settings.",
       })
     } finally {
-      setLoading(false)
+      setTestLoading(false)
     }
   }
 
@@ -307,36 +338,79 @@ export default function AISettingsPage() {
     <div className="flex flex-1 flex-col overflow-hidden bg-background h-full">
       {/* Content */}
       <div className="flex-1 overflow-auto p-6">
-        <div className="mx-auto max-w-4xl space-y-8">
-          {/* Description */}
-          <div>
-            <p className="text-sm text-muted-foreground">
-              Configure your AI endpoint and API key. When enabled, Nimtable
-              will use your custom settings.
-            </p>
+        <div className="mx-auto max-w-4xl space-y-6">
+          {/* Header */}
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <Bot className="w-5 h-5 text-card-foreground" />
+              <h2 className="text-base font-normal text-card-foreground">
+                AI Settings
+              </h2>
+              <span className="rounded border border-border bg-muted/40 px-2 py-0.5 text-xs text-muted-foreground">
+                {settings.isEnabled ? "Enabled" : "Disabled"}
+              </span>
+              <span className="rounded border border-border bg-muted/40 px-2 py-0.5 text-xs text-muted-foreground">
+                {isConfigured ? "Configured" : "Not configured"}
+              </span>
+            </div>
+            {enableLoading && (
+              <span className="text-xs text-muted-foreground">Updating…</span>
+            )}
           </div>
 
-          {/* Settings Form */}
-          <div className="space-y-6">
-            {/* Enable Switch */}
-            <div className="flex items-center space-x-2 pb-6 border-b border-border">
-              <Switch
-                id="ai-enabled"
-                checked={settings.isEnabled}
-                onCheckedChange={handleToggleEnable}
-                disabled={switchLoading}
-              />
-              <Label htmlFor="ai-enabled" className="text-sm font-medium">
-                Enable custom AI configuration
-                {switchLoading && (
-                  <span className="ml-2 text-sm text-muted-foreground font-normal">
-                    Updating...
-                  </span>
-                )}
-              </Label>
+          <p className="text-sm text-muted-foreground">
+            Nimtable currently supports OpenAI API-compatible endpoints. If you
+            want to use providers like Anthropic Claude, Google Gemini, or AWS
+            Bedrock, route them through an OpenAI-compatible gateway and use the
+            gateway endpoint here. Nimtable will send AI requests using the
+            endpoint, model name, and API key you configure below.
+          </p>
+
+          {loadError && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Could not load settings</AlertTitle>
+              <AlertDescription>{loadError}</AlertDescription>
+            </Alert>
+          )}
+
+          {/* Step 1: Configure */}
+          <div className="rounded-lg border border-border bg-card p-6 space-y-6">
+            <div className="flex items-center gap-2">
+              <PlugZap className="h-5 w-5 text-primary" />
+              <h3 className="text-base font-semibold text-card-foreground">
+                1) Configure provider
+              </h3>
             </div>
 
-            {/* Form Fields */}
+            {!isConfigured && (
+              <Alert variant="warning">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Missing required fields</AlertTitle>
+                <AlertDescription>
+                  {missingEndpoint && <p>• API Endpoint is required</p>}
+                  {missingModelName && <p>• Model Name is required</p>}
+                  {missingApiKey && <p>• API Key is required</p>}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {saveState.status === "success" && (
+              <Alert>
+                <CheckCircle2 className="h-4 w-4" />
+                <AlertTitle>Saved</AlertTitle>
+                <AlertDescription>{saveState.message}</AlertDescription>
+              </Alert>
+            )}
+
+            {saveState.status === "error" && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Save failed</AlertTitle>
+                <AlertDescription>{saveState.message}</AlertDescription>
+              </Alert>
+            )}
+
             <div className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="endpoint" className="text-sm font-medium">
@@ -346,14 +420,16 @@ export default function AISettingsPage() {
                   id="endpoint"
                   placeholder="https://api.openai.com/v1"
                   value={settings.endpoint}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     setSettings({ ...settings, endpoint: e.target.value })
-                  }
-                  disabled={!settings.isEnabled}
+                    setSaveState({ status: "idle" })
+                    setTestState({ status: "idle" })
+                    setEnableState({ status: "idle" })
+                  }}
                   className="bg-card border-input"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Must be OpenAI-compatible API endpoint
+                  OpenAI API-compatible base URL.
                 </p>
               </div>
 
@@ -370,12 +446,13 @@ export default function AISettingsPage() {
                       onClick={() => {
                         const newUpdateApiKey = !updateApiKey
                         setUpdateApiKey(newUpdateApiKey)
-                        // Clear API key input when switching to update mode
+                        setSaveState({ status: "idle" })
+                        setTestState({ status: "idle" })
+                        setEnableState({ status: "idle" })
                         if (newUpdateApiKey) {
                           setSettings({ ...settings, apiKey: "" })
                         }
                       }}
-                      disabled={!settings.isEnabled}
                       className="border-input bg-card h-8"
                     >
                       {updateApiKey ? "Keep existing" : "Update"}
@@ -394,15 +471,17 @@ export default function AISettingsPage() {
                     type="password"
                     placeholder="sk-..."
                     value={settings.apiKey}
-                    onChange={(e) =>
+                    onChange={(e) => {
                       setSettings({ ...settings, apiKey: e.target.value })
-                    }
-                    disabled={!settings.isEnabled}
+                      setSaveState({ status: "idle" })
+                      setTestState({ status: "idle" })
+                      setEnableState({ status: "idle" })
+                    }}
                     className="bg-card border-input"
                   />
                 )}
                 <p className="text-xs text-muted-foreground">
-                  Your API key will be stored securely
+                  Stored securely. Never shown again after saving.
                 </p>
               </div>
 
@@ -412,68 +491,129 @@ export default function AISettingsPage() {
                 </Label>
                 <Input
                   id="model-name"
-                  placeholder="gpt-4"
+                  placeholder="gpt-4o-mini"
                   value={settings.modelName}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     setSettings({ ...settings, modelName: e.target.value })
-                  }
-                  disabled={!settings.isEnabled}
+                    setSaveState({ status: "idle" })
+                    setTestState({ status: "idle" })
+                    setEnableState({ status: "idle" })
+                  }}
                   className="bg-card border-input"
                 />
                 <p className="text-xs text-muted-foreground">
-                  The model name to use for AI requests
+                  The model identifier for your endpoint.
                 </p>
               </div>
             </div>
 
-            {/* Actions */}
-            <div className="space-y-3 pt-6 border-t border-border">
-              <div className="flex gap-2">
-                <LoadingButton
-                  onClick={handleSave}
-                  loading={loading}
-                  disabled={loading}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                >
-                  Save Configuration
-                </LoadingButton>
-                <LoadingButton
+            <div className="flex items-center gap-2">
+              <LoadingButton
+                onClick={handleSave}
+                loading={saveLoading}
+                disabled={saveLoading}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
+              >
+                {saveLoading ? "Saving..." : "Save"}
+              </LoadingButton>
+            </div>
+          </div>
+
+          {/* Step 2: Test */}
+          <div className="rounded-lg border border-border bg-card p-6 space-y-4">
+            <div className="flex items-center gap-2">
+              <TestTube2 className="h-5 w-5 text-primary" />
+              <h3 className="text-base font-semibold text-card-foreground">
+                2) Test connection
+              </h3>
+            </div>
+
+            {testState.status === "success" && (
+              <Alert>
+                <CheckCircle2 className="h-4 w-4" />
+                <AlertTitle>Connection successful</AlertTitle>
+                <AlertDescription>{testState.message}</AlertDescription>
+              </Alert>
+            )}
+
+            {testState.status === "error" && (
+              <Alert variant="warning">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Connection failed</AlertTitle>
+                <AlertDescription>{testState.message}</AlertDescription>
+              </Alert>
+            )}
+
+            <LoadingButton
+              variant="outline"
+              onClick={handleTest}
+              loading={testLoading}
+              disabled={!canTest || testLoading}
+              className="border-input bg-card hover:bg-muted/50"
+            >
+              {testLoading ? "Testing..." : "Test Connection"}
+            </LoadingButton>
+          </div>
+
+          {/* Step 3: Enable */}
+          <div className="rounded-lg border border-border bg-card p-6 space-y-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="space-y-1">
+                <h3 className="text-base font-semibold text-card-foreground">
+                  3) Enable AI
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Turn AI features on or off for your account.
+                </p>
+              </div>
+
+              {settings.isEnabled ? (
+                <Button
+                  type="button"
                   variant="outline"
-                  onClick={handleTest}
-                  loading={loading}
-                  disabled={
-                    !settings.isEnabled ||
-                    !settings.endpoint ||
-                    !settings.modelName ||
-                    (!settings.hasApiKey &&
-                      (!updateApiKey || !settings.apiKey)) ||
-                    loading
-                  }
+                  disabled={enableLoading}
+                  onClick={() => handleToggleEnable(false)}
                   className="border-input bg-card hover:bg-muted/50"
                 >
-                  {loading ? "Testing..." : "Test Connection"}
-                </LoadingButton>
-              </div>
-              <div className="text-xs text-muted-foreground space-y-1">
-                {settings.isEnabled ? (
-                  <div>
-                    <p>
-                      • Test connection will send a simple "Hello" request to
-                      verify your configuration.
-                    </p>
-                    <p>
-                      • Enable/disable changes are saved automatically. Click
-                      "Save Configuration" for other settings.
-                    </p>
-                  </div>
-                ) : (
-                  <p>
-                    • AI is disabled. Enable to use your custom settings.
-                    Enable/disable changes are saved automatically.
-                  </p>
-                )}
-              </div>
+                  Disable AI
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  disabled={!isConfigured || enableLoading}
+                  onClick={() => handleToggleEnable(true)}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                >
+                  Enable AI
+                </Button>
+              )}
             </div>
+
+            {enableState.status === "success" && (
+              <Alert>
+                <CheckCircle2 className="h-4 w-4" />
+                <AlertTitle>Updated</AlertTitle>
+                <AlertDescription>{enableState.message}</AlertDescription>
+              </Alert>
+            )}
+
+            {enableState.status === "error" && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Update failed</AlertTitle>
+                <AlertDescription>{enableState.message}</AlertDescription>
+              </Alert>
+            )}
+
+            {!settings.isEnabled && !isConfigured && (
+              <Alert variant="warning">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Not ready</AlertTitle>
+                <AlertDescription>
+                  Save API Endpoint, Model Name, and API Key before enabling AI.
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
         </div>
       </div>

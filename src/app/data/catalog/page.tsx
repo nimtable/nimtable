@@ -27,7 +27,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Database, Trash2, ArrowLeft } from "lucide-react"
+import { ArrowLeft, Database, Unlink } from "lucide-react"
 import { notFound, useSearchParams, useRouter } from "next/navigation"
 import { PageLoader } from "@/components/shared/page-loader"
 import { deleteCatalog } from "@/lib/client/sdk.gen"
@@ -120,15 +120,15 @@ export default function CatalogPage() {
       })
 
       toast({
-        title: "Catalog deleted successfully",
+        title: "Catalog disconnected from Nimtable",
         description:
-          "Catalog and Nimtable-managed data were removed. Iceberg tables/data were not deleted.",
+          "This removed the catalog metadata from Nimtable (and purged Nimtable-managed data). External catalog and Iceberg tables/data were not deleted.",
       })
       router.replace("/data/catalogs")
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Failed to delete catalog",
+        title: "Failed to disconnect catalog from Nimtable",
         description: errorToString(error),
       })
     }
@@ -289,24 +289,31 @@ export default function CatalogPage() {
             <AlertDialogTrigger asChild>
               <Button
                 variant="outline"
-                size="icon"
-                className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground cursor-pointer"
+                size="sm"
+                title="Disconnect this catalog from Nimtable"
+                className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground cursor-pointer gap-2"
               >
-                <Trash2 className="w-4 h-4" />
+                <Unlink className="w-4 h-4" />
+                <span>Disconnect</span>
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogTitle>Disconnect from Nimtable?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete the
-                  catalog and remove it from the database.
+                  This will remove this catalog from Nimtable's database and
+                  purge Nimtable-managed metadata. It will{" "}
+                  <span className="font-medium">
+                    not delete the external catalog
+                  </span>{" "}
+                  or any{" "}
+                  <span className="font-medium">Iceberg tables/data</span>.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <AlertDialogAction onClick={handleDelete}>
-                  Delete
+                  Disconnect
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

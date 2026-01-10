@@ -1,12 +1,31 @@
 "use client"
 
-import { ExternalLink, FolderTreeIcon, Plus, Search } from "lucide-react"
+import {
+  ExternalLink,
+  FolderTreeIcon,
+  Info,
+  Plus,
+  Search,
+  MoreHorizontal,
+  Unlink,
+} from "lucide-react"
 import { useQueries } from "@tanstack/react-query"
 import { formatDistanceToNow } from "date-fns"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { useState } from "react"
 import type React from "react"
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import {
   Dialog,
   DialogContent,
@@ -22,6 +41,17 @@ import { Switch } from "@/components/ui/switch"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useDemoMode } from "@/contexts/demo-mode-context"
+import { useToast } from "@/hooks/use-toast"
+import { errorToString } from "@/lib/utils"
+import { deleteCatalog } from "@/lib/client/sdk.gen"
+import { useQueryClient } from "@tanstack/react-query"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 import { CreateCatalogModal } from "./CreateCatalogModal"
 import { useNamespaces } from "../hooks/useNamespaces"
@@ -36,6 +66,8 @@ export function CatalogsContent() {
     refetch: refetchCatalogs,
   } = useCatalogs()
   const { demoMode } = useDemoMode()
+  const { toast } = useToast()
+  const queryClient = useQueryClient()
   const { namespaces } = useNamespaces(catalogs || [])
   const { tables, isLoading: isLoadingTables } = useAllTables()
   const [searchQuery, setSearchQuery] = useState<string>("")
@@ -49,6 +81,9 @@ export function CatalogsContent() {
   })
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const [selectedCatalog, setSelectedCatalog] = useState<string | null>(null)
+  const [disconnectCatalogName, setDisconnectCatalogName] = useState<
+    string | null
+  >(null)
   const router = useRouter()
 
   // Get catalog configurations
@@ -178,6 +213,49 @@ export function CatalogsContent() {
 
   const handleInfoClick = (catalog: string) => {
     router.push(`/data/namespaces?catalog=${encodeURIComponent(catalog)}`)
+  }
+
+  const handleDisconnectCatalog = async (catalogName: string) => {
+    try {
+      await deleteCatalog({
+        path: {
+          catalogName,
+        },
+        query: {
+          purge: true,
+        },
+      })
+
+      // Clear cached data so other pages (e.g., Dashboard metrics) don't keep showing stale catalog tables.
+      queryClient.removeQueries({
+        predicate: (q) => {
+          const key = q.queryKey
+          const root = Array.isArray(key) ? key[0] : key
+          return (
+            root === "catalogs" ||
+            root === "namespaces" ||
+            root === "tables" ||
+            root === "catalog-config" ||
+            root === "catalog-details" ||
+            root === "table-metadata"
+          )
+        },
+      })
+
+      toast({
+        title: "Catalog disconnected from Nimtable",
+        description:
+          "This removed the catalog metadata from Nimtable (and purged Nimtable-managed data). External catalog and Iceberg tables/data were not deleted.",
+      })
+
+      await refetchCatalogs()
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Failed to disconnect catalog from Nimtable",
+        description: errorToString(error),
+      })
+    }
   }
 
   if (isLoadingCatalogs) {
@@ -364,14 +442,49 @@ export function CatalogsContent() {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <a
-                      href={`/data/catalog?catalog=${encodeURIComponent(catalog)}`}
-                      onClick={(e) => e.stopPropagation()}
-                      className="text-primary hover:text-primary/80 font-normal opacity-0 group-hover:opacity-100 transition-opacity"
-                      title="Open catalog details"
-                    >
-                      Details →
-                    </a>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => e.stopPropagation()}
+                          className="h-8 w-8"
+                          title="Actions"
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        align="end"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <DropdownMenuItem
+                          asChild
+                          className="cursor-pointer hover:!bg-accent hover:!text-accent-foreground focus:!bg-accent focus:!text-accent-foreground"
+                        >
+                          <Link
+                            href={`/data/catalog?catalog=${encodeURIComponent(catalog)}`}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Info className="h-4 w-4" />
+                            Details
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          disabled={demoMode}
+                          className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                          onSelect={(e) => {
+                            e.preventDefault()
+                            if (demoMode) return
+                            setDisconnectCatalogName(catalog)
+                          }}
+                        >
+                          <Unlink className="h-4 w-4" />
+                          Disconnect
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </td>
                 </tr>
               ))}
@@ -540,6 +653,40 @@ export function CatalogsContent() {
           refetchCatalogs()
         }}
       />
+
+      {/* Disconnect confirmation */}
+      <AlertDialog
+        open={disconnectCatalogName !== null}
+        onOpenChange={(open) => {
+          if (!open) setDisconnectCatalogName(null)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Disconnect from Nimtable?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove this catalog from Nimtable's database and purge
+              Nimtable-managed metadata. It will{" "}
+              <span className="font-medium">
+                not delete the external catalog
+              </span>{" "}
+              or any <span className="font-medium">Iceberg tables/data</span>.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (!disconnectCatalogName) return
+                void handleDisconnectCatalog(disconnectCatalogName)
+                setDisconnectCatalogName(null)
+              }}
+            >
+              Disconnect
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

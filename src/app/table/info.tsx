@@ -68,6 +68,7 @@ import { type TableSummary as TableSummaryType } from "@/db/db"
 import { AITextInput } from "@/components/ai-text-input"
 import { useDemoMode } from "@/contexts/demo-mode-context"
 import { saveTableSummary } from "@/db/table-summary"
+import { ToastAction } from "@/components/ui/toast"
 
 interface InfoTabProps {
   tableData: LoadTableResult
@@ -668,6 +669,7 @@ export function TableSummary({
 }) {
   const queryClient = useQueryClient()
   const { toast } = useToast()
+  const router = useRouter()
   const { demoMode } = useDemoMode()
 
   const {
@@ -788,7 +790,6 @@ export function TableSummary({
   ): Promise<void> => {
     if (demoMode) {
       toast({
-        variant: "destructive",
         title: "Disabled in demo mode",
         description:
           "Table summary generation is not available in demo preview.",
@@ -806,7 +807,6 @@ export function TableSummary({
   const handleSave = async (content: string): Promise<void> => {
     if (demoMode) {
       toast({
-        variant: "destructive",
         title: "Disabled in demo mode",
         description: "Saving table summary is not available in demo preview.",
       })
@@ -821,10 +821,41 @@ export function TableSummary({
   // Handle errors from action result
   useEffect(() => {
     if (result && !result.success) {
+      const err = result.error || ""
+      const isAiNotConfigured = err.includes("AI is not configured")
+      const isDemoDisabled =
+        err.toLowerCase().includes("disabled in demo mode") ||
+        err.toLowerCase().includes("demo mode")
+
+      if (isAiNotConfigured) {
+        toast({
+          title: "AI not configured",
+          description:
+            "To use AI Generate, configure your API key in Settings → AI.",
+          action: (
+            <ToastAction
+              altText="Open AI settings"
+              onClick={() => router.push("/settings/ai")}
+            >
+              Open Settings
+            </ToastAction>
+          ),
+        })
+        return
+      }
+
+      if (isDemoDisabled) {
+        toast({
+          title: "Disabled in demo mode",
+          description: "AI Generate is not available in demo preview.",
+        })
+        return
+      }
+
       toast({
         variant: "destructive",
         title: "Failed to update table summary",
-        description: result.error,
+        description: err,
       })
     }
   }, [result, toast])
