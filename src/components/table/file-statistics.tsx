@@ -4,23 +4,6 @@ interface FileStatisticsProps {
   distribution: DistributionData
 }
 
-interface StatCardProps {
-  value: string | number
-  label: string
-  className?: string
-}
-
-function StatCard({ value, label, className = "" }: StatCardProps) {
-  return (
-    <div
-      className={`flex flex-col items-center justify-center p-3 rounded-lg bg-muted/30 ${className}`}
-    >
-      <span className="text-lg font-semibold">{value}</span>
-      <span className="text-xs text-muted-foreground mt-1">{label}</span>
-    </div>
-  )
-}
-
 function FileTypeStats({
   fileCount,
   fileSize,

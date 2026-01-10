@@ -53,4 +53,15 @@ public class DataDistributionRepository {
                 .eq("tableName", tableName)
                 .delete();
     }
+
+    public int deleteByCatalogName(String catalogName) {
+        // Use SQL to avoid any potential ORM mapping edge cases and to be consistent with other
+        // purge cleanups.
+        int deleted =
+                DB.sqlUpdate("delete from data_distributions where catalog_name = :catalogName")
+                        .setParameter("catalogName", catalogName)
+                        .execute();
+        LOG.info("Deleted {} data distributions for catalog: {}", deleted, catalogName);
+        return deleted;
+    }
 }

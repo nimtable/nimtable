@@ -18,8 +18,12 @@ package io.nimtable;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.ebean.DB;
+import io.nimtable.cache.DataDistributionCache;
 import io.nimtable.db.entity.Catalog;
 import io.nimtable.db.repository.CatalogRepository;
+import io.nimtable.db.repository.DataDistributionRepository;
+import io.nimtable.db.repository.ScheduledTaskRepository;
 import io.nimtable.spark.LocalSpark;
 import io.nimtable.util.SensitiveDataFilter;
 import jakarta.servlet.ServletException;
@@ -43,12 +47,18 @@ public class CatalogsServlet extends HttpServlet {
     private final Config config;
     private final ObjectMapper mapper;
     private final CatalogRepository catalogRepository;
+    private final ScheduledTaskRepository scheduledTaskRepository;
+    private final DataDistributionRepository dataDistributionRepository;
+    private final DataDistributionCache dataDistributionCache;
 
     public CatalogsServlet(Config config) {
         this.config = config;
         this.mapper = new ObjectMapper();
         this.mapper.findAndRegisterModules();
         this.catalogRepository = new CatalogRepository();
+        this.scheduledTaskRepository = new ScheduledTaskRepository();
+        this.dataDistributionRepository = new DataDistributionRepository();
+        this.dataDistributionCache = DataDistributionCache.getInstance();
     }
 
     @Override
@@ -277,10 +287,11 @@ public class CatalogsServlet extends HttpServlet {
 
             // Remove leading slash
             String catalogName = pathInfo.substring(1);
+            boolean purge = Boolean.parseBoolean(req.getParameter("purge"));
 
             // Check if catalog exists in database
             Catalog catalog = catalogRepository.findByName(catalogName);
-            if (catalog == null) {
+            if (catalog == null && !purge) {
                 resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
                 Map<String, Object> errorResponse = new HashMap<>();
                 errorResponse.put("error", "Not found");
@@ -290,11 +301,22 @@ public class CatalogsServlet extends HttpServlet {
                 return;
             }
 
-            // Delete from database
-            catalogRepository.delete(catalog);
+            if (purge) {
+                purgeCatalogData(catalogName);
+            }
+
+            // Delete from database (if it exists there; config-defined catalogs can't be deleted
+            // here)
+            if (catalog != null) {
+                catalogRepository.delete(catalog);
+                // Remove REST servlet route so the catalog name can be re-created cleanly.
+                Server.unregisterCatalog(catalogName);
+            }
 
             // Update LocalSpark instance with new catalog configuration
-            LocalSpark.updateInstance(config);
+            if (catalog != null) {
+                LocalSpark.updateInstance(config);
+            }
 
             // Return success response
             resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
@@ -307,6 +329,34 @@ public class CatalogsServlet extends HttpServlet {
             errorResponse.put("details", getDetailedErrorMessage(e));
             resp.setContentType("application/json");
             mapper.writeValue(resp.getWriter(), errorResponse);
+        }
+    }
+
+    private void purgeCatalogData(String catalogName) {
+        try {
+            int scheduledTasksDeleted = scheduledTaskRepository.deleteByCatalogName(catalogName);
+            int distributionsDeleted = dataDistributionRepository.deleteByCatalogName(catalogName);
+            int tableSummariesDeleted =
+                    DB.createUpdate(
+                                    Catalog.class,
+                                    "delete from table_summaries where catalog_name = :catalogName")
+                            .setParameter("catalogName", catalogName)
+                            .execute();
+
+            // Clear in-memory distribution cache entries for this catalog
+            dataDistributionCache.removeByCatalogName(catalogName);
+
+            LOG.info(
+                    "Purged catalog data for {} (scheduled_tasks={}, data_distributions={}, table_summaries={})",
+                    catalogName,
+                    scheduledTasksDeleted,
+                    distributionsDeleted,
+                    tableSummariesDeleted);
+        } catch (Exception e) {
+            // Purge should be best-effort but must not leave the system in an unknown state
+            // silently.
+            LOG.error("Failed to purge catalog data for: {}", catalogName, e);
+            throw e;
         }
     }
 

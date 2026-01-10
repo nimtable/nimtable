@@ -1,14 +1,6 @@
 "use client"
 
-import {
-  ArrowLeft,
-  Database,
-  FileText,
-  LayoutList,
-  Plus,
-  RefreshCw,
-  TableIcon,
-} from "lucide-react"
+import { Database, FileText, LayoutList, Plus, RefreshCw } from "lucide-react"
 import { useSearchParams } from "next/navigation"
 import { useState, useEffect } from "react"
 import Link from "next/link"
@@ -24,6 +16,7 @@ import { InfoTab } from "@/app/table/info"
 import { useTableData } from "../../hooks/useTableData"
 import { ScrewdriverWrenchIcon } from "@/components/icon"
 import { useDemoMode } from "@/contexts/demo-mode-context"
+import { DataHierarchyHeader } from "@/components/data/DataHierarchyHeader"
 
 export default function TablePage() {
   const params = useSearchParams()
@@ -83,52 +76,38 @@ export default function TablePage() {
 
   return (
     <div className="mx-auto w-full">
-      <div className="bg-card px-6 pt-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link
-            href={`/data/catalog?catalog=${catalog}`}
-            className="text-primary hover:text-primary/80 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <TableIcon className="w-5 h-5 text-card-foreground" />
-              <h2 className="text-base font-normal text-card-foreground">
-                {table}
-              </h2>
-            </div>
-            <span className="px-2 py-1 text-xs font-normal bg-muted text-muted-foreground rounded">
-              Table details
-            </span>
+      <DataHierarchyHeader
+        current="table"
+        catalog={catalog}
+        namespace={namespace}
+        table={table}
+        rightSlot={
+          <div className="flex items-center gap-2">
+            <button className="btn-secondary" onClick={handleRefresh}>
+              <RefreshCw className="w-4 h-4" />
+              <span>{isRefetching ? "Refreshing..." : "Refresh"}</span>
+            </button>
+
+            <button
+              onClick={() => !demoMode && setShowOptimizeSheet(true)}
+              className="btn-secondary"
+              disabled={demoMode}
+            >
+              <ScrewdriverWrenchIcon className="w-4 h-4" />
+              <span>
+                {demoMode ? "Optimize (demo disabled)" : "Optimize table"}
+              </span>
+            </button>
+
+            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
+              <Link href={sqlEditorUrl} className="flex items-center">
+                <Plus className="w-4 h-4" />
+                <span>SQL Query</span>
+              </Link>
+            </Button>
           </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button className="btn-secondary" onClick={handleRefresh}>
-            <RefreshCw className="w-4 h-4" />
-            <span>{isRefetching ? "Refreshing..." : "Refresh"}</span>
-          </button>
-
-          <button
-            onClick={() => !demoMode && setShowOptimizeSheet(true)}
-            className="btn-secondary"
-            disabled={demoMode}
-          >
-            <ScrewdriverWrenchIcon className="w-4 h-4" />
-            <span>
-              {demoMode ? "Optimize (demo disabled)" : "Optimize table"}
-            </span>
-          </button>
-
-          <Button className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
-            <Link href={sqlEditorUrl} className="flex items-center">
-              <Plus className="w-4 h-4" />
-              <span>SQL Query</span>
-            </Link>
-          </Button>
-        </div>
-      </div>
+        }
+      />
 
       <Tabs
         value={activeTab}

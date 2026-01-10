@@ -51,7 +51,7 @@ export interface AITextInputProps {
 export function AITextInput({
   placeholder = "Enter your content here...",
   content = "",
-  aiPromptPlaceholder,
+  aiPromptPlaceholder: _aiPromptPlaceholder,
   saveAction,
   aiGenerateAction,
   startInEditMode,

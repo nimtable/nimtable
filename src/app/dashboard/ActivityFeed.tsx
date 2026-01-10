@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { useQueries } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import { getTableInfo } from "@/lib/client"
-import { useContext } from "react"
+import { useContext, useMemo, useState } from "react"
 import { useDemoMode } from "@/contexts/demo-mode-context"
 import { DEMO_TABLE_METADATA, getDemoTableKey } from "@/lib/demo-data"
 import {
@@ -16,10 +16,21 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 export function ActivityFeed() {
   const { tables, isLoading: isLoadingTables } = useContext(OverviewContext)
   const { demoMode } = useDemoMode()
+  const [timeRange, setTimeRange] = useState<"7d" | "30d" | "all">("30d")
+  const onTimeRangeChange = (v: string) => {
+    if (v === "7d" || v === "30d" || v === "all") setTimeRange(v)
+  }
 
   const compactionQueries = useQueries({
     queries: tables.map((table) => ({
@@ -81,7 +92,25 @@ export function ActivityFeed() {
         }))
     })
     .sort((a, b) => b.timestamp - a.timestamp)
-    .slice(0, 5)
+    .slice(0, 50)
+
+  const filteredHistory = useMemo(() => {
+    const now = Date.now()
+    const windowMs =
+      timeRange === "7d"
+        ? 7 * 24 * 60 * 60 * 1000
+        : timeRange === "30d"
+          ? 30 * 24 * 60 * 60 * 1000
+          : null
+    const withinWindow = (ts: number) => {
+      if (!windowMs) return true
+      const ms = ts < 1e12 ? ts * 1000 : ts
+      return now - ms <= windowMs
+    }
+    return compactionHistory
+      .filter((a) => withinWindow(a.timestamp))
+      .slice(0, 5)
+  }, [compactionHistory, timeRange])
 
   if (isLoadingTables || isLoading) {
     return (
@@ -126,6 +155,21 @@ export function ActivityFeed() {
           <h3 className="mt-2 text-sm font-medium text-card-foreground">
             No recent activity
           </h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Run an optimization or schedule tasks to see activity here.
+          </p>
+          <div className="mt-4 flex gap-2">
+            <Link href="/optimization">
+              <Button variant="outline" className="bg-card border-input">
+                Open optimization
+              </Button>
+            </Link>
+            <Link href="/jobs">
+              <Button variant="outline" className="bg-card border-input">
+                Configure tasks
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
     )
@@ -140,21 +184,33 @@ export function ActivityFeed() {
             Recent Activity
           </h2>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-sm text-primary hover:text-primary! hover:bg-muted/50"
-        >
-          <Link
-            href="/dashboard/activity"
-            className="text-primary hover:text-primary"
+        <div className="flex items-center gap-2">
+          <Select value={timeRange} onValueChange={onTimeRangeChange}>
+            <SelectTrigger className="h-8 w-[120px] bg-card border-input">
+              <SelectValue placeholder="Range" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7d">Last 7 days</SelectItem>
+              <SelectItem value="30d">Last 30 days</SelectItem>
+              <SelectItem value="all">All time</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-sm text-primary hover:text-primary! hover:bg-muted/50"
           >
-            View all
-          </Link>
-        </Button>
+            <Link
+              href="/dashboard/activity"
+              className="text-primary hover:text-primary"
+            >
+              View all
+            </Link>
+          </Button>
+        </div>
       </div>
       <div className="divide-y divide-border">
-        {compactionHistory.map((activity, index) => (
+        {filteredHistory.map((activity, index) => (
           <div
             key={index}
             className="flex items-center gap-4 px-6 py-3 hover:bg-muted/50 transition-colors"

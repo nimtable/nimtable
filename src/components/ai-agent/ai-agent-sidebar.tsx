@@ -88,7 +88,7 @@ export function AIAgentSidebar() {
           err.cause instanceof Error ? err.cause.message : String(err.cause)
         detail = `${detail} (cause: ${cause})`
       }
-      console.error("AI chat request error:", err)
+      console.error("AI chat request error:", detail, err)
     },
   })
 

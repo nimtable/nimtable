@@ -18,7 +18,7 @@
 
 import type React from "react"
 
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { useState, useRef } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { useToast } from "@/hooks/use-toast"
@@ -35,8 +35,7 @@ export default function LoginPage() {
   const { login } = useAuth()
   const { toast } = useToast()
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const redirectPath = searchParams.get("redirect") || "/dashboard"
+  const redirectPath = "/dashboard"
 
   const formRef = useRef<HTMLFormElement>(null)
 

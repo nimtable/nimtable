@@ -83,6 +83,18 @@ export function TableWatchlist() {
           <p className="mt-1 text-sm text-muted-foreground">
             All tables are in good condition
           </p>
+          <div className="mt-4 flex gap-2">
+            <Link href="/optimization">
+              <Button variant="outline" className="bg-card border-input">
+                Review optimization
+              </Button>
+            </Link>
+            <Link href="/jobs">
+              <Button variant="outline" className="bg-card border-input">
+                Schedule tasks
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
     )

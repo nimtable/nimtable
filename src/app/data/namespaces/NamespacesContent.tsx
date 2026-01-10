@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowLeft, Plus, Search } from "lucide-react"
+import { Plus, Search } from "lucide-react"
 import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -18,8 +18,11 @@ import {
 import { FolderIcon, ChevronDown } from "lucide-react"
 import Link from "next/link"
 import { useDemoMode } from "@/contexts/demo-mode-context"
+import { useRouter } from "next/navigation"
+import { DataHierarchyHeader } from "@/components/data/DataHierarchyHeader"
 
 export function NamespacesContent() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const catalogFromUrl = searchParams.get("catalog")
   const searchFromUrl = searchParams.get("search") || ""
@@ -79,25 +82,28 @@ export function NamespacesContent() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="flex items-center gap-3 px-6 py-4">
-        <Link
-          href="/data/catalogs"
-          className="text-primary hover:text-primary/80 transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Link>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <FolderIcon className="w-5 h-5 text-card-foreground" />
-            <h2 className="text-base font-normal text-card-foreground">
-              {selectedCatalog} ({filteredNamespaces.length})
-            </h2>
+      <DataHierarchyHeader
+        current="namespaces"
+        catalog={selectedCatalog !== "all" ? selectedCatalog : undefined}
+        count={filteredNamespaces.length}
+      />
+
+      {!catalogFromUrl && selectedCatalog === "all" && (
+        <div className="px-6 pt-4">
+          <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm text-muted-foreground">
+            You&apos;re viewing{" "}
+            <span className="text-foreground">all catalogs</span>. For a clearer
+            drill-down experience, start from{" "}
+            <Link
+              href="/data/catalogs"
+              className="text-primary hover:text-primary/80"
+            >
+              Catalogs
+            </Link>{" "}
+            and click a catalog to browse its namespaces.
           </div>
-          <span className="px-2 py-1 text-xs font-normal bg-muted text-muted-foreground rounded">
-            Namespaces
-          </span>
         </div>
-      </div>
+      )}
       <div className="bg-card border-b border-border px-6 py-4">
         <div className="flex items-center gap-3">
           <DropdownMenu>
@@ -173,7 +179,12 @@ export function NamespacesContent() {
               {filteredNamespaces.map((namespace, index) => (
                 <tr
                   key={index}
-                  className="group hover:bg-table-row-hover transition-colors"
+                  className="group hover:bg-table-row-hover transition-colors cursor-pointer"
+                  onClick={() => {
+                    router.push(
+                      `/data/tables?catalog=${namespace.catalog}&namespace=${namespace.name}`
+                    )
+                  }}
                 >
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-normal text-card-foreground">
                     {namespace.name}
@@ -182,29 +193,7 @@ export function NamespacesContent() {
                     {namespace.catalog}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                    <div className="flex items-center justify-between">
-                      {namespace.tableCount}
-
-                      <a
-                        href={`/data/tables?catalog=${namespace.catalog}&namespace=${namespace.name}`}
-                        className="text-primary cursor-pointer hover:text-primary/80 font-normal flex items-center gap-1 ml-4 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        View Tables
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 5l7 7-7 7"
-                          />
-                        </svg>
-                      </a>
-                    </div>
+                    {namespace.tableCount}
                   </td>
                 </tr>
               ))}
