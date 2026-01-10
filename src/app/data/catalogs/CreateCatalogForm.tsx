@@ -13,7 +13,11 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
 import { ChevronDown, Plus, Trash2 } from "lucide-react"
@@ -297,7 +301,9 @@ export function CreateCatalogForm({
     return parseSpark(input, "=")
   }
 
-  const parseSparkDefaults = (input: string): Partial<CreateCatalogFormData> => {
+  const parseSparkDefaults = (
+    input: string
+  ): Partial<CreateCatalogFormData> => {
     return parseSpark(input, /\s+/)
   }
 
@@ -527,7 +533,8 @@ export function CreateCatalogForm({
       toast({
         variant: "destructive",
         title: "Catalog type is required",
-        description: "Choose a preset, or set a type in Advanced settings for Custom.",
+        description:
+          "Choose a preset, or set a type in Advanced settings for Custom.",
       })
       return
     }
@@ -607,7 +614,8 @@ export function CreateCatalogForm({
           <div className="space-y-1">
             <h3 className="text-base font-medium">Connect a catalog</h3>
             <p className="text-sm text-muted-foreground">
-              Choose a guided setup, or paste an existing Iceberg catalog config.
+              Choose a guided setup, or paste an existing Iceberg catalog
+              config.
             </p>
           </div>
           <TabsList>
@@ -620,7 +628,9 @@ export function CreateCatalogForm({
         <div
           ref={tabBodyRef}
           className="pl-1 pr-2"
-          style={bodyMinHeight ? { minHeight: `${bodyMinHeight}px` } : undefined}
+          style={
+            bodyMinHeight ? { minHeight: `${bodyMinHeight}px` } : undefined
+          }
         >
           <TabsContent value="import" className="space-y-4">
             <div className="space-y-2">
@@ -674,323 +684,344 @@ export function CreateCatalogForm({
           </TabsContent>
 
           <TabsContent value="connect" className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="preset">Connection method</Label>
-            <Select
-              value={selectedPresetKey}
-              onValueChange={(v) => {
-                setIsNameAuto(true)
-                applyPreset(v)
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a preset" />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(CONNECTION_PRESETS).map(([key, preset]) => (
-                  <SelectItem key={key} value={key}>
-                    {preset.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              Choose how you want Nimtable to connect to your Iceberg catalog.
-            </p>
-            {selectedPresetKey === "custom" && !formData.type.trim() && (
-              <p className="text-xs text-muted-foreground">
-                Custom requires a catalog type in <span className="font-medium">Advanced settings</span>.
-              </p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="name">Catalog name</Label>
-            <Input
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={(e) => {
-                setIsNameAuto(false)
-                setFormData((prev) => ({ ...prev, name: e.target.value }))
-                setNameError(validateCatalogName(e.target.value))
-              }}
-              onBlur={() => {
-                setNameError(validateCatalogName(formData.name))
-              }}
-              placeholder="Any unique name (we provide a default)"
-              aria-invalid={!!nameError}
-            />
-            {nameError ? (
-              <p className="text-xs text-red-500">{nameError}</p>
-            ) : (
-              <p className="text-xs text-muted-foreground">
-                Pick any name you like. It just needs to be unique.
-              </p>
-            )}
-          </div>
-
-          <Separator />
-
-          <div className="grid gap-6 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="uri">Catalog endpoint (URI)</Label>
-              <Input
-                id="uri"
-                name="uri"
-                value={formData.uri}
-                onChange={handleChange}
-                placeholder={
-                  formData.type === "jdbc"
-                    ? "jdbc:postgresql://..."
-                    : formData.type === "rest"
-                      ? "http://..."
-                      : "Leave empty if not applicable"
-                }
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="warehouse">Warehouse</Label>
-              <Input
-                id="warehouse"
-                name="warehouse"
-                value={formData.warehouse}
-                onChange={handleChange}
-                placeholder="e.g., s3://bucket/path, /path/to/warehouse"
-                required
-              />
-            </div>
-          </div>
-
-          {formData.type === "glue" && (
-            <div className="rounded-md border border-yellow-200 bg-yellow-50 p-4">
-              <h3 className="text-sm font-medium text-yellow-900">
-                AWS credentials required
-              </h3>
-              <p className="mt-1 text-sm text-yellow-800">
-                Ensure AWS credentials (AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
-                are configured in your environment.
+              <Label htmlFor="preset">Connection method</Label>
+              <Select
+                value={selectedPresetKey}
+                onValueChange={(v) => {
+                  setIsNameAuto(true)
+                  applyPreset(v)
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a preset" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(CONNECTION_PRESETS).map(([key, preset]) => (
+                    <SelectItem key={key} value={key}>
+                      {preset.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Choose how you want Nimtable to connect to your Iceberg catalog.
               </p>
-            </div>
-          )}
-
-          {(selectedPresetKey === "s3-tables" ||
-            (formData.type === "rest" && formData.uri.includes("s3tables"))) && (
-            <div className="rounded-md border border-blue-200 bg-blue-50 p-4">
-              <h3 className="text-sm font-medium text-blue-900">
-                AWS S3 Tables preset
-              </h3>
-              <p className="mt-1 text-sm text-blue-800">
-                S3 Tables uses the Iceberg REST endpoint with SigV4 authentication. Make sure the warehouse ARN and region are correct.
-              </p>
-              <p className="mt-2 text-sm">
-                <a
-                  href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-tables-integrating-open-source.html"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-700 hover:text-blue-900 underline"
-                >
-                  AWS documentation →
-                </a>
-              </p>
-            </div>
-          )}
-
-          {hasS3Settings && (
-            <div className="space-y-3">
-              <div className="space-y-1">
-                <h4 className="text-sm font-medium">S3 settings</h4>
+              {selectedPresetKey === "custom" && !formData.type.trim() && (
                 <p className="text-xs text-muted-foreground">
-                  These map to Iceberg catalog properties (s3.*).
+                  Custom requires a catalog type in{" "}
+                  <span className="font-medium">Advanced settings</span>.
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="name">Catalog name</Label>
+              <Input
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={(e) => {
+                  setIsNameAuto(false)
+                  setFormData((prev) => ({ ...prev, name: e.target.value }))
+                  setNameError(validateCatalogName(e.target.value))
+                }}
+                onBlur={() => {
+                  setNameError(validateCatalogName(formData.name))
+                }}
+                placeholder="Any unique name (we provide a default)"
+                aria-invalid={!!nameError}
+              />
+              {nameError ? (
+                <p className="text-xs text-red-500">{nameError}</p>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Pick any name you like. It just needs to be unique.
+                </p>
+              )}
+            </div>
+
+            <Separator />
+
+            <div className="grid gap-6 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="uri">Catalog endpoint (URI)</Label>
+                <Input
+                  id="uri"
+                  name="uri"
+                  value={formData.uri}
+                  onChange={handleChange}
+                  placeholder={
+                    formData.type === "jdbc"
+                      ? "jdbc:postgresql://..."
+                      : formData.type === "rest"
+                        ? "http://..."
+                        : "Leave empty if not applicable"
+                  }
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="warehouse">Warehouse</Label>
+                <Input
+                  id="warehouse"
+                  name="warehouse"
+                  value={formData.warehouse}
+                  onChange={handleChange}
+                  placeholder="e.g., s3://bucket/path, /path/to/warehouse"
+                  required
+                />
+              </div>
+            </div>
+
+            {formData.type === "glue" && (
+              <div className="rounded-md border border-yellow-200 bg-yellow-50 p-4">
+                <h3 className="text-sm font-medium text-yellow-900">
+                  AWS credentials required
+                </h3>
+                <p className="mt-1 text-sm text-yellow-800">
+                  Ensure AWS credentials (AWS_REGION, AWS_ACCESS_KEY_ID,
+                  AWS_SECRET_ACCESS_KEY) are configured in your environment.
                 </p>
               </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="s3.endpoint">S3 endpoint</Label>
-                  <Input
-                    id="s3.endpoint"
-                    value={getProperty("s3.endpoint")}
-                    onChange={(e) => setProperty("s3.endpoint", e.target.value)}
-                    placeholder="e.g., http://localhost:9000"
-                  />
+            )}
+
+            {(selectedPresetKey === "s3-tables" ||
+              (formData.type === "rest" &&
+                formData.uri.includes("s3tables"))) && (
+              <div className="rounded-md border border-blue-200 bg-blue-50 p-4">
+                <h3 className="text-sm font-medium text-blue-900">
+                  AWS S3 Tables preset
+                </h3>
+                <p className="mt-1 text-sm text-blue-800">
+                  S3 Tables uses the Iceberg REST endpoint with SigV4
+                  authentication. Make sure the warehouse ARN and region are
+                  correct.
+                </p>
+                <p className="mt-2 text-sm">
+                  <a
+                    href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-tables-integrating-open-source.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-700 hover:text-blue-900 underline"
+                  >
+                    AWS documentation →
+                  </a>
+                </p>
+              </div>
+            )}
+
+            {hasS3Settings && (
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <h4 className="text-sm font-medium">S3 settings</h4>
+                  <p className="text-xs text-muted-foreground">
+                    These map to Iceberg catalog properties (s3.*).
+                  </p>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="s3.region">S3 region</Label>
-                  <Input
-                    id="s3.region"
-                    value={getProperty("s3.region")}
-                    onChange={(e) => setProperty("s3.region", e.target.value)}
-                    placeholder="e.g., us-east-1"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="s3.access-key-id">Access key ID</Label>
-                  <Input
-                    id="s3.access-key-id"
-                    value={getProperty("s3.access-key-id")}
-                    onChange={(e) =>
-                      setProperty("s3.access-key-id", e.target.value)
-                    }
-                    placeholder="e.g., AKIA..."
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="s3.secret-access-key">Secret access key</Label>
-                  <Input
-                    id="s3.secret-access-key"
-                    type="password"
-                    value={getProperty("s3.secret-access-key")}
-                    onChange={(e) =>
-                      setProperty("s3.secret-access-key", e.target.value)
-                    }
-                    placeholder="••••••••"
-                  />
-                </div>
-                <div className="space-y-2 sm:col-span-2">
-                  <Label htmlFor="s3.path-style-access">Path-style access</Label>
-                  <Input
-                    id="s3.path-style-access"
-                    value={getProperty("s3.path-style-access")}
-                    onChange={(e) =>
-                      setProperty("s3.path-style-access", e.target.value)
-                    }
-                    placeholder="true or false"
-                  />
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="s3.endpoint">S3 endpoint</Label>
+                    <Input
+                      id="s3.endpoint"
+                      value={getProperty("s3.endpoint")}
+                      onChange={(e) =>
+                        setProperty("s3.endpoint", e.target.value)
+                      }
+                      placeholder="e.g., http://localhost:9000"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="s3.region">S3 region</Label>
+                    <Input
+                      id="s3.region"
+                      value={getProperty("s3.region")}
+                      onChange={(e) => setProperty("s3.region", e.target.value)}
+                      placeholder="e.g., us-east-1"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="s3.access-key-id">Access key ID</Label>
+                    <Input
+                      id="s3.access-key-id"
+                      value={getProperty("s3.access-key-id")}
+                      onChange={(e) =>
+                        setProperty("s3.access-key-id", e.target.value)
+                      }
+                      placeholder="e.g., AKIA..."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="s3.secret-access-key">
+                      Secret access key
+                    </Label>
+                    <Input
+                      id="s3.secret-access-key"
+                      type="password"
+                      value={getProperty("s3.secret-access-key")}
+                      onChange={(e) =>
+                        setProperty("s3.secret-access-key", e.target.value)
+                      }
+                      placeholder="••••••••"
+                    />
+                  </div>
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label htmlFor="s3.path-style-access">
+                      Path-style access
+                    </Label>
+                    <Input
+                      id="s3.path-style-access"
+                      value={getProperty("s3.path-style-access")}
+                      onChange={(e) =>
+                        setProperty("s3.path-style-access", e.target.value)
+                      }
+                      placeholder="true or false"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
-            <div className="flex items-center justify-between">
-              <h4 className="text-sm font-medium">Advanced settings</h4>
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8">
-                  <ChevronDown className="mr-2 h-4 w-4" />
-                  {advancedOpen ? "Hide" : "Show"}
-                </Button>
-              </CollapsibleTrigger>
-            </div>
-            <CollapsibleContent className="mt-3 space-y-3">
-              {selectedPresetKey === "custom" && (
-                <div className="space-y-2">
-                  <Label htmlFor="type">Catalog type (required)</Label>
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    <Select
-                      value={customTypeMode === "other" ? "other" : formData.type}
-                      onValueChange={(v) => {
-                        if (v === "other") {
-                          setCustomTypeMode("other")
-                          setFormData((prev) => ({ ...prev, type: "" }))
-                          return
+            <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-medium">Advanced settings</h4>
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8">
+                    <ChevronDown className="mr-2 h-4 w-4" />
+                    {advancedOpen ? "Hide" : "Show"}
+                  </Button>
+                </CollapsibleTrigger>
+              </div>
+              <CollapsibleContent className="mt-3 space-y-3">
+                {selectedPresetKey === "custom" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="type">Catalog type (required)</Label>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <Select
+                        value={
+                          customTypeMode === "other" ? "other" : formData.type
                         }
-                        setCustomTypeMode("known")
-                        setCustomTypeOther("")
-                        setFormData((prev) => ({ ...prev, type: v }))
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a catalog type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="rest">REST</SelectItem>
-                        <SelectItem value="jdbc">JDBC</SelectItem>
-                        <SelectItem value="glue">Glue</SelectItem>
-                        <SelectItem value="hadoop">Hadoop</SelectItem>
-                        <SelectItem value="hive">Hive</SelectItem>
-                        <SelectItem value="nessie">Nessie</SelectItem>
-                        <SelectItem value="other">Other…</SelectItem>
-                      </SelectContent>
-                    </Select>
-
-                    {customTypeMode === "other" && (
-                      <Input
-                        id="type"
-                        name="type"
-                        value={customTypeOther}
-                        onChange={(e) => {
-                          const v = e.target.value.trim()
-                          setCustomTypeOther(v)
+                        onValueChange={(v) => {
+                          if (v === "other") {
+                            setCustomTypeMode("other")
+                            setFormData((prev) => ({ ...prev, type: "" }))
+                            return
+                          }
+                          setCustomTypeMode("known")
+                          setCustomTypeOther("")
                           setFormData((prev) => ({ ...prev, type: v }))
                         }}
-                        placeholder="Enter catalog type"
-                        required
-                      />
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    This is the Iceberg catalog type used for validation and runtime configuration.
-                  </p>
-                </div>
-              )}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label>Properties (raw)</Label>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={addProperty}
-                    className="h-8"
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add property
-                  </Button>
-                </div>
-                <div className="space-y-3">
-                  {advancedProperties.map((property, index) => {
-                    const idx = formData.properties.findIndex(
-                      (p) => p.key === property.key && p.value === property.value
-                    )
-                    const realIndex = idx >= 0 ? idx : index
-                    return (
-                      <div
-                        key={`${property.key}-${index}`}
-                        className="flex items-center gap-2"
                       >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a catalog type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="rest">REST</SelectItem>
+                          <SelectItem value="jdbc">JDBC</SelectItem>
+                          <SelectItem value="glue">Glue</SelectItem>
+                          <SelectItem value="hadoop">Hadoop</SelectItem>
+                          <SelectItem value="hive">Hive</SelectItem>
+                          <SelectItem value="nessie">Nessie</SelectItem>
+                          <SelectItem value="other">Other…</SelectItem>
+                        </SelectContent>
+                      </Select>
+
+                      {customTypeMode === "other" && (
                         <Input
-                          placeholder="Key"
-                          value={property.key}
-                          onChange={(e) =>
-                            handlePropertyChange(realIndex, "key", e.target.value)
-                          }
-                          className="flex-1"
+                          id="type"
+                          name="type"
+                          value={customTypeOther}
+                          onChange={(e) => {
+                            const v = e.target.value.trim()
+                            setCustomTypeOther(v)
+                            setFormData((prev) => ({ ...prev, type: v }))
+                          }}
+                          placeholder="Enter catalog type"
+                          required
                         />
-                        <Input
-                          placeholder="Value"
-                          type={isSensitiveKey(property.key) ? "password" : "text"}
-                          value={property.value}
-                          onChange={(e) =>
-                            handlePropertyChange(
-                              realIndex,
-                              "value",
-                              e.target.value
-                            )
-                          }
-                          className="flex-1"
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeProperty(realIndex)}
-                          className="h-9 w-9"
-                        >
-                          <Trash2 className="h-4 w-4 text-muted-foreground" />
-                        </Button>
-                      </div>
-                    )
-                  })}
-                </div>
-                {advancedProperties.length === 0 && (
-                  <p className="text-xs text-muted-foreground">
-                    No advanced properties. Use “Add property” to add custom keys.
-                  </p>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      This is the Iceberg catalog type used for validation and
+                      runtime configuration.
+                    </p>
+                  </div>
                 )}
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Properties (raw)</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addProperty}
+                      className="h-8"
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add property
+                    </Button>
+                  </div>
+                  <div className="space-y-3">
+                    {advancedProperties.map((property, index) => {
+                      const idx = formData.properties.findIndex(
+                        (p) =>
+                          p.key === property.key && p.value === property.value
+                      )
+                      const realIndex = idx >= 0 ? idx : index
+                      return (
+                        <div
+                          key={`${property.key}-${index}`}
+                          className="flex items-center gap-2"
+                        >
+                          <Input
+                            placeholder="Key"
+                            value={property.key}
+                            onChange={(e) =>
+                              handlePropertyChange(
+                                realIndex,
+                                "key",
+                                e.target.value
+                              )
+                            }
+                            className="flex-1"
+                          />
+                          <Input
+                            placeholder="Value"
+                            type={
+                              isSensitiveKey(property.key) ? "password" : "text"
+                            }
+                            value={property.value}
+                            onChange={(e) =>
+                              handlePropertyChange(
+                                realIndex,
+                                "value",
+                                e.target.value
+                              )
+                            }
+                            className="flex-1"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeProperty(realIndex)}
+                            className="h-9 w-9"
+                          >
+                            <Trash2 className="h-4 w-4 text-muted-foreground" />
+                          </Button>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  {advancedProperties.length === 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      No advanced properties. Use “Add property” to add custom
+                      keys.
+                    </p>
+                  )}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
           </TabsContent>
         </div>
       </Tabs>
@@ -1003,4 +1034,3 @@ export function CreateCatalogForm({
     </form>
   )
 }
-
