@@ -55,18 +55,6 @@ Access the UI at [http://localhost:3000](http://localhost:3000).
 
 > **Important:** After your first login, we strongly recommend changing the default admin password through the web interface for security. Once changed, the password will be stored in the database and environment variables will no longer be used for authentication.
 
-You can customize the initial admin credentials by setting environment variables in your `docker-compose.yml`:
-
-```yaml
-services:
-  nimtable-web:
-    environment:
-      - ADMIN_USERNAME=your-admin-username
-      - ADMIN_PASSWORD=your-secure-password
-```
-
-**Note:** Environment variables only set the initial password. Once you change the password through the web interface, the new password will be stored in the database and environment variables will be ignored for authentication purposes.
-
 ## Core Capabilities
 
 Nimtable runs between users and Iceberg catalogs.
@@ -99,82 +87,6 @@ It offers the following capabilities:
 - Integrate with external engines like Spark or RisingWave to manage compaction and maintenance tasks.
 - Serve as a standard Iceberg REST Catalog API endpoint.
 
-## Configuration
-
-Nimtable can be configured in two ways:
-
-- **Web UI:** Easiest for new users - just log in and click "Create Catalog."
-- **YAML Configuration File:** Recommended for advanced users or automated deployments.
-
-### 1. Configuration File Location
-
-- By default, Nimtable looks for `config.yaml` in the working directory.
-- **Docker:** Mount your config file to `/app/config.yaml` inside the container.
-- See [docker/docker-compose.yml](./docker/docker-compose.yml) for an example of mounting configuration.
-
-### 2. Minimal Configuration Example
-
-```yaml
-server:
-  port: 8182
-  host: 0.0.0.0
-database:
-  url: jdbc:postgresql://localhost:5432/nimtable_db
-  username: nimtable_user
-  password: password
-```
-
-> **Important:** Change the default admin password after your first login for security. Once changed through the web interface, the password will be stored in the database and environment variables will no longer be used for authentication.
-
-### 3. Admin Password Management
-
-The default admin password can be changed through the web interface after login. Once changed:
-- The new password is stored in the database
-- Environment variables (`ADMIN_USERNAME` and `ADMIN_PASSWORD`) are ignored for authentication
-- The password change is persistent across container restarts
-
-### 4. Catalog Configuration
-
-You can add catalogs in two ways:
-
-- **Web UI:**  
-  After logging in, click "Create Catalog" and follow the prompts. Catalogs added via the UI are stored in the internal database and do not modify `config.yaml`.
-
-- **YAML File:**  
-  Pre-configure catalogs by adding them to your `config.yaml`.  
-  See [backend/config.yaml](./backend/config.yaml) for full examples and templates.
-
-**Supported Catalog Types:**  
-- REST
-- AWS Glue
-- S3 Tables
-- PostgreSQL (via JDBC)
-
-Each catalog type may require specific fields. Refer to the sample config for details.
-
-### 5. AWS Credential Configuration
-
-If you use AWS Glue or S3, you can provide credentials in two ways:
-
-- **Environment Variables:**
-  ```yaml
-  # docker-compose.yml
-  services:
-    nimtable:
-      environment:
-        - AWS_REGION=us-east-1
-        - AWS_ACCESS_KEY_ID=your-access-key
-        - AWS_SECRET_ACCESS_KEY=your-secret-key
-  ```
-
-- **Mounting AWS Credentials File:**
-  ```yaml
-  # docker-compose.yml
-  services:
-    nimtable:
-      volumes:
-        - ~/.aws/credentials:/root/.aws/credentials:ro
-  ```
 
 ## Roadmap
 
