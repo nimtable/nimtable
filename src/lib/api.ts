@@ -1710,7 +1710,6 @@ export class HttpClient<SecurityDataType = unknown> {
           }
         }
 
-        // @ts-expect-error - index access is safe here
         return await response[responseFormat]()
       }
 
