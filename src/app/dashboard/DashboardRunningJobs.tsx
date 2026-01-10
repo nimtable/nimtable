@@ -80,7 +80,7 @@ export function DashboardRunningJobs() {
         <Button
           variant="ghost"
           size="sm"
-          className="text-sm text-primary hover:text-primary! hover:bg-muted/50"
+          className="text-sm text-primary !hover:text-primary hover:bg-muted/50"
         >
           <Link href="/jobs" className="flex items-center gap-1">
             View all
