@@ -39,11 +39,24 @@ export function errorToString(error: unknown): string {
     typeof (error as { message?: unknown }).message === "string"
   ) {
     const message = (error as { message: string }).message
-    const details =
+    const detailsRaw =
       "details" in error &&
       typeof (error as { details?: unknown }).details === "string"
         ? (error as { details: string }).details
         : ""
+
+    // Avoid dumping HTML into UI toasts, and keep details short.
+    const details = (() => {
+      if (!detailsRaw) return ""
+      const looksLikeHtml = /<!doctype|<html[\s>]|<\/(head|body|html)>/i.test(
+        detailsRaw
+      )
+      if (looksLikeHtml) return ""
+      const singleLine = detailsRaw.replace(/\s+/g, " ").trim()
+      if (singleLine.length <= 140) return singleLine
+      return `${singleLine.slice(0, 140)}…`
+    })()
+
     return details ? `${message} (${details})` : message
   }
   // IcebergErrorResponse

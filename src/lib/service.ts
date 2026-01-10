@@ -34,12 +34,16 @@ const handleUnauthorized = async () => {
 accClient.setConfig({
   credentials: "include",
   throwOnError: true,
+  // Ensure responses are parsed based on Content-Type (prevents JSON parsing errors on HTML/error pages).
+  parseAs: "auto",
 })
 
 client.setConfig({
   baseUrl: getApiBaseUrl(),
   credentials: "include",
   throwOnError: true,
+  // Ensure responses are parsed based on Content-Type (prevents JSON parsing errors on HTML/error pages).
+  parseAs: "auto",
 })
 
 accClient.interceptors.response.use(async (response) => {
