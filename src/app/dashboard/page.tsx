@@ -15,7 +15,11 @@ import { DashboardInsights } from "./DashboardInsights"
 import { DashboardWhatsChanged } from "./DashboardWhatsChanged"
 import { DashboardDataDashboards } from "./DashboardDataDashboards"
 import { DemoWizardModal } from "@/components/demo/DemoWizardModal"
-import { clearDemoContext, getDemoContext, type DemoContext } from "@/lib/demo-context"
+import {
+  clearDemoContext,
+  getDemoContext,
+  type DemoContext,
+} from "@/lib/demo-context"
 import {
   computeHealthScoreDetails,
   getTablesNeedingCompaction,
@@ -107,7 +111,8 @@ export default function DashboardPage() {
               <div className="text-sm">
                 <span className="text-muted-foreground">Demo ready:</span>{" "}
                 <span className="font-medium">
-                  {demoContext.catalog}.{demoContext.namespace}.{demoContext.table}
+                  {demoContext.catalog}.{demoContext.namespace}.
+                  {demoContext.table}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -172,7 +177,8 @@ export default function DashboardPage() {
             <div className="text-sm">
               <span className="text-muted-foreground">Demo ready:</span>{" "}
               <span className="font-medium">
-                {demoContext.catalog}.{demoContext.namespace}.{demoContext.table}
+                {demoContext.catalog}.{demoContext.namespace}.
+                {demoContext.table}
               </span>
             </div>
             <div className="flex items-center gap-2">

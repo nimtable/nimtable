@@ -113,7 +113,9 @@ FROM range(0, ${safeRows})`
     const statusText = result.response?.statusText
     const message = errorToString(result.error)
     throw new Error(
-      status ? `HTTP ${status}${statusText ? ` ${statusText}` : ""}: ${message}` : message
+      status
+        ? `HTTP ${status}${statusText ? ` ${statusText}` : ""}: ${message}`
+        : message
     )
   }
 
@@ -135,7 +137,11 @@ FROM range(0, ${safeRows})`
     } catch (e) {
       const msg = errorToString(e)
       setLastError(msg)
-      toast({ variant: "destructive", title: "Failed to create catalog", description: msg })
+      toast({
+        variant: "destructive",
+        title: "Failed to create catalog",
+        description: msg,
+      })
     } finally {
       setIsWorking(false)
     }
@@ -164,7 +170,11 @@ FROM range(0, ${safeRows})`
     } catch (e) {
       const msg = errorToString(e)
       setLastError(msg)
-      toast({ variant: "destructive", title: "Failed to create table", description: msg })
+      toast({
+        variant: "destructive",
+        title: "Failed to create table",
+        description: msg,
+      })
     } finally {
       setIsWorking(false)
     }
@@ -172,7 +182,10 @@ FROM range(0, ${safeRows})`
 
   const canContinueStep1 = Boolean(warehouse.trim()) && Boolean(catalog.trim())
   const canContinueStep3 =
-    Boolean(namespace.trim()) && Boolean(table.trim()) && Number.isFinite(rows) && rows > 0
+    Boolean(namespace.trim()) &&
+    Boolean(table.trim()) &&
+    Number.isFinite(rows) &&
+    rows > 0
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -180,15 +193,16 @@ FROM range(0, ${safeRows})`
         <DialogHeader>
           <DialogTitle>Create a real Iceberg demo</DialogTitle>
           <DialogDescription>
-            This wizard creates an Iceberg Hadoop catalog and a small Iceberg table using
-            Nimtable&apos;s built-in Spark.
+            This wizard creates an Iceberg Hadoop catalog and a small Iceberg
+            table using Nimtable&apos;s built-in Spark.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div className="text-sm text-muted-foreground">
-              Step <span className="text-foreground font-medium">{step}</span> / 4
+              Step <span className="text-foreground font-medium">{step}</span> /
+              4
             </div>
             <Button
               variant="ghost"
@@ -208,7 +222,9 @@ FROM range(0, ${safeRows})`
           {step === 1 && (
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="demo-warehouse">Warehouse path (inside Nimtable)</Label>
+                <Label htmlFor="demo-warehouse">
+                  Warehouse path (inside Nimtable)
+                </Label>
                 <Input
                   id="demo-warehouse"
                   value={warehouse}
@@ -216,7 +232,8 @@ FROM range(0, ${safeRows})`
                   placeholder="/tmp/nimtable-demo-warehouse"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Iceberg stores table data + metadata files under this directory.
+                  Iceberg stores table data + metadata files under this
+                  directory.
                 </p>
               </div>
 
@@ -231,9 +248,12 @@ FROM range(0, ${safeRows})`
               </div>
 
               <div className="rounded-lg border bg-muted/30 p-3 text-xs">
-                <div className="font-medium text-foreground">What this creates</div>
+                <div className="font-medium text-foreground">
+                  What this creates
+                </div>
                 <div className="mt-1 text-muted-foreground">
-                  An Iceberg Hadoop catalog pointing to <code>{warehouse || "…"}</code>.
+                  An Iceberg Hadoop catalog pointing to{" "}
+                  <code>{warehouse || "…"}</code>.
                 </div>
               </div>
             </div>
@@ -242,8 +262,8 @@ FROM range(0, ${safeRows})`
           {step === 2 && (
             <div className="space-y-3">
               <p className="text-sm">
-                Create the Iceberg catalog in Nimtable. This registers a REST endpoint at{" "}
-                <code>/api/catalog/{catalog}/...</code>.
+                Create the Iceberg catalog in Nimtable. This registers a REST
+                endpoint at <code>/api/catalog/{catalog}/...</code>.
               </p>
             </div>
           )}
@@ -317,7 +337,11 @@ FROM range(0, ${safeRows})`
           {step === 4 && (
             <div className="space-y-3">
               <div className="rounded-lg border bg-muted/30 p-3 text-sm">
-                Created <code>{catalog}.{namespace}.{table}</code>.
+                Created{" "}
+                <code>
+                  {catalog}.{namespace}.{table}
+                </code>
+                .
               </div>
               <div className="flex flex-wrap gap-2">
                 <Button
@@ -359,14 +383,21 @@ FROM range(0, ${safeRows})`
           </Button>
 
           {step === 1 && (
-            <Button onClick={() => setStep(2)} disabled={!canContinueStep1 || isWorking}>
+            <Button
+              onClick={() => setStep(2)}
+              disabled={!canContinueStep1 || isWorking}
+            >
               Continue
             </Button>
           )}
 
           {step === 2 && (
             <div className="flex items-center gap-2">
-              <Button variant="secondary" onClick={() => setStep(1)} disabled={isWorking}>
+              <Button
+                variant="secondary"
+                onClick={() => setStep(1)}
+                disabled={isWorking}
+              >
                 Back
               </Button>
               <Button onClick={handleCreateCatalog} disabled={isWorking}>
@@ -377,10 +408,17 @@ FROM range(0, ${safeRows})`
 
           {step === 3 && (
             <div className="flex items-center gap-2">
-              <Button variant="secondary" onClick={() => setStep(2)} disabled={isWorking}>
+              <Button
+                variant="secondary"
+                onClick={() => setStep(2)}
+                disabled={isWorking}
+              >
                 Back
               </Button>
-              <Button onClick={handleCreateTable} disabled={!canContinueStep3 || isWorking}>
+              <Button
+                onClick={handleCreateTable}
+                disabled={!canContinueStep3 || isWorking}
+              >
                 {isWorking ? "Creating..." : "Create demo table"}
               </Button>
             </div>
@@ -400,4 +438,3 @@ FROM range(0, ${safeRows})`
     </Dialog>
   )
 }
-

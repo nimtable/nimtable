@@ -54,4 +54,3 @@ export function clearDemoContext() {
   if (!isBrowser()) return
   window.localStorage.removeItem(DEMO_CONTEXT_KEY)
 }
-
