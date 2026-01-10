@@ -71,7 +71,7 @@ export function DashboardKpiGrid() {
   const { data: scheduledTasks, isLoading: isLoadingTasks } = useQuery<
     ScheduledTask[]
   >({
-    queryKey: ["scheduled-tasks"],
+    queryKey: ["scheduled-tasks", demoMode],
     queryFn: async () => {
       if (demoMode) return demoScheduledTasks()
       const response = await getScheduledTasks()
