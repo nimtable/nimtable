@@ -75,6 +75,8 @@ export function DashboardWhatsChanged({
     snapshot.runningJobs,
     snapshot.taskFailures,
     snapshot.totalTables,
+    snapshot.totalDataBytes,
+    snapshot.totalDataRecords,
   ])
 
   const changes = useMemo(() => {
