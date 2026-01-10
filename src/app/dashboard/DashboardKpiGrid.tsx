@@ -98,7 +98,11 @@ export function DashboardKpiGrid() {
       tablesNeedingCompaction: tablesNeedingCompaction.length,
       failedTasks: scheduledSummary.failed.length,
     })
-  }, [tables.length, tablesNeedingCompaction.length, scheduledSummary.failed])
+  }, [
+    tables.length,
+    tablesNeedingCompaction.length,
+    scheduledSummary.failed.length,
+  ])
 
   const healthScore = health.score
 
