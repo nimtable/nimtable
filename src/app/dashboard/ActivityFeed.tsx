@@ -107,7 +107,9 @@ export function ActivityFeed() {
       const ms = ts < 1e12 ? ts * 1000 : ts
       return now - ms <= windowMs
     }
-    return compactionHistory.filter((a) => withinWindow(a.timestamp)).slice(0, 5)
+    return compactionHistory
+      .filter((a) => withinWindow(a.timestamp))
+      .slice(0, 5)
   }, [compactionHistory, timeRange])
 
   if (isLoadingTables || isLoading) {

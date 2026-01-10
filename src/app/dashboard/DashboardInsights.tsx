@@ -55,8 +55,8 @@ export function DashboardInsights() {
   })
 
   const tablesNeedingCompaction = useMemo(() => {
-    const definedTables = tables.filter(
-      (t): t is NonNullable<typeof t> => Boolean(t)
+    const definedTables = tables.filter((t): t is NonNullable<typeof t> =>
+      Boolean(t)
     )
     return getTablesNeedingCompaction(definedTables)
   }, [tables])
@@ -111,7 +111,8 @@ export function DashboardInsights() {
       list.push({
         key: "failed-tasks",
         title: `${scheduledSummary.failed.length} scheduled tasks failing`,
-        description: "Investigate recent failures to keep the lakehouse healthy.",
+        description:
+          "Investigate recent failures to keep the lakehouse healthy.",
         tone: "warn",
         ctaHref: "/jobs",
         ctaLabel: "View failures",

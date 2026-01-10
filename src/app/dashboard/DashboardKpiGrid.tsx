@@ -81,8 +81,8 @@ export function DashboardKpiGrid() {
   })
 
   const tablesNeedingCompaction = useMemo(() => {
-    const definedTables = tables.filter(
-      (t): t is NonNullable<typeof t> => Boolean(t)
+    const definedTables = tables.filter((t): t is NonNullable<typeof t> =>
+      Boolean(t)
     )
     return getTablesNeedingCompaction(definedTables)
   }, [tables])

@@ -14,7 +14,10 @@ import { DashboardRunningJobs } from "./DashboardRunningJobs"
 import { DashboardInsights } from "./DashboardInsights"
 import { DashboardWhatsChanged } from "./DashboardWhatsChanged"
 import { DashboardDataDashboards } from "./DashboardDataDashboards"
-import { computeHealthScoreDetails, getTablesNeedingCompaction } from "./dashboard-health"
+import {
+  computeHealthScoreDetails,
+  getTablesNeedingCompaction,
+} from "./dashboard-health"
 import { getScheduledTasks, type ScheduledTask } from "@/lib/client"
 import { useQuery } from "@tanstack/react-query"
 
@@ -22,8 +25,8 @@ export default function DashboardPage() {
   const { isLoading, isFileDistributionLoading, tables, refresh } =
     useContext(OverviewContext)
   const { enable: enableDemo, demoMode } = useDemoMode()
-  const definedTables = tables.filter(
-    (t): t is NonNullable<typeof t> => Boolean(t)
+  const definedTables = tables.filter((t): t is NonNullable<typeof t> =>
+    Boolean(t)
   )
   const tablesNeedingCompaction = getTablesNeedingCompaction(definedTables)
 

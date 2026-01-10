@@ -83,10 +83,20 @@ export function DashboardDataDashboards() {
   // Fetch table metadata (snapshots) for trends & freshness.
   const tableInfoQueries = useQueries({
     queries: definedTables.map((table) => ({
-      queryKey: ["tableInfo", table.catalog, table.namespace, table.table, demoMode],
+      queryKey: [
+        "tableInfo",
+        table.catalog,
+        table.namespace,
+        table.table,
+        demoMode,
+      ],
       queryFn: async () => {
         if (demoMode) {
-          const key = getDemoTableKey(table.catalog, table.namespace, table.table)
+          const key = getDemoTableKey(
+            table.catalog,
+            table.namespace,
+            table.table
+          )
           return DEMO_TABLE_METADATA[key]
         }
         const res = await getTableInfo({
@@ -110,7 +120,8 @@ export function DashboardDataDashboards() {
         const snapshots = (q.data as any)?.metadata?.snapshots ?? []
         const lastUpdated =
           (q.data as any)?.metadata?.["last-updated-ms"] ??
-          (snapshots?.[snapshots.length - 1]?.["timestamp-ms"] ?? 0)
+          snapshots?.[snapshots.length - 1]?.["timestamp-ms"] ??
+          0
         return {
           catalog: t.catalog,
           namespace: t.namespace,
@@ -171,7 +182,8 @@ export function DashboardDataDashboards() {
   const layoutTop = useMemo(() => {
     const rows = definedTables.map((t) => {
       const smallPct = Number(t.ranges?.["0-8M"]?.percentage ?? 0)
-      const deleteFiles = (t.positionDeleteFileCount || 0) + (t.eqDeleteFileCount || 0)
+      const deleteFiles =
+        (t.positionDeleteFileCount || 0) + (t.eqDeleteFileCount || 0)
       return {
         id: `${t.catalog}.${t.namespace}.${t.table}`,
         catalog: t.catalog,
@@ -199,7 +211,8 @@ export function DashboardDataDashboards() {
     // Freshness anomaly: tables not updated in > 7d
     const stale = snapshotsByTable
       .map((t) => {
-        const hoursAgo = (Date.now() - ms(t.lastUpdated || 0)) / (60 * 60 * 1000)
+        const hoursAgo =
+          (Date.now() - ms(t.lastUpdated || 0)) / (60 * 60 * 1000)
         return { ...t, hoursAgo }
       })
       .filter((t) => t.hoursAgo > 168)
@@ -251,7 +264,8 @@ export function DashboardDataDashboards() {
       list.push({
         key: "all-good",
         title: "Data signals look steady",
-        detail: "No major anomalies detected in freshness, change volume, or layout health.",
+        detail:
+          "No major anomalies detected in freshness, change volume, or layout health.",
         tone: "good",
         href: "/data/tables",
         cta: "Browse tables",
@@ -296,8 +310,8 @@ export function DashboardDataDashboards() {
           {!hasAddedRecords ? (
             <div className="text-sm text-muted-foreground">
               We can show full growth trends once snapshot summaries include
-              record/byte deltas (or when metrics are persisted server-side). For
-              now, you can use “Changes over time” as a growth proxy.
+              record/byte deltas (or when metrics are persisted server-side).
+              For now, you can use “Changes over time” as a growth proxy.
             </div>
           ) : (
             <div className="h-48 w-full">
@@ -448,14 +462,20 @@ export function DashboardDataDashboards() {
                     >
                       {a.tone === "good" ? "Stable" : "Attention"}
                     </Badge>
-                    <div className="text-sm text-card-foreground">{a.title}</div>
+                    <div className="text-sm text-card-foreground">
+                      {a.title}
+                    </div>
                   </div>
                   <div className="mt-1 text-sm text-muted-foreground">
                     {a.detail}
                   </div>
                 </div>
                 <Link href={a.href} className="shrink-0">
-                  <Button variant="outline" size="sm" className="bg-card border-input">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="bg-card border-input"
+                  >
                     {a.cta}
                   </Button>
                 </Link>
@@ -467,4 +487,3 @@ export function DashboardDataDashboards() {
     </div>
   )
 }
-
