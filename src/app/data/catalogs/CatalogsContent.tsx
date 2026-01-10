@@ -667,7 +667,9 @@ export function CatalogsContent() {
             <AlertDialogDescription>
               This will remove this catalog from Nimtable's database and purge
               Nimtable-managed metadata. It will{" "}
-              <span className="font-medium">not delete the external catalog</span>{" "}
+              <span className="font-medium">
+                not delete the external catalog
+              </span>{" "}
               or any <span className="font-medium">Iceberg tables/data</span>.
             </AlertDialogDescription>
           </AlertDialogHeader>

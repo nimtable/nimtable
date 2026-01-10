@@ -23,7 +23,13 @@ import { Label } from "@/components/ui/label"
 import { LoadingButton } from "@/components/ui/loading-button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertCircle, Bot, CheckCircle2, PlugZap, TestTube2 } from "lucide-react"
+import {
+  AlertCircle,
+  Bot,
+  CheckCircle2,
+  PlugZap,
+  TestTube2,
+} from "lucide-react"
 
 interface AISettings {
   endpoint: string
@@ -66,7 +72,9 @@ export default function AISettingsPage() {
   const [loadError, setLoadError] = useState<string | null>(null)
   const [saveState, setSaveState] = useState<InlineState>({ status: "idle" })
   const [testState, setTestState] = useState<InlineState>({ status: "idle" })
-  const [enableState, setEnableState] = useState<InlineState>({ status: "idle" })
+  const [enableState, setEnableState] = useState<InlineState>({
+    status: "idle",
+  })
 
   // Load existing settings
   useEffect(() => {
@@ -155,7 +163,9 @@ export default function AISettingsPage() {
       setEnableState({
         status: "error",
         message:
-          error instanceof Error ? error.message : "Failed to update AI settings",
+          error instanceof Error
+            ? error.message
+            : "Failed to update AI settings",
       })
     } finally {
       setEnableLoading(false)
