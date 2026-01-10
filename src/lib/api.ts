@@ -1683,16 +1683,40 @@ export class HttpClient<SecurityDataType = unknown> {
       r.data = null as unknown as T
       r.error = null as unknown as E
 
-      // Parse snapshot-id as strings because it may be greater than MAX_SAFE_INTEGER
+      // Parse snapshot-id as strings because it may be greater than MAX_SAFE_INTEGER.
+      // Also: avoid throwing SyntaxError when the server returns non-JSON (e.g. HTML 404 pages).
       const JSONbigintString = require("json-bigint")({ storeAsString: true })
-      response.json = async () => {
-        const text = await response.text()
-        return JSONbigintString.parse(text)
+
+      const parseBody = async () => {
+        if (!responseFormat) return null
+
+        if (responseFormat === "json") {
+          const raw = await response.text()
+          if (!raw) return {}
+          try {
+            return JSONbigintString.parse(raw)
+          } catch (e) {
+            if (r.ok) {
+              throw e
+            }
+            // Fall back to a clean error message instead of bubbling up "Unexpected '<'".
+            const statusText = response.statusText || "Error"
+            const isHtml = /<!doctype|<html[\s>]/i.test(raw)
+            throw {
+              message: `HTTP ${response.status} ${statusText}`,
+              // Do not leak HTML into UI toasts; keep raw text only when it's not HTML.
+              details: isHtml ? "" : raw.slice(0, 500),
+            }
+          }
+        }
+
+        // @ts-expect-error - index access is safe here
+        return await response[responseFormat]()
       }
 
       const data = !responseFormat
         ? r
-        : await response[responseFormat]()
+        : await parseBody()
             .then((data) => {
               if (r.ok) {
                 r.data = data

@@ -95,7 +95,7 @@ export default function DashboardPage() {
           <p className="mt-1 text-sm text-muted-foreground">
             {demoMode
               ? "Demo mode is enabled"
-              : "Connect a catalog to start monitoring your Iceberg lakehouse"}
+              : "Connect a catalog to start monitoring your Iceberg lakehouse."}
           </p>
         </div>
 
