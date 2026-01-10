@@ -90,21 +90,36 @@ export async function loadNamespacesAndTables(
   }
   const api = catalogApi(catalog, inBrowser)
 
+  function normalizeNamespaceParts(parts: string[]): string[] | null {
+    const cleaned = (parts || []).map((p) => (p ?? "").trim()).filter(Boolean)
+    return cleaned.length > 0 ? cleaned : null
+  }
+
   async function fetchNamespaceAndChildren(
     namespace: string[]
   ): Promise<NamespaceTables> {
-    const namespaceName = namespace.join(".")
-    const tablesResponse = await api.v1.listTables(namespaceName)
+    const normalized = normalizeNamespaceParts(namespace)
+    const namespaceName = normalized ? normalized.join(".") : ""
+
+    // Root (empty) namespace isn't a real namespace; don't query tables for it.
+    const tablesResponse = namespaceName
+      ? await api.v1.listTables(namespaceName)
+      : { identifiers: [] as any[] }
 
     // Get child namespaces
-    const childNamespacesResponse = await api.v1.listNamespaces({
-      parent: namespaceName,
-    })
+    // Important: do NOT send `parent` when it is empty, otherwise Iceberg REST
+    // servers may interpret it as an empty namespace and return 404.
+    const childNamespacesResponse = namespaceName
+      ? await api.v1.listNamespaces({ parent: namespaceName })
+      : await api.v1.listNamespaces()
     const childNamespaces = childNamespacesResponse.namespaces || []
 
     // Recursively fetch child namespaces
     const children = await Promise.all(
-      childNamespaces.map((child) => fetchNamespaceAndChildren(child))
+      childNamespaces
+        .map((child) => normalizeNamespaceParts(child))
+        .filter((child): child is string[] => !!child)
+        .map((child) => fetchNamespaceAndChildren(child))
     )
 
     // Sort children by shortName
@@ -119,7 +134,9 @@ export async function loadNamespacesAndTables(
 
     return {
       name: namespaceName,
-      shortName: namespace[namespace.length - 1],
+      shortName: (normalized || namespace)[
+        (normalized || namespace).length - 1
+      ],
       tables: sortedTables,
       children: sortedChildren,
     }
@@ -127,7 +144,9 @@ export async function loadNamespacesAndTables(
 
   // Start with root namespaces
   const response = await api.v1.listNamespaces()
-  const rootNamespaces = response.namespaces || []
+  const rootNamespaces = (response.namespaces || [])
+    .map((ns) => normalizeNamespaceParts(ns))
+    .filter((ns): ns is string[] => !!ns)
 
   // Fetch all namespaces and their children
   const result = await Promise.all(
@@ -143,7 +162,11 @@ export async function listNamespaces(catalog: string): Promise<string[]> {
 
   // Start with root namespaces
   const response = await api.v1.listNamespaces()
-  const rootNamespaces = response.namespaces || []
+  const rootNamespaces =
+    response.namespaces
+      ?.map((ns) => (ns || []).map((p) => (p ?? "").trim()).filter(Boolean))
+      .filter((ns) => ns.length > 0) || []
+
   return rootNamespaces.map((namespace) => namespace.join("."))
 }
 

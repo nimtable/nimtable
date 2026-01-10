@@ -321,34 +321,48 @@ public class RESTCatalogAdapter extends BaseHTTPClient {
 
             case LIST_NAMESPACES:
                 if (asNamespaceCatalog != null) {
-                    Namespace ns;
-                    if (vars.containsKey("parent")) {
-                        ns =
-                                Namespace.of(
-                                        RESTUtil.NAMESPACE_SPLITTER
-                                                .splitToStream(vars.get("parent"))
-                                                .toArray(String[]::new));
-                    } else {
-                        ns = Namespace.empty();
-                    }
+                    // NOTE: Treat missing/blank `parent` as "list root namespaces".
+                    // Some Iceberg catalog implementations throw when asked to list namespaces
+                    // under
+                    // Namespace.empty(), so we must avoid passing it as a "parent namespace".
+                    final String parent = vars.get("parent");
+                    final boolean hasParent = parent != null && !parent.trim().isEmpty();
+                    Namespace ns =
+                            hasParent
+                                    ? Namespace.of(
+                                            RESTUtil.NAMESPACE_SPLITTER
+                                                    .splitToStream(parent)
+                                                    .toArray(String[]::new))
+                                    : null;
 
                     String pageToken = PropertyUtil.propertyAsString(vars, "pageToken", null);
                     String pageSize = PropertyUtil.propertyAsString(vars, "pageSize", null);
 
                     if (pageSize != null) {
+                        if (ns == null) {
+                            // Graceful fallback: treat this server as "no pagination support" for
+                            // root listing.
+                            return castResponse(
+                                    responseType,
+                                    ListNamespacesResponse.builder()
+                                            .addAll(asNamespaceCatalog.listNamespaces())
+                                            .build());
+                        }
                         return castResponse(
                                 responseType,
                                 CatalogHandlers.listNamespaces(
                                         asNamespaceCatalog, ns, pageToken, pageSize));
                     } else {
-                        if (ns.length() > 0) {
+                        if (ns != null && ns.length() > 0) {
                             // only support one level of namespace listing
                             return castResponse(
                                     responseType, ListNamespacesResponse.builder().build());
                         } else {
                             return castResponse(
                                     responseType,
-                                    CatalogHandlers.listNamespaces(asNamespaceCatalog, ns));
+                                    ListNamespacesResponse.builder()
+                                            .addAll(asNamespaceCatalog.listNamespaces())
+                                            .build());
                         }
                     }
                 }
