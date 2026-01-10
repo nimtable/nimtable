@@ -1,7 +1,6 @@
 "use client"
 
 import { OverviewContext } from "./OverviewProvider"
-import { MetricsSummary } from "./MetricsSummary"
 import { TableWatchlist } from "./TableWatchlist"
 import { ActivityFeed } from "./ActivityFeed"
 import { useContext } from "react"
@@ -9,6 +8,10 @@ import { ConnectCatalogStep } from "@/components/onboarding/connect-catalog-step
 import { Button } from "@/components/ui/button"
 import { useDemoMode } from "@/contexts/demo-mode-context"
 import { LayoutGrid } from "lucide-react"
+import { DashboardKpiGrid } from "./DashboardKpiGrid"
+import { DashboardQuickActions } from "./DashboardQuickActions"
+import { DashboardRunningJobs } from "./DashboardRunningJobs"
+import { DashboardInsights } from "./DashboardInsights"
 
 export default function DashboardPage() {
   const { isLoading, isFileDistributionLoading, tables, refresh } =
@@ -86,7 +89,16 @@ export default function DashboardPage() {
 
       <div className="flex-1 overflow-auto p-6">
         <div className="w-full space-y-6">
-          <MetricsSummary />
+          <DashboardKpiGrid />
+          <DashboardQuickActions />
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+              <DashboardInsights />
+            </div>
+            <div className="lg:col-span-1">
+              <DashboardRunningJobs />
+            </div>
+          </div>
           <ActivityFeed />
           <TableWatchlist />
         </div>
