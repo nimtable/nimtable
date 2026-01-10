@@ -26,6 +26,22 @@ export function computeHealthScore({
   tablesNeedingCompaction: number
   failedTasks: number
 }) {
+  return computeHealthScoreDetails({
+    totalTables,
+    tablesNeedingCompaction,
+    failedTasks,
+  }).score
+}
+
+export function computeHealthScoreDetails({
+  totalTables,
+  tablesNeedingCompaction,
+  failedTasks,
+}: {
+  totalTables: number
+  tablesNeedingCompaction: number
+  failedTasks: number
+}) {
   // Lightweight heuristic (no backend history required):
   // - penalize compaction backlog (up to 45 points)
   // - penalize failed scheduled tasks (up to 35 points)
@@ -35,7 +51,17 @@ export function computeHealthScore({
   const backlogPenalty = Math.min(45, Math.round(backlogRatio * 60))
   const failuresPenalty = Math.min(35, failedTasks * 10)
   const raw = 100 - backlogPenalty - failuresPenalty
-  return Math.max(0, Math.min(100, raw))
+  const score = Math.max(0, Math.min(100, raw))
+  return {
+    score,
+    breakdown: {
+      backlogPenalty,
+      failuresPenalty,
+      totalTables,
+      tablesNeedingCompaction,
+      failedTasks,
+    },
+  }
 }
 
 export function summarizeScheduledTasks(tasks: ScheduledTask[] | undefined) {

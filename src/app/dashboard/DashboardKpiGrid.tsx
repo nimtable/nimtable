@@ -2,16 +2,22 @@
 
 import { useContext, useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { Activity, AlertTriangle, Database, GitCompare } from "lucide-react"
+import { Activity, AlertCircle, Database, GitCompare, Info } from "lucide-react"
 
 import { OverviewContext } from "./OverviewProvider"
 import { getScheduledTasks, type ScheduledTask } from "@/lib/client"
 import { useDemoMode } from "@/contexts/demo-mode-context"
 import {
-  computeHealthScore,
+  computeHealthScoreDetails,
   getTablesNeedingCompaction,
   summarizeScheduledTasks,
 } from "./dashboard-health"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { Badge } from "@/components/ui/badge"
 
 function demoScheduledTasks(): ScheduledTask[] {
   // Minimal demo tasks to make the dashboard feel alive in demo mode.
@@ -86,13 +92,15 @@ export function DashboardKpiGrid() {
     [scheduledTasks]
   )
 
-  const healthScore = useMemo(() => {
-    return computeHealthScore({
+  const health = useMemo(() => {
+    return computeHealthScoreDetails({
       totalTables: tables.length,
       tablesNeedingCompaction: tablesNeedingCompaction.length,
       failedTasks: scheduledSummary.failed.length,
     })
   }, [tables.length, tablesNeedingCompaction.length, scheduledSummary.failed])
+
+  const healthScore = health.score
 
   const healthLabel =
     healthScore >= 90
@@ -116,7 +124,59 @@ export function DashboardKpiGrid() {
               {healthScore}
               <span className="ml-2 text-sm text-muted-foreground">/ 100</span>
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">{healthLabel}</p>
+            <div className="mt-1 flex items-center gap-2">
+              <p className="text-xs text-muted-foreground">{healthLabel}</p>
+              {tablesNeedingCompaction.length === 0 &&
+                scheduledSummary.failed.length === 0 && (
+                  <Badge
+                    variant="outline"
+                    className="text-[11px] bg-green-50 text-green-700 border-green-200"
+                  >
+                    All clear
+                  </Badge>
+                )}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    className="inline-flex items-center rounded border border-border bg-muted/20 px-1.5 py-0.5 text-[11px] text-muted-foreground hover:bg-muted/40"
+                    aria-label="How this score is calculated"
+                    type="button"
+                  >
+                    <Info className="mr-1 h-3 w-3" />
+                    Why
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-[320px]">
+                  <div className="space-y-2 text-sm">
+                    <div className="font-medium">How we compute this score</div>
+                    <div className="text-xs text-muted-foreground">
+                      It’s a lightweight heuristic (no historical time series
+                      required). We subtract penalties from 100.
+                    </div>
+                    <div className="text-xs">
+                      <div className="flex items-center justify-between gap-4">
+                        <span>Compaction backlog</span>
+                        <span className="font-mono">
+                          -{health.breakdown.backlogPenalty}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between gap-4">
+                        <span>Task failures</span>
+                        <span className="font-mono">
+                          -{health.breakdown.failuresPenalty}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Based on {health.breakdown.totalTables} tables,{" "}
+                      {health.breakdown.tablesNeedingCompaction} needing
+                      compaction, and {health.breakdown.failedTasks} failing
+                      tasks.
+                    </div>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </div>
           </div>
           <div className="rounded-md bg-primary p-2.5 text-primary-foreground">
             <Activity className="h-6 w-6" />
@@ -183,7 +243,7 @@ export function DashboardKpiGrid() {
             )}
           </div>
           <div className="rounded-md bg-red-500 p-2.5 text-white">
-            <AlertTriangle className="h-6 w-6" />
+            <AlertCircle className="h-6 w-6" />
           </div>
         </div>
       </div>
