@@ -52,7 +52,7 @@ export function DashboardRunningJobs() {
   const { demoMode } = useDemoMode()
 
   const { data: scheduledTasks, isLoading } = useQuery<ScheduledTask[]>({
-    queryKey: ["scheduled-tasks"],
+    queryKey: ["scheduled-tasks", demoMode],
     queryFn: async () => {
       if (demoMode) return demoTasks()
       const res = await getScheduledTasks()
