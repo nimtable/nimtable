@@ -134,7 +134,9 @@ export async function loadNamespacesAndTables(
 
     return {
       name: namespaceName,
-      shortName: (normalized || namespace)[(normalized || namespace).length - 1],
+      shortName: (normalized || namespace)[
+        (normalized || namespace).length - 1
+      ],
       tables: sortedTables,
       children: sortedChildren,
     }
