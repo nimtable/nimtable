@@ -13,6 +13,7 @@ import { DashboardQuickActions } from "./DashboardQuickActions"
 import { DashboardRunningJobs } from "./DashboardRunningJobs"
 import { DashboardInsights } from "./DashboardInsights"
 import { DashboardWhatsChanged } from "./DashboardWhatsChanged"
+import { DashboardDataDashboards } from "./DashboardDataDashboards"
 import { computeHealthScoreDetails, getTablesNeedingCompaction } from "./dashboard-health"
 import { getScheduledTasks, type ScheduledTask } from "@/lib/client"
 import { useQuery } from "@tanstack/react-query"
@@ -133,8 +134,17 @@ export default function DashboardPage() {
               needsCompaction: tablesNeedingCompaction.length,
               taskFailures,
               runningJobs,
+              totalDataBytes: definedTables.reduce(
+                (s, t) => s + (t.dataFileSizeInBytes || 0),
+                0
+              ),
+              totalDataRecords: definedTables.reduce(
+                (s, t) => s + (t.dataFileRecordCount || 0),
+                0
+              ),
             }}
           />
+          <DashboardDataDashboards />
           <DashboardQuickActions />
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
             <div className="lg:col-span-2">

@@ -12,6 +12,8 @@ type Snapshot = {
   needsCompaction: number
   taskFailures: number
   runningJobs: number
+  totalDataBytes: number
+  totalDataRecords: number
 }
 
 const STORAGE_KEY = "nimtable.dashboard.lastSnapshot.v1"
@@ -58,6 +60,8 @@ export function DashboardWhatsChanged({
       needsCompaction: snapshot.needsCompaction,
       taskFailures: snapshot.taskFailures,
       runningJobs: snapshot.runningJobs,
+      totalDataBytes: snapshot.totalDataBytes,
+      totalDataRecords: snapshot.totalDataRecords,
     }
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(now))
@@ -122,8 +126,36 @@ export function DashboardWhatsChanged({
       })
     }
 
+    const bytesDelta = snapshot.totalDataBytes - previous.totalDataBytes
+    if (bytesDelta !== 0) {
+      list.push({
+        key: "bytes",
+        label: "Data size",
+        delta: bytesDelta,
+        tone: "neutral",
+      })
+    }
+
+    const recordsDelta = snapshot.totalDataRecords - previous.totalDataRecords
+    if (recordsDelta !== 0) {
+      list.push({
+        key: "records",
+        label: "Record count",
+        delta: recordsDelta,
+        tone: "neutral",
+      })
+    }
+
     return list.slice(0, 3)
-  }, [previous, snapshot.healthScore, snapshot.needsCompaction, snapshot.taskFailures, snapshot.totalTables])
+  }, [
+    previous,
+    snapshot.healthScore,
+    snapshot.needsCompaction,
+    snapshot.taskFailures,
+    snapshot.totalTables,
+    snapshot.totalDataBytes,
+    snapshot.totalDataRecords,
+  ])
 
   if (!previous) {
     return (
