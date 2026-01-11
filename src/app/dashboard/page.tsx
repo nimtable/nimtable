@@ -84,7 +84,7 @@ export default function DashboardPage() {
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
             Connect a catalog to start monitoring your Iceberg lakehouse, or
-            create a local Iceberg catalog inside Nimtable.
+            create a local Iceberg catalog inside Nimtable (Docker container).
           </p>
         </div>
 
