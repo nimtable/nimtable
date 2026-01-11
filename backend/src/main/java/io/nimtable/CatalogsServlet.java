@@ -167,17 +167,16 @@ public class CatalogsServlet extends HttpServlet {
         try {
             // Sub-route: seed demo data for a catalog.
             // POST /api/catalogs/{catalogName}/seed-demo
-            // 1) Prefer request URI parsing (works even if getPathInfo() behaves unexpectedly behind proxies).
+            // 1) Prefer request URI parsing (works even if getPathInfo() behaves unexpectedly
+            // behind proxies).
             String requestUri = req.getRequestURI();
             if (requestUri != null) {
                 String suffix = "/seed-demo";
                 String suffixSlash = "/seed-demo/";
-                boolean isSeed =
-                        requestUri.endsWith(suffix) || requestUri.endsWith(suffixSlash);
+                boolean isSeed = requestUri.endsWith(suffix) || requestUri.endsWith(suffixSlash);
                 int catalogsIdx = requestUri.indexOf("/api/catalogs/");
                 if (isSeed && catalogsIdx >= 0) {
-                    String after =
-                            requestUri.substring(catalogsIdx + "/api/catalogs/".length());
+                    String after = requestUri.substring(catalogsIdx + "/api/catalogs/".length());
                     // after: "{catalogName}/seed-demo" or "{catalogName}/seed-demo/"
                     int slashIdx = after.indexOf('/');
                     if (slashIdx > 0) {
@@ -378,7 +377,8 @@ public class CatalogsServlet extends HttpServlet {
         }
     }
 
-    private void handleSeedDemo(String catalogName, HttpServletRequest req, HttpServletResponse resp)
+    private void handleSeedDemo(
+            String catalogName, HttpServletRequest req, HttpServletResponse resp)
             throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         mapper.findAndRegisterModules();
@@ -394,8 +394,7 @@ public class CatalogsServlet extends HttpServlet {
 
         boolean existsInConfig =
                 config.catalogs() != null
-                        && config.catalogs().stream()
-                                .anyMatch(c -> catalogName.equals(c.name()));
+                        && config.catalogs().stream().anyMatch(c -> catalogName.equals(c.name()));
         Catalog dbCatalog = catalogRepository.findByName(catalogName);
 
         if (!existsInConfig && dbCatalog == null) {
@@ -472,9 +471,7 @@ public class CatalogsServlet extends HttpServlet {
                 String countSql = String.format("SELECT count(*) AS c FROM %s", fqTable);
                 sql.add(countSql);
                 long count =
-                        spark.sql(countSql)
-                                .collectAsList()
-                                .stream()
+                        spark.sql(countSql).collectAsList().stream()
                                 .findFirst()
                                 .map(r -> ((Number) r.getAs("c")).longValue())
                                 .orElse(0L);
@@ -486,7 +483,8 @@ public class CatalogsServlet extends HttpServlet {
                             " (1, 'alice', current_timestamp()),"
                                     + " (2, 'bob', current_timestamp()),"
                                     + " (3, 'cathy', current_timestamp())";
-                    // If caller requests fewer than 3, truncate; if more, keep 3 (simple, predictable).
+                    // If caller requests fewer than 3, truncate; if more, keep 3 (simple,
+                    // predictable).
                     if (rows < 3) {
                         if (rows == 1) {
                             values = " (1, 'alice', current_timestamp())";
