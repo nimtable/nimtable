@@ -324,7 +324,7 @@ export function CatalogsContent() {
             onClick={() => setCreateModalOpen(true)}
           >
             <Plus className="w-4 h-4 mr-0" />
-            Create new catalog
+            Connect catalog
           </Button>
         </div>
       </div>
