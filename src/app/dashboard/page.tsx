@@ -75,11 +75,7 @@ export default function DashboardPage() {
   if (tables.length === 0) {
     return (
       <div className="flex flex-1 flex-col overflow-hidden bg-background">
-        <DemoWizardModal
-          open={demoOpen}
-          onOpenChange={setDemoOpen}
-          onCreated={() => refresh()}
-        />
+        <DemoWizardModal open={demoOpen} onOpenChange={setDemoOpen} />
         {/* Top bar (match Optimization layout style) */}
         <div className="bg-card border-b border-border px-6 py-4">
           <div className="flex items-center justify-between">

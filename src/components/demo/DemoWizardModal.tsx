@@ -27,11 +27,9 @@ type Step = 1 | 2 | 3 | 4
 export function DemoWizardModal({
   open,
   onOpenChange,
-  onCreated,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onCreated?: () => void
 }) {
   const router = useRouter()
   const { toast } = useToast()
@@ -149,11 +147,16 @@ FROM range(0, ${safeRows})`
         description: `${catalog}.${namespace}.${table} is ready.`,
       })
 
+      // Persist demo context so the UI can show the "Demo ready" banner elsewhere.
       setDemoContext({ catalog, namespace, table })
-      onCreated?.()
+
       // Requirement: after creating the demo catalog/table, send user to Catalogs.
-      onOpenChange(false)
+      // Important: navigate first, then close the modal. Closing can cause the
+      // parent (Dashboard) to re-render/unmount, which can otherwise interrupt navigation.
       router.push("/data/catalogs")
+      onOpenChange(false)
+
+      // The Catalogs page will fetch fresh state; avoid triggering a Dashboard refresh race here.
     } catch (e) {
       const msg = errorToString(e)
       setLastError(msg)
