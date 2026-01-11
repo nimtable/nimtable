@@ -161,9 +161,7 @@ FROM range(0, ${safeRows})`
 
       setDemoContext({ catalog, namespace, table })
       onCreated?.()
-      // Default UX: take user to the table page immediately.
-      onOpenChange(false)
-      router.push(tableUrl)
+      setStep(4)
     } catch (e) {
       const msg = errorToString(e)
       setLastError(msg)
@@ -331,32 +329,67 @@ FROM range(0, ${safeRows})`
           )}
 
           {step === 4 && (
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div className="rounded-lg border bg-muted/30 p-3 text-sm">
-                Created{" "}
+                Demo is ready:{" "}
                 <code>
                   {catalog}.{namespace}.{table}
                 </code>
-                .
               </div>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  onClick={() => {
-                    onOpenChange(false)
-                    router.push(tableUrl)
-                  }}
-                >
-                  Open table
-                </Button>
-                <Button
-                  variant="secondary"
-                  onClick={() => {
-                    onOpenChange(false)
-                    router.push("/data/catalogs")
-                  }}
-                >
-                  Browse catalogs
-                </Button>
+
+              <div className="space-y-2">
+                <div className="text-sm font-medium">
+                  Next, what do you want to do?
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    onClick={() => {
+                      onOpenChange(false)
+                      router.push(
+                        `/data/catalog?catalog=${encodeURIComponent(catalog)}`
+                      )
+                    }}
+                  >
+                    Browse demo catalog
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      onOpenChange(false)
+                      router.push(tableUrl)
+                    }}
+                  >
+                    Open table details
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      const url = `/data/sql-editor?catalog=${encodeURIComponent(
+                        catalog
+                      )}&namespace=${encodeURIComponent(
+                        namespace
+                      )}&table=${encodeURIComponent(table)}`
+                      onOpenChange(false)
+                      router.push(url)
+                    }}
+                  >
+                    Open SQL editor
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      const url = `/data/tables/table?catalog=${encodeURIComponent(
+                        catalog
+                      )}&namespace=${encodeURIComponent(
+                        namespace
+                      )}&table=${encodeURIComponent(table)}&tab=snapshots`
+                      onOpenChange(false)
+                      router.push(url)
+                    }}
+                  >
+                    View snapshots
+                  </Button>
+                </div>
               </div>
             </div>
           )}
