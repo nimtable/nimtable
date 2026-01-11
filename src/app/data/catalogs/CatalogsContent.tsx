@@ -8,6 +8,7 @@ import {
   Search,
   MoreHorizontal,
   Unlink,
+  Trash2,
 } from "lucide-react"
 import { useQueries } from "@tanstack/react-query"
 import { formatDistanceToNow } from "date-fns"
@@ -35,12 +36,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { getCatalogConfig } from "@/lib/data-loader"
-import { loadTableData } from "@/lib/data-loader"
+import { getCatalogDetails, loadTableData } from "@/lib/data-loader"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useDemoMode } from "@/contexts/demo-mode-context"
 import { useToast } from "@/hooks/use-toast"
 import { errorToString } from "@/lib/utils"
 import { deleteCatalog } from "@/lib/client/sdk.gen"
@@ -54,6 +54,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 import { CreateCatalogModal } from "./CreateCatalogModal"
+import { LocalCatalogWizardModal } from "@/components/onboarding/LocalCatalogWizardModal"
 import { useNamespaces } from "../hooks/useNamespaces"
 import { useCatalogs } from "../hooks/useCatalogs"
 import { useAllTables } from "../hooks/useTables"
@@ -65,7 +66,6 @@ export function CatalogsContent() {
     isLoading: isLoadingCatalogs,
     refetch: refetchCatalogs,
   } = useCatalogs()
-  const { demoMode } = useDemoMode()
   const { toast } = useToast()
   const queryClient = useQueryClient()
   const { namespaces } = useNamespaces(catalogs || [])
@@ -73,6 +73,7 @@ export function CatalogsContent() {
   const [searchQuery, setSearchQuery] = useState<string>("")
   const [mirrorModalOpen, setMirrorModalOpen] = useState<boolean>(false)
   const [createModalOpen, setCreateModalOpen] = useState<boolean>(false)
+  const [localCatalogOpen, setLocalCatalogOpen] = useState<boolean>(false)
   const [formData, setFormData] = useState({
     catalogName: "",
     endpoint: "",
@@ -84,39 +85,58 @@ export function CatalogsContent() {
   const [disconnectCatalogName, setDisconnectCatalogName] = useState<
     string | null
   >(null)
+  const [deleteCatalogName, setDeleteCatalogName] = useState<string | null>(
+    null
+  )
   const router = useRouter()
 
   // Get catalog configurations
   const catalogConfigs = useQueries({
-    queries: demoMode
-      ? []
-      : (catalogs || []).map((catalog) => ({
-          queryKey: ["catalog-config", catalog],
-          queryFn: () => getCatalogConfig(catalog),
-          enabled: !!catalog,
-        })),
+    queries: (catalogs || []).map((catalog) => ({
+      queryKey: ["catalog-config", catalog],
+      queryFn: () => getCatalogConfig(catalog),
+      enabled: !!catalog,
+    })),
   })
 
-  const catalogConfigMap = demoMode
-    ? {
-        demo: {
-          defaults: {
-            type: "demo",
-            warehouse: "demo",
-            properties: {},
-          },
-          overrides: {},
-        },
+  const catalogConfigMap = catalogConfigs.reduce(
+    (acc, query, index) => {
+      if (query.data && catalogs?.[index]) {
+        acc[catalogs[index]] = query.data
       }
-    : catalogConfigs.reduce(
-        (acc, query, index) => {
-          if (query.data && catalogs?.[index]) {
-            acc[catalogs[index]] = query.data
-          }
-          return acc
-        },
-        {} as Record<string, any>
-      )
+      return acc
+    },
+    {} as Record<string, any>
+  )
+
+  const catalogDetailsQueries = useQueries({
+    queries: (catalogs || []).map((catalog) => ({
+      queryKey: ["catalog-details", catalog],
+      queryFn: () => getCatalogDetails(catalog),
+      enabled: !!catalog,
+    })),
+  })
+
+  const catalogDetailsMap = catalogDetailsQueries.reduce(
+    (acc, query, index) => {
+      if (query.data && catalogs?.[index]) {
+        acc[catalogs[index]] = query.data
+      }
+      return acc
+    },
+    {} as Record<string, any>
+  )
+
+  const isLocalCatalog = (catalogName: string) => {
+    const cfg = catalogDetailsMap[catalogName]
+    const type = cfg?.type
+    const warehouse = cfg?.warehouse
+    return (
+      type === "hadoop" &&
+      typeof warehouse === "string" &&
+      warehouse.trim().startsWith("/")
+    )
+  }
 
   // Get table metadata for each table
   const tableMetadataQueries = useQueries({
@@ -222,7 +242,7 @@ export function CatalogsContent() {
           catalogName,
         },
         query: {
-          purge: true,
+          purge: false,
         },
       })
 
@@ -245,7 +265,7 @@ export function CatalogsContent() {
       toast({
         title: "Catalog disconnected from Nimtable",
         description:
-          "This removed the catalog metadata from Nimtable (and purged Nimtable-managed data). External catalog and Iceberg tables/data were not deleted.",
+          "This removed the catalog metadata from Nimtable. External catalog and Iceberg tables/data were not deleted.",
       })
 
       await refetchCatalogs()
@@ -253,6 +273,49 @@ export function CatalogsContent() {
       toast({
         variant: "destructive",
         title: "Failed to disconnect catalog from Nimtable",
+        description: errorToString(error),
+      })
+    }
+  }
+
+  const handleDeleteLocalCatalog = async (catalogName: string) => {
+    try {
+      await deleteCatalog({
+        path: {
+          catalogName,
+        },
+        query: {
+          purge: true,
+        },
+      })
+
+      // Clear cached data so other pages (e.g., Dashboard metrics) don't keep showing stale catalog tables.
+      queryClient.removeQueries({
+        predicate: (q) => {
+          const key = q.queryKey
+          const root = Array.isArray(key) ? key[0] : key
+          return (
+            root === "catalogs" ||
+            root === "namespaces" ||
+            root === "tables" ||
+            root === "catalog-config" ||
+            root === "catalog-details" ||
+            root === "table-metadata"
+          )
+        },
+      })
+
+      toast({
+        title: "Local catalog deleted from Nimtable",
+        description:
+          "This removed the catalog from Nimtable and purged Nimtable-managed metadata. Warehouse files on disk were not deleted automatically.",
+      })
+
+      await refetchCatalogs()
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Failed to delete local catalog",
         description: errorToString(error),
       })
     }
@@ -310,6 +373,10 @@ export function CatalogsContent() {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden bg-background min-h-screen">
+      <LocalCatalogWizardModal
+        open={localCatalogOpen}
+        onOpenChange={setLocalCatalogOpen}
+      />
       <DataHierarchyHeader
         current="catalogs"
         count={filteredCatalogs?.length || 0}
@@ -327,22 +394,32 @@ export function CatalogsContent() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <button
-            className="btn-secondary flex items-center gap-2"
-            onClick={() => !demoMode && setMirrorModalOpen(true)}
-            disabled={demoMode}
-          >
-            <ExternalLink className="w-4 h-4" />
-            <span>Mirror external catalog</span>
-          </button>
-          <Button
-            className="bg-primary hover:bg-primary/90 text-primary-foreground"
-            onClick={() => !demoMode && setCreateModalOpen(true)}
-            disabled={demoMode}
-          >
-            <Plus className="w-4 h-4 mr-0" />
-            Create new catalog
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                size="sm"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add catalog
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setCreateModalOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Connect catalog
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setLocalCatalogOpen(true)}>
+                <FolderTreeIcon className="mr-2 h-4 w-4" />
+                Create local Iceberg catalog
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setMirrorModalOpen(true)}>
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Mirror external catalog
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -392,7 +469,14 @@ export function CatalogsContent() {
                   }}
                 >
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-normal text-card-foreground">
-                    <span>{catalog}</span>
+                    <div className="flex items-center gap-2">
+                      <span>{catalog}</span>
+                      {isLocalCatalog(catalog) && (
+                        <span className="inline-flex items-center rounded-full border bg-muted/40 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                          Local
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground text-right">
                     <a
@@ -472,17 +556,30 @@ export function CatalogsContent() {
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          disabled={demoMode}
                           className="text-destructive focus:bg-destructive/10 focus:text-destructive"
                           onSelect={(e) => {
                             e.preventDefault()
-                            if (demoMode) return
                             setDisconnectCatalogName(catalog)
                           }}
                         >
                           <Unlink className="h-4 w-4" />
                           Disconnect
                         </DropdownMenuItem>
+                        {isLocalCatalog(catalog) && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                              onSelect={(e) => {
+                                e.preventDefault()
+                                setDeleteCatalogName(catalog)
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          </>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </td>
@@ -665,8 +762,8 @@ export function CatalogsContent() {
           <AlertDialogHeader>
             <AlertDialogTitle>Disconnect from Nimtable?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will remove this catalog from Nimtable's database and purge
-              Nimtable-managed metadata. It will{" "}
+              This will remove this catalog from Nimtable&apos;s database. It
+              will{" "}
               <span className="font-medium">
                 not delete the external catalog
               </span>{" "}
@@ -683,6 +780,38 @@ export function CatalogsContent() {
               }}
             >
               Disconnect
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete local catalog confirmation */}
+      <AlertDialog
+        open={deleteCatalogName !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteCatalogName(null)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete local catalog?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This is only available for local Hadoop catalogs. This will remove
+              the catalog from Nimtable and purge Nimtable-managed metadata.
+              Warehouse files on disk are not deleted automatically.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (!deleteCatalogName) return
+                void handleDeleteLocalCatalog(deleteCatalogName)
+                setDeleteCatalogName(null)
+              }}
+            >
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { FolderIcon, ChevronDown } from "lucide-react"
 import Link from "next/link"
-import { useDemoMode } from "@/contexts/demo-mode-context"
 import { useRouter } from "next/navigation"
 import { DataHierarchyHeader } from "@/components/data/DataHierarchyHeader"
 
@@ -34,7 +33,6 @@ export function NamespacesContent() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
   const { catalogs, isLoading: isLoadingCatalogs } = useCatalogs()
-  const { demoMode } = useDemoMode()
   // Use useQueries to fetch namespaces for all catalogs in parallel
   const { namespaces: allNamespaces, isLoading: isLoadingNamespaces } =
     useNamespaces(catalogs || [])
@@ -140,8 +138,7 @@ export function NamespacesContent() {
           </div>
           <Button
             className="bg-primary hover:bg-primary/90 text-primary-foreground"
-            onClick={() => !demoMode && setIsCreateModalOpen(true)}
-            disabled={demoMode}
+            onClick={() => setIsCreateModalOpen(true)}
           >
             <Plus className="w-4 h-4 mr-0" />
             Create new Namespace

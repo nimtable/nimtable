@@ -8,7 +8,6 @@ import { CalendarClock, ExternalLink, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { getScheduledTasks, type ScheduledTask } from "@/lib/client"
-import { useDemoMode } from "@/contexts/demo-mode-context"
 import { summarizeScheduledTasks } from "./dashboard-health"
 
 function formatWhen(dateString?: string) {
@@ -23,38 +22,10 @@ function formatWhen(dateString?: string) {
   }).format(new Date(ms))
 }
 
-function demoTasks(): ScheduledTask[] {
-  const emptyParams = {} as ScheduledTask["parameters"]
-  return [
-    {
-      id: 2,
-      taskName: "hourly-snapshot-expiration",
-      taskType: "OPTIMIZE",
-      enabled: true,
-      catalogName: "s3-tables-catalog-demo",
-      namespace: "public",
-      tableName: "datagen_t",
-      cronExpression: "0 * * * *",
-      cronDescription: "Every hour",
-      nextRunAt: String(Date.now() + 1000 * 60 * 8),
-      lastRunAt: String(Date.now() - 1000 * 60 * 5),
-      lastRunStatus: "RUNNING",
-      lastRunMessage: "In progress",
-      createdAt: String(Date.now() - 1000 * 60 * 60 * 24 * 7),
-      updatedAt: String(Date.now() - 1000 * 60 * 60),
-      createdBy: "demo",
-      parameters: emptyParams,
-    },
-  ]
-}
-
 export function DashboardRunningJobs() {
-  const { demoMode } = useDemoMode()
-
   const { data: scheduledTasks, isLoading } = useQuery<ScheduledTask[]>({
-    queryKey: ["scheduled-tasks", demoMode],
+    queryKey: ["scheduled-tasks"],
     queryFn: async () => {
-      if (demoMode) return demoTasks()
       const res = await getScheduledTasks()
       if (res.error) throw new Error("Failed to fetch scheduled tasks")
       return res.data || []

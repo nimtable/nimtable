@@ -66,7 +66,6 @@ import { cn } from "@/lib/utils"
 import { actionGenerateTableSummary } from "@/components/table/actions"
 import { type TableSummary as TableSummaryType } from "@/db/db"
 import { AITextInput } from "@/components/ai-text-input"
-import { useDemoMode } from "@/contexts/demo-mode-context"
 import { saveTableSummary } from "@/db/table-summary"
 import { ToastAction } from "@/components/ui/toast"
 
@@ -144,7 +143,6 @@ export function InfoTab({
   const { toast } = useToast()
   const router = useRouter()
   const { refresh } = useRefresh()
-  const { demoMode } = useDemoMode()
   const [showDropDialog, setShowDropDialog] = useState(false)
   const [showRenameDialog, setShowRenameDialog] = useState(false)
   const [newTableName, setNewTableName] = useState(table)
@@ -156,14 +154,6 @@ export function InfoTab({
 
   const handleDropTable = async () => {
     try {
-      if (demoMode) {
-        toast({
-          variant: "destructive",
-          title: "Disabled in demo mode",
-          description: "Dropping tables is not available in demo preview.",
-        })
-        return
-      }
       await dropTable(catalog, namespace, table)
       toast({
         title: "Table dropped successfully",
@@ -670,7 +660,6 @@ export function TableSummary({
   const queryClient = useQueryClient()
   const { toast } = useToast()
   const router = useRouter()
-  const { demoMode } = useDemoMode()
 
   const {
     data: tableSummary,
@@ -679,7 +668,6 @@ export function TableSummary({
   } = useQuery<TableSummaryType>({
     queryKey: ["table-summary", catalog, namespace, table],
     queryFn: async () => {
-      if (demoMode) return { summary: "Table summary is disabled in demo mode" }
       const res = await fetch(
         `/api/agent/table_summary?table=${table}&namespace=${namespace}&catalog=${catalog}`
       )
@@ -697,12 +685,6 @@ export function TableSummary({
     ActionResult,
     FormData
   >(async (_state: ActionResult, formData: FormData) => {
-    if (demoMode) {
-      return {
-        success: false,
-        error: "Table summary actions are disabled in demo mode",
-      }
-    }
     const action = formData.get("action") as string
 
     const actions = {
@@ -788,14 +770,6 @@ export function TableSummary({
     additionalPrompt?: string,
     _currentContent?: string
   ): Promise<void> => {
-    if (demoMode) {
-      toast({
-        title: "Disabled in demo mode",
-        description:
-          "Table summary generation is not available in demo preview.",
-      })
-      return
-    }
     const formData = new FormData()
     formData.append("action", "generate")
     if (additionalPrompt) {
@@ -805,13 +779,6 @@ export function TableSummary({
   }
 
   const handleSave = async (content: string): Promise<void> => {
-    if (demoMode) {
-      toast({
-        title: "Disabled in demo mode",
-        description: "Saving table summary is not available in demo preview.",
-      })
-      return
-    }
     const formData = new FormData()
     formData.append("action", "edit")
     formData.append("summary", content)
@@ -823,9 +790,6 @@ export function TableSummary({
     if (result && !result.success) {
       const err = result.error || ""
       const isAiNotConfigured = err.includes("AI is not configured")
-      const isDemoDisabled =
-        err.toLowerCase().includes("disabled in demo mode") ||
-        err.toLowerCase().includes("demo mode")
 
       if (isAiNotConfigured) {
         toast({
@@ -840,14 +804,6 @@ export function TableSummary({
               Open Settings
             </ToastAction>
           ),
-        })
-        return
-      }
-
-      if (isDemoDisabled) {
-        toast({
-          title: "Disabled in demo mode",
-          description: "AI Generate is not available in demo preview.",
         })
         return
       }

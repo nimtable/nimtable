@@ -6,7 +6,6 @@ import { Activity, AlertCircle, Database, GitCompare, Info } from "lucide-react"
 
 import { OverviewContext } from "./OverviewProvider"
 import { getScheduledTasks, type ScheduledTask } from "@/lib/client"
-import { useDemoMode } from "@/contexts/demo-mode-context"
 import {
   computeHealthScoreDetails,
   getTablesNeedingCompaction,
@@ -19,61 +18,14 @@ import {
 } from "@/components/ui/tooltip"
 import { Badge } from "@/components/ui/badge"
 
-function demoScheduledTasks(): ScheduledTask[] {
-  // Minimal demo tasks to make the dashboard feel alive in demo mode.
-  const emptyParams = {} as ScheduledTask["parameters"]
-  return [
-    {
-      id: 1,
-      taskName: "daily-compaction",
-      taskType: "OPTIMIZE",
-      enabled: true,
-      catalogName: "s3-tables-catalog-demo",
-      namespace: "public",
-      tableName: "t_compact",
-      cronExpression: "0 2 * * *",
-      cronDescription: "Every day at 2:00 AM",
-      nextRunAt: String(Date.now() + 1000 * 60 * 30),
-      lastRunAt: String(Date.now() - 1000 * 60 * 60 * 20),
-      lastRunStatus: "SUCCESS",
-      lastRunMessage: "Completed",
-      createdAt: String(Date.now() - 1000 * 60 * 60 * 24 * 30),
-      updatedAt: String(Date.now() - 1000 * 60 * 60 * 24),
-      createdBy: "demo",
-      parameters: emptyParams,
-    },
-    {
-      id: 2,
-      taskName: "hourly-snapshot-expiration",
-      taskType: "OPTIMIZE",
-      enabled: true,
-      catalogName: "s3-tables-catalog-demo",
-      namespace: "public",
-      tableName: "datagen_t",
-      cronExpression: "0 * * * *",
-      cronDescription: "Every hour",
-      nextRunAt: String(Date.now() + 1000 * 60 * 8),
-      lastRunAt: String(Date.now() - 1000 * 60 * 5),
-      lastRunStatus: "RUNNING",
-      lastRunMessage: "In progress",
-      createdAt: String(Date.now() - 1000 * 60 * 60 * 24 * 7),
-      updatedAt: String(Date.now() - 1000 * 60 * 60),
-      createdBy: "demo",
-      parameters: emptyParams,
-    },
-  ]
-}
-
 export function DashboardKpiGrid() {
   const { tables, isFileDistributionLoading } = useContext(OverviewContext)
-  const { demoMode } = useDemoMode()
 
   const { data: scheduledTasks, isLoading: isLoadingTasks } = useQuery<
     ScheduledTask[]
   >({
-    queryKey: ["scheduled-tasks", demoMode],
+    queryKey: ["scheduled-tasks"],
     queryFn: async () => {
-      if (demoMode) return demoScheduledTasks()
       const response = await getScheduledTasks()
       if (response.error) throw new Error("Failed to fetch scheduled tasks")
       return response.data || []

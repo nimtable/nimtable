@@ -20,15 +20,6 @@ import { CatalogConfig, LoadTableResult, PartitionSpec } from "./api"
 import { getCatalogs } from "./client"
 import { createClient, createConfig } from "@hey-api/client-fetch"
 import { getApiBaseUrl } from "./api-config"
-import {
-  DEMO_CATALOGS,
-  DEMO_NAMESPACE_TABLES,
-  DEMO_SAMPLE_DATA,
-  DEMO_TABLE_DISTRIBUTIONS,
-  DEMO_TABLE_METADATA,
-  getDemoTableKey,
-} from "./demo-data"
-import { isDemoModeEnabled } from "./demo-mode"
 
 // Re-export types from api.ts, ensuring application code don't need to access the api directly.
 export type {
@@ -50,9 +41,6 @@ function isBrowser() {
 }
 
 export async function loadCatalogNames(): Promise<string[]> {
-  if (isDemoModeEnabled()) {
-    return DEMO_CATALOGS
-  }
   try {
     // Create a properly configured client for server-side or browser-side usage
     const baseUrl = getApiBaseUrl(!isBrowser())
@@ -85,9 +73,6 @@ export async function loadNamespacesAndTables(
   catalog: string,
   inBrowser: boolean = true
 ): Promise<NamespaceTables[]> {
-  if (isDemoModeEnabled() && DEMO_NAMESPACE_TABLES[catalog]) {
-    return DEMO_NAMESPACE_TABLES[catalog]
-  }
   const api = catalogApi(catalog, inBrowser)
 
   function normalizeNamespaceParts(parts: string[]): string[] | null {
@@ -203,10 +188,6 @@ export async function loadTableData(
   namespace: string,
   table: string
 ): Promise<LoadTableResult> {
-  const key = getDemoTableKey(catalog, namespace, table)
-  if (isDemoModeEnabled() && DEMO_TABLE_METADATA[key]) {
-    return DEMO_TABLE_METADATA[key]
-  }
   const api = catalogApi(catalog, isBrowser())
   const response = await api.v1.loadTable(namespace, table)
   return response
@@ -217,9 +198,6 @@ export async function dropTable(
   namespace: string,
   table: string
 ): Promise<void> {
-  if (isDemoModeEnabled()) {
-    throw new Error("Table deletion is disabled in demo mode")
-  }
   const api = catalogApi(catalog)
   await api.v1.dropTable(namespace, table)
 }
@@ -230,9 +208,6 @@ export async function renameTable(
   sourceTable: string,
   destinationTable: string
 ): Promise<void> {
-  if (isDemoModeEnabled()) {
-    throw new Error("able renaming is disabled in demo mode")
-  }
   const api = catalogApi(catalog)
   await api.v1.renameTable({
     source: {
@@ -266,31 +241,6 @@ export async function runQuery(
   query: string
 ): Promise<{ columns: string[]; rows: any[][]; error?: string }> {
   try {
-    if (isDemoModeEnabled()) {
-      const demoEntries = Object.entries(DEMO_SAMPLE_DATA)
-      const match = demoEntries.find(([key]) => {
-        const [catalog, namespace, table] = key.split(".")
-        return (
-          query.includes(catalog) &&
-          query.includes(namespace) &&
-          query.includes(table)
-        )
-      })
-
-      if (match) {
-        const [, sample] = match
-        return {
-          columns: sample.columns,
-          rows: sample.rows,
-        }
-      }
-
-      return {
-        columns: [],
-        rows: [],
-        error: "Only demo tables are queryable in demo mode",
-      }
-    }
     // In browser environment, use relative path
     if (isBrowser()) {
       const response = await fetch(
@@ -431,10 +381,6 @@ export async function getFileDistribution(
   tableId: string,
   snapshotId?: string
 ): Promise<DistributionData> {
-  const key = getDemoTableKey(catalog, namespace, tableId)
-  if (isDemoModeEnabled() && DEMO_TABLE_DISTRIBUTIONS[key]) {
-    return DEMO_TABLE_DISTRIBUTIONS[key]
-  }
   const url = snapshotId
     ? `/api/distribution/${catalog}/${namespace}/${tableId}/${snapshotId}`
     : `/api/distribution/${catalog}/${namespace}/${tableId}`
@@ -542,11 +488,6 @@ export async function fetchSampleData(
   table: string,
   pagination: PaginationParams
 ): Promise<FetchSampleDataResult> {
-  const key = getDemoTableKey(catalog, namespace, table)
-  if (isDemoModeEnabled() && DEMO_SAMPLE_DATA[key]) {
-    const sample = DEMO_SAMPLE_DATA[key]
-    return sample
-  }
   // First, get the total count of rows
   const countQuery = `SELECT COUNT(*) as total FROM \`${catalog}\`.\`${namespace}\`.\`${table}\``
   const countResult = await runQuery(countQuery)

@@ -67,6 +67,14 @@ spark.sql.defaultCatalog                             local
 `
 
 const CONNECTION_PRESETS: Record<string, CatalogTemplate> = {
+  "local-hadoop": {
+    name: "Local (Hadoop)",
+    type: "hadoop",
+    uri: "",
+    warehouse: "/tmp/warehouse",
+    properties: [],
+    inputType: "form",
+  },
   "rest-s3": {
     name: "REST + S3",
     type: "rest",
@@ -170,6 +178,8 @@ export type CreateCatalogFormData = {
 
 function suggestNameForPreset(presetKey: string) {
   switch (presetKey) {
+    case "local-hadoop":
+      return "local"
     case "rest-s3":
       return "rest_catalog"
     case "jdbc-s3":
@@ -612,7 +622,6 @@ export function CreateCatalogForm({
       <Tabs value={mode} onValueChange={(v) => setMode(v as typeof mode)}>
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <h3 className="text-base font-medium">Connect a catalog</h3>
             <p className="text-sm text-muted-foreground">
               Choose a guided setup, or paste an existing Iceberg catalog
               config.

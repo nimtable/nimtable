@@ -9,8 +9,6 @@ import { useQueries } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import { getTableInfo } from "@/lib/client"
 import { useContext, useMemo, useState } from "react"
-import { useDemoMode } from "@/contexts/demo-mode-context"
-import { DEMO_TABLE_METADATA, getDemoTableKey } from "@/lib/demo-data"
 import {
   Tooltip,
   TooltipContent,
@@ -26,7 +24,6 @@ import {
 
 export function ActivityFeed() {
   const { tables, isLoading: isLoadingTables } = useContext(OverviewContext)
-  const { demoMode } = useDemoMode()
   const [timeRange, setTimeRange] = useState<"7d" | "30d" | "all">("30d")
   const onTimeRangeChange = (v: string) => {
     if (v === "7d" || v === "30d" || v === "all") setTimeRange(v)
@@ -42,20 +39,6 @@ export function ActivityFeed() {
       ],
       queryFn: () => {
         if (!table) return null
-        if (demoMode) {
-          const key = getDemoTableKey(
-            table.catalog,
-            table.namespace,
-            table.table
-          )
-          const data = DEMO_TABLE_METADATA[key]
-          return {
-            data,
-            table: table.table,
-            catalog: table.catalog,
-            namespace: table.namespace,
-          }
-        }
         return getTableInfo({
           path: {
             catalog: table.catalog,

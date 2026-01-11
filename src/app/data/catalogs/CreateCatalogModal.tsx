@@ -60,7 +60,7 @@ export function CreateCatalogModal({
               !formData.warehouse
             }
           >
-            {isSubmitting ? "Creating..." : "Create Catalog"}
+            {isSubmitting ? "Connecting..." : "Connect catalog"}
           </Button>
         )}
       </div>
@@ -73,7 +73,7 @@ export function CreateCatalogModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Database className="h-5 w-5" />
-            Create New Catalog
+            Connect catalog
           </DialogTitle>
         </DialogHeader>
         <CreateCatalogForm

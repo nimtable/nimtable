@@ -10,13 +10,10 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { getTableInfo } from "@/lib/client"
 import { formatDate } from "@/lib/format"
-import { useDemoMode } from "@/contexts/demo-mode-context"
-import { DEMO_TABLE_METADATA, getDemoTableKey } from "@/lib/demo-data"
 
 export default function ActivityPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const { tables } = useContext(OverviewContext)
-  const { demoMode } = useDemoMode()
 
   const compactionQueries = useQueries({
     queries: tables.map((table) => ({
@@ -28,20 +25,6 @@ export default function ActivityPage() {
       ],
       queryFn: () => {
         if (!table) return null
-        if (demoMode) {
-          const key = getDemoTableKey(
-            table.catalog,
-            table.namespace,
-            table.table
-          )
-          const data = DEMO_TABLE_METADATA[key]
-          return {
-            data,
-            table: table.table,
-            catalog: table.catalog,
-            namespace: table.namespace,
-          }
-        }
         return getTableInfo({
           path: {
             catalog: table.catalog,
