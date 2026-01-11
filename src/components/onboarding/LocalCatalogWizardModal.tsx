@@ -482,14 +482,19 @@ export function LocalCatalogWizardModal({
                   </div>
 
                   <div className="rounded-lg border bg-muted/30 p-3 text-xs">
-                    <div className="font-medium text-foreground">After this step</div>
+                    <div className="font-medium text-foreground">
+                      After this step
+                    </div>
                     <div className="mt-1 text-muted-foreground space-y-1">
                       <div>
                         - Catalog: <code>{trimmedCatalog}</code> (warehouse{" "}
                         <code>{warehouse.trim() || "…"}</code>)
                       </div>
                       <div>
-                        - Namespace: <code>{trimmedCatalog}.{trimmedNamespace}</code>
+                        - Namespace:{" "}
+                        <code>
+                          {trimmedCatalog}.{trimmedNamespace}
+                        </code>
                       </div>
                     </div>
                   </div>
@@ -555,7 +560,9 @@ export function LocalCatalogWizardModal({
                   </div>
 
                   <div className="rounded-lg border bg-muted/30 p-3 text-xs">
-                    <div className="font-medium text-foreground">Table schema</div>
+                    <div className="font-medium text-foreground">
+                      Table schema
+                    </div>
                     <div className="mt-1 text-muted-foreground">
                       <div>
                         <code>id</code> BIGINT
@@ -571,7 +578,9 @@ export function LocalCatalogWizardModal({
 
                   {seedSummary && (
                     <div className="rounded-lg border bg-muted/30 p-3 text-xs">
-                      <div className="font-medium text-foreground">Last result</div>
+                      <div className="font-medium text-foreground">
+                        Last result
+                      </div>
                       <div className="mt-1 text-muted-foreground">
                         {seedSummary}
                       </div>
@@ -589,7 +598,11 @@ export function LocalCatalogWizardModal({
                       <Collapsible>
                         <div className="flex items-center justify-between">
                           <CollapsibleTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-8 px-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 px-2"
+                            >
                               Advanced: SQL
                               <ChevronDown className="ml-2 h-4 w-4" />
                             </Button>
@@ -660,8 +673,12 @@ export function LocalCatalogWizardModal({
 
                   {seedSummary && (
                     <div className="rounded-lg border bg-muted/30 p-3 text-xs">
-                      <div className="font-medium text-foreground">Last result</div>
-                      <div className="mt-1 text-muted-foreground">{seedSummary}</div>
+                      <div className="font-medium text-foreground">
+                        Last result
+                      </div>
+                      <div className="mt-1 text-muted-foreground">
+                        {seedSummary}
+                      </div>
                     </div>
                   )}
 
@@ -671,12 +688,18 @@ export function LocalCatalogWizardModal({
                       executed &&
                       normalizeSqlForCompare(executed) !==
                         normalizeSqlForCompare(previewSqlPopulate)
-                    const copyTarget = showExecuted ? executed : previewSqlPopulate
+                    const copyTarget = showExecuted
+                      ? executed
+                      : previewSqlPopulate
                     return (
                       <Collapsible>
                         <div className="flex items-center justify-between">
                           <CollapsibleTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-8 px-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 px-2"
+                            >
                               Advanced: SQL
                               <ChevronDown className="ml-2 h-4 w-4" />
                             </Button>
@@ -757,7 +780,9 @@ export function LocalCatalogWizardModal({
                 onClick={() => runStep(2)}
                 disabled={!createDemo || isWorking}
               >
-                {stepStatus[2] === "working" ? "Running..." : "Create namespace"}
+                {stepStatus[2] === "working"
+                  ? "Running..."
+                  : "Create namespace"}
               </Button>
             </div>
           )}
