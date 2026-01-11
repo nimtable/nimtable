@@ -39,6 +39,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.iceberg.CatalogUtil;
+import org.apache.spark.sql.SparkSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -164,6 +165,50 @@ public class CatalogsServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         try {
+            // Sub-route: seed demo data for a catalog.
+            // POST /api/catalogs/{catalogName}/seed-demo
+            // 1) Prefer request URI parsing (works even if getPathInfo() behaves unexpectedly
+            // behind proxies).
+            String requestUri = req.getRequestURI();
+            if (requestUri != null) {
+                String suffix = "/seed-demo";
+                String suffixSlash = "/seed-demo/";
+                boolean isSeed = requestUri.endsWith(suffix) || requestUri.endsWith(suffixSlash);
+                int catalogsIdx = requestUri.indexOf("/api/catalogs/");
+                if (isSeed && catalogsIdx >= 0) {
+                    String after = requestUri.substring(catalogsIdx + "/api/catalogs/".length());
+                    // after: "{catalogName}/seed-demo" or "{catalogName}/seed-demo/"
+                    int slashIdx = after.indexOf('/');
+                    if (slashIdx > 0) {
+                        String catalogName = after.substring(0, slashIdx);
+                        if (!catalogName.isEmpty()) {
+                            handleSeedDemo(catalogName, req, resp);
+                            return;
+                        }
+                    }
+                }
+            }
+
+            // 2) Fallback to Servlet pathInfo parsing.
+            String pathInfo = req.getPathInfo();
+            if (pathInfo != null) {
+                // Expected: "/{catalogName}/seed-demo" (optionally with trailing "/")
+                String cleaned =
+                        pathInfo.endsWith("/")
+                                ? pathInfo.substring(0, pathInfo.length() - 1)
+                                : pathInfo;
+                String[] parts = cleaned.split("/");
+                // parts: ["", "{catalogName}", "seed-demo"]
+                if (parts.length >= 3
+                        && "seed-demo".equals(parts[2])
+                        && parts[1] != null
+                        && !parts[1].isEmpty()) {
+                    String catalogName = parts[1];
+                    handleSeedDemo(catalogName, req, resp);
+                    return;
+                }
+            }
+
             ObjectMapper mapper = new ObjectMapper();
             JsonNode root = mapper.readTree(req.getReader());
 
@@ -330,6 +375,171 @@ public class CatalogsServlet extends HttpServlet {
             resp.setContentType("application/json");
             mapper.writeValue(resp.getWriter(), errorResponse);
         }
+    }
+
+    private void handleSeedDemo(
+            String catalogName, HttpServletRequest req, HttpServletResponse resp)
+            throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.findAndRegisterModules();
+
+        if (catalogName == null || catalogName.trim().isEmpty()) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.setContentType("application/json");
+            mapper.writeValue(
+                    resp.getWriter(),
+                    Map.of("error", "Validation error", "message", "Catalog name is required"));
+            return;
+        }
+
+        boolean existsInConfig =
+                config.catalogs() != null
+                        && config.catalogs().stream().anyMatch(c -> catalogName.equals(c.name()));
+        Catalog dbCatalog = catalogRepository.findByName(catalogName);
+
+        if (!existsInConfig && dbCatalog == null) {
+            resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            resp.setContentType("application/json");
+            mapper.writeValue(
+                    resp.getWriter(),
+                    Map.of("error", "Not found", "message", "Catalog not found: " + catalogName));
+            return;
+        }
+
+        // Body is optional.
+        String body = req.getReader().lines().collect(Collectors.joining("\n")).trim();
+        JsonNode root = body.isEmpty() ? mapper.createObjectNode() : mapper.readTree(body);
+
+        String namespace = root.path("namespace").asText("nimtable_demo").trim();
+        String table = root.path("table").asText("sample").trim();
+        int requestedRows = root.path("rows").asInt(3);
+        String phase = root.path("phase").asText("all").trim().toLowerCase();
+
+        if (namespace.isEmpty() || table.isEmpty()) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.setContentType("application/json");
+            mapper.writeValue(
+                    resp.getWriter(),
+                    Map.of(
+                            "error",
+                            "Validation error",
+                            "message",
+                            "namespace and table are required"));
+            return;
+        }
+
+        // Keep the demo small and safe.
+        int rows = Math.max(0, Math.min(100, requestedRows));
+
+        String qCatalog = quoteIdent(catalogName);
+        String qNamespace = quoteIdent(namespace);
+        String qTable = quoteIdent(table);
+        String fqNamespace = qCatalog + "." + qNamespace;
+        String fqTable = qCatalog + "." + qNamespace + "." + qTable;
+
+        try {
+            SparkSession spark = LocalSpark.getInstance(config).getSpark();
+
+            List<String> sql = new ArrayList<>();
+            boolean alreadyHadData = false;
+            int insertedRows = 0;
+
+            // Step 1: create namespace
+            if (phase.equals("all") || phase.equals("namespace")) {
+                String createNamespaceSql =
+                        String.format("CREATE NAMESPACE IF NOT EXISTS %s", fqNamespace);
+                sql.add(createNamespaceSql);
+                spark.sql(createNamespaceSql);
+            }
+
+            // Step 2: create table
+            if (phase.equals("all") || phase.equals("table")) {
+                String createTableSql =
+                        String.format(
+                                "CREATE TABLE IF NOT EXISTS %s ("
+                                        + "id BIGINT, "
+                                        + "name STRING, "
+                                        + "created_at TIMESTAMP"
+                                        + ") USING iceberg",
+                                fqTable);
+                sql.add(createTableSql);
+                spark.sql(createTableSql);
+            }
+
+            // Step 3: populate
+            if (phase.equals("all") || phase.equals("populate")) {
+                String countSql = String.format("SELECT count(*) AS c FROM %s", fqTable);
+                sql.add(countSql);
+                long count =
+                        spark.sql(countSql).collectAsList().stream()
+                                .findFirst()
+                                .map(r -> ((Number) r.getAs("c")).longValue())
+                                .orElse(0L);
+
+                alreadyHadData = count > 0;
+
+                if (!alreadyHadData && rows > 0) {
+                    String values =
+                            " (1, 'alice', current_timestamp()),"
+                                    + " (2, 'bob', current_timestamp()),"
+                                    + " (3, 'cathy', current_timestamp())";
+                    // If caller requests fewer than 3, truncate; if more, keep 3 (simple,
+                    // predictable).
+                    if (rows < 3) {
+                        if (rows == 1) {
+                            values = " (1, 'alice', current_timestamp())";
+                        } else {
+                            values =
+                                    " (1, 'alice', current_timestamp()), (2, 'bob', current_timestamp())";
+                        }
+                    }
+                    String insertSql = String.format("INSERT INTO %s VALUES%s", fqTable, values);
+                    sql.add(insertSql);
+                    spark.sql(insertSql);
+                    insertedRows = Math.min(rows, 3);
+                }
+            }
+
+            resp.setStatus(HttpServletResponse.SC_OK);
+            resp.setContentType("application/json");
+            mapper.writeValue(
+                    resp.getWriter(),
+                    Map.of(
+                            "catalog",
+                            catalogName,
+                            "namespace",
+                            namespace,
+                            "table",
+                            table,
+                            "tableFqn",
+                            catalogName + "." + namespace + "." + table,
+                            "phase",
+                            phase,
+                            "sql",
+                            sql,
+                            "alreadyHadData",
+                            alreadyHadData,
+                            "insertedRows",
+                            insertedRows));
+        } catch (Exception e) {
+            LOG.error("Failed to seed demo table for catalog: {}", catalogName, e);
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            resp.setContentType("application/json");
+            mapper.writeValue(
+                    resp.getWriter(),
+                    Map.of(
+                            "error",
+                            "Failed to seed demo table",
+                            "message",
+                            e.getMessage() == null ? "Unknown error" : e.getMessage(),
+                            "details",
+                            getDetailedErrorMessage(e)));
+        }
+    }
+
+    private static String quoteIdent(String ident) {
+        // Spark SQL uses backticks for identifiers. Escape embedded backticks defensively.
+        return "`" + ident.replace("`", "``") + "`";
     }
 
     private void purgeCatalogData(String catalogName) {

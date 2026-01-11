@@ -237,6 +237,45 @@ export async function createNamespace(
   })
 }
 
+export async function seedDemoTable(
+  catalogName: string,
+  opts?: { namespace?: string; table?: string; rows?: number; phase?: string }
+): Promise<{
+  catalog: string
+  namespace: string
+  table: string
+  tableFqn: string
+  phase: string
+  sql: string[]
+  alreadyHadData: boolean
+  insertedRows: number
+}> {
+  const safeCatalogName = encodeURIComponent(catalogName)
+  const response = await fetch(`/api/catalogs/${safeCatalogName}/seed-demo`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      namespace: opts?.namespace,
+      table: opts?.table,
+      rows: opts?.rows,
+      phase: opts?.phase,
+    }),
+  })
+
+  if (!response.ok) {
+    let message = `HTTP ${response.status} ${response.statusText}`
+    try {
+      const data = await response.json()
+      message = data?.message || data?.error || message
+    } catch {
+      // ignore
+    }
+    throw new Error(message)
+  }
+
+  return await response.json()
+}
+
 export async function runQuery(
   query: string
 ): Promise<{ columns: string[]; rows: any[][]; error?: string }> {
