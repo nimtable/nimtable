@@ -40,7 +40,6 @@ import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useDemoMode } from "@/contexts/demo-mode-context"
 import { useToast } from "@/hooks/use-toast"
 import { errorToString } from "@/lib/utils"
 import { deleteCatalog } from "@/lib/client/sdk.gen"
@@ -65,7 +64,6 @@ export function CatalogsContent() {
     isLoading: isLoadingCatalogs,
     refetch: refetchCatalogs,
   } = useCatalogs()
-  const { demoMode } = useDemoMode()
   const { toast } = useToast()
   const queryClient = useQueryClient()
   const { namespaces } = useNamespaces(catalogs || [])
@@ -88,35 +86,22 @@ export function CatalogsContent() {
 
   // Get catalog configurations
   const catalogConfigs = useQueries({
-    queries: demoMode
-      ? []
-      : (catalogs || []).map((catalog) => ({
-          queryKey: ["catalog-config", catalog],
-          queryFn: () => getCatalogConfig(catalog),
-          enabled: !!catalog,
-        })),
+    queries: (catalogs || []).map((catalog) => ({
+      queryKey: ["catalog-config", catalog],
+      queryFn: () => getCatalogConfig(catalog),
+      enabled: !!catalog,
+    })),
   })
 
-  const catalogConfigMap = demoMode
-    ? {
-        demo: {
-          defaults: {
-            type: "demo",
-            warehouse: "demo",
-            properties: {},
-          },
-          overrides: {},
-        },
+  const catalogConfigMap = catalogConfigs.reduce(
+    (acc, query, index) => {
+      if (query.data && catalogs?.[index]) {
+        acc[catalogs[index]] = query.data
       }
-    : catalogConfigs.reduce(
-        (acc, query, index) => {
-          if (query.data && catalogs?.[index]) {
-            acc[catalogs[index]] = query.data
-          }
-          return acc
-        },
-        {} as Record<string, any>
-      )
+      return acc
+    },
+    {} as Record<string, any>
+  )
 
   // Get table metadata for each table
   const tableMetadataQueries = useQueries({
@@ -329,16 +314,14 @@ export function CatalogsContent() {
           </div>
           <button
             className="btn-secondary flex items-center gap-2"
-            onClick={() => !demoMode && setMirrorModalOpen(true)}
-            disabled={demoMode}
+            onClick={() => setMirrorModalOpen(true)}
           >
             <ExternalLink className="w-4 h-4" />
             <span>Mirror external catalog</span>
           </button>
           <Button
             className="bg-primary hover:bg-primary/90 text-primary-foreground"
-            onClick={() => !demoMode && setCreateModalOpen(true)}
-            disabled={demoMode}
+            onClick={() => setCreateModalOpen(true)}
           >
             <Plus className="w-4 h-4 mr-0" />
             Create new catalog
@@ -472,11 +455,9 @@ export function CatalogsContent() {
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          disabled={demoMode}
                           className="text-destructive focus:bg-destructive/10 focus:text-destructive"
                           onSelect={(e) => {
                             e.preventDefault()
-                            if (demoMode) return
                             setDisconnectCatalogName(catalog)
                           }}
                         >

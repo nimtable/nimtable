@@ -27,8 +27,6 @@ import { OverviewContext } from "./OverviewProvider"
 import { getTableInfo } from "@/lib/client"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { useDemoMode } from "@/contexts/demo-mode-context"
-import { DEMO_TABLE_METADATA, getDemoTableKey } from "@/lib/demo-data"
 
 type SnapshotSummary = Record<string, any>
 
@@ -61,7 +59,6 @@ function bucketFreshness(hoursAgo: number) {
 
 export function DashboardDataDashboards() {
   const { tables } = useContext(OverviewContext)
-  const { demoMode } = useDemoMode()
 
   const definedTables = useMemo(
     () => tables.filter((t): t is NonNullable<typeof t> => Boolean(t)),
@@ -83,22 +80,8 @@ export function DashboardDataDashboards() {
   // Fetch table metadata (snapshots) for trends & freshness.
   const tableInfoQueries = useQueries({
     queries: definedTables.map((table) => ({
-      queryKey: [
-        "tableInfo",
-        table.catalog,
-        table.namespace,
-        table.table,
-        demoMode,
-      ],
+      queryKey: ["tableInfo", table.catalog, table.namespace, table.table],
       queryFn: async () => {
-        if (demoMode) {
-          const key = getDemoTableKey(
-            table.catalog,
-            table.namespace,
-            table.table
-          )
-          return DEMO_TABLE_METADATA[key]
-        }
         const res = await getTableInfo({
           path: {
             catalog: table.catalog,

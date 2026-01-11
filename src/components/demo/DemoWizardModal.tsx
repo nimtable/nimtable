@@ -20,7 +20,6 @@ import { useToast } from "@/hooks/use-toast"
 import { createCatalog, getCatalogs } from "@/lib/client"
 import { setDemoContext } from "@/lib/demo-context"
 import { runQuery } from "@/lib/data-loader"
-import { disableDemoMode } from "@/lib/demo-mode"
 import { errorToString } from "@/lib/utils"
 
 type Step = 1 | 2 | 3 | 4
@@ -51,8 +50,6 @@ export function DemoWizardModal({
 
   useEffect(() => {
     if (!open) return
-    // Demo mode returns fake catalogs/tables and blocks real API calls, so force-disable it.
-    disableDemoMode()
     setLastError(null)
     setStep(1)
   }, [open])
@@ -208,7 +205,6 @@ FROM range(0, ${safeRows})`
               variant="ghost"
               size="sm"
               onClick={() => {
-                disableDemoMode()
                 setLastError(null)
                 setStep(1)
               }}

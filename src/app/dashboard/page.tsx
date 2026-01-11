@@ -6,7 +6,6 @@ import { ActivityFeed } from "./ActivityFeed"
 import { useContext, useEffect, useState } from "react"
 import { ConnectCatalogStep } from "@/components/onboarding/connect-catalog-step"
 import { Button } from "@/components/ui/button"
-import { useDemoMode } from "@/contexts/demo-mode-context"
 import { LayoutGrid } from "lucide-react"
 import { DashboardKpiGrid } from "./DashboardKpiGrid"
 import { DashboardQuickActions } from "./DashboardQuickActions"
@@ -32,7 +31,6 @@ export default function DashboardPage() {
   const router = useRouter()
   const { isLoading, isFileDistributionLoading, tables, refresh } =
     useContext(OverviewContext)
-  const { demoMode } = useDemoMode()
   const [demoOpen, setDemoOpen] = useState(false)
   const [demoContext, setDemoContextState] = useState<DemoContext | null>(null)
 
@@ -51,20 +49,14 @@ export default function DashboardPage() {
       if (response.error) throw new Error("Failed to fetch scheduled tasks")
       return response.data || []
     },
-    enabled: !demoMode, // demo mode already has local demo data in KPI card
   })
 
-  const demoSnapshot = {
-    taskFailures: 0,
-    runningJobs: 1,
-  }
-
-  const taskFailures = demoMode
-    ? demoSnapshot.taskFailures
-    : (scheduledTasks ?? []).filter((t) => t.lastRunStatus === "FAILED").length
-  const runningJobs = demoMode
-    ? demoSnapshot.runningJobs
-    : (scheduledTasks ?? []).filter((t) => t.lastRunStatus === "RUNNING").length
+  const taskFailures = (scheduledTasks ?? []).filter(
+    (t) => t.lastRunStatus === "FAILED"
+  ).length
+  const runningJobs = (scheduledTasks ?? []).filter(
+    (t) => t.lastRunStatus === "RUNNING"
+  ).length
 
   const health = computeHealthScoreDetails({
     totalTables: tables.length,

@@ -22,7 +22,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/contexts/auth-context"
-import { useDemoMode } from "@/contexts/demo-mode-context"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 
@@ -34,7 +33,6 @@ export function DashboardLayout({
   children: React.ReactNode
 }) {
   const { user, logout } = useAuth()
-  const { demoMode, disable } = useDemoMode()
   const searchParams = useSearchParams()
   const catalogParam = searchParams.get("catalog")
 
@@ -54,19 +52,6 @@ export function DashboardLayout({
               {title}
             </h1>
             <div className="flex items-center gap-4">
-              {demoMode && (
-                <button
-                  className="flex items-center gap-2 rounded-full bg-primary/90 px-3 py-1 text-[11px] font-semibold text-primary-foreground shadow-sm ring-1 ring-primary/30 transition hover:bg-primary hover:shadow-md"
-                  onClick={() => {
-                    disable()
-                    // hard refresh to reload real data
-                    window.location.reload()
-                  }}
-                >
-                  <span>Exit demo mode</span>
-                </button>
-              )}
-
               {catalogParam && (
                 <Link
                   href={`/data/catalog?catalog=${encodeURIComponent(catalogParam)}`}
