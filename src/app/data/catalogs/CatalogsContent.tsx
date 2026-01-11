@@ -8,6 +8,7 @@ import {
   Search,
   MoreHorizontal,
   Unlink,
+  Trash2,
 } from "lucide-react"
 import { useQueries } from "@tanstack/react-query"
 import { formatDistanceToNow } from "date-fns"
@@ -84,6 +85,9 @@ export function CatalogsContent() {
   const [disconnectCatalogName, setDisconnectCatalogName] = useState<
     string | null
   >(null)
+  const [deleteCatalogName, setDeleteCatalogName] = useState<string | null>(
+    null
+  )
   const router = useRouter()
 
   // Get catalog configurations
@@ -104,6 +108,17 @@ export function CatalogsContent() {
     },
     {} as Record<string, any>
   )
+
+  const isLocalCatalog = (catalogName: string) => {
+    const cfg = catalogConfigMap[catalogName]
+    const type = cfg?.defaults?.type ?? cfg?.type
+    const warehouse = cfg?.defaults?.warehouse ?? cfg?.warehouse
+    return (
+      type === "hadoop" &&
+      typeof warehouse === "string" &&
+      warehouse.trim().startsWith("/")
+    )
+  }
 
   // Get table metadata for each table
   const tableMetadataQueries = useQueries({
@@ -209,7 +224,7 @@ export function CatalogsContent() {
           catalogName,
         },
         query: {
-          purge: true,
+          purge: false,
         },
       })
 
@@ -232,7 +247,7 @@ export function CatalogsContent() {
       toast({
         title: "Catalog disconnected from Nimtable",
         description:
-          "This removed the catalog metadata from Nimtable (and purged Nimtable-managed data). External catalog and Iceberg tables/data were not deleted.",
+          "This removed the catalog metadata from Nimtable. External catalog and Iceberg tables/data were not deleted.",
       })
 
       await refetchCatalogs()
@@ -240,6 +255,49 @@ export function CatalogsContent() {
       toast({
         variant: "destructive",
         title: "Failed to disconnect catalog from Nimtable",
+        description: errorToString(error),
+      })
+    }
+  }
+
+  const handleDeleteLocalCatalog = async (catalogName: string) => {
+    try {
+      await deleteCatalog({
+        path: {
+          catalogName,
+        },
+        query: {
+          purge: true,
+        },
+      })
+
+      // Clear cached data so other pages (e.g., Dashboard metrics) don't keep showing stale catalog tables.
+      queryClient.removeQueries({
+        predicate: (q) => {
+          const key = q.queryKey
+          const root = Array.isArray(key) ? key[0] : key
+          return (
+            root === "catalogs" ||
+            root === "namespaces" ||
+            root === "tables" ||
+            root === "catalog-config" ||
+            root === "catalog-details" ||
+            root === "table-metadata"
+          )
+        },
+      })
+
+      toast({
+        title: "Local catalog deleted from Nimtable",
+        description:
+          "This removed the catalog from Nimtable and purged Nimtable-managed metadata. Warehouse files on disk were not deleted automatically.",
+      })
+
+      await refetchCatalogs()
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Failed to delete local catalog",
         description: errorToString(error),
       })
     }
@@ -393,7 +451,14 @@ export function CatalogsContent() {
                   }}
                 >
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-normal text-card-foreground">
-                    <span>{catalog}</span>
+                    <div className="flex items-center gap-2">
+                      <span>{catalog}</span>
+                      {isLocalCatalog(catalog) && (
+                        <span className="inline-flex items-center rounded-full border bg-muted/40 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                          Local
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground text-right">
                     <a
@@ -482,6 +547,21 @@ export function CatalogsContent() {
                           <Unlink className="h-4 w-4" />
                           Disconnect
                         </DropdownMenuItem>
+                        {isLocalCatalog(catalog) && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                              onSelect={(e) => {
+                                e.preventDefault()
+                                setDeleteCatalogName(catalog)
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          </>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </td>
@@ -664,8 +744,8 @@ export function CatalogsContent() {
           <AlertDialogHeader>
             <AlertDialogTitle>Disconnect from Nimtable?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will remove this catalog from Nimtable's database and purge
-              Nimtable-managed metadata. It will{" "}
+              This will remove this catalog from Nimtable&apos;s database. It
+              will{" "}
               <span className="font-medium">
                 not delete the external catalog
               </span>{" "}
@@ -682,6 +762,38 @@ export function CatalogsContent() {
               }}
             >
               Disconnect
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete local catalog confirmation */}
+      <AlertDialog
+        open={deleteCatalogName !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteCatalogName(null)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete local catalog?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This is only available for local Hadoop catalogs. This will remove
+              the catalog from Nimtable and purge Nimtable-managed metadata.
+              Warehouse files on disk are not deleted automatically.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (!deleteCatalogName) return
+                void handleDeleteLocalCatalog(deleteCatalogName)
+                setDeleteCatalogName(null)
+              }}
+            >
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
