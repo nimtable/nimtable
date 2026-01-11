@@ -622,7 +622,6 @@ export function CreateCatalogForm({
       <Tabs value={mode} onValueChange={(v) => setMode(v as typeof mode)}>
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <h3 className="text-base font-medium">Connect a catalog</h3>
             <p className="text-sm text-muted-foreground">
               Choose a guided setup, or paste an existing Iceberg catalog
               config.
