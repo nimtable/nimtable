@@ -53,6 +53,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 import { CreateCatalogModal } from "./CreateCatalogModal"
+import { LocalCatalogWizardModal } from "@/components/onboarding/LocalCatalogWizardModal"
 import { useNamespaces } from "../hooks/useNamespaces"
 import { useCatalogs } from "../hooks/useCatalogs"
 import { useAllTables } from "../hooks/useTables"
@@ -71,6 +72,7 @@ export function CatalogsContent() {
   const [searchQuery, setSearchQuery] = useState<string>("")
   const [mirrorModalOpen, setMirrorModalOpen] = useState<boolean>(false)
   const [createModalOpen, setCreateModalOpen] = useState<boolean>(false)
+  const [localCatalogOpen, setLocalCatalogOpen] = useState<boolean>(false)
   const [formData, setFormData] = useState({
     catalogName: "",
     endpoint: "",
@@ -295,6 +297,10 @@ export function CatalogsContent() {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden bg-background min-h-screen">
+      <LocalCatalogWizardModal
+        open={localCatalogOpen}
+        onOpenChange={setLocalCatalogOpen}
+      />
       <DataHierarchyHeader
         current="catalogs"
         count={filteredCatalogs?.length || 0}
@@ -319,6 +325,13 @@ export function CatalogsContent() {
             <ExternalLink className="w-4 h-4" />
             <span>Mirror external catalog</span>
           </button>
+          <Button
+            variant="outline"
+            className="bg-card border-input"
+            onClick={() => setLocalCatalogOpen(true)}
+          >
+            Create local Iceberg catalog
+          </Button>
           <Button
             className="bg-primary hover:bg-primary/90 text-primary-foreground"
             onClick={() => setCreateModalOpen(true)}
