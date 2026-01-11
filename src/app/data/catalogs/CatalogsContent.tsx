@@ -318,27 +318,32 @@ export function CatalogsContent() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <button
-            className="btn-secondary flex items-center gap-2"
-            onClick={() => setMirrorModalOpen(true)}
-          >
-            <ExternalLink className="w-4 h-4" />
-            <span>Mirror external catalog</span>
-          </button>
-          <Button
-            variant="outline"
-            className="bg-card border-input"
-            onClick={() => setLocalCatalogOpen(true)}
-          >
-            Create local Iceberg catalog
-          </Button>
-          <Button
-            className="bg-primary hover:bg-primary/90 text-primary-foreground"
-            onClick={() => setCreateModalOpen(true)}
-          >
-            <Plus className="w-4 h-4 mr-0" />
-            Connect catalog
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                size="sm"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add catalog
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setCreateModalOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Connect catalog
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setLocalCatalogOpen(true)}>
+                <FolderTreeIcon className="mr-2 h-4 w-4" />
+                Create local Iceberg catalog
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setMirrorModalOpen(true)}>
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Mirror external catalog
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
