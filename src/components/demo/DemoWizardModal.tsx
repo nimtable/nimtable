@@ -54,16 +54,6 @@ export function DemoWizardModal({
     setStep(1)
   }, [open])
 
-  const tableUrl = useMemo(() => {
-    const params = new URLSearchParams({
-      catalog,
-      namespace,
-      table,
-      tab: "info",
-    })
-    return `/data/tables/table?${params.toString()}`
-  }, [catalog, namespace, table])
-
   const namespaceSql = useMemo(() => {
     return `CREATE NAMESPACE IF NOT EXISTS ${catalog}.${namespace}`
   }, [catalog, namespace])
@@ -161,7 +151,9 @@ FROM range(0, ${safeRows})`
 
       setDemoContext({ catalog, namespace, table })
       onCreated?.()
-      setStep(4)
+      // Requirement: after creating the demo catalog/table, send user to Catalogs.
+      onOpenChange(false)
+      router.push("/data/catalogs")
     } catch (e) {
       const msg = errorToString(e)
       setLastError(msg)
@@ -336,60 +328,8 @@ FROM range(0, ${safeRows})`
                   {catalog}.{namespace}.{table}
                 </code>
               </div>
-
-              <div className="space-y-2">
-                <div className="text-sm font-medium">
-                  Next, what do you want to do?
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    onClick={() => {
-                      onOpenChange(false)
-                      router.push(
-                        `/data/catalog?catalog=${encodeURIComponent(catalog)}`
-                      )
-                    }}
-                  >
-                    Browse demo catalog
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    onClick={() => {
-                      onOpenChange(false)
-                      router.push(tableUrl)
-                    }}
-                  >
-                    Open table details
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    onClick={() => {
-                      const url = `/data/sql-editor?catalog=${encodeURIComponent(
-                        catalog
-                      )}&namespace=${encodeURIComponent(
-                        namespace
-                      )}&table=${encodeURIComponent(table)}`
-                      onOpenChange(false)
-                      router.push(url)
-                    }}
-                  >
-                    Open SQL editor
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    onClick={() => {
-                      const url = `/data/tables/table?catalog=${encodeURIComponent(
-                        catalog
-                      )}&namespace=${encodeURIComponent(
-                        namespace
-                      )}&table=${encodeURIComponent(table)}&tab=snapshots`
-                      onOpenChange(false)
-                      router.push(url)
-                    }}
-                  >
-                    View snapshots
-                  </Button>
-                </div>
+              <div className="text-sm text-muted-foreground">
+                Redirecting to <span className="font-medium">Catalogs</span>…
               </div>
             </div>
           )}
