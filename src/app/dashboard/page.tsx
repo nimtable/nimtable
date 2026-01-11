@@ -3,7 +3,7 @@
 import { OverviewContext } from "./OverviewProvider"
 import { TableWatchlist } from "./TableWatchlist"
 import { ActivityFeed } from "./ActivityFeed"
-import { useContext, useEffect, useState } from "react"
+import { useContext, useState } from "react"
 import { ConnectCatalogStep } from "@/components/onboarding/connect-catalog-step"
 import { Button } from "@/components/ui/button"
 import { LayoutGrid } from "lucide-react"
@@ -13,30 +13,18 @@ import { DashboardRunningJobs } from "./DashboardRunningJobs"
 import { DashboardInsights } from "./DashboardInsights"
 import { DashboardWhatsChanged } from "./DashboardWhatsChanged"
 import { DashboardDataDashboards } from "./DashboardDataDashboards"
-import { DemoWizardModal } from "@/components/demo/DemoWizardModal"
-import {
-  clearDemoContext,
-  getDemoContext,
-  type DemoContext,
-} from "@/lib/demo-context"
+import { LocalCatalogWizardModal } from "@/components/onboarding/LocalCatalogWizardModal"
 import {
   computeHealthScoreDetails,
   getTablesNeedingCompaction,
 } from "./dashboard-health"
 import { getScheduledTasks, type ScheduledTask } from "@/lib/client"
 import { useQuery } from "@tanstack/react-query"
-import { useRouter } from "next/navigation"
 
 export default function DashboardPage() {
-  const router = useRouter()
   const { isLoading, isFileDistributionLoading, tables, refresh } =
     useContext(OverviewContext)
   const [demoOpen, setDemoOpen] = useState(false)
-  const [demoContext, setDemoContextState] = useState<DemoContext | null>(null)
-
-  useEffect(() => {
-    setDemoContextState(getDemoContext())
-  }, [])
   const definedTables = tables.filter((t): t is NonNullable<typeof t> =>
     Boolean(t)
   )
@@ -75,7 +63,7 @@ export default function DashboardPage() {
   if (tables.length === 0) {
     return (
       <div className="flex flex-1 flex-col overflow-hidden bg-background">
-        <DemoWizardModal open={demoOpen} onOpenChange={setDemoOpen} />
+        <LocalCatalogWizardModal open={demoOpen} onOpenChange={setDemoOpen} />
         {/* Top bar (match Optimization layout style) */}
         <div className="bg-card border-b border-border px-6 py-4">
           <div className="flex items-center justify-between">
@@ -91,49 +79,12 @@ export default function DashboardPage() {
               className="bg-card border-input"
               onClick={() => setDemoOpen(true)}
             >
-              Create demo Iceberg table
+              Create local Iceberg catalog
             </Button>
           </div>
-          {demoContext && (
-            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-muted/30 px-3 py-2">
-              <div className="text-sm">
-                <span className="text-muted-foreground">Demo ready:</span>{" "}
-                <span className="font-medium">
-                  {demoContext.catalog}.{demoContext.namespace}.
-                  {demoContext.table}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    const params = new URLSearchParams({
-                      catalog: demoContext.catalog,
-                      namespace: demoContext.namespace,
-                      table: demoContext.table,
-                      tab: "info",
-                    })
-                    router.push(`/data/tables/table?${params.toString()}`)
-                  }}
-                >
-                  Continue demo
-                </Button>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => {
-                    clearDemoContext()
-                    setDemoContextState(null)
-                  }}
-                >
-                  Clear
-                </Button>
-              </div>
-            </div>
-          )}
           <p className="mt-1 text-sm text-muted-foreground">
             Connect a catalog to start monitoring your Iceberg lakehouse, or
-            create a small local demo table.
+            create a local Iceberg catalog inside Nimtable.
           </p>
         </div>
 
@@ -160,43 +111,6 @@ export default function DashboardPage() {
             Overview
           </h2>
         </div>
-        {demoContext && (
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-muted/30 px-3 py-2">
-            <div className="text-sm">
-              <span className="text-muted-foreground">Demo ready:</span>{" "}
-              <span className="font-medium">
-                {demoContext.catalog}.{demoContext.namespace}.
-                {demoContext.table}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                size="sm"
-                onClick={() => {
-                  const params = new URLSearchParams({
-                    catalog: demoContext.catalog,
-                    namespace: demoContext.namespace,
-                    table: demoContext.table,
-                    tab: "info",
-                  })
-                  router.push(`/data/tables/table?${params.toString()}`)
-                }}
-              >
-                Continue demo
-              </Button>
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={() => {
-                  clearDemoContext()
-                  setDemoContextState(null)
-                }}
-              >
-                Clear
-              </Button>
-            </div>
-          </div>
-        )}
         <p className="mt-1 text-sm text-muted-foreground">
           Welcome back to your Iceberg lakehouse control center
         </p>

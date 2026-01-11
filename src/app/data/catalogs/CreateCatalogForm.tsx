@@ -67,6 +67,14 @@ spark.sql.defaultCatalog                             local
 `
 
 const CONNECTION_PRESETS: Record<string, CatalogTemplate> = {
+  "local-hadoop": {
+    name: "Local (Hadoop)",
+    type: "hadoop",
+    uri: "",
+    warehouse: "/tmp/warehouse",
+    properties: [],
+    inputType: "form",
+  },
   "rest-s3": {
     name: "REST + S3",
     type: "rest",
@@ -170,6 +178,8 @@ export type CreateCatalogFormData = {
 
 function suggestNameForPreset(presetKey: string) {
   switch (presetKey) {
+    case "local-hadoop":
+      return "local"
     case "rest-s3":
       return "rest_catalog"
     case "jdbc-s3":
