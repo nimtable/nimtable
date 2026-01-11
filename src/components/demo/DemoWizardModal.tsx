@@ -116,7 +116,8 @@ FROM range(0, ${safeRows})`
         title: "Catalog ready",
         description: `Created or reused catalog "${catalog}".`,
       })
-      setStep(3)
+      // Requirement: after creating the demo catalog, take the user to Catalogs.
+      window.location.assign("/data/catalogs")
     } catch (e) {
       const msg = errorToString(e)
       setLastError(msg)
