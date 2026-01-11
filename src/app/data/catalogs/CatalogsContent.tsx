@@ -36,7 +36,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { getCatalogConfig } from "@/lib/data-loader"
-import { loadTableData } from "@/lib/data-loader"
+import { getCatalogDetails, loadTableData } from "@/lib/data-loader"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { Input } from "@/components/ui/input"
@@ -109,10 +109,28 @@ export function CatalogsContent() {
     {} as Record<string, any>
   )
 
+  const catalogDetailsQueries = useQueries({
+    queries: (catalogs || []).map((catalog) => ({
+      queryKey: ["catalog-details", catalog],
+      queryFn: () => getCatalogDetails(catalog),
+      enabled: !!catalog,
+    })),
+  })
+
+  const catalogDetailsMap = catalogDetailsQueries.reduce(
+    (acc, query, index) => {
+      if (query.data && catalogs?.[index]) {
+        acc[catalogs[index]] = query.data
+      }
+      return acc
+    },
+    {} as Record<string, any>
+  )
+
   const isLocalCatalog = (catalogName: string) => {
-    const cfg = catalogConfigMap[catalogName]
-    const type = cfg?.defaults?.type ?? cfg?.type
-    const warehouse = cfg?.defaults?.warehouse ?? cfg?.warehouse
+    const cfg = catalogDetailsMap[catalogName]
+    const type = cfg?.type
+    const warehouse = cfg?.warehouse
     return (
       type === "hadoop" &&
       typeof warehouse === "string" &&
