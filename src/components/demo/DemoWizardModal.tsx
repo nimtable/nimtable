@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { useRouter } from "next/navigation"
 
 import {
   Dialog,
@@ -31,7 +30,6 @@ export function DemoWizardModal({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
-  const router = useRouter()
   const { toast } = useToast()
 
   const [step, setStep] = useState<Step>(1)
@@ -151,10 +149,8 @@ FROM range(0, ${safeRows})`
       setDemoContext({ catalog, namespace, table })
 
       // Requirement: after creating the demo catalog/table, send user to Catalogs.
-      // Important: navigate first, then close the modal. Closing can cause the
-      // parent (Dashboard) to re-render/unmount, which can otherwise interrupt navigation.
-      router.push("/data/catalogs")
-      onOpenChange(false)
+      // Use a hard navigation to avoid any client-side routing race conditions.
+      window.location.assign("/data/catalogs")
 
       // The Catalogs page will fetch fresh state; avoid triggering a Dashboard refresh race here.
     } catch (e) {
