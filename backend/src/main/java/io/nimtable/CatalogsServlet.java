@@ -47,9 +47,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.iceberg.CatalogUtil;
-import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SparkSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -91,7 +91,7 @@ public class CatalogsServlet extends HttpServlet {
                 config.catalogs() != null
                         ? config.catalogs().stream()
                                 .map(Config.Catalog::name)
-                                    .filter(name -> !DELETED_CONFIG_CATALOGS.contains(name))
+                                .filter(name -> !DELETED_CONFIG_CATALOGS.contains(name))
                                 .collect(Collectors.toList())
                         : new ArrayList<>();
         List<String> dbCatalogs =
@@ -364,8 +364,9 @@ public class CatalogsServlet extends HttpServlet {
             boolean isLocalHadoop =
                     (catalog != null && "hadoop".equalsIgnoreCase(catalog.getType()))
                             || (configCatalog != null
-                                    && (configCatalog.properties().containsKey(
-                                                    Config.Catalog.WAREHOUSE_LOCATION)
+                                    && (configCatalog
+                                                    .properties()
+                                                    .containsKey(Config.Catalog.WAREHOUSE_LOCATION)
                                             || "hadoop"
                                                     .equalsIgnoreCase(
                                                             configCatalog
@@ -620,9 +621,11 @@ public class CatalogsServlet extends HttpServlet {
         }
     }
 
-    private void deleteWarehouseDirectory(String catalogName, String warehousePath) throws IOException {
+    private void deleteWarehouseDirectory(String catalogName, String warehousePath)
+            throws IOException {
         if (warehousePath == null || warehousePath.isBlank()) {
-            LOG.info("No warehouse path recorded for catalog {}; skip deleting files.", catalogName);
+            LOG.info(
+                    "No warehouse path recorded for catalog {}; skip deleting files.", catalogName);
             return;
         }
 
@@ -690,9 +693,7 @@ public class CatalogsServlet extends HttpServlet {
         try {
             SparkSession spark = LocalSpark.getInstance(config).getSpark();
             Dataset<Row> namespaces =
-                    spark.sql(
-                            String.format(
-                                    "SHOW NAMESPACES IN `%s`", sanitizeIdent(catalogName)));
+                    spark.sql(String.format("SHOW NAMESPACES IN `%s`", sanitizeIdent(catalogName)));
             List<String> nsList =
                     namespaces.collectAsList().stream()
                             .map(
@@ -719,7 +720,10 @@ public class CatalogsServlet extends HttpServlet {
                 }
             }
         } catch (Exception e) {
-            LOG.warn("Failed to drop namespaces/tables for catalog {}: {}", catalogName, e.toString());
+            LOG.warn(
+                    "Failed to drop namespaces/tables for catalog {}: {}",
+                    catalogName,
+                    e.toString());
         }
     }
 
@@ -728,7 +732,8 @@ public class CatalogsServlet extends HttpServlet {
     }
 
     private void ensureWritable(Path warehouse) throws IOException {
-        ProcessBuilder pb = new ProcessBuilder("/bin/sh", "-c", "chmod -R u+rwX -- " + warehouse.toString());
+        ProcessBuilder pb =
+                new ProcessBuilder("/bin/sh", "-c", "chmod -R u+rwX -- " + warehouse.toString());
         pb.redirectErrorStream(true);
         Process proc = pb.start();
         try {
@@ -765,7 +770,8 @@ public class CatalogsServlet extends HttpServlet {
     }
 
     private void fallbackShellDelete(Path warehouse) throws IOException {
-        ProcessBuilder pb = new ProcessBuilder("/bin/sh", "-c", "rm -rf -- " + warehouse.toString());
+        ProcessBuilder pb =
+                new ProcessBuilder("/bin/sh", "-c", "rm -rf -- " + warehouse.toString());
         pb.redirectErrorStream(true);
         Process proc = pb.start();
         try {
