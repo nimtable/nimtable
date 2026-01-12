@@ -1,7 +1,7 @@
 "use client"
 
 import { Database, FileText, LayoutList, Plus, RefreshCw } from "lucide-react"
-import { useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useState, useEffect } from "react"
 import Link from "next/link"
 
@@ -20,11 +20,13 @@ import { DataHierarchyHeader } from "@/components/data/DataHierarchyHeader"
 
 export default function TablePage() {
   const params = useSearchParams()
+  const router = useRouter()
   const catalog = params.get("catalog")
   const namespace = params.get("namespace")
   const table = params.get("table")
   const tab = params.get("tab")
-  const isValidParams = catalog && namespace && table
+  const hasNamespace = catalog && namespace
+  const hasTable = hasNamespace && table
 
   const { data, isFetching, isRefetching, refetch } = useTableData(
     catalog as string,
@@ -52,6 +54,20 @@ export default function TablePage() {
     ? `/data/sql-editor?catalog=${catalog}${namespace ? `&namespace=${namespace}` : ""}${table ? `&table=${table}` : ""}`
     : "/data/sql-editor"
 
+  // If missing table but have catalog+namespace, redirect to tables list
+  if (!hasTable && hasNamespace) {
+    router.replace(
+      `/data/tables?catalog=${encodeURIComponent(
+        catalog as string
+      )}&namespace=${encodeURIComponent(namespace as string)}`
+    )
+    return null
+  }
+
+  if (!hasTable) {
+    return <div>Invalid params</div>
+  }
+
   if (isFetching) {
     return (
       <div className="flex h-full w-full items-center justify-center">
@@ -63,10 +79,6 @@ export default function TablePage() {
         />
       </div>
     )
-  }
-
-  if (!isValidParams) {
-    return <div>Invalid params</div>
   }
 
   if (!data) {

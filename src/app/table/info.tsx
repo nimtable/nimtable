@@ -217,141 +217,8 @@ export function InfoTab({
 
   return (
     <div className="space-y-8">
-      {/* Table Details */}
-      <div className="space-y-6">
-        <FileDistributionSection
-          tableId={table}
-          catalog={catalog}
-          namespace={namespace}
-          refreshKey={refreshKey}
-        />
-
-        <div className="grid grid-cols-2 gap-6">
-          <TableSummary
-            catalog={catalog}
-            namespace={namespace}
-            table={table}
-            tableData={tableData}
-          />
-
-          <div className="bg-card border border-border rounded-lg p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <TableIcon className="w-5 h-5 text-primary" />
-              <h3 className="text-base font-semibold text-card-foreground">
-                Table Information
-              </h3>
-            </div>
-            <div className="divide-y divide-muted/30">
-              <div className="px-6 py-3">
-                <div className="mb-1 flex items-center justify-between">
-                  <h4 className="text-xs font-medium text-muted-foreground">
-                    Table UUID
-                  </h4>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className={cn(
-                          "h-6 w-6 rounded-md transition-all duration-200",
-                          copyingField === "Table UUID"
-                            ? "bg-muted text-blue-500"
-                            : "text-muted-foreground"
-                        )}
-                        onClick={() =>
-                          copyToClipboard(
-                            tableData.metadata["table-uuid"],
-                            "Table UUID"
-                          )
-                        }
-                      >
-                        {copyingField === "Table UUID" ? (
-                          <Check className="h-3 w-3" />
-                        ) : (
-                          <Copy className="h-3 w-3" />
-                        )}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="left">
-                      <p>
-                        {copyingField === "Table UUID"
-                          ? "Copied!"
-                          : "Copy to clipboard"}
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-                <div className="rounded-md border border-muted/30 bg-muted/30 p-1.5 font-mono">
-                  <p className="break-all text-xs text-foreground/90">
-                    {tableData.metadata["table-uuid"]}
-                  </p>
-                </div>
-              </div>
-
-              <div className="px-6 py-3">
-                <div className="mb-1 flex items-center justify-between">
-                  <h4 className="text-xs font-medium text-muted-foreground">
-                    Location
-                  </h4>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className={cn(
-                          "h-6 w-6 rounded-md transition-all duration-200",
-                          copyingField === "Location"
-                            ? "bg-muted text-blue-500"
-                            : "text-muted-foreground"
-                        )}
-                        onClick={() =>
-                          copyToClipboard(
-                            tableData.metadata.location || "",
-                            "Location"
-                          )
-                        }
-                      >
-                        {copyingField === "Location" ? (
-                          <Check className="h-3 w-3" />
-                        ) : (
-                          <Copy className="h-3 w-3" />
-                        )}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="left">
-                      <p>
-                        {copyingField === "Location"
-                          ? "Copied!"
-                          : "Copy to clipboard"}
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-                <div className="rounded-md border border-muted/30 bg-muted/30 p-1.5 font-mono">
-                  <p className="break-all text-xs text-foreground/90">
-                    {tableData.metadata.location}
-                  </p>
-                </div>
-              </div>
-
-              <div className="px-6 py-3">
-                <h4 className="mb-1 text-xs font-medium text-muted-foreground">
-                  Last Updated
-                </h4>
-                <p className="pl-1 text-xs font-medium">
-                  {tableData.metadata["last-updated-ms"]
-                    ? new Date(
-                        tableData.metadata["last-updated-ms"]
-                      ).toLocaleString()
-                    : "-"}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Schema Section */}
-        <div className="bg-card border border-border rounded-lg p-6">
+      {/* Schema Section (first) */}
+      <div className="bg-card border border-border rounded-lg p-6">
           <div className="flex items-center gap-2 mb-4">
             <svg
               className="w-5 h-5 text-primary"
@@ -408,6 +275,136 @@ export function InfoTab({
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+
+    {/* Table context (summary) */}
+    <TableSummary
+      catalog={catalog}
+      namespace={namespace}
+      table={table}
+      tableData={tableData}
+    />
+
+    {/* Other details */}
+    <FileDistributionSection
+      tableId={table}
+      catalog={catalog}
+      namespace={namespace}
+      refreshKey={refreshKey}
+    />
+
+    <div className="bg-card border border-border rounded-lg p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <TableIcon className="w-5 h-5 text-primary" />
+          <h3 className="text-base font-semibold text-card-foreground">
+            Table Information
+          </h3>
+        </div>
+        <div className="divide-y divide-muted/30">
+          <div className="px-6 py-3">
+            <div className="mb-1 flex items-center justify-between">
+              <h4 className="text-xs font-medium text-muted-foreground">
+                Table UUID
+              </h4>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                      "h-6 w-6 rounded-md transition-all duration-200",
+                      copyingField === "Table UUID"
+                        ? "bg-muted text-blue-500"
+                        : "text-muted-foreground"
+                    )}
+                    onClick={() =>
+                      copyToClipboard(
+                        tableData.metadata["table-uuid"],
+                        "Table UUID"
+                      )
+                    }
+                  >
+                    {copyingField === "Table UUID" ? (
+                      <Check className="h-3 w-3" />
+                    ) : (
+                      <Copy className="h-3 w-3" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="left">
+                  <p>
+                    {copyingField === "Table UUID"
+                      ? "Copied!"
+                      : "Copy to clipboard"}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+            <div className="rounded-md border border-muted/30 bg-muted/30 p-1.5 font-mono">
+              <p className="break-all text-xs text-foreground/90">
+                {tableData.metadata["table-uuid"]}
+              </p>
+            </div>
+          </div>
+
+          <div className="px-6 py-3">
+            <div className="mb-1 flex items-center justify-between">
+              <h4 className="text-xs font-medium text-muted-foreground">
+                Location
+              </h4>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                      "h-6 w-6 rounded-md transition-all duration-200",
+                      copyingField === "Location"
+                        ? "bg-muted text-blue-500"
+                        : "text-muted-foreground"
+                    )}
+                    onClick={() =>
+                      copyToClipboard(
+                        tableData.metadata.location || "",
+                        "Location"
+                      )
+                    }
+                  >
+                    {copyingField === "Location" ? (
+                      <Check className="h-3 w-3" />
+                    ) : (
+                      <Copy className="h-3 w-3" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="left">
+                  <p>
+                    {copyingField === "Location"
+                      ? "Copied!"
+                      : "Copy to clipboard"}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+            <div className="rounded-md border border-muted/30 bg-muted/30 p-1.5 font-mono">
+              <p className="break-all text-xs text-foreground/90">
+                {tableData.metadata.location}
+              </p>
+            </div>
+          </div>
+
+          <div className="px-6 py-3">
+            <h4 className="mb-1 text-xs font-medium text-muted-foreground">
+              Last Updated
+            </h4>
+            <p className="pl-1 text-xs font-medium">
+              {tableData.metadata["last-updated-ms"]
+                ? new Date(
+                    tableData.metadata["last-updated-ms"]
+                  ).toLocaleString()
+                : "-"}
+            </p>
           </div>
         </div>
       </div>
