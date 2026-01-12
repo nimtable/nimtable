@@ -32,6 +32,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -625,11 +626,6 @@ public class CatalogsServlet extends HttpServlet {
             return;
         }
 
-        if (warehousePath == null) {
-            LOG.info("No warehouse path recorded for catalog {}; skip deleting files.", catalogName);
-            return;
-        }
-
         warehousePath = warehousePath.trim();
         if (warehousePath.isEmpty()) {
             LOG.info("Empty warehouse path for catalog {}; skip deleting files.", catalogName);
@@ -692,7 +688,7 @@ public class CatalogsServlet extends HttpServlet {
 
     private void dropNamespacesAndTables(String catalogName) {
         try {
-            SparkSession spark = LocalSpark.getSession();
+            SparkSession spark = LocalSpark.getInstance(config).getSpark();
             Dataset<Row> namespaces =
                     spark.sql(
                             String.format(
@@ -708,7 +704,7 @@ public class CatalogsServlet extends HttpServlet {
                                         }
                                     })
                             .filter(ns -> ns != null && !ns.isBlank())
-                            .toList();
+                            .collect(Collectors.toList());
 
             for (String ns : nsList) {
                 String sql =
@@ -732,12 +728,11 @@ public class CatalogsServlet extends HttpServlet {
     }
 
     private void ensureWritable(Path warehouse) throws IOException {
-        ProcessBuilder pb =
-                new ProcessBuilder("/bin/sh", "-c", "chmod -R u+rwX -- " + warehouse.toString())
-                        .redirectErrorStream(true);
+        ProcessBuilder pb = new ProcessBuilder("/bin/sh", "-c", "chmod -R u+rwX -- " + warehouse.toString());
+        pb.redirectErrorStream(true);
         Process proc = pb.start();
-        try (proc) {
-            proc.getInputStream().transferTo(OutputStream.nullOutputStream());
+        try {
+            drain(proc.getInputStream());
             int code = proc.waitFor();
             if (code != 0) {
                 throw new IOException("chmod exited with code " + code);
@@ -745,6 +740,8 @@ public class CatalogsServlet extends HttpServlet {
         } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
             throw new IOException("chmod interrupted", ie);
+        } finally {
+            proc.destroy();
         }
     }
 
@@ -768,12 +765,11 @@ public class CatalogsServlet extends HttpServlet {
     }
 
     private void fallbackShellDelete(Path warehouse) throws IOException {
-        ProcessBuilder pb =
-                new ProcessBuilder("/bin/sh", "-c", "rm -rf -- " + warehouse.toString())
-                        .redirectErrorStream(true);
+        ProcessBuilder pb = new ProcessBuilder("/bin/sh", "-c", "rm -rf -- " + warehouse.toString());
+        pb.redirectErrorStream(true);
         Process proc = pb.start();
-        try (proc) {
-            proc.getInputStream().transferTo(OutputStream.nullOutputStream());
+        try {
+            drain(proc.getInputStream());
             int code = proc.waitFor();
             if (code != 0) {
                 throw new IOException("rm -rf exited with code " + code);
@@ -781,6 +777,15 @@ public class CatalogsServlet extends HttpServlet {
         } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
             throw new IOException("rm -rf interrupted", ie);
+        } finally {
+            proc.destroy();
+        }
+    }
+
+    private void drain(InputStream input) throws IOException {
+        byte[] buf = new byte[8192];
+        while (input.read(buf) != -1) {
+            // discard
         }
     }
 
