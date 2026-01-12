@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import {
   ChevronDown,
   ChevronRight,
@@ -59,6 +60,7 @@ function NamespaceNode({
   activeNamespace,
   activeTable,
 }: NamespaceNodeProps) {
+  const router = useRouter()
   const shouldAutoOpen =
     !!activeNamespace &&
     (activeNamespace === namespace ||
@@ -82,7 +84,16 @@ function NamespaceNode({
           isOpen && "bg-muted/60"
         )}
         style={{ paddingLeft: indent + 8 }}
-        onClick={() => setIsOpen((prev) => !prev)}
+        onClick={() => {
+          setIsOpen((prev) => !prev)
+          if (namespace) {
+            router.push(
+              `/data/tables?catalog=${encodeURIComponent(
+                catalog
+              )}&namespace=${encodeURIComponent(namespace)}`
+            )
+          }
+        }}
         disabled={!hasChildren && !isFetching}
       >
         {isFetching ? (
@@ -172,6 +183,7 @@ function CatalogRoot({
   activeNamespace,
   activeTable,
 }: CatalogRootProps) {
+  const router = useRouter()
   const { data, isFetching } = useNamespaceChildren(catalog)
   const namespaces = data?.namespaces || []
   const showEmpty = !isFetching && namespaces.length === 0
@@ -216,6 +228,7 @@ export function CatalogExplorer({
   activeTable,
 }: CatalogExplorerProps) {
   const { catalogs, isLoading } = useCatalogs()
+  const router = useRouter()
   const [openCatalog, setOpenCatalog] = useState<string | null>(
     activeCatalog ?? null
   )
@@ -270,9 +283,12 @@ export function CatalogExplorer({
             <div key={catalog} className="mb-1">
               <button
                 type="button"
-                onClick={() =>
+                onClick={() => {
                   setOpenCatalog((prev) => (prev === catalog ? null : catalog))
-                }
+                  router.push(
+                    `/data/namespaces?catalog=${encodeURIComponent(catalog)}`
+                  )
+                }}
                 className={cn(
                   "flex w-full items-center gap-2 rounded px-2 py-1.5 hover:bg-muted transition-colors",
                   openCatalog === catalog && "bg-muted/60"

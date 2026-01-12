@@ -21,12 +21,19 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { createCatalog, getCatalogs } from "@/lib/client"
 import { runQuery } from "@/lib/data-loader"
 import { errorToString } from "@/lib/utils"
 import { SqlCodeBlock } from "@/components/shared/SqlCodeBlock"
-import { ChevronDown, Copy } from "lucide-react"
+import { ChevronDown, Copy, Plus, Trash2 } from "lucide-react"
 
 type Step = 1 | 2 | 3 | 4
 
@@ -63,6 +70,13 @@ export function LocalCatalogWizardModal({
   const [demoNamespace, setDemoNamespace] = useState("nimtable_demo")
   const [demoTable, setDemoTable] = useState("sample")
   const [demoRows, setDemoRows] = useState(1000)
+  const [tableColumns, setTableColumns] = useState<
+    { name: string; type: string }[]
+  >([
+    { name: "id", type: "BIGINT" },
+    { name: "name", type: "STRING" },
+    { name: "created_at", type: "TIMESTAMP" },
+  ])
 
   useEffect(() => {
     if (!open) return
@@ -115,6 +129,15 @@ export function LocalCatalogWizardModal({
     })
     setStepError((prev) => ({ ...prev, 4: null }))
   }, [demoRows])
+
+  useEffect(() => {
+    setStepStatus((prev) => ({ ...prev, 3: "idle", 4: "idle" }))
+    setStepSql((prev) => {
+      const { 3: _3, 4: _4, ...rest } = prev
+      return rest
+    })
+    setStepError((prev) => ({ ...prev, 3: null, 4: null }))
+  }, [tableColumns])
 
   const canContinue = useMemo(
     () => Boolean(warehouse.trim()) && Boolean(catalog.trim()),
@@ -229,6 +252,23 @@ export function LocalCatalogWizardModal({
       const qNamespace = quoteIdent(namespace)
       const qTable = quoteIdent(table)
 
+      if (stepToRun >= 3 && normalizedColumns.length === 0) {
+        const msg = "Add at least one column before creating the table."
+        setStepStatus((prev) => ({ ...prev, [stepToRun]: "idle" }))
+        setStepError((prev) => ({ ...prev, [stepToRun]: msg }))
+        toast({
+          variant: "destructive",
+          title: "No columns configured",
+          description: msg,
+        })
+        setIsWorking(false)
+        return
+      }
+
+      const columnDefs = normalizedColumns
+        .map((col) => `${quoteIdent(col.name)} ${col.type}`)
+        .join(", ")
+
       const statements: string[] = []
 
       if (stepToRun === 2) {
@@ -239,7 +279,7 @@ export function LocalCatalogWizardModal({
       } else if (stepToRun === 3) {
         const sql =
           `CREATE TABLE IF NOT EXISTS ${qCatalog}.${qNamespace}.${qTable} (` +
-          `id BIGINT, name STRING, created_at TIMESTAMP` +
+          `${columnDefs}` +
           `) USING iceberg`
         statements.push(sql)
         await runQuery(sql)
@@ -268,12 +308,7 @@ export function LocalCatalogWizardModal({
               `No rows inserted into ${trimmedCatalog}.${namespace}.${table}.`
             )
           } else {
-            const insertSql =
-              `INSERT INTO ${qCatalog}.${qNamespace}.${qTable} ` +
-              `SELECT CAST(id + 1 AS BIGINT) AS id, ` +
-              `concat('user_', CAST(id + 1 AS STRING)) AS name, ` +
-              `current_timestamp() AS created_at ` +
-              `FROM range(${rows})`
+            const insertSql = buildInsertSql(rows)
             statements.push(insertSql)
             await runQuery(insertSql)
             setSeedSummary(
@@ -311,25 +346,88 @@ export function LocalCatalogWizardModal({
   const trimmedTable = demoTable.trim() || "sample"
   const demoFqn = `${trimmedCatalog}.${trimmedNamespace}.${trimmedTable}`
 
+  const normalizedColumns = useMemo(() => {
+    return tableColumns.map((col, idx) => {
+      const name = col.name.trim() || `column_${idx + 1}`
+      const type = col.type.trim() || "STRING"
+      return { name, type }
+    })
+  }, [tableColumns])
+
+  const typeOptions = [
+    "BOOLEAN",
+    "INT",
+    "BIGINT",
+    "FLOAT",
+    "DOUBLE",
+    "DECIMAL(38,18)",
+    "DATE",
+    "TIME",
+    "TIMESTAMP",
+    "TIMESTAMPTZ",
+    "STRING",
+    "BINARY",
+    "UUID",
+  ]
+
+  const columnDefinitions = useMemo(() => {
+    if (!normalizedColumns.length) return ""
+    const parts = normalizedColumns.map(
+      (col) => `${quoteIdent(col.name)} ${col.type}`
+    )
+    return "\n  " + parts.join(",\n  ") + "\n"
+  }, [normalizedColumns])
+
   const previewSqlNamespace = `CREATE NAMESPACE IF NOT EXISTS \`${trimmedCatalog}\`.\`${trimmedNamespace}\`;`
 
-  const previewSqlTable = `CREATE TABLE IF NOT EXISTS \`${trimmedCatalog}\`.\`${trimmedNamespace}\`.\`${trimmedTable}\` (id BIGINT, name STRING, created_at TIMESTAMP) USING iceberg;`
+  const previewSqlTable = `CREATE TABLE IF NOT EXISTS \`${trimmedCatalog}\`.\`${trimmedNamespace}\`.\`${trimmedTable}\` (${columnDefinitions}) USING iceberg;`
 
   const clampedRows = Math.max(
     0,
     Math.min(MAX_DEMO_ROWS, Math.floor(Number(demoRows) || 0))
   )
+  function sampleExpressionForType(type: string, idx: number) {
+    const t = type.trim().toUpperCase()
+    if (t.includes("INT") || t === "LONG" || t === "BIGINT") {
+      return `CAST(id + ${idx + 1} AS BIGINT)`
+    }
+    if (t.includes("DOUBLE") || t.includes("FLOAT") || t.includes("DECIMAL")) {
+      return `CAST(id + ${idx + 1} AS DOUBLE)`
+    }
+    if (t.includes("BOOL")) {
+      return `(id % 2) = 0`
+    }
+    if (t.includes("TIME")) {
+      return "current_timestamp()"
+    }
+    if (t.includes("DATE")) {
+      return "current_date()"
+    }
+    if (t.includes("BINARY")) {
+      return "CAST(id AS BINARY)"
+    }
+    if (t.includes("UUID")) {
+      return "uuid()"
+    }
+    return `concat('${idx + 1}_', CAST(id + 1 AS STRING))`
+  }
+
+  function buildInsertSql(rows: number) {
+    const selectColumns = normalizedColumns
+      .map(
+        (col, idx) =>
+          `${sampleExpressionForType(col.type, idx)} AS ${quoteIdent(col.name)}`
+      )
+      .join(", ")
+    return (
+      `INSERT INTO \`${trimmedCatalog}\`.\`${trimmedNamespace}\`.\`${trimmedTable}\`\n` +
+      `SELECT\n  ${selectColumns}\nFROM range(${rows});`
+    )
+  }
+
   const previewSqlPopulateStatements = [
     `SELECT count(*) AS c FROM \`${trimmedCatalog}\`.\`${trimmedNamespace}\`.\`${trimmedTable}\`;`,
-    ...(clampedRows > 0
-      ? [
-          `INSERT INTO \`${trimmedCatalog}\`.\`${trimmedNamespace}\`.\`${trimmedTable}\` ` +
-            `SELECT CAST(id + 1 AS BIGINT) AS id, ` +
-            `concat('user_', CAST(id + 1 AS STRING)) AS name, ` +
-            `current_timestamp() AS created_at ` +
-            `FROM range(${clampedRows});`,
-        ]
-      : []),
+    ...(clampedRows > 0 ? [buildInsertSql(clampedRows)] : []),
   ]
   const previewSqlPopulate = previewSqlPopulateStatements.join("\n")
 
@@ -360,7 +458,7 @@ export function LocalCatalogWizardModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[800px] max-h-[85vh] overflow-hidden">
+      <DialogContent className="sm:max-w-[800px] max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Create local Iceberg catalog</DialogTitle>
           <DialogDescription>
@@ -369,25 +467,9 @@ export function LocalCatalogWizardModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 min-h-0 overflow-y-auto pr-1">
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-muted-foreground">
-              Step <span className="font-medium text-foreground">{step}</span> /
-              4
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setLastError(null)
-                setSeedSql(null)
-                setSeedSummary(null)
-                setSeedError(null)
-                setStep(1)
-              }}
-            >
-              Reset
-            </Button>
+        <div className="space-y-6 min-h-0 overflow-y-auto pr-1 flex-1">
+          <div className="text-sm text-muted-foreground">
+            Step <span className="font-medium text-foreground">{step}</span> / 4
           </div>
 
           <Separator />
@@ -546,7 +628,7 @@ export function LocalCatalogWizardModal({
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div className="space-y-2">
                       <Label>Namespace</Label>
-                      <Input value={demoNamespace} readOnly />
+                      <Input value={demoNamespace} disabled />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="demo-table">Table name</Label>
@@ -559,33 +641,107 @@ export function LocalCatalogWizardModal({
                     </div>
                   </div>
 
-                  <div className="rounded-lg border bg-muted/30 p-3 text-xs">
-                    <div className="font-medium text-foreground">
-                      Table schema
+                  <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <div>
+                        <div className="text-sm font-medium text-foreground">
+                          Table schema
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Adjust column names and data types before creating the
+                          table.
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="h-8"
+                        onClick={() =>
+                          setTableColumns((prev) => [
+                            ...prev,
+                            {
+                              name: `column_${prev.length + 1}`,
+                              type: "STRING",
+                            },
+                          ])
+                        }
+                      >
+                        <Plus className="mr-1.5 h-4 w-4" />
+                        Add column
+                      </Button>
                     </div>
-                    <div className="mt-1 text-muted-foreground">
-                      <div>
-                        <code>id</code> BIGINT
-                      </div>
-                      <div>
-                        <code>name</code> STRING
-                      </div>
-                      <div>
-                        <code>created_at</code> TIMESTAMP
-                      </div>
+                    <div className="space-y-2">
+                      {tableColumns.map((col, idx) => (
+                        <div
+                          key={`table-column-${idx}`}
+                          className="rounded-md border border-border/60 bg-background/40 p-2 sm:p-3"
+                        >
+                          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:gap-3">
+                            <div className="flex-1 space-y-1">
+                              <Label className="text-xs text-muted-foreground">
+                                Name
+                              </Label>
+                              <Input
+                                value={col.name}
+                                onChange={(e) => {
+                                  const next = [...tableColumns]
+                                  next[idx] = {
+                                    ...next[idx],
+                                    name: e.target.value,
+                                  }
+                                  setTableColumns(next)
+                                }}
+                                placeholder={`column_${idx + 1}`}
+                              />
+                            </div>
+                            <div className="sm:w-48 space-y-1">
+                              <Label className="text-xs text-muted-foreground">
+                                Data type
+                              </Label>
+                              <Select
+                                value={col.type}
+                                onValueChange={(value) => {
+                                  const next = [...tableColumns]
+                                  next[idx] = {
+                                    ...next[idx],
+                                    type: value,
+                                  }
+                                  setTableColumns(next)
+                                }}
+                              >
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="STRING" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {typeOptions.map((t) => (
+                                    <SelectItem key={t} value={t}>
+                                      {t}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 mt-1"
+                              disabled={tableColumns.length <= 1}
+                              onClick={() =>
+                                setTableColumns((prev) =>
+                                  prev.filter((_, i) => i !== idx)
+                                )
+                              }
+                              aria-label={`Remove column ${idx + 1}`}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-
-                  {seedSummary && (
-                    <div className="rounded-lg border bg-muted/30 p-3 text-xs">
-                      <div className="font-medium text-foreground">
-                        Last result
-                      </div>
-                      <div className="mt-1 text-muted-foreground">
-                        {seedSummary}
-                      </div>
-                    </div>
-                  )}
 
                   {(() => {
                     const executed = (stepSql[3] || []).join("\n")
@@ -670,17 +826,6 @@ export function LocalCatalogWizardModal({
                       {MAX_DEMO_ROWS.toLocaleString()} to keep it safe.
                     </p>
                   </div>
-
-                  {seedSummary && (
-                    <div className="rounded-lg border bg-muted/30 p-3 text-xs">
-                      <div className="font-medium text-foreground">
-                        Last result
-                      </div>
-                      <div className="mt-1 text-muted-foreground">
-                        {seedSummary}
-                      </div>
-                    </div>
-                  )}
 
                   {(() => {
                     const executed = (stepSql[4] || []).join("\n")

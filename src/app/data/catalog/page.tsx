@@ -114,7 +114,8 @@ export default function CatalogPage() {
             root === "tables" ||
             root === "catalog-config" ||
             root === "catalog-details" ||
-            root === "table-metadata"
+            root === "table-metadata" ||
+            root === "namespace-children"
           )
         },
       })

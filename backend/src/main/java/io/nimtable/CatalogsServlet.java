@@ -32,19 +32,30 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.iceberg.CatalogUtil;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class CatalogsServlet extends HttpServlet {
     private static final Logger LOG = LoggerFactory.getLogger(CatalogsServlet.class);
+    private static final Set<String> DELETED_CONFIG_CATALOGS = new ConcurrentSkipListSet<>();
     private final Config config;
     private final ObjectMapper mapper;
     private final CatalogRepository catalogRepository;
@@ -80,6 +91,7 @@ public class CatalogsServlet extends HttpServlet {
                 config.catalogs() != null
                         ? config.catalogs().stream()
                                 .map(Config.Catalog::name)
+                                .filter(name -> !DELETED_CONFIG_CATALOGS.contains(name))
                                 .collect(Collectors.toList())
                         : new ArrayList<>();
         List<String> dbCatalogs =
@@ -334,9 +346,11 @@ public class CatalogsServlet extends HttpServlet {
             String catalogName = pathInfo.substring(1);
             boolean purge = Boolean.parseBoolean(req.getParameter("purge"));
 
-            // Check if catalog exists in database
+            // Look up catalog in DB and config
             Catalog catalog = catalogRepository.findByName(catalogName);
-            if (catalog == null && !purge) {
+            Config.Catalog configCatalog = config.getCatalog(catalogName);
+
+            if (catalog == null && configCatalog == null && !purge) {
                 resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
                 Map<String, Object> errorResponse = new HashMap<>();
                 errorResponse.put("error", "Not found");
@@ -346,8 +360,39 @@ public class CatalogsServlet extends HttpServlet {
                 return;
             }
 
+            String warehouseToDelete = null;
+            boolean isLocalHadoop =
+                    (catalog != null && "hadoop".equalsIgnoreCase(catalog.getType()))
+                            || (configCatalog != null
+                                    && (configCatalog
+                                                    .properties()
+                                                    .containsKey(Config.Catalog.WAREHOUSE_LOCATION)
+                                            || "hadoop"
+                                                    .equalsIgnoreCase(
+                                                            configCatalog
+                                                                    .properties()
+                                                                    .getOrDefault(
+                                                                            Config.Catalog
+                                                                                    .CATALOG_IMPL,
+                                                                            ""))));
+            if (isLocalHadoop) {
+                if (catalog != null) {
+                    warehouseToDelete = catalog.getWarehouse();
+                } else if (configCatalog != null) {
+                    warehouseToDelete =
+                            configCatalog
+                                    .properties()
+                                    .getOrDefault(Config.Catalog.WAREHOUSE_LOCATION, null);
+                }
+            }
+
             if (purge) {
                 purgeCatalogData(catalogName);
+            }
+
+            if (isLocalHadoop) {
+                dropNamespacesAndTables(catalogName);
+                deleteWarehouseDirectory(catalogName, warehouseToDelete);
             }
 
             // Delete from database (if it exists there; config-defined catalogs can't be deleted
@@ -355,6 +400,12 @@ public class CatalogsServlet extends HttpServlet {
             if (catalog != null) {
                 catalogRepository.delete(catalog);
                 // Remove REST servlet route so the catalog name can be re-created cleanly.
+                Server.unregisterCatalog(catalogName);
+            }
+
+            // Hide config-defined catalog for the current runtime session
+            if (configCatalog != null) {
+                DELETED_CONFIG_CATALOGS.add(catalogName);
                 Server.unregisterCatalog(catalogName);
             }
 
@@ -567,6 +618,180 @@ public class CatalogsServlet extends HttpServlet {
             // silently.
             LOG.error("Failed to purge catalog data for: {}", catalogName, e);
             throw e;
+        }
+    }
+
+    private void deleteWarehouseDirectory(String catalogName, String warehousePath)
+            throws IOException {
+        if (warehousePath == null || warehousePath.isBlank()) {
+            LOG.info(
+                    "No warehouse path recorded for catalog {}; skip deleting files.", catalogName);
+            return;
+        }
+
+        warehousePath = warehousePath.trim();
+        if (warehousePath.isEmpty()) {
+            LOG.info("Empty warehouse path for catalog {}; skip deleting files.", catalogName);
+            return;
+        }
+
+        // Guard against non-local schemes (e.g., s3://) — only delete local file paths.
+        if (warehousePath.contains("://")) {
+            LOG.warn(
+                    "Refusing to delete non-local warehouse path {} for catalog {}",
+                    warehousePath,
+                    catalogName);
+            return;
+        }
+
+        Path warehouse = Paths.get(warehousePath).normalize();
+        // Safety guard: never attempt to delete root or an empty path
+        if (warehouse.getNameCount() == 0 || "/".equals(warehouse.toString())) {
+            LOG.warn(
+                    "Refusing to delete warehouse path {} for catalog {} (path too broad)",
+                    warehousePath,
+                    catalogName);
+            return;
+        }
+
+        if (!Files.exists(warehouse)) {
+            LOG.info(
+                    "Warehouse path {} for catalog {} does not exist on disk; nothing to delete.",
+                    warehouse,
+                    catalogName);
+            return;
+        }
+
+        LOG.info("Deleting warehouse directory {} for catalog {}", warehouse, catalogName);
+
+        try {
+            deleteRecursively(warehouse);
+        } catch (IOException e) {
+            LOG.warn(
+                    "Java delete failed for warehouse {} ({}). Trying chmod -R u+rwX + rm -rf.",
+                    warehouse,
+                    e.toString());
+            try {
+                ensureWritable(warehouse);
+            } catch (IOException chmodErr) {
+                LOG.warn(
+                        "chmod -R u+rwX failed for warehouse {} ({}), continuing to rm -rf anyway.",
+                        warehouse,
+                        chmodErr.toString());
+            }
+            fallbackShellDelete(warehouse);
+        }
+
+        if (Files.exists(warehouse)) {
+            LOG.warn("Warehouse directory {} still exists after delete attempt", warehouse);
+        } else {
+            LOG.info("Deleted warehouse directory {} for catalog {}", warehouse, catalogName);
+        }
+    }
+
+    private void dropNamespacesAndTables(String catalogName) {
+        try {
+            SparkSession spark = LocalSpark.getInstance(config).getSpark();
+            Dataset<Row> namespaces =
+                    spark.sql(String.format("SHOW NAMESPACES IN `%s`", sanitizeIdent(catalogName)));
+            List<String> nsList =
+                    namespaces.collectAsList().stream()
+                            .map(
+                                    row -> {
+                                        try {
+                                            return row.getString(0);
+                                        } catch (Exception e) {
+                                            return null;
+                                        }
+                                    })
+                            .filter(ns -> ns != null && !ns.isBlank())
+                            .collect(Collectors.toList());
+
+            for (String ns : nsList) {
+                String sql =
+                        String.format(
+                                "DROP NAMESPACE IF EXISTS `%s`.`%s` CASCADE",
+                                sanitizeIdent(catalogName), sanitizeIdent(ns));
+                try {
+                    spark.sql(sql);
+                    LOG.info("Dropped namespace {}.{}", catalogName, ns);
+                } catch (Exception e) {
+                    LOG.warn("Failed to drop namespace {}.{}: {}", catalogName, ns, e.toString());
+                }
+            }
+        } catch (Exception e) {
+            LOG.warn(
+                    "Failed to drop namespaces/tables for catalog {}: {}",
+                    catalogName,
+                    e.toString());
+        }
+    }
+
+    private String sanitizeIdent(String ident) {
+        return ident.replace("`", "``");
+    }
+
+    private void ensureWritable(Path warehouse) throws IOException {
+        ProcessBuilder pb =
+                new ProcessBuilder("/bin/sh", "-c", "chmod -R u+rwX -- " + warehouse.toString());
+        pb.redirectErrorStream(true);
+        Process proc = pb.start();
+        try {
+            drain(proc.getInputStream());
+            int code = proc.waitFor();
+            if (code != 0) {
+                throw new IOException("chmod exited with code " + code);
+            }
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+            throw new IOException("chmod interrupted", ie);
+        } finally {
+            proc.destroy();
+        }
+    }
+
+    private void deleteRecursively(Path root) throws IOException {
+        try (Stream<Path> paths = Files.walk(root)) {
+            paths.sorted(Comparator.reverseOrder())
+                    .forEach(
+                            p -> {
+                                try {
+                                    Files.deleteIfExists(p);
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            });
+        } catch (RuntimeException e) {
+            if (e.getCause() instanceof IOException ioException) {
+                throw ioException;
+            }
+            throw e;
+        }
+    }
+
+    private void fallbackShellDelete(Path warehouse) throws IOException {
+        ProcessBuilder pb =
+                new ProcessBuilder("/bin/sh", "-c", "rm -rf -- " + warehouse.toString());
+        pb.redirectErrorStream(true);
+        Process proc = pb.start();
+        try {
+            drain(proc.getInputStream());
+            int code = proc.waitFor();
+            if (code != 0) {
+                throw new IOException("rm -rf exited with code " + code);
+            }
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+            throw new IOException("rm -rf interrupted", ie);
+        } finally {
+            proc.destroy();
+        }
+    }
+
+    private void drain(InputStream input) throws IOException {
+        byte[] buf = new byte[8192];
+        while (input.read(buf) != -1) {
+            // discard
         }
     }
 
