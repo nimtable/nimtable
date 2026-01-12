@@ -219,82 +219,82 @@ export function InfoTab({
     <div className="space-y-8">
       {/* Schema Section (first) */}
       <div className="bg-card border border-border rounded-lg p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <svg
-              className="w-5 h-5 text-primary"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M4 7h16M4 12h16M4 17h16" />
-            </svg>
-            <h3 className="text-base font-semibold text-card-foreground">
-              Table Schema
-            </h3>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left py-3 px-4 text-sm font-normal text-muted-foreground">
-                    ID
-                  </th>
-                  <th className="text-left py-3 px-4 text-sm font-normal text-muted-foreground">
-                    Name
-                  </th>
-                  <th className="text-left py-3 px-4 text-sm font-normal text-muted-foreground">
-                    Type
-                  </th>
-                  <th className="text-left py-3 px-4 text-sm font-normal text-muted-foreground">
-                    Required
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {schema?.fields.map((field: StructField) => (
-                  <tr
-                    key={field.id}
-                    className="border-b border-border hover:bg-muted/30"
-                  >
-                    <td className="py-3 px-4 text-sm text-card-foreground">
-                      {field.id}
-                    </td>
-                    <td className="py-3 px-4 text-sm text-card-foreground">
-                      {field.name}
-                    </td>
-                    <td className="py-3 px-4 text-sm text-card-foreground">
-                      {typeof field.type === "string"
-                        ? field.type
-                        : field.type.type}
-                    </td>
-                    <td className="py-3 px-4 text-sm text-card-foreground">
-                      {field.required ? "Yes" : "No"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <div className="flex items-center gap-2 mb-4">
+          <svg
+            className="w-5 h-5 text-primary"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path d="M4 7h16M4 12h16M4 17h16" />
+          </svg>
+          <h3 className="text-base font-semibold text-card-foreground">
+            Table Schema
+          </h3>
         </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="text-left py-3 px-4 text-sm font-normal text-muted-foreground">
+                  ID
+                </th>
+                <th className="text-left py-3 px-4 text-sm font-normal text-muted-foreground">
+                  Name
+                </th>
+                <th className="text-left py-3 px-4 text-sm font-normal text-muted-foreground">
+                  Type
+                </th>
+                <th className="text-left py-3 px-4 text-sm font-normal text-muted-foreground">
+                  Required
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {schema?.fields.map((field: StructField) => (
+                <tr
+                  key={field.id}
+                  className="border-b border-border hover:bg-muted/30"
+                >
+                  <td className="py-3 px-4 text-sm text-card-foreground">
+                    {field.id}
+                  </td>
+                  <td className="py-3 px-4 text-sm text-card-foreground">
+                    {field.name}
+                  </td>
+                  <td className="py-3 px-4 text-sm text-card-foreground">
+                    {typeof field.type === "string"
+                      ? field.type
+                      : field.type.type}
+                  </td>
+                  <td className="py-3 px-4 text-sm text-card-foreground">
+                    {field.required ? "Yes" : "No"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-    {/* Table context (summary) */}
-    <TableSummary
-      catalog={catalog}
-      namespace={namespace}
-      table={table}
-      tableData={tableData}
-    />
+      {/* Table context (summary) */}
+      <TableSummary
+        catalog={catalog}
+        namespace={namespace}
+        table={table}
+        tableData={tableData}
+      />
 
-    {/* Other details */}
-    <FileDistributionSection
-      tableId={table}
-      catalog={catalog}
-      namespace={namespace}
-      refreshKey={refreshKey}
-    />
+      {/* Other details */}
+      <FileDistributionSection
+        tableId={table}
+        catalog={catalog}
+        namespace={namespace}
+        refreshKey={refreshKey}
+      />
 
-    <div className="bg-card border border-border rounded-lg p-6">
+      <div className="bg-card border border-border rounded-lg p-6">
         <div className="flex items-center gap-2 mb-4">
           <TableIcon className="w-5 h-5 text-primary" />
           <h3 className="text-base font-semibold text-card-foreground">

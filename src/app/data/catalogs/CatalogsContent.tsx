@@ -1,6 +1,14 @@
 "use client"
 
-import { ExternalLink, FolderTreeIcon, Info, Plus, Search, MoreHorizontal, Unlink } from "lucide-react"
+import {
+  ExternalLink,
+  FolderTreeIcon,
+  Info,
+  Plus,
+  Search,
+  MoreHorizontal,
+  Unlink,
+} from "lucide-react"
 import { useQueries } from "@tanstack/react-query"
 import { formatDistanceToNow } from "date-fns"
 import { useRouter } from "next/navigation"
@@ -717,7 +725,6 @@ export function CatalogsContent() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
     </div>
   )
 }

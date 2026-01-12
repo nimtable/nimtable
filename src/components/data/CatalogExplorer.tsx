@@ -284,9 +284,7 @@ export function CatalogExplorer({
               <button
                 type="button"
                 onClick={() => {
-                  setOpenCatalog((prev) =>
-                    prev === catalog ? null : catalog
-                  )
+                  setOpenCatalog((prev) => (prev === catalog ? null : catalog))
                   router.push(
                     `/data/namespaces?catalog=${encodeURIComponent(catalog)}`
                   )
