@@ -425,175 +425,177 @@ export function CatalogsContent() {
 
       {/* Catalogs Grid */}
       <div className="flex-1 overflow-auto p-6">
-        <div className="px-6 py-4 border-b border-border flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <FolderTreeIcon className="w-5 h-5 text-card-foreground" />
-            <h2 className="text-base font-normal text-card-foreground">
-              Catalogs ({filteredCatalogs?.length})
-            </h2>
+        <div className="rounded-lg border border-border bg-card overflow-hidden">
+          <div className="px-6 py-4 border-b border-border flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FolderTreeIcon className="w-5 h-5 text-card-foreground" />
+              <h2 className="text-base font-normal text-card-foreground">
+                Catalogs ({filteredCatalogs?.length})
+              </h2>
+            </div>
           </div>
-        </div>
-        {/* Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-table-header border-b border-border">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-normal text-muted-foreground uppercase tracking-wider">
-                  Name
-                </th>
+          {/* Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-table-header border-b border-border">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-normal text-muted-foreground uppercase tracking-wider">
+                    Name
+                  </th>
 
-                <th className="px-6 py-3 text-right text-xs font-normal text-muted-foreground uppercase tracking-wider">
-                  Namespaces
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-normal text-muted-foreground uppercase tracking-wider">
-                  Tables
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-normal text-muted-foreground uppercase tracking-wider">
-                  Storage size
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-normal text-muted-foreground uppercase tracking-wider">
-                  Last modified
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-normal text-muted-foreground uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-card divide-y divide-border">
-              {filteredCatalogs.map((catalog, index) => (
-                <tr
-                  key={index}
-                  className="group hover:bg-table-row-hover transition-colors cursor-pointer"
-                  onClick={() => {
-                    handleInfoClick(catalog)
-                  }}
-                >
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-normal text-card-foreground">
-                    <div className="flex items-center gap-2">
-                      <span>{catalog}</span>
-                      {isLocalCatalog(catalog) && (
-                        <span className="inline-flex items-center rounded-full border bg-muted/40 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-                          Local
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground text-right">
-                    <a
-                      href={`/data/namespaces?catalog=${encodeURIComponent(catalog)}`}
-                      onClick={(e) => e.stopPropagation()}
-                      className="text-primary hover:text-primary/80"
-                      title="View namespaces"
-                    >
-                      {catalogStats[catalog]?.namespaceCount || 0}
-                    </a>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground text-right">
-                    <a
-                      href={`/data/tables?catalog=${encodeURIComponent(catalog)}`}
-                      onClick={(e) => e.stopPropagation()}
-                      className="text-primary hover:text-primary/80"
-                      title="View tables"
-                    >
-                      {catalogStats[catalog]?.tableCount || 0}
-                    </a>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground text-right">
-                    {isLoadingTables ||
-                    catalogConfigs.some((q) => q.isLoading) ||
-                    tableMetadataQueries.some((q) => q.isLoading) ? (
-                      <div className="h-4 w-16 inline-block animate-pulse rounded bg-gray-200" />
-                    ) : catalogStats[catalog]?.storageSize ? (
-                      `${(catalogStats[catalog].storageSize / (1024 * 1024)).toFixed(2)} MB`
-                    ) : (
-                      "0 MB"
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground text-right">
-                    <span>
+                  <th className="px-6 py-3 text-right text-xs font-normal text-muted-foreground uppercase tracking-wider">
+                    Namespaces
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-normal text-muted-foreground uppercase tracking-wider">
+                    Tables
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-normal text-muted-foreground uppercase tracking-wider">
+                    Storage size
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-normal text-muted-foreground uppercase tracking-wider">
+                    Last modified
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-normal text-muted-foreground uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-card divide-y divide-border">
+                {filteredCatalogs.map((catalog, index) => (
+                  <tr
+                    key={index}
+                    className="group hover:bg-table-row-hover transition-colors cursor-pointer"
+                    onClick={() => {
+                      handleInfoClick(catalog)
+                    }}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-normal text-card-foreground">
+                      <div className="flex items-center gap-2">
+                        <span>{catalog}</span>
+                        {isLocalCatalog(catalog) && (
+                          <span className="inline-flex items-center rounded-full border bg-muted/40 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                            Local
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground text-right">
+                      <a
+                        href={`/data/namespaces?catalog=${encodeURIComponent(catalog)}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-primary hover:text-primary/80"
+                        title="View namespaces"
+                      >
+                        {catalogStats[catalog]?.namespaceCount || 0}
+                      </a>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground text-right">
+                      <a
+                        href={`/data/tables?catalog=${encodeURIComponent(catalog)}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-primary hover:text-primary/80"
+                        title="View tables"
+                      >
+                        {catalogStats[catalog]?.tableCount || 0}
+                      </a>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground text-right">
                       {isLoadingTables ||
                       catalogConfigs.some((q) => q.isLoading) ||
                       tableMetadataQueries.some((q) => q.isLoading) ? (
-                        <div className="h-4 w-16 animate-pulse rounded inline-block bg-gray-200" />
-                      ) : catalogStats[catalog]?.lastModified ? (
-                        formatDistanceToNow(
-                          catalogStats[catalog].lastModified,
-                          { addSuffix: true }
-                        )
+                        <div className="h-4 w-16 inline-block animate-pulse rounded bg-gray-200" />
+                      ) : catalogStats[catalog]?.storageSize ? (
+                        `${(catalogStats[catalog].storageSize / (1024 * 1024)).toFixed(2)} MB`
                       ) : (
-                        "Never"
+                        "0 MB"
                       )}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={(e) => e.stopPropagation()}
-                          className="h-8 w-8"
-                          title="Actions"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align="end"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <DropdownMenuItem
-                          asChild
-                          className="cursor-pointer hover:!bg-accent hover:!text-accent-foreground focus:!bg-accent focus:!text-accent-foreground"
-                        >
-                          <Link
-                            href={`/data/catalog?catalog=${encodeURIComponent(catalog)}`}
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Info className="h-4 w-4" />
-                            Details
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          className="text-destructive focus:bg-destructive/10 focus:text-destructive"
-                          onSelect={(e) => {
-                            e.preventDefault()
-                            setDisconnectCatalogName(catalog)
-                          }}
-                        >
-                          <Unlink className="h-4 w-4" />
-                          Disconnect
-                        </DropdownMenuItem>
-                        {isLocalCatalog(catalog) && (
-                          <>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              className="text-destructive focus:bg-destructive/10 focus:text-destructive"
-                              onSelect={(e) => {
-                                e.preventDefault()
-                                setDeleteCatalogName(catalog)
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                              Delete
-                            </DropdownMenuItem>
-                          </>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground text-right">
+                      <span>
+                        {isLoadingTables ||
+                        catalogConfigs.some((q) => q.isLoading) ||
+                        tableMetadataQueries.some((q) => q.isLoading) ? (
+                          <div className="h-4 w-16 animate-pulse rounded inline-block bg-gray-200" />
+                        ) : catalogStats[catalog]?.lastModified ? (
+                          formatDistanceToNow(
+                            catalogStats[catalog].lastModified,
+                            { addSuffix: true }
+                          )
+                        ) : (
+                          "Never"
                         )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {filteredCatalogs?.length === 0 && (
-          <div className="py-8 text-center text-gray-500">
-            No catalogs found matching your criteria
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => e.stopPropagation()}
+                            className="h-8 w-8"
+                            title="Actions"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                          align="end"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <DropdownMenuItem
+                            asChild
+                            className="cursor-pointer hover:!bg-accent hover:!text-accent-foreground focus:!bg-accent focus:!text-accent-foreground"
+                          >
+                            <Link
+                              href={`/data/catalog?catalog=${encodeURIComponent(catalog)}`}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Info className="h-4 w-4" />
+                              Details
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                            onSelect={(e) => {
+                              e.preventDefault()
+                              setDisconnectCatalogName(catalog)
+                            }}
+                          >
+                            <Unlink className="h-4 w-4" />
+                            Disconnect
+                          </DropdownMenuItem>
+                          {isLocalCatalog(catalog) && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                                onSelect={(e) => {
+                                  e.preventDefault()
+                                  setDeleteCatalogName(catalog)
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                                Delete
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        )}
+
+          {filteredCatalogs?.length === 0 && (
+            <div className="py-8 text-center text-gray-500">
+              No catalogs found matching your criteria
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Catalog Info Dialog */}
