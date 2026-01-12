@@ -12,6 +12,7 @@ import { DataPreview } from "@/app/table/data-preview"
 import { SnapshotsTab } from "@/app/table/snapshots"
 import { Button } from "@/components/ui/button"
 import { InfoTab } from "@/app/table/info"
+import { CatalogExplorer } from "@/components/data/CatalogExplorer"
 
 import { useTableData } from "../../hooks/useTableData"
 import { ScrewdriverWrenchIcon } from "@/components/icon"
@@ -73,92 +74,107 @@ export default function TablePage() {
   }
 
   return (
-    <div className="mx-auto w-full">
-      <DataHierarchyHeader
-        current="table"
-        catalog={catalog}
-        namespace={namespace}
-        table={table}
-        rightSlot={
-          <div className="flex items-center gap-2">
-            <button className="btn-secondary" onClick={handleRefresh}>
-              <RefreshCw className="w-4 h-4" />
-              <span>{isRefetching ? "Refreshing..." : "Refresh"}</span>
-            </button>
+    <div className="flex h-full bg-background">
+      <div className="hidden h-full w-80 shrink-0 border-r border-border bg-card/60 lg:flex">
+        <CatalogExplorer
+          activeCatalog={catalog ?? undefined}
+          activeNamespace={namespace ?? undefined}
+          activeTable={table ?? undefined}
+          className="h-full w-full"
+        />
+      </div>
 
-            <button
-              onClick={() => setShowOptimizeSheet(true)}
-              className="btn-secondary"
-            >
-              <ScrewdriverWrenchIcon className="w-4 h-4" />
-              <span>Optimize table</span>
-            </button>
+      <div className="mx-auto w-full flex-1 overflow-auto">
+        <DataHierarchyHeader
+          current="table"
+          catalog={catalog}
+          namespace={namespace}
+          table={table}
+          rightSlot={
+            <div className="flex items-center gap-2">
+              <button className="btn-secondary" onClick={handleRefresh}>
+                <RefreshCw className="w-4 h-4" />
+                <span>{isRefetching ? "Refreshing..." : "Refresh"}</span>
+              </button>
 
-            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
-              <Link href={sqlEditorUrl} className="flex items-center">
-                <Plus className="w-4 h-4" />
-                <span>SQL Query</span>
-              </Link>
-            </Button>
+              <button
+                onClick={() => setShowOptimizeSheet(true)}
+                className="btn-secondary"
+              >
+                <ScrewdriverWrenchIcon className="w-4 h-4" />
+                <span>Optimize table</span>
+              </button>
+
+              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
+                <Link href={sqlEditorUrl} className="flex items-center">
+                  <Plus className="w-4 h-4" />
+                  <span>SQL Query</span>
+                </Link>
+              </Button>
+            </div>
+          }
+        />
+
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="space-y-4"
+        >
+          <div className="bg-card border-b border-border px-6 py-4">
+            <TabsList className="grid w-full max-w-md grid-cols-3">
+              <TabsTrigger value="info" className="flex items-center gap-1.5">
+                <FileText className="h-4 w-4" />
+                <span>Info</span>
+              </TabsTrigger>
+              <TabsTrigger value="data" className="flex items-center gap-1.5">
+                <Database className="h-4 w-4" />
+                <span>Data Preview</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="snapshots"
+                className="flex items-center gap-1.5"
+              >
+                <LayoutList className="h-4 w-4" />
+                <span>Version Control</span>
+              </TabsTrigger>
+            </TabsList>
           </div>
-        }
-      />
+          <TabsContent value="info" className="space-y-4 p-6">
+            <InfoTab
+              tableData={data}
+              catalog={catalog}
+              namespace={namespace}
+              table={table}
+              refreshKey={refreshKey}
+            />
+          </TabsContent>
 
-      <Tabs
-        value={activeTab}
-        onValueChange={setActiveTab}
-        className="space-y-4"
-      >
-        <div className="bg-card border-b border-border px-6 py-4">
-          <TabsList className="grid w-full max-w-md grid-cols-3">
-            <TabsTrigger value="info" className="flex items-center gap-1.5">
-              <FileText className="h-4 w-4" />
-              <span>Info</span>
-            </TabsTrigger>
-            <TabsTrigger value="data" className="flex items-center gap-1.5">
-              <Database className="h-4 w-4" />
-              <span>Data Preview</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="snapshots"
-              className="flex items-center gap-1.5"
-            >
-              <LayoutList className="h-4 w-4" />
-              <span>Version Control</span>
-            </TabsTrigger>
-          </TabsList>
-        </div>
-        <TabsContent value="info" className="space-y-4 p-6">
-          <InfoTab
-            tableData={data}
-            catalog={catalog}
-            namespace={namespace}
-            table={table}
-            refreshKey={refreshKey}
-          />
-        </TabsContent>
+          <TabsContent value="data">
+            <DataPreview
+              catalog={catalog}
+              namespace={namespace}
+              table={table}
+            />
+          </TabsContent>
 
-        <TabsContent value="data">
-          <DataPreview catalog={catalog} namespace={namespace} table={table} />
-        </TabsContent>
+          <TabsContent value="snapshots">
+            <SnapshotsTab
+              tableData={data}
+              catalog={catalog}
+              namespace={namespace}
+              table={table}
+            />
+          </TabsContent>
+        </Tabs>
 
-        <TabsContent value="snapshots">
-          <SnapshotsTab
-            tableData={data}
-            catalog={catalog}
-            namespace={namespace}
-            table={table}
-          />
-        </TabsContent>
-      </Tabs>
-
-      <OptimizeSheet
-        open={showOptimizeSheet}
-        onOpenChange={setShowOptimizeSheet}
-        catalog={catalog as string}
-        namespace={namespace as string}
-        table={table as string}
-      />
+        <OptimizeSheet
+          open={showOptimizeSheet}
+          onOpenChange={setShowOptimizeSheet}
+          catalog={catalog as string}
+          namespace={namespace as string}
+          table={table as string}
+        />
+      </div>
     </div>
   )
 }

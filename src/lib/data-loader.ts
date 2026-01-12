@@ -69,6 +69,16 @@ export interface NamespaceTables {
   children: NamespaceTables[]
 }
 
+export interface NamespaceChild {
+  name: string
+  shortName: string
+}
+
+export interface NamespaceChildren {
+  namespaces: NamespaceChild[]
+  tables: string[]
+}
+
 export async function loadNamespacesAndTables(
   catalog: string,
   inBrowser: boolean = true
@@ -140,6 +150,52 @@ export async function loadNamespacesAndTables(
 
   // Sort root namespaces by shortName
   return result.sort((a, b) => a.shortName.localeCompare(b.shortName))
+}
+
+/**
+ * Lightweight, non-recursive loader for a single namespace level.
+ * Used for lazy tree rendering to avoid fetching the entire namespace/table graph.
+ */
+export async function loadNamespaceChildren(
+  catalog: string,
+  parentNamespace?: string
+): Promise<NamespaceChildren> {
+  const api = catalogApi(catalog, isBrowser())
+  const trimmedParent = parentNamespace?.trim()
+
+  const namespacePromise = trimmedParent
+    ? api.v1.listNamespaces({ parent: trimmedParent })
+    : api.v1.listNamespaces()
+
+  // Tables exist only under a concrete namespace; root has no tables.
+  const tablesPromise = trimmedParent
+    ? api.v1.listTables(trimmedParent)
+    : Promise.resolve({ identifiers: [] as Array<{ name: string }> })
+
+  const [namespaceResp, tablesResp] = await Promise.all([
+    namespacePromise,
+    tablesPromise,
+  ])
+
+  const namespaces =
+    namespaceResp.namespaces
+      ?.map((ns) => (ns || []).map((p) => (p ?? "").trim()).filter(Boolean))
+      .filter((ns) => ns.length > 0)
+      .map((ns) => ({
+        name: ns.join("."),
+        shortName: ns[ns.length - 1],
+      }))
+      .sort((a, b) => a.shortName.localeCompare(b.shortName)) || []
+
+  const tables =
+    tablesResp.identifiers?.map((tbl) => tbl.name).sort((a, b) => {
+      return a.localeCompare(b)
+    }) || []
+
+  return {
+    namespaces,
+    tables,
+  }
 }
 
 export async function listNamespaces(catalog: string): Promise<string[]> {
