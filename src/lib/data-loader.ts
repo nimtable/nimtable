@@ -188,9 +188,11 @@ export async function loadNamespaceChildren(
       .sort((a, b) => a.shortName.localeCompare(b.shortName)) || []
 
   const tables =
-    tablesResp.identifiers?.map((tbl) => tbl.name).sort((a, b) => {
-      return a.localeCompare(b)
-    }) || []
+    tablesResp.identifiers
+      ?.map((tbl) => tbl.name)
+      .sort((a, b) => {
+        return a.localeCompare(b)
+      }) || []
 
   return {
     namespaces,

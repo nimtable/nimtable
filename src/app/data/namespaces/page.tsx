@@ -1,4 +1,4 @@
- "use client"
+"use client"
 
 import { NamespacesContent } from "./NamespacesContent"
 import { CatalogExplorer } from "@/components/data/CatalogExplorer"

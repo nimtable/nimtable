@@ -128,9 +128,7 @@ function NamespaceNode({
                 {mode === "select" && onSelectTable ? (
                   <button
                     type="button"
-                    onClick={() =>
-                      onSelectTable({ catalog, namespace, table })
-                    }
+                    onClick={() => onSelectTable({ catalog, namespace, table })}
                     className={cn(
                       "flex w-full items-center gap-2 rounded px-2 py-1.5 text-left hover:bg-muted transition-colors",
                       activeNamespace === namespace &&

@@ -1,4 +1,4 @@
- "use client"
+"use client"
 
 import { TablesContent } from "./TablesContent"
 import { CatalogExplorer } from "@/components/data/CatalogExplorer"
