@@ -86,7 +86,7 @@ function NamespaceNode({
         style={{ paddingLeft: indent + 8 }}
         onClick={() => {
           setIsOpen((prev) => !prev)
-          if (namespace) {
+          if (mode === "navigate" && namespace) {
             router.push(
               `/data/tables?catalog=${encodeURIComponent(
                 catalog
@@ -183,7 +183,6 @@ function CatalogRoot({
   activeNamespace,
   activeTable,
 }: CatalogRootProps) {
-  const router = useRouter()
   const { data, isFetching } = useNamespaceChildren(catalog)
   const namespaces = data?.namespaces || []
   const showEmpty = !isFetching && namespaces.length === 0
@@ -285,9 +284,11 @@ export function CatalogExplorer({
                 type="button"
                 onClick={() => {
                   setOpenCatalog((prev) => (prev === catalog ? null : catalog))
-                  router.push(
-                    `/data/namespaces?catalog=${encodeURIComponent(catalog)}`
-                  )
+                  if (mode === "navigate") {
+                    router.push(
+                      `/data/namespaces?catalog=${encodeURIComponent(catalog)}`
+                    )
+                  }
                 }}
                 className={cn(
                   "flex w-full items-center gap-2 rounded px-2 py-1.5 hover:bg-muted transition-colors",
