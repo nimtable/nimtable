@@ -2,6 +2,8 @@
 
 # Nimtable: Observability for Apache Iceberg™
 
+[![gitcgr](https://gitcgr.com/badge/nimtable/nimtable.svg)](https://gitcgr.com/nimtable/nimtable)
+
 </div>
 
 <div align="center">
