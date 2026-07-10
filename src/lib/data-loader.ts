@@ -40,6 +40,55 @@ function isBrowser() {
   return typeof window !== "undefined"
 }
 
+// Multipart namespace parts are separated by 0x1F on the wire ("%1F"
+// url-encoded). Servers may advertise a different separator via the
+// `namespace-separator` config override; Nimtable's backend uses the
+// default, and spec-compliant servers must always accept 0x1F. Names
+// internal to Nimtable remain `.`-separated.
+const NAMESPACE_SEPARATOR = "\u001f"
+const NAMESPACE_SEPARATOR_ENCODED = "%1F"
+
+function namespaceParts(namespace: string): string[] {
+  return namespace
+    .split(".")
+    .map((part) => part.trim())
+    .filter(Boolean)
+}
+
+function cleanNamespaces(namespaces: string[][] | undefined): string[][] {
+  return (namespaces || [])
+    .map((ns) => (ns || []).map((p) => (p ?? "").trim()).filter(Boolean))
+    .filter((ns) => ns.length > 0)
+}
+
+function encodeNamespace(parts: string[]): string {
+  return parts.map(encodeURIComponent).join(NAMESPACE_SEPARATOR_ENCODED)
+}
+
+function namespaceToQueryParam(parts: string[]): string {
+  return parts.join(NAMESPACE_SEPARATOR)
+}
+
+async function listChildNamespaces(
+  api: ReturnType<typeof catalogApi>,
+  parentParts: string[]
+): Promise<string[][]> {
+  const namespaces: string[][] = []
+  let pageToken: string | null = ""
+  do {
+    const response = await api.v1.listNamespaces({
+      ...(parentParts.length
+        ? { parent: namespaceToQueryParam(parentParts) }
+        : {}),
+      pageSize: 100,
+      pageToken,
+    })
+    namespaces.push(...(response.namespaces || []))
+    pageToken = response["next-page-token"] ?? null
+  } while (pageToken !== null)
+  return namespaces
+}
+
 export async function loadCatalogNames(): Promise<string[]> {
   try {
     // Create a properly configured client for server-side or browser-side usage
@@ -85,70 +134,33 @@ export async function loadNamespacesAndTables(
 ): Promise<NamespaceTables[]> {
   const api = catalogApi(catalog, inBrowser)
 
-  function normalizeNamespaceParts(parts: string[]): string[] | null {
-    const cleaned = (parts || []).map((p) => (p ?? "").trim()).filter(Boolean)
-    return cleaned.length > 0 ? cleaned : null
-  }
-
   async function fetchNamespaceAndChildren(
-    namespace: string[]
+    parts: string[]
   ): Promise<NamespaceTables> {
-    const normalized = normalizeNamespaceParts(namespace)
-    const namespaceName = normalized ? normalized.join(".") : ""
-
-    // Root (empty) namespace isn't a real namespace; don't query tables for it.
-    const tablesResponse = namespaceName
-      ? await api.v1.listTables(namespaceName)
-      : { identifiers: [] as any[] }
-
-    // Get child namespaces
-    // Important: do NOT send `parent` when it is empty, otherwise Iceberg REST
-    // servers may interpret it as an empty namespace and return 404.
-    const childNamespacesResponse = namespaceName
-      ? await api.v1.listNamespaces({ parent: namespaceName })
-      : await api.v1.listNamespaces()
-    const childNamespaces = childNamespacesResponse.namespaces || []
+    const [tablesResponse, childNamespaces] = await Promise.all([
+      api.v1.listTables(encodeNamespace(parts)),
+      listChildNamespaces(api, parts),
+    ])
 
     // Recursively fetch child namespaces
     const children = await Promise.all(
-      childNamespaces
-        .map((child) => normalizeNamespaceParts(child))
-        .filter((child): child is string[] => !!child)
-        .map((child) => fetchNamespaceAndChildren(child))
+      cleanNamespaces(childNamespaces).map(fetchNamespaceAndChildren)
     )
-
-    // Sort children by shortName
-    const sortedChildren = children.sort((a, b) =>
-      a.shortName.localeCompare(b.shortName)
-    )
-
-    // Sort tables alphabetically
-    const sortedTables = (
-      tablesResponse.identifiers?.map((table) => table.name) || []
-    ).sort()
 
     return {
-      name: namespaceName,
-      shortName: (normalized || namespace)[
-        (normalized || namespace).length - 1
-      ],
-      tables: sortedTables,
-      children: sortedChildren,
+      name: parts.join("."),
+      shortName: parts[parts.length - 1],
+      tables: (
+        tablesResponse.identifiers?.map((table) => table.name) || []
+      ).sort(),
+      children: children.sort((a, b) => a.shortName.localeCompare(b.shortName)),
     }
   }
 
-  // Start with root namespaces
-  const response = await api.v1.listNamespaces()
-  const rootNamespaces = (response.namespaces || [])
-    .map((ns) => normalizeNamespaceParts(ns))
-    .filter((ns): ns is string[] => !!ns)
-
-  // Fetch all namespaces and their children
+  const rootNamespaces = await listChildNamespaces(api, [])
   const result = await Promise.all(
-    rootNamespaces.map((namespace) => fetchNamespaceAndChildren(namespace))
+    cleanNamespaces(rootNamespaces).map(fetchNamespaceAndChildren)
   )
-
-  // Sort root namespaces by shortName
   return result.sort((a, b) => a.shortName.localeCompare(b.shortName))
 }
 
@@ -161,31 +173,24 @@ export async function loadNamespaceChildren(
   parentNamespace?: string
 ): Promise<NamespaceChildren> {
   const api = catalogApi(catalog, isBrowser())
-  const trimmedParent = parentNamespace?.trim()
-
-  const namespacePromise = trimmedParent
-    ? api.v1.listNamespaces({ parent: trimmedParent })
-    : api.v1.listNamespaces()
+  const parentParts = namespaceParts(parentNamespace ?? "")
 
   // Tables exist only under a concrete namespace; root has no tables.
-  const tablesPromise = trimmedParent
-    ? api.v1.listTables(trimmedParent)
+  const tablesPromise = parentParts.length
+    ? api.v1.listTables(encodeNamespace(parentParts))
     : Promise.resolve({ identifiers: [] as Array<{ name: string }> })
 
-  const [namespaceResp, tablesResp] = await Promise.all([
-    namespacePromise,
+  const [childNamespaces, tablesResp] = await Promise.all([
+    listChildNamespaces(api, parentParts),
     tablesPromise,
   ])
 
-  const namespaces =
-    namespaceResp.namespaces
-      ?.map((ns) => (ns || []).map((p) => (p ?? "").trim()).filter(Boolean))
-      .filter((ns) => ns.length > 0)
-      .map((ns) => ({
-        name: ns.join("."),
-        shortName: ns[ns.length - 1],
-      }))
-      .sort((a, b) => a.shortName.localeCompare(b.shortName)) || []
+  const namespaces = cleanNamespaces(childNamespaces)
+    .map((ns) => ({
+      name: ns.join("."),
+      shortName: ns[ns.length - 1],
+    }))
+    .sort((a, b) => a.shortName.localeCompare(b.shortName))
 
   const tables =
     tablesResp.identifiers
@@ -247,8 +252,7 @@ export async function loadTableData(
   table: string
 ): Promise<LoadTableResult> {
   const api = catalogApi(catalog, isBrowser())
-  const response = await api.v1.loadTable(namespace, table)
-  return response
+  return api.v1.loadTable(encodeNamespace(namespaceParts(namespace)), table)
 }
 
 export async function dropTable(
@@ -257,7 +261,7 @@ export async function dropTable(
   table: string
 ): Promise<void> {
   const api = catalogApi(catalog)
-  await api.v1.dropTable(namespace, table)
+  await api.v1.dropTable(encodeNamespace(namespaceParts(namespace)), table)
 }
 
 export async function renameTable(
@@ -269,11 +273,11 @@ export async function renameTable(
   const api = catalogApi(catalog)
   await api.v1.renameTable({
     source: {
-      namespace: namespace.split("/"),
+      namespace: namespaceParts(namespace),
       name: sourceTable,
     },
     destination: {
-      namespace: namespace.split("/"),
+      namespace: namespaceParts(namespace),
       name: destinationTable,
     },
   })
@@ -287,7 +291,7 @@ export async function createNamespace(
   const api = catalogApi(catalog)
 
   // Split namespace by dots to create the namespace array
-  const namespaceArray = namespace.split(".")
+  const namespaceArray = namespaceParts(namespace)
 
   await api.v1.createNamespace({
     namespace: namespaceArray,
@@ -432,10 +436,11 @@ export async function getNamespaceTables(
   namespace: string
 ): Promise<NamespaceTable[]> {
   const api = catalogApi(catalog)
-  const response = await api.v1.listTables(namespace)
+  const encodedNamespace = encodeNamespace(namespaceParts(namespace))
+  const response = await api.v1.listTables(encodedNamespace)
   return (await Promise.all(
     response.identifiers?.map(async (table) => {
-      const tableResponse = await api.v1.loadTable(namespace, table.name)
+      const tableResponse = await api.v1.loadTable(encodedNamespace, table.name)
       return {
         name: table.name,
         formatVersion: tableResponse.metadata["format-version"] || "",
@@ -585,8 +590,13 @@ export async function fetchSampleData(
   table: string,
   pagination: PaginationParams
 ): Promise<FetchSampleDataResult> {
+  // Quote each part separately so nested namespaces resolve level by level.
+  const fullTableName = [catalog, ...namespaceParts(namespace), table]
+    .map((part) => `\`${part}\``)
+    .join(".")
+
   // First, get the total count of rows
-  const countQuery = `SELECT COUNT(*) as total FROM \`${catalog}\`.\`${namespace}\`.\`${table}\``
+  const countQuery = `SELECT COUNT(*) as total FROM ${fullTableName}`
   const countResult = await runQuery(countQuery)
 
   // Extract the total count from the result
@@ -598,7 +608,7 @@ export async function fetchSampleData(
   const offset = (pagination.page - 1) * pagination.pageSize
 
   // Construct the paginated query
-  const query = `SELECT * FROM \`${catalog}\`.\`${namespace}\`.\`${table}\` LIMIT ${pagination.pageSize} OFFSET ${offset}`
+  const query = `SELECT * FROM ${fullTableName} LIMIT ${pagination.pageSize} OFFSET ${offset}`
   const result = await runQuery(query)
 
   return {
