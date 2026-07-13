@@ -42,6 +42,7 @@ import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { runQuery } from "@/lib/data-loader"
+import { rowsToCsv } from "@/lib/csv"
 import { errorToString } from "@/lib/utils"
 
 export default function SQLEditorPage() {
@@ -166,18 +167,7 @@ export default function SQLEditorPage() {
   const handleDownloadResults = () => {
     if (!queryResults) return
 
-    // Create CSV content
-    const headers = queryResults.columns.join(",")
-    const rows = queryResults.rows
-      .map((row) =>
-        row
-          .map((cell) =>
-            typeof cell === "string" ? `"${cell.replace(/"/g, '""')}"` : cell
-          )
-          .join(",")
-      )
-      .join("\n")
-    const csvContent = `${headers}\n${rows}`
+    const csvContent = rowsToCsv(queryResults.columns, queryResults.rows)
 
     // Create download link
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
