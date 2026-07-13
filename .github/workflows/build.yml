@@ -55,6 +55,9 @@ jobs:
       - name: Lint frontend
         run: pnpm run lint
 
+      - name: Test CSV serialization
+        run: pnpm run test:csv
+
       - name: Lint backend
         run: |
           cd backend
