@@ -1,6 +1,7 @@
 import { useQueries } from "@tanstack/react-query"
 
 import { loadNamespacesAndTables } from "@/lib/data-loader"
+import type { NamespaceTables } from "@/lib/data-loader"
 
 export interface Namespace {
   id: string
@@ -21,18 +22,22 @@ export function useNamespaces(catalogs: string[]) {
       })) || [],
   })
 
-  // Combine all namespaces data
+  // Combine all namespaces data, flattening nested namespaces
   const allNamespaces = namespaceQueries
     .flatMap((query, index) => {
       if (!query.data) return []
       const catalog = catalogs?.[index] || ""
-      return query.data.map((ns) => ({
-        id: ns.name,
-        name: ns.shortName,
-        catalog: catalog,
-        tableCount: ns.tables.length,
-        tables: ns.tables,
-      }))
+      const flatten = (ns: NamespaceTables): Namespace[] => [
+        {
+          id: ns.name,
+          name: ns.name,
+          catalog: catalog,
+          tableCount: ns.tables.length,
+          tables: ns.tables,
+        },
+        ...ns.children.flatMap(flatten),
+      ]
+      return query.data.flatMap(flatten)
     })
     .filter(Boolean)
 

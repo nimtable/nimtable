@@ -23,6 +23,7 @@ import io.nimtable.db.repository.CatalogRepository;
 import io.nimtable.db.repository.ScheduledTaskRepository;
 import io.nimtable.spark.LocalSpark;
 import io.nimtable.util.CronUtil;
+import io.nimtable.util.NamespaceUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -224,7 +225,7 @@ public class OptimizeServlet extends HttpServlet {
         try {
             table =
                     CatalogUtil.buildIcebergCatalog(catalogName, properties, new Configuration())
-                            .loadTable(TableIdentifier.of(namespace, tableName));
+                            .loadTable(TableIdentifier.of(NamespaceUtil.parse(namespace), tableName));
         } catch (Exception e) {
             logger.error("Failed to load table: {}.{}", namespace, tableName, e);
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);

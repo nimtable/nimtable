@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.nimtable.cache.DataDistributionCache;
 import io.nimtable.db.entity.DataDistribution;
 import io.nimtable.db.repository.CatalogRepository;
+import io.nimtable.util.NamespaceUtil;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -163,7 +164,7 @@ public class DistributionServlet extends HttpServlet {
             }
         }
 
-        Table table = catalog.loadTable(TableIdentifier.of(namespace, tableName));
+        Table table = catalog.loadTable(TableIdentifier.of(NamespaceUtil.parse(namespace), tableName));
 
         Snapshot snapshot;
         if (snapshotId != null) {

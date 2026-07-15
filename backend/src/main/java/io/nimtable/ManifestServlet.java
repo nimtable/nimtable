@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.nimtable.db.entity.Catalog;
 import io.nimtable.db.repository.CatalogRepository;
+import io.nimtable.util.NamespaceUtil;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -99,7 +100,7 @@ public class ManifestServlet extends HttpServlet {
         try {
             table =
                     CatalogUtil.buildIcebergCatalog(catalogName, properties, new Configuration())
-                            .loadTable(TableIdentifier.of(namespace, tableName));
+                            .loadTable(TableIdentifier.of(NamespaceUtil.parse(namespace), tableName));
         } catch (Exception e) {
             logger.error("Failed to load table: {}.{}", namespace, tableName, e);
             response.sendError(
