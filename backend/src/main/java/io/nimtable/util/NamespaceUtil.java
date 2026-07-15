@@ -20,11 +20,12 @@ import org.apache.iceberg.catalog.Namespace;
 
 public final class NamespaceUtil {
 
-    // Multi-level namespace parts arrive from the frontend separated by the 0x1F
-    // unit separator on the wire (see the web data-loader `namespaceParts`). Split
-    // on it to rebuild a real multi-level Namespace; a flat namespace yields a
-    // single element.
-    private static final String SEPARATOR = "\\u001f";
+    // Nimtable's per-table endpoints (distribution/manifest/optimize) receive the
+    // namespace as one path segment with levels joined by '.', matching the
+    // frontend's internal dot-separated representation (see web data-loader; the
+    // 0x1F separator is used only on the Iceberg REST listing path). Split on '.'
+    // to rebuild a real multi-level Namespace; a flat namespace yields one element.
+    private static final String SEPARATOR = "\\.";
 
     private NamespaceUtil() {}
 
