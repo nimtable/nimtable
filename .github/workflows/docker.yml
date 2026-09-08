@@ -1,6 +1,9 @@
-name: Publish Nightly Docker Image
+name: Publish Docker Image
 
 on:
+  push:
+    tags:
+      - 'v*.*.*'
   schedule:
     - cron: '0 17 * * *'
   # Allow manual trigger
@@ -48,9 +51,12 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ matrix.image_config.image_name }}
+          flavor: |
+            latest=false
           tags: |
-            type=raw,value=nightly-${{matrix.arch_config.arch}}
-            type=raw,value=nightly-${{ github.sha }}-${{matrix.arch_config.arch}}
+            type=raw,value=nightly-${{matrix.arch_config.arch}},enable=${{ github.event_name != 'push' }}
+            type=raw,value=nightly-${{ github.sha }}-${{matrix.arch_config.arch}},enable=${{ github.event_name != 'push' }}
+            type=semver,pattern={{version}},suffix=-${{matrix.arch_config.arch}}
 
       - name: Build and push Docker image (${{ matrix.image_config.type }})
         uses: docker/build-push-action@v6
@@ -75,27 +81,55 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract release version
+        if: github.event_name == 'push'
+        id: release-meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          flavor: |
+            latest=false
+          tags: |
+            type=semver,pattern={{version}}
       - name: Create and push manifest images (nightly)
+        if: github.event_name != 'push'
         uses: Noelware/docker-manifest-action@0.4.3
         with:
           inputs: ${{ env.IMAGE_NAME }}:nightly
           images: ${{ env.IMAGE_NAME }}:nightly-amd64,${{ env.IMAGE_NAME }}:nightly-arm64
           push: true
       - name: Create and push manifest images (nightly-sha)
+        if: github.event_name != 'push'
         uses: Noelware/docker-manifest-action@0.4.3
         with:
           inputs: ${{ env.IMAGE_NAME }}:nightly-${{ github.sha }}
           images: ${{ env.IMAGE_NAME }}:nightly-${{ github.sha }}-amd64,${{ env.IMAGE_NAME }}:nightly-${{ github.sha }}-arm64
           push: true
       - name: Create and push manifest images for Frontend (nightly)
+        if: github.event_name != 'push'
         uses: Noelware/docker-manifest-action@0.4.3
         with:
           inputs: ${{ env.FRONTEND_IMAGE_NAME }}:nightly
           images: ${{ env.FRONTEND_IMAGE_NAME }}:nightly-amd64,${{ env.FRONTEND_IMAGE_NAME }}:nightly-arm64
           push: true
       - name: Create and push manifest images for Frontend (nightly-sha)
+        if: github.event_name != 'push'
         uses: Noelware/docker-manifest-action@0.4.3
         with:
           inputs: ${{ env.FRONTEND_IMAGE_NAME }}:nightly-${{ github.sha }}
           images: ${{ env.FRONTEND_IMAGE_NAME }}:nightly-${{ github.sha }}-amd64,${{ env.FRONTEND_IMAGE_NAME }}:nightly-${{ github.sha }}-arm64
+          push: true
+      - name: Create and push manifest images (release)
+        if: github.event_name == 'push'
+        uses: Noelware/docker-manifest-action@0.4.3
+        with:
+          inputs: ${{ env.IMAGE_NAME }}:${{ steps.release-meta.outputs.version }}
+          images: ${{ env.IMAGE_NAME }}:${{ steps.release-meta.outputs.version }}-amd64,${{ env.IMAGE_NAME }}:${{ steps.release-meta.outputs.version }}-arm64
+          push: true
+      - name: Create and push manifest images for Frontend (release)
+        if: github.event_name == 'push'
+        uses: Noelware/docker-manifest-action@0.4.3
+        with:
+          inputs: ${{ env.FRONTEND_IMAGE_NAME }}:${{ steps.release-meta.outputs.version }}
+          images: ${{ env.FRONTEND_IMAGE_NAME }}:${{ steps.release-meta.outputs.version }}-amd64,${{ env.FRONTEND_IMAGE_NAME }}:${{ steps.release-meta.outputs.version }}-arm64
           push: true

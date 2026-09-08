@@ -1,6 +1,9 @@
-name: Publish Nightly DockerHub Image
+name: Publish DockerHub Image
 
 on:
+  push:
+    tags:
+      - 'v*.*.*'
   schedule:
     - cron: '0 17 * * *'
   # Allow manual trigger
@@ -46,9 +49,12 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ matrix.image_config.type == 'backend' && env.DOCKERHUB_IMAGE_NAME || env.DOCKERHUB_FRONTEND_IMAGE_NAME }}
+          flavor: |
+            latest=false
           tags: |
-            type=raw,value=nightly-${{matrix.arch_config.arch}}
-            type=raw,value=nightly-${{ github.sha }}-${{matrix.arch_config.arch}}
+            type=raw,value=nightly-${{matrix.arch_config.arch}},enable=${{ github.event_name != 'push' }}
+            type=raw,value=nightly-${{ github.sha }}-${{matrix.arch_config.arch}},enable=${{ github.event_name != 'push' }}
+            type=semver,pattern={{version}},suffix=-${{matrix.arch_config.arch}}
 
       - name: Build and push Docker image (${{ matrix.image_config.type }})
         uses: docker/build-push-action@v6
@@ -73,7 +79,18 @@ jobs:
         with:
           username: ${{ env.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Extract release version
+        if: github.event_name == 'push'
+        id: release-meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKERHUB_IMAGE_NAME }}
+          flavor: |
+            latest=false
+          tags: |
+            type=semver,pattern={{version}}
       - name: Create and push manifest images to DockerHub (nightly)
+        if: github.event_name != 'push'
         uses: Noelware/docker-manifest-action@0.4.3
         with:
           inputs: ${{ env.DOCKERHUB_IMAGE_NAME }}:nightly
@@ -81,6 +98,7 @@ jobs:
           amend: true
           push: true
       - name: Create and push manifest images to DockerHub (nightly-sha)
+        if: github.event_name != 'push'
         uses: Noelware/docker-manifest-action@0.4.3
         with:
           inputs: ${{ env.DOCKERHUB_IMAGE_NAME }}:nightly-${{ github.sha }}
@@ -88,6 +106,7 @@ jobs:
           amend: true
           push: true
       - name: Create and push manifest images for Frontend to DockerHub (nightly)
+        if: github.event_name != 'push'
         uses: Noelware/docker-manifest-action@0.4.3
         with:
           inputs: ${{ env.DOCKERHUB_FRONTEND_IMAGE_NAME }}:nightly
@@ -95,10 +114,26 @@ jobs:
           amend: true
           push: true
       - name: Create and push manifest images for Frontend to DockerHub (nightly-sha)
+        if: github.event_name != 'push'
         uses: Noelware/docker-manifest-action@0.4.3
         with:
           inputs: ${{ env.DOCKERHUB_FRONTEND_IMAGE_NAME }}:nightly-${{ github.sha }}
           images: ${{ env.DOCKERHUB_FRONTEND_IMAGE_NAME }}:nightly-${{ github.sha }}-amd64,${{ env.DOCKERHUB_FRONTEND_IMAGE_NAME }}:nightly-${{ github.sha }}-arm64
           amend: true
           push: true
-
+      - name: Create and push manifest images to DockerHub (release)
+        if: github.event_name == 'push'
+        uses: Noelware/docker-manifest-action@0.4.3
+        with:
+          inputs: ${{ env.DOCKERHUB_IMAGE_NAME }}:${{ steps.release-meta.outputs.version }}
+          images: ${{ env.DOCKERHUB_IMAGE_NAME }}:${{ steps.release-meta.outputs.version }}-amd64,${{ env.DOCKERHUB_IMAGE_NAME }}:${{ steps.release-meta.outputs.version }}-arm64
+          amend: true
+          push: true
+      - name: Create and push manifest images for Frontend to DockerHub (release)
+        if: github.event_name == 'push'
+        uses: Noelware/docker-manifest-action@0.4.3
+        with:
+          inputs: ${{ env.DOCKERHUB_FRONTEND_IMAGE_NAME }}:${{ steps.release-meta.outputs.version }}
+          images: ${{ env.DOCKERHUB_FRONTEND_IMAGE_NAME }}:${{ steps.release-meta.outputs.version }}-amd64,${{ env.DOCKERHUB_FRONTEND_IMAGE_NAME }}:${{ steps.release-meta.outputs.version }}-arm64
+          amend: true
+          push: true
