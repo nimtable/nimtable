@@ -125,8 +125,14 @@ dependencies {
   implementation 'org.slf4j:slf4j-api:2.0.12'
   implementation 'ch.qos.logback:logback-classic:1.5.8'
 
+  testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+
   // Password Hashing
   implementation 'org.mindrot:jbcrypt:0.4'
+}
+
+test {
+  useJUnitPlatform()
 }
 
 jar {

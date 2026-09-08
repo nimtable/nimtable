@@ -23,6 +23,7 @@ import io.nimtable.db.repository.CatalogRepository;
 import io.nimtable.db.repository.ScheduledTaskRepository;
 import io.nimtable.spark.LocalSpark;
 import io.nimtable.util.CronUtil;
+import io.nimtable.util.SparkSqlUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -92,8 +93,8 @@ public class OptimizeServlet extends HttpServlet {
         StringBuilder sqlBuilder = new StringBuilder();
         sqlBuilder.append(
                 String.format(
-                        "CALL `%s`.system.rewrite_data_files(table => '%s.%s'",
-                        catalogName, namespace, tableName));
+                        "CALL `%s`.system.rewrite_data_files(table => %s",
+                        catalogName, SparkSqlUtil.tableIdentifierArgument(namespace, tableName)));
 
         if (strategy != null && !strategy.isEmpty()) {
             sqlBuilder.append(String.format(", strategy => '%s'", strategy));
@@ -139,8 +140,11 @@ public class OptimizeServlet extends HttpServlet {
                 Instant.ofEpochMilli(System.currentTimeMillis() - maxSnapshotAgeMs).toString();
         String sql =
                 String.format(
-                        "CALL `%s`.system.expire_snapshots(table => '%s.%s', older_than => TIMESTAMP '%s', retain_last => %d)",
-                        catalogName, namespace, tableName, timestampStr, minSnapshotsToKeep);
+                        "CALL `%s`.system.expire_snapshots(table => %s, older_than => TIMESTAMP '%s', retain_last => %d)",
+                        catalogName,
+                        SparkSqlUtil.tableIdentifierArgument(namespace, tableName),
+                        timestampStr,
+                        minSnapshotsToKeep);
         logger.info("Executing expire snapshots SQL: {}", sql);
         Row result = spark.sql(sql).collectAsList().get(0);
 
@@ -163,8 +167,10 @@ public class OptimizeServlet extends HttpServlet {
                 Instant.ofEpochMilli(System.currentTimeMillis() - olderThanMs).toString();
         String sql =
                 String.format(
-                        "CALL `%s`.system.remove_orphan_files(table => '%s.%s', older_than => TIMESTAMP '%s')",
-                        catalogName, namespace, tableName, timestampStr);
+                        "CALL `%s`.system.remove_orphan_files(table => %s, older_than => TIMESTAMP '%s')",
+                        catalogName,
+                        SparkSqlUtil.tableIdentifierArgument(namespace, tableName),
+                        timestampStr);
         logger.info("Executing remove orphan files SQL: {}", sql);
         List<Row> result = spark.sql(sql).collectAsList();
         return new CleanOrphanFilesResult(

@@ -22,6 +22,7 @@ import io.nimtable.db.repository.CatalogRepository;
 import io.nimtable.db.repository.ScheduledTaskRepository;
 import io.nimtable.spark.LocalSpark;
 import io.nimtable.util.CronUtil;
+import io.nimtable.util.SparkSqlUtil;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -239,8 +240,10 @@ public class ScheduleManager {
         StringBuilder sqlBuilder = new StringBuilder();
         sqlBuilder.append(
                 String.format(
-                        "CALL `%s`.system.rewrite_data_files(table => '%s.%s'",
-                        task.getCatalogName(), task.getNamespace(), task.getTableName()));
+                        "CALL `%s`.system.rewrite_data_files(table => %s",
+                        task.getCatalogName(),
+                        SparkSqlUtil.tableIdentifierArgument(
+                                task.getNamespace(), task.getTableName())));
 
         if (task.getStrategy() != null && !task.getStrategy().isEmpty()) {
             sqlBuilder.append(String.format(", strategy => '%s'", task.getStrategy()));
@@ -277,10 +280,10 @@ public class ScheduleManager {
 
         String sql =
                 String.format(
-                        "CALL `%s`.system.expire_snapshots(table => '%s.%s', older_than => TIMESTAMP '%s', retain_last => %d)",
+                        "CALL `%s`.system.expire_snapshots(table => %s, older_than => TIMESTAMP '%s', retain_last => %d)",
                         task.getCatalogName(),
-                        task.getNamespace(),
-                        task.getTableName(),
+                        SparkSqlUtil.tableIdentifierArgument(
+                                task.getNamespace(), task.getTableName()),
                         timestampStr,
                         task.getMinSnapshotsToKeep());
 
@@ -300,10 +303,10 @@ public class ScheduleManager {
 
         String sql =
                 String.format(
-                        "CALL `%s`.system.remove_orphan_files(table => '%s.%s', older_than => TIMESTAMP '%s')",
+                        "CALL `%s`.system.remove_orphan_files(table => %s, older_than => TIMESTAMP '%s')",
                         task.getCatalogName(),
-                        task.getNamespace(),
-                        task.getTableName(),
+                        SparkSqlUtil.tableIdentifierArgument(
+                                task.getNamespace(), task.getTableName()),
                         timestampStr);
 
         LOG.info("Executing orphan file cleanup SQL: {}", sql);
