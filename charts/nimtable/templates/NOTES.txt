@@ -1,0 +1,17 @@
+1. Wait for the Nimtable workloads to become ready:
+
+   kubectl rollout status deployment/{{ include "nimtable.backendName" . }}
+   kubectl rollout status deployment/{{ include "nimtable.webName" . }}
+
+{{- if .Values.ingress.enabled }}
+2. Open the URL configured under ingress.hosts.
+{{- else }}
+2. Forward the web service locally:
+
+   kubectl port-forward service/{{ include "nimtable.webName" . }} 3000:{{ .Values.web.service.port }}
+
+   Then open http://localhost:3000.
+{{- end }}
+
+The default login is admin/admin unless auth.adminUsername and auth.adminPassword were changed.
+Change all auth and database credentials before exposing this installation.

@@ -1,0 +1,34 @@
+name: Helm
+
+on:
+  pull_request:
+    paths:
+      - "charts/**"
+      - ".github/workflows/helm.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "charts/**"
+      - ".github/workflows/helm.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+      - name: Lint chart
+        run: helm lint charts/nimtable --strict
+      - name: Render default installation
+        run: helm template nimtable charts/nimtable
+      - name: Render external database and ingress installation
+        run: >-
+          helm template nimtable charts/nimtable
+          --set postgresql.enabled=false
+          --set externalDatabase.host=postgres.example.com
+          --set-string externalDatabase.password=test-password
+          --set ingress.enabled=true

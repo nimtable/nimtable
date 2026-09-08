@@ -1,0 +1,86 @@
+nameOverride: ""
+fullnameOverride: ""
+
+imagePullSecrets: []
+
+web:
+  replicaCount: 1
+  image:
+    repository: ghcr.io/nimtable/nimtable-web
+    pullPolicy: IfNotPresent
+    tag: ""
+  service:
+    type: ClusterIP
+    port: 3000
+  podAnnotations: {}
+  podLabels: {}
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+backend:
+  replicaCount: 1
+  image:
+    repository: ghcr.io/nimtable/nimtable
+    pullPolicy: IfNotPresent
+    tag: ""
+  service:
+    type: ClusterIP
+    port: 8182
+  javaOpts: -Xmx2g -Xms512m
+  catalogs: []
+  podAnnotations: {}
+  podLabels: {}
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+auth:
+  # Change these values before exposing Nimtable outside a trusted environment.
+  jwtSecret: change-me
+  adminUsername: admin
+  adminPassword: admin
+
+postgresql:
+  enabled: true
+  image:
+    repository: postgres
+    pullPolicy: IfNotPresent
+    tag: "17"
+  auth:
+    username: nimtable_user
+    password: password
+    database: nimtable
+  service:
+    port: 5432
+  persistence:
+    enabled: true
+    accessModes:
+      - ReadWriteOnce
+    size: 8Gi
+    storageClass: ""
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# Used when postgresql.enabled is false.
+externalDatabase:
+  host: ""
+  port: 5432
+  username: nimtable_user
+  password: ""
+  database: nimtable
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: nimtable.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []

@@ -48,6 +48,15 @@ docker compose up -d
 
 Access the UI at [http://localhost:3000](http://localhost:3000).
 
+To deploy on Kubernetes, use the included [Helm chart](charts/nimtable):
+
+```bash
+helm install nimtable ./charts/nimtable
+```
+
+See the [chart documentation](charts/nimtable/README.md) for credential,
+external database, persistence, and ingress configuration.
+
 #### Default Admin Login
 
 - **Username:** `admin`
