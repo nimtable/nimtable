@@ -1,0 +1,17 @@
+{{- if .Values.postgresql.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "nimtable.postgresqlName" . }}
+  labels:
+    {{- include "nimtable.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgresql
+spec:
+  ports:
+    - name: postgresql
+      port: {{ .Values.postgresql.service.port }}
+      targetPort: postgresql
+      protocol: TCP
+  selector:
+    {{- include "nimtable.selectorLabels" (dict "root" . "component" "postgresql") | nindent 4 }}
+{{- end }}

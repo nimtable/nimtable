@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "nimtable.fullname" . }}-test-connection"
+  labels:
+    {{- include "nimtable.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  restartPolicy: Never
+  containers:
+    - name: wget
+      image: busybox:1.37
+      command:
+        - wget
+      args:
+        - "{{ include "nimtable.webName" . }}:{{ .Values.web.service.port }}"

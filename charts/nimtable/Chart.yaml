@@ -1,0 +1,13 @@
+apiVersion: v2
+name: nimtable
+description: A Helm chart for Nimtable, an observability platform for Apache Iceberg
+type: application
+version: 0.1.0
+appVersion: nightly
+home: https://github.com/nimtable/nimtable
+icon: https://raw.githubusercontent.com/nimtable/nimtable/main/public/nimtable_icon.png
+sources:
+  - https://github.com/nimtable/nimtable
+maintainers:
+  - name: Nimtable maintainers
+    url: https://github.com/nimtable/nimtable
