@@ -1,5 +1,5 @@
 blank_issues_enabled: true
 contact_links:
-  - name: 💬 Slack Community
-    url: https://go.nimtable.com/slack
-    about: Join our Slack workspace for real-time help, discussions, and community support
+  - name: 💬 GitHub Discussions
+    url: https://github.com/nimtable/nimtable/discussions
+    about: Ask questions and connect with the Nimtable community

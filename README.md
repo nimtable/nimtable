@@ -21,10 +21,10 @@
     />
   </a>
   <a
-    href="https://go.risingwave.com/slack"
+    href="https://github.com/nimtable/nimtable/discussions"
     target="_blank"
   >
-    <img alt="Slack" src="https://badgen.net/badge/Slack/Join%20Community%20(Powered%20By%20RisingWave%20Labs)/0abd59?icon=slack" />
+    <img alt="GitHub Discussions" src="https://badgen.net/badge/GitHub/Join%20Discussions/24292f?icon=github" />
   </a>
 </div>
 
