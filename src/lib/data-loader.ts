@@ -20,6 +20,7 @@ import { CatalogConfig, LoadTableResult, PartitionSpec } from "./api"
 import { getCatalogs } from "./client"
 import { createClient, createConfig } from "@hey-api/client-fetch"
 import { getApiBaseUrl } from "./api-config"
+import { readOptimizationResponse } from "./optimization-response"
 
 // Re-export types from api.ts, ensuring application code don't need to access the api directly.
 export type {
@@ -559,12 +560,7 @@ export async function runOptimizationOperation(
     }
   )
 
-  if (!response.ok) {
-    const error = await response.json()
-    throw new Error(error.message || `Failed to run ${step}`)
-  }
-
-  return await response.json()
+  return await readOptimizationResponse(response, step)
 }
 
 export interface PaginationParams {

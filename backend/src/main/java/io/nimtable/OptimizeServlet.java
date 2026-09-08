@@ -278,8 +278,8 @@ public class OptimizeServlet extends HttpServlet {
         switch (operation) {
             case "compact":
                 if (compaction) {
-                    SparkSession spark = LocalSpark.getInstance(config).getSpark();
                     try {
+                        SparkSession spark = LocalSpark.getInstance(config).getSpark();
                         CompactionResult compactionResult =
                                 compactTable(
                                         spark,
@@ -314,8 +314,8 @@ public class OptimizeServlet extends HttpServlet {
 
             case "expire-snapshots":
                 if (snapshotRetention) {
-                    SparkSession spark = LocalSpark.getInstance(config).getSpark();
                     try {
+                        SparkSession spark = LocalSpark.getInstance(config).getSpark();
                         ExpireSnapshotResult expireResult =
                                 expireSnapshots(
                                         spark,
@@ -348,8 +348,8 @@ public class OptimizeServlet extends HttpServlet {
 
             case "clean-orphan-files":
                 if (orphanFileDeletion) {
-                    SparkSession spark = LocalSpark.getInstance(config).getSpark();
                     try {
+                        SparkSession spark = LocalSpark.getInstance(config).getSpark();
                         CleanOrphanFilesResult cleanResult =
                                 cleanOrphanFiles(
                                         spark,

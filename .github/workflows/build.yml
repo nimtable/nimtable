@@ -52,6 +52,9 @@ jobs:
       - name: Check frontend formatting
         run: pnpm run format:check
 
+      - name: Test frontend
+        run: pnpm test
+
       - name: Lint frontend
         run: pnpm run lint
 
