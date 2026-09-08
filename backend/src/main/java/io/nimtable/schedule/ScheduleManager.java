@@ -20,6 +20,7 @@ import io.nimtable.Config;
 import io.nimtable.db.entity.ScheduledTask;
 import io.nimtable.db.repository.CatalogRepository;
 import io.nimtable.db.repository.ScheduledTaskRepository;
+import io.nimtable.deployment.BackendInstanceLock;
 import io.nimtable.spark.LocalSpark;
 import io.nimtable.util.CronUtil;
 import java.time.Instant;
@@ -49,19 +50,22 @@ public class ScheduleManager {
     private final Config config;
     private final ScheduledTaskRepository scheduledTaskRepository;
     private final CatalogRepository catalogRepository;
+    private final BackendInstanceLock instanceLock;
     private final ScheduledExecutorService executorService;
     private boolean isRunning = false;
 
-    private ScheduleManager(Config config) {
+    private ScheduleManager(Config config, BackendInstanceLock instanceLock) {
         this.config = config;
+        this.instanceLock = instanceLock;
         this.scheduledTaskRepository = new ScheduledTaskRepository();
         this.catalogRepository = new CatalogRepository();
         this.executorService = Executors.newScheduledThreadPool(4);
     }
 
-    public static synchronized ScheduleManager getInstance(Config config) {
+    public static synchronized ScheduleManager getInstance(
+            Config config, BackendInstanceLock instanceLock) {
         if (instance == null) {
-            instance = new ScheduleManager(config);
+            instance = new ScheduleManager(config, instanceLock);
         }
         return instance;
     }
@@ -137,6 +141,11 @@ public class ScheduleManager {
     /** Check for tasks that need to be executed and execute them. */
     private void checkAndExecuteTasks() {
         try {
+            if (!instanceLock.isHeld()) {
+                LOG.error("Skipping scheduled work because the backend deployment lock was lost");
+                return;
+            }
+
             List<ScheduledTask> tasksToRun = scheduledTaskRepository.findTasksToRun();
 
             if (tasksToRun.isEmpty()) {

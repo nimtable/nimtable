@@ -63,6 +63,7 @@ public class PersistenceManager {
                 javax.sql.DataSource ds = DatabaseFactory.create(ebeanConfig).dataSource();
                 // Run Flyway migrations
                 FlywayMigrator.migrateDatabase(ds, dbConfig);
+                dataSourceInstance = ds;
             } catch (Exception e) {
                 LOG.error("Failed to initialize persistence: {}", e.getMessage(), e);
                 throw new RuntimeException("Failed to initialize persistence", e);

@@ -21,6 +21,8 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.nimtable.db.PersistenceManager;
 import io.nimtable.db.entity.Catalog;
 import io.nimtable.db.repository.CatalogRepository;
+import io.nimtable.deployment.BackendInstanceLock;
+import io.nimtable.deployment.DeploymentStatusServlet;
 import io.nimtable.schedule.ScheduleManager;
 import io.nimtable.spark.LocalSpark;
 import java.io.File;
@@ -227,19 +229,26 @@ public class Server {
         // Initialize Persistence Manager
         PersistenceManager.initialize(dbConfig);
 
+        try (BackendInstanceLock instanceLock =
+                BackendInstanceLock.acquire(PersistenceManager.getDataSource())) {
+            runServer(config, instanceLock);
+        }
+    }
+
+    private static void runServer(Config config, BackendInstanceLock instanceLock)
+            throws Exception {
+
         // --- Instantiate Repositories ---
         CatalogRepository catalogRepository = new CatalogRepository(); // Simple instantiation
 
         // init spark
         LocalSpark.getInstance(config);
 
-        // Initialize and start the schedule manager
-        ScheduleManager scheduleManager = ScheduleManager.getInstance(config);
-        scheduleManager.start();
-
         // Add Servlets to handle API endpoints
         apiContext = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
         apiContext.setContextPath("/api");
+        apiContext.addServlet(
+                new ServletHolder("status", new DeploymentStatusServlet(instanceLock)), "/status");
         apiContext.addServlet(
                 new ServletHolder("catalogs", new CatalogsServlet(config)), "/catalogs/*");
         apiContext.addServlet(
@@ -254,9 +263,23 @@ public class Server {
                 new ServletHolder("distribution", new DistributionServlet(config)),
                 "/distribution/*");
 
-        // Add route for each `/api/catalog/<catalog-name>/*` endpoints
+        // Database definitions take precedence over config definitions with the same name. This
+        // matches CatalogsServlet and LocalSpark and makes restart reconciliation deterministic.
+        List<Catalog> dbCatalogs = catalogRepository.findAll();
+        Set<String> dbCatalogNames = new HashSet<>();
+        for (Catalog catalogEntity : dbCatalogs) {
+            dbCatalogNames.add(catalogEntity.getName());
+        }
+
+        // Add route for each `/api/catalog/<catalog-name>/*` endpoint.
         if (config.catalogs() != null) {
             for (Config.Catalog catalog : config.catalogs()) {
+                if (dbCatalogNames.contains(catalog.name())) {
+                    LOG.info(
+                            "Catalog {} is defined in config and PostgreSQL; using PostgreSQL",
+                            catalog.name());
+                    continue;
+                }
                 if (CATALOG_ADAPTERS.containsKey(catalog.name())) {
                     LOG.warn("Duplicate catalog name in config.yaml, skipping: {}", catalog.name());
                     continue;
@@ -266,14 +289,7 @@ public class Server {
         }
 
         // Add catalogs from database
-        List<Catalog> dbCatalogs = catalogRepository.findAll();
         for (Catalog catalogEntity : dbCatalogs) {
-            if (CATALOG_ADAPTERS.containsKey(catalogEntity.getName())) {
-                LOG.warn(
-                        "Duplicate catalog name in database rows, skipping: {}",
-                        catalogEntity.getName());
-                continue;
-            }
             LOG.info("Creating catalog from database: {}", catalogEntity.getName());
             Map<String, String> properties = new HashMap<>(catalogEntity.getProperties());
             properties.put("type", catalogEntity.getType());
@@ -282,22 +298,27 @@ public class Server {
             registerCatalog(catalogEntity.getName(), properties);
         }
 
+        // Prepare scheduled work only after the catalog state has been fully reconstructed.
+        ScheduleManager scheduleManager = ScheduleManager.getInstance(config, instanceLock);
+
         // Create handler list with API context
         HandlerList handlers = new HandlerList();
         handlers.addHandler(apiContext);
         org.eclipse.jetty.server.Server httpServer =
                 new org.eclipse.jetty.server.Server(
                         new InetSocketAddress(config.server().host(), config.server().port()));
+        httpServer.setStopAtShutdown(true);
         httpServer.setHandler(handlers);
 
-        // Add listener bean to close PersistenceManager and ScheduleManager on shutdown
+        // Add listener bean to close process-local services on shutdown.
         httpServer.addBean(
                 new AbstractLifeCycle.AbstractLifeCycleListener() {
                     @Override
                     public void lifeCycleStopping(LifeCycle event) {
                         LOG.info(
-                                "Shutting down server, closing ScheduleManager and PersistenceManager.");
+                                "Shutting down server, closing scheduler, Spark, catalogs, and persistence");
                         scheduleManager.stop();
+                        LocalSpark.getInstance(config).stop();
                         CATALOG_ADAPTERS.forEach(
                                 (name, adapter) -> {
                                     try {
@@ -313,8 +334,19 @@ public class Server {
                     }
                 });
 
-        httpServer.start();
-        LOG.info("Server started on {}:{}", config.server().host(), config.server().port());
-        httpServer.join();
+        try {
+            httpServer.start();
+            scheduleManager.start();
+            LOG.info("Server started on {}:{}", config.server().host(), config.server().port());
+            httpServer.join();
+        } finally {
+            if (!httpServer.isStopped()) {
+                try {
+                    httpServer.stop();
+                } catch (Exception e) {
+                    LOG.warn("Failed to stop the HTTP server cleanly", e);
+                }
+            }
+        }
     }
 }
