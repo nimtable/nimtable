@@ -20,6 +20,8 @@ services:
   nimtable:
     image: ghcr.io/nimtable/nimtable:nightly
     restart: unless-stopped
+    deploy:
+      replicas: 1
     depends_on:
       database:
         condition: service_healthy

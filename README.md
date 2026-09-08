@@ -48,6 +48,10 @@ docker compose up -d
 
 Access the UI at [http://localhost:3000](http://localhost:3000).
 
+The Java backend supports one replica per PostgreSQL database. See the
+[backend deployment model](docs/deployment.md) for the enforced concurrency model,
+readiness endpoint, and operational implications of embedded Spark.
+
 #### Default Admin Login
 
 - **Username:** `admin`

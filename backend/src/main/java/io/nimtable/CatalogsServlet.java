@@ -39,6 +39,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -99,9 +100,10 @@ public class CatalogsServlet extends HttpServlet {
                         .map(Catalog::getName)
                         .collect(Collectors.toList());
 
-        // Combine both lists
-        List<String> allCatalogs = new ArrayList<>(configCatalogs);
-        allCatalogs.addAll(dbCatalogs);
+        // PostgreSQL definitions take precedence over config definitions with the same name,
+        // matching startup registration and Spark configuration.
+        Set<String> allCatalogs = new LinkedHashSet<>(dbCatalogs);
+        allCatalogs.addAll(configCatalogs);
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
